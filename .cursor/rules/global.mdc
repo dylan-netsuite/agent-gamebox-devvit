@@ -1,0 +1,50 @@
+---
+description: Monorepo structure and conventions for the agent-gamebox-devvit project
+globs:
+alwaysApply: true
+---
+
+This is a monorepo containing multiple Devvit game apps, organized by engine type:
+
+```
+games/
+  {engine}/           # phaser, canvas, three, etc.
+    {game-name}/      # Each game is a full, independent Devvit app
+```
+
+Each game is a self-contained Devvit app with its own `devvit.json`, `package.json`, and build pipeline.
+
+When working on a specific game (e.g., `games/phaser/jeopardy/`), the folders to code in are:
+
+- `games/{engine}/{game}/src/client`: This is the full screen webview. To persist data and access the server, call `fetch(/my/api/endpoint)`.
+- `games/{engine}/{game}/src/server`: This is a serverless backend written in Node. This is where you can access redis and save data.
+- `games/{engine}/{game}/src/shared`: Shared code between the devvit app, client, and server. Great place for shared types.
+
+Rules:
+
+- Assume that typescript, vite, tailwind, eslint, prettier, and all codebase configuration is working. If there is a bug, it is more likely your code than the codebase configuration.
+- Build/lint commands should be run with workspace flag: `npm run build -w games/{engine}/{game}`
+- Devvit CLI commands (playtest, upload) must be run from within the game directory: `cd games/{engine}/{game}`
+- Each game has its own `.env` file with `DEVVIT_SUBREDDIT` for playtest URL construction.
+
+## Multi-Agent Playwright Testing
+
+Two Playwright MCP servers are configured as separate "players" (`player_one`, `player_two`), each with its own persistent browser profile under `.devvit-testing/profiles/`. This allows two agents to operate separate authenticated browsers simultaneously without conflicts.
+
+### Assignment Convention
+- Read the game's `.env` file for `PLAYWRIGHT_PLAYER` (e.g., `PLAYWRIGHT_PLAYER=one`)
+- Use that player's tools: `player_one` tools for "one", `player_two` tools for "two"
+- If no `PLAYWRIGHT_PLAYER` is set, default to `player_one`
+- NEVER use another agent's player instance -- each agent owns exactly one
+
+### Browser Profiles
+- Profiles are stored in `.devvit-testing/profiles/p1/` and `.devvit-testing/profiles/p2/`
+- Each profile can be pre-seeded with a Reddit login so agents inherit the session
+- Screenshots are saved to `.devvit-testing/screenshots/p1/` and `.devvit-testing/screenshots/p2/`
+
+### Multiplayer Testing
+When testing multiplayer features:
+1. Agent 1 uses `player_one` tools, Agent 2 uses `player_two` tools
+2. Each player navigates to the same playtest URL
+3. Perform actions with one player, then screenshot the other player's view to verify sync
+4. NEVER use standard playwright tools -- ALWAYS use the specific `player_one` or `player_two` server tools

@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "devvit-mcp": {
+      "command": "npx",
+      "args": ["-y", "@devvit/mcp"]
+    },
+    "player_one": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--user-data-dir",
+        "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/profiles/p1",
+        "--output-dir",
+        "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/screenshots/p1"
+      ]
+    },
+    "player_two": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--user-data-dir",
+        "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/profiles/p2",
+        "--output-dir",
+        "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/screenshots/p2"
+      ]
+    }
+  }
+}

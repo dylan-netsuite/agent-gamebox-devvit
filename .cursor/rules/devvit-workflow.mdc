@@ -1,0 +1,48 @@
+---
+description: Rules for autonomous Devvit development workflow execution in the monorepo
+globs:
+alwaysApply: true
+---
+
+## Devvit Workflow Automation Rules
+
+When executing `/devvit-full-cycle` or any workflow skill:
+
+### Game Path Required
+
+All workflow skills take a **game path** as the first argument (e.g., `phaser/jeopardy`).
+All operations are scoped to `games/{game-path}/`.
+
+### Autonomous Execution
+- Execute ALL workflow phases without pausing for user confirmation
+- Do NOT ask "should I continue?" or "ready for the next phase?"
+- Do NOT ask for the playtest URL -- construct it from the game's `.env` and `devvit.json`
+- Do NOT summarize between phases -- just keep executing
+- Only stop for unrecoverable errors
+
+### Playtest URL Construction
+The playtest URL is deterministic. Never ask the user for it:
+1. Read app name: `games/{game-path}/devvit.json` -> `name` field
+2. Read subreddit: `games/{game-path}/.env` -> `DEVVIT_SUBREDDIT` (strip `r/` prefix for URL)
+3. URL: `https://www.reddit.com/r/{subreddit}?playtest={app-name}`
+
+### Build and Validation Commands
+Run from repo root using workspace flag:
+- Build: `npm run build -w games/{game-path}`
+- Type-check: `npm run type-check -w games/{game-path}`
+- Lint: `npm run lint -w games/{game-path}`
+- Deploy: `cd games/{game-path} && npx devvit playtest`
+
+### Playwright MCP
+- Two player servers configured in `.cursor/mcp.json`: `player_one` and `player_two`
+- Read the game's `.env` for `PLAYWRIGHT_PLAYER` to determine which server to use
+- Each player has its own persistent browser profile (`.devvit-testing/profiles/p1` or `p2`)
+- No Chrome window conflicts -- each agent uses its assigned player server exclusively
+- For Phaser/canvas interactions, use `browser_run_code` with coordinate-based clicks
+- Devvit apps render inside nested iframes -- look for `webview.devvit.net` in frame URLs
+
+### Workflow State
+State is namespaced per game: `.workflows/{game-path}/{wf-id}/`
+
+### Phase Flow
+Planning -> Coding -> Build -> Test -> Analyze -> (Iterate or Complete)
