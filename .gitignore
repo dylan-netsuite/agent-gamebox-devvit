@@ -15,6 +15,7 @@ dist
 
 # Playwright MCP artifacts
 .playwright-mcp/
+/*.png
 
 # Devvit testing (browser profiles, screenshots)
 .devvit-testing/profiles/
