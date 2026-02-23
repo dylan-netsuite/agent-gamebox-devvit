@@ -39,6 +39,8 @@ class OrdersPanelImpl {
   private listEl: HTMLElement | null = null;
   private statusEl: HTMLElement | null = null;
   private turnEl: HTMLElement | null = null;
+  private timerEl: HTMLElement | null = null;
+  private timerInterval: ReturnType<typeof setInterval> | null = null;
   private submitBtn: HTMLButtonElement | null = null;
   private modeRow: HTMLElement | null = null;
   private logSection: HTMLElement | null = null;
@@ -56,6 +58,10 @@ class OrdersPanelImpl {
 
     this.turnEl = document.createElement('div');
     this.turnEl.className = 'orders-turn';
+
+    this.timerEl = document.createElement('div');
+    this.timerEl.className = 'orders-timer';
+    this.timerEl.style.display = 'none';
 
     const title = document.createElement('div');
     title.className = 'orders-title';
@@ -99,6 +105,7 @@ class OrdersPanelImpl {
     this.statusEl.className = 'orders-status';
 
     this.container.appendChild(this.turnEl);
+    this.container.appendChild(this.timerEl);
     this.container.appendChild(title);
     this.container.appendChild(this.modeRow);
     this.container.appendChild(this.listEl);
@@ -176,6 +183,36 @@ class OrdersPanelImpl {
     if (this.turnEl) {
       this.turnEl.textContent = `${turn.season} ${turn.year} — ${phaseLabel(phase)}`;
     }
+  }
+
+  setDeadline(deadline: number | null) {
+    if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
+    if (!this.timerEl) return;
+    if (!deadline) {
+      this.timerEl.style.display = 'none';
+      return;
+    }
+    this.timerEl.style.display = 'block';
+    const update = () => {
+      if (!this.timerEl) return;
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) {
+        this.timerEl.textContent = '⏱ Time expired';
+        this.timerEl.classList.add('timer-expired');
+        this.timerEl.classList.remove('timer-warning');
+        if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
+        return;
+      }
+      this.timerEl.textContent = `⏱ ${formatCountdown(remaining)}`;
+      if (remaining < 60_000) {
+        this.timerEl.classList.add('timer-warning');
+      } else {
+        this.timerEl.classList.remove('timer-warning');
+      }
+      this.timerEl.classList.remove('timer-expired');
+    };
+    update();
+    this.timerInterval = setInterval(update, 1000);
   }
 
   setSubmitEnabled(enabled: boolean) {
@@ -373,11 +410,13 @@ class OrdersPanelImpl {
   }
 
   destroy() {
+    if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
     this.container?.remove();
     this.container = null;
     this.listEl = null;
     this.statusEl = null;
     this.turnEl = null;
+    this.timerEl = null;
     this.submitBtn = null;
     this.modeRow = null;
     this.logSection = null;
@@ -407,6 +446,20 @@ function formatStagedOrder(o: StagedOrder): string {
     case 'support-move': return `${prefix} S ${o.supportedProvince} → ${o.supportedDestination}`;
     case 'convoy': return `${prefix} C ${o.convoyedProvince} → ${o.convoyedDestination}`;
   }
+}
+
+function formatCountdown(ms: number): string {
+  const totalSec = Math.ceil(ms / 1000);
+  const hours = Math.floor(totalSec / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
+  const secs = totalSec % 60;
+  if (hours >= 24) {
+    const days = Math.floor(hours / 24);
+    const remHrs = hours % 24;
+    return `${days}d ${remHrs}h`;
+  }
+  if (hours > 0) return `${hours}h ${mins.toString().padStart(2, '0')}m`;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 export const OrdersPanelDOM = new OrdersPanelImpl();

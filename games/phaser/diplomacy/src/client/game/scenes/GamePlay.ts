@@ -14,6 +14,7 @@ import {
   type OrderMode,
 } from '../ui/OrdersPanelDOM';
 import { ChatPanelDOM, type ChatMessage } from '../ui/ChatPanelDOM';
+import { HistoryPanelDOM } from '../ui/HistoryPanelDOM';
 import { SoundManager } from '../ui/SoundManager';
 import type { Order, MoveOrder, HoldOrder, SupportOrder, ConvoyOrder } from '../../../shared/types/orders';
 import type { SubmitOrdersResponse, SubmitRetreatsResponse, SubmitBuildsResponse, ErrorResponse } from '../../../shared/types/api';
@@ -85,6 +86,9 @@ export class GamePlay extends Scene {
   private tooltipEl: HTMLDivElement | null = null;
   private coastPickerEl: HTMLDivElement | null = null;
   private pendingCoastOrder: { unitType: 'Army' | 'Fleet'; from: string; to: string } | null = null;
+  private myGamesBtn: HTMLButtonElement | null = null;
+  private historyBtn: HTMLButtonElement | null = null;
+  private historyMode = false;
 
   private isDragging = false;
   private dragMoved = false;
@@ -101,10 +105,13 @@ export class GamePlay extends Scene {
     super('GamePlay');
   }
 
-  init(data: { gameState: GameState; currentPlayer: PlayerInfo | null; previousUnits?: Unit[] }) {
+  private autoOpenHistory = false;
+
+  init(data: { gameState: GameState; currentPlayer: PlayerInfo | null; previousUnits?: Unit[]; historyMode?: boolean }) {
     this.gameState = data.gameState;
     this.currentPlayer = data.currentPlayer;
     this.previousUnits = data.previousUnits ?? null;
+    this.autoOpenHistory = data.historyMode ?? false;
   }
 
   create() {
@@ -152,12 +159,19 @@ export class GamePlay extends Scene {
 
     ChatPanelDOM.init((text, channel) => void this.sendChat(text, channel), this.currentPlayer?.country);
     SoundManager.init(this);
+    this.createMyGamesButton();
+    this.createHistoryButton();
 
     this.updatePanelState();
     this.startPollingIfNeeded();
 
     if (this.previousUnits) {
       this.animateUnitMovements(this.previousUnits);
+    }
+
+    if (this.autoOpenHistory) {
+      this.autoOpenHistory = false;
+      void this.toggleHistoryMode();
     }
   }
 
@@ -513,6 +527,7 @@ export class GamePlay extends Scene {
   }
 
   private onUnitDown(provinceId: string, unitType: 'Army' | 'Fleet') {
+    if (this.historyMode) return;
     if (this.orderMode === 'hold') {
       this.stageOrder({ orderType: 'hold', unitType, from: provinceId });
       return;
@@ -533,6 +548,7 @@ export class GamePlay extends Scene {
   }
 
   private onProvinceClick(provinceId: string) {
+    if (this.historyMode) return;
     if (this.orderMode === 'hold') {
       const unitAt = this.gameState.units.find((u) => u.province === provinceId);
       if (unitAt && this.isMyUnit(unitAt)) {
@@ -1004,6 +1020,165 @@ export class GamePlay extends Scene {
     if (this.tooltipEl) this.tooltipEl.style.display = 'none';
   }
 
+  // ── My Games button ────────────────────────────
+
+  private createMyGamesButton(): void {
+    if (this.myGamesBtn) return;
+    const btn = document.createElement('button');
+    btn.id = 'my-games-btn';
+    btn.textContent = 'My Games';
+    btn.onclick = () => {
+      this.stopPolling();
+      OrdersPanelDOM.destroy();
+      ChatPanelDOM.destroy();
+      HistoryPanelDOM.destroy();
+      this.hideCoastPicker();
+      this.hideTooltip();
+      SoundManager.destroy();
+      this.destroyMyGamesButton();
+      this.destroyHistoryButton();
+      this.scene.start('MyGames');
+    };
+    const app = document.getElementById('app') ?? document.body;
+    app.appendChild(btn);
+    this.myGamesBtn = btn;
+  }
+
+  private destroyMyGamesButton(): void {
+    this.myGamesBtn?.remove();
+    this.myGamesBtn = null;
+  }
+
+  // ── History button + replay mode ──────────────
+
+  private createHistoryButton(): void {
+    if (this.historyBtn) return;
+    const btn = document.createElement('button');
+    btn.id = 'history-btn';
+    btn.textContent = 'History';
+    btn.onclick = () => void this.toggleHistoryMode();
+    const app = document.getElementById('app') ?? document.body;
+    app.appendChild(btn);
+    this.historyBtn = btn;
+  }
+
+  private destroyHistoryButton(): void {
+    this.historyBtn?.remove();
+    this.historyBtn = null;
+  }
+
+  private async toggleHistoryMode(): Promise<void> {
+    if (this.historyMode) {
+      this.exitHistoryMode();
+      return;
+    }
+
+    OrdersPanelDOM.destroy();
+    this.historyMode = true;
+    if (this.historyBtn) this.historyBtn.textContent = 'Loading...';
+
+    const opened = await HistoryPanelDOM.open({
+      onSnapshotChange: (snapshot) => this.renderSnapshot(snapshot),
+      onClose: () => this.exitHistoryMode(),
+    });
+
+    if (!opened) {
+      this.historyMode = false;
+      if (this.historyBtn) this.historyBtn.textContent = 'History';
+      this.initOrdersPanel();
+      this.updatePanelState();
+      return;
+    }
+
+    if (this.historyBtn) this.historyBtn.textContent = 'Exit History';
+  }
+
+  private exitHistoryMode(): void {
+    this.historyMode = false;
+    HistoryPanelDOM.destroy();
+    if (this.historyBtn) this.historyBtn.textContent = 'History';
+    this.reloadScene();
+  }
+
+  private renderSnapshot(snapshot: import('../../../shared/types/game').TurnSnapshot): void {
+    for (const key of Object.keys(this.unitTokens)) {
+      const objs = this.unitTokens[key];
+      if (objs) for (const obj of objs) obj.destroy();
+    }
+    this.unitTokens = {};
+
+    for (const [id, poly] of Object.entries(this.provincePolys)) {
+      const province = this.provinces.find((p) => p.id === id);
+      if (!province) continue;
+      const nonPlayableIds = new Set(['SWI', 'IRE', 'SIC', 'COR']);
+      if (nonPlayableIds.has(id)) continue;
+      if (province.type === 'sea') continue;
+
+      const scOwner = province.supplyCenter
+        ? (snapshot.supplyCenters[id] as Country | undefined)
+        : undefined;
+
+      let fill: number;
+      if (scOwner && COUNTRY_COLORS[scOwner]) {
+        const cc = Phaser.Display.Color.HexStringToColor(COUNTRY_COLORS[scOwner]);
+        fill = (cc.red << 16) | (cc.green << 8) | cc.blue;
+      } else {
+        fill = DiplomacyTheme.landFill;
+      }
+      poly.setFillStyle(fill, 0.95);
+    }
+
+    for (const unit of snapshot.units) {
+      const province = this.provinces.find((p) => p.id === unit.province);
+      if (!province) continue;
+
+      const labelObj = this.provinceLabels[unit.province];
+      const fallbackX = province.x + province.width / 2;
+      const fallbackY = province.y + province.height / 2;
+      const tokenOffsetY = 22;
+      const centerX = labelObj ? labelObj.x : fallbackX;
+      const centerY = labelObj ? labelObj.y - tokenOffsetY : fallbackY - tokenOffsetY;
+
+      const color = POWER_COLORS[unit.country] ?? 0xffffff;
+      const isArmy = unit.type === 'Army';
+
+      const token = this.add
+        .rectangle(centerX, centerY, isArmy ? 28 : 48, isArmy ? 28 : 16, color, 0.95)
+        .setStrokeStyle(3, 0x000000, 1)
+        .setDepth(DEPTH_UNIT);
+
+      const unitLabel = this.add
+        .text(centerX, centerY, isArmy ? 'A' : 'F', {
+          fontFamily: 'Arial Black',
+          fontSize: '14px',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5)
+        .setDepth(DEPTH_UNIT + 1);
+
+      this.unitTokens[unit.province] = [token, unitLabel];
+    }
+  }
+
+  private initOrdersPanel(): void {
+    OrdersPanelDOM.init({
+      onClear: () => {
+        this.stagedOrders = [];
+        this.orderedProvinces.clear();
+        OrdersPanelDOM.setOrders(this.stagedOrders);
+        this.clearSelection();
+        this.redrawOrderArrows();
+      },
+      onSubmit: (orders) => void this.submitOrders(orders),
+      onRefresh: () => void this.refreshGameState(),
+      onModeChange: (mode) => this.onModeChange(mode),
+      onSubmitRetreats: (retreats) => void this.submitRetreats(retreats),
+      onSubmitBuilds: (builds) => void this.submitBuilds(builds),
+    });
+  }
+
   // ── Camera controls ────────────────────────────
 
   private clampCamera() {
@@ -1077,6 +1252,7 @@ export class GamePlay extends Scene {
 
   private updatePanelState() {
     OrdersPanelDOM.setTurnInfo(this.gameState.turn, this.gameState.phase);
+    OrdersPanelDOM.setDeadline(this.gameState.turnDeadline ?? null);
     OrdersPanelDOM.setTurnLog(this.gameState.turnLog);
 
     if (this.gameState.phase === 'retreats') {
@@ -1193,7 +1369,10 @@ export class GamePlay extends Scene {
         this.stopPolling();
         OrdersPanelDOM.destroy();
         ChatPanelDOM.destroy();
+        HistoryPanelDOM.destroy();
         this.hideCoastPicker();
+        this.destroyMyGamesButton();
+        this.destroyHistoryButton();
         SoundManager.destroy();
         if (this.tooltipEl) { this.tooltipEl.remove(); this.tooltipEl = null; }
         this.scene.start('GameOver', { gameState: data.gameState });
@@ -1334,7 +1513,10 @@ export class GamePlay extends Scene {
           this.stopPolling();
           OrdersPanelDOM.destroy();
           ChatPanelDOM.destroy();
+          HistoryPanelDOM.destroy();
           this.hideCoastPicker();
+          this.destroyMyGamesButton();
+          this.destroyHistoryButton();
           SoundManager.destroy();
           if (this.tooltipEl) { this.tooltipEl.remove(); this.tooltipEl = null; }
           this.scene.start('GameOver', { gameState: state });
@@ -1353,7 +1535,10 @@ export class GamePlay extends Scene {
     this.stopPolling();
     OrdersPanelDOM.destroy();
     ChatPanelDOM.destroy();
+    HistoryPanelDOM.destroy();
     this.hideCoastPicker();
+    this.destroyMyGamesButton();
+    this.destroyHistoryButton();
     if (this.tooltipEl) { this.tooltipEl.remove(); this.tooltipEl = null; }
     this.scene.restart({ gameState: this.gameState, currentPlayer: this.currentPlayer, previousUnits });
   }
@@ -1362,7 +1547,10 @@ export class GamePlay extends Scene {
     this.stopPolling();
     OrdersPanelDOM.destroy();
     ChatPanelDOM.destroy();
+    HistoryPanelDOM.destroy();
     this.hideCoastPicker();
+    this.destroyMyGamesButton();
+    this.destroyHistoryButton();
     if (this.tooltipEl) { this.tooltipEl.remove(); this.tooltipEl = null; }
   }
 }

@@ -73,7 +73,18 @@ export interface GameState {
   winner: Country | null;
   turnLog: string[];
   ordersSubmitted: Country[];
+  turnTimeLimitMs: number | null;
+  turnDeadline: number | null;
 }
+
+export const TURN_TIMER_PRESETS: { label: string; ms: number | null }[] = [
+  { label: 'None', ms: null },
+  { label: '5m', ms: 5 * 60 * 1000 },
+  { label: '15m', ms: 15 * 60 * 1000 },
+  { label: '1h', ms: 60 * 60 * 1000 },
+  { label: '24h', ms: 24 * 60 * 60 * 1000 },
+  { label: '48h', ms: 48 * 60 * 60 * 1000 },
+];
 
 export const COUNTRY_COLORS: Record<Country, string> = {
   AUSTRIA: '#A040A0',
@@ -94,5 +105,13 @@ export const COUNTRY_NAMES: Record<Country, string> = {
   RUSSIA: 'Russia',
   TURKEY: 'Turkey',
 };
+
+export interface TurnSnapshot {
+  turn: Turn;
+  phase: 'after-orders' | 'after-retreats' | 'after-builds' | 'initial';
+  units: Unit[];
+  supplyCenters: Record<string, Country | null>;
+  log: string[];
+}
 
 export const WIN_CONDITION = 18;

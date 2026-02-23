@@ -1,4 +1,4 @@
-import type { GameState, Country, PlayerInfo } from './game';
+import type { GameState, Country, PlayerInfo, GamePhase, Turn, TurnSnapshot } from './game';
 import type { Order, RetreatOrder, BuildOrder, OrderResult } from './orders';
 
 export interface InitResponse {
@@ -6,6 +6,22 @@ export interface InitResponse {
   postId: string;
   gameState: GameState | null;
   currentPlayer: PlayerInfo | null;
+}
+
+export interface GameSummary {
+  postId: string;
+  gameId: string;
+  phase: GamePhase;
+  turn: Turn;
+  country: Country;
+  playerCount: number;
+  isYourTurn: boolean;
+  winner: Country | null;
+  turnDeadline: number | null;
+}
+
+export interface MyGamesResponse {
+  games: GameSummary[];
 }
 
 export interface CreateGameResponse {
@@ -68,4 +84,8 @@ export interface ErrorResponse {
 export interface StartGameResponse {
   type: 'start';
   gameState: GameState;
+}
+
+export interface HistoryResponse {
+  snapshots: TurnSnapshot[];
 }

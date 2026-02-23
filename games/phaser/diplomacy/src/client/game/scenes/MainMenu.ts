@@ -1,8 +1,8 @@
 import * as Phaser from 'phaser';
 import { Scene, GameObjects } from 'phaser';
 import type { GameState, Country, PlayerInfo } from '../../../shared/types/game';
-import { ALL_COUNTRIES, COUNTRY_COLORS, COUNTRY_NAMES } from '../../../shared/types/game';
-import type { InitResponse, JoinGameResponse, ErrorResponse, StartGameResponse } from '../../../shared/types/api';
+import { ALL_COUNTRIES, COUNTRY_COLORS, COUNTRY_NAMES, TURN_TIMER_PRESETS } from '../../../shared/types/game';
+import type { InitResponse, JoinGameResponse, ErrorResponse, StartGameResponse, MyGamesResponse } from '../../../shared/types/api';
 
 const LOBBY_POLL_MS = 3000;
 
@@ -72,6 +72,8 @@ export class MainMenu extends Scene {
       this.updateStatus();
       this.createCountrySelection();
       this.createPlayerList();
+      this.createTimerPicker();
+      this.createMyGamesButton();
       this.createStartButton();
       this.startPolling();
     } catch {
@@ -250,6 +252,103 @@ export class MainMenu extends Scene {
       this.stopPolling();
       this.scene.restart();
     } catch { this.statusText.setText('Failed to join. Try again.'); }
+  }
+
+  private createTimerPicker(): void {
+    if (!this.gameState || this.gameState.phase !== 'waiting') return;
+    if (!this.currentPlayer) return;
+
+    const { width } = this.scale;
+    const y = 280 + (this.gameState.players.length > 0 ? 22 + this.gameState.players.length * 18 : 44) + 16;
+
+    this.add
+      .text(width / 2, y, 'Turn Timer', {
+        fontFamily: 'Georgia, serif',
+        fontSize: '12px',
+        color: '#e6c200',
+      })
+      .setOrigin(0.5);
+
+    const currentMs = this.gameState.turnTimeLimitMs;
+    const btnWidth = 42;
+    const gap = 4;
+    const totalW = TURN_TIMER_PRESETS.length * btnWidth + (TURN_TIMER_PRESETS.length - 1) * gap;
+    const startX = (width - totalW) / 2 + btnWidth / 2;
+
+    TURN_TIMER_PRESETS.forEach((preset, i) => {
+      const bx = startX + i * (btnWidth + gap);
+      const by = y + 20;
+      const isSelected = preset.ms === currentMs;
+
+      const bg = this.add.rectangle(bx, by, btnWidth, 22, isSelected ? 0x2ecc71 : 0x1a2a3a, isSelected ? 0.3 : 0.9);
+      bg.setStrokeStyle(1, isSelected ? 0x2ecc71 : 0x334455);
+      bg.setInteractive({ useHandCursor: true });
+
+      const label = this.add
+        .text(bx, by, preset.label, {
+          fontFamily: 'Arial, sans-serif',
+          fontSize: '9px',
+          color: isSelected ? '#2ecc71' : '#8899aa',
+          fontStyle: isSelected ? 'bold' : 'normal',
+        })
+        .setOrigin(0.5);
+
+      bg.on('pointerover', () => { if (!isSelected) bg.setStrokeStyle(1, 0x66aacc); });
+      bg.on('pointerout', () => { if (!isSelected) bg.setStrokeStyle(1, 0x334455); });
+      bg.on('pointerdown', () => void this.setTimer(preset.ms));
+    });
+  }
+
+  private async setTimer(ms: number | null): Promise<void> {
+    try {
+      const res = await fetch('/api/game/configure', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ turnTimeLimitMs: ms }),
+      });
+      if (!res.ok) return;
+      this.stopPolling();
+      this.scene.restart();
+    } catch { /* ignore */ }
+  }
+
+  private createMyGamesButton(): void {
+    const { width, height } = this.scale;
+    const y = height - 155;
+    const bg = this.add.rectangle(width / 2, y, 200, 32, 0x1a2a3a);
+    bg.setStrokeStyle(1, 0x4488aa);
+    bg.setInteractive({ useHandCursor: true });
+
+    const label = this.add
+      .text(width / 2, y, 'MY GAMES', {
+        fontFamily: 'Georgia, serif',
+        fontSize: '12px',
+        color: '#4488aa',
+        letterSpacing: 2,
+      })
+      .setOrigin(0.5);
+
+    bg.on('pointerover', () => { bg.setStrokeStyle(2, 0x66aacc); label.setColor('#66aacc'); });
+    bg.on('pointerout', () => { bg.setStrokeStyle(1, 0x4488aa); label.setColor('#4488aa'); });
+    bg.on('pointerdown', () => {
+      this.stopPolling();
+      this.scene.start('MyGames');
+    });
+
+    void this.loadMyGamesBadge(label);
+  }
+
+  private async loadMyGamesBadge(label: GameObjects.Text): Promise<void> {
+    try {
+      const res = await fetch('/api/user/games');
+      if (!res.ok) return;
+      const data = (await res.json()) as MyGamesResponse;
+      const actionNeeded = data.games.filter((g) => g.isYourTurn && g.phase !== 'complete').length;
+      if (actionNeeded > 0) {
+        label.setText(`MY GAMES (${actionNeeded})`);
+        label.setColor('#e6c200');
+      }
+    } catch { /* ignore */ }
   }
 
   private createStartButton(): void {

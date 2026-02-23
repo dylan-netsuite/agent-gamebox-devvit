@@ -1,5 +1,5 @@
 import { redis } from '@devvit/web/server';
-import type { GameState, Country, PlayerInfo, GamePhase, BuildOption } from '../../shared/types/game';
+import type { GameState, Country, PlayerInfo, GamePhase, BuildOption, TurnSnapshot } from '../../shared/types/game';
 import { ALL_COUNTRIES, WIN_CONDITION } from '../../shared/types/game';
 import { STARTING_UNITS, STARTING_SUPPLY_CENTERS } from '../../shared/data/startingPositions';
 import { getHomeSupplyCenters } from '../../shared/data/provinces';
@@ -32,9 +32,24 @@ export async function createGame(postId: string): Promise<GameState> {
     winner: null,
     turnLog: [],
     ordersSubmitted: [],
+    turnTimeLimitMs: null,
+    turnDeadline: null,
   };
   await saveGameState(state);
   return state;
+}
+
+function userGamesKey(userId: string): string {
+  return `user:${userId}:games`;
+}
+
+export async function addUserGame(userId: string, postId: string): Promise<void> {
+  await redis.zAdd(userGamesKey(userId), { member: postId, score: Date.now() });
+}
+
+export async function getUserGamePostIds(userId: string): Promise<string[]> {
+  const entries = await redis.zRange(userGamesKey(userId), 0, -1);
+  return entries.map((e) => e.member);
 }
 
 export async function joinGame(
@@ -57,6 +72,7 @@ export async function joinGame(
   state.players.push(player);
 
   await saveGameState(state);
+  await addUserGame(userId, postId);
   return { state, player };
 }
 
@@ -68,6 +84,7 @@ export async function startGame(postId: string): Promise<GameState> {
   state.phase = 'orders';
   state.ordersSubmitted = [];
   state.turnLog = [`=== ${state.turn.season} ${state.turn.year} ===`];
+  state.turnDeadline = state.turnTimeLimitMs ? Date.now() + state.turnTimeLimitMs : null;
 
   await saveGameState(state);
   return state;
@@ -144,4 +161,35 @@ export function calculateBuilds(state: GameState): BuildOption[] {
 
 export function setPhase(state: GameState, phase: GamePhase): void {
   state.phase = phase;
+  if (state.turnTimeLimitMs && (phase === 'orders' || phase === 'retreats' || phase === 'builds')) {
+    state.turnDeadline = Date.now() + state.turnTimeLimitMs;
+  } else if (phase === 'complete' || phase === 'waiting') {
+    state.turnDeadline = null;
+  }
+}
+
+function historyKey(postId: string): string {
+  return `game:${postId}:history`;
+}
+
+export async function saveTurnSnapshot(
+  state: GameState,
+  phase: TurnSnapshot['phase']
+): Promise<void> {
+  const snapshot: TurnSnapshot = {
+    turn: { ...state.turn },
+    phase,
+    units: state.units.map((u) => ({ ...u })),
+    supplyCenters: { ...state.supplyCenters },
+    log: [...state.turnLog],
+  };
+  await redis.zAdd(historyKey(state.postId), {
+    member: JSON.stringify(snapshot),
+    score: Date.now(),
+  });
+}
+
+export async function getTurnHistory(postId: string): Promise<TurnSnapshot[]> {
+  const entries = await redis.zRange(historyKey(postId), 0, -1);
+  return entries.map((e) => JSON.parse(e.member) as TurnSnapshot);
 }

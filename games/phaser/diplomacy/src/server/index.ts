@@ -13,6 +13,10 @@ import {
   updateSupplyCenters,
   calculateBuilds,
   setPhase,
+  getUserGamePostIds,
+  addUserGame,
+  saveTurnSnapshot,
+  getTurnHistory,
 } from './core/gameState';
 import { resolveOrders, applyResults } from './core/orderResolver';
 import {
@@ -28,7 +32,9 @@ import type {
   SubmitOrdersRequest,
   SubmitRetreatsRequest,
   SubmitBuildsRequest,
+  HistoryResponse,
 } from '../shared/types/api';
+import type { GameState } from '../shared/types/game';
 import type { Order } from '../shared/types/orders';
 
 const app = express();
@@ -54,6 +60,10 @@ router.get('/api/init', async (_req, res): Promise<void> => {
   const currentPlayer = userId
     ? gameState.players.find((p) => p.userId === userId) ?? null
     : null;
+
+  if (currentPlayer && userId) {
+    await addUserGame(userId, postId);
+  }
 
   const response: InitResponse = {
     type: 'init',
@@ -89,6 +99,39 @@ router.post('/api/game/join', async (req, res): Promise<void> => {
   }
 });
 
+// ─── Configure Game ──────────────────────────────
+router.post('/api/game/configure', async (req, res): Promise<void> => {
+  const { postId, userId } = context;
+  if (!postId || !userId) {
+    res.status(400).json({ status: 'error', message: 'Missing context' } satisfies ErrorResponse);
+    return;
+  }
+
+  const state = await getGameState(postId);
+  if (!state) {
+    res.status(404).json({ status: 'error', message: 'Game not found' } satisfies ErrorResponse);
+    return;
+  }
+
+  if (state.phase !== 'waiting') {
+    res.status(400).json({ status: 'error', message: 'Game already started' } satisfies ErrorResponse);
+    return;
+  }
+
+  const player = state.players.find((p) => p.userId === userId);
+  if (!player) {
+    res.status(403).json({ status: 'error', message: 'Not a player' } satisfies ErrorResponse);
+    return;
+  }
+
+  const body = req.body as { turnTimeLimitMs?: number | null };
+  if (body.turnTimeLimitMs !== undefined) {
+    state.turnTimeLimitMs = body.turnTimeLimitMs;
+  }
+  await saveGameState(state);
+  res.json({ type: 'configure', gameState: state });
+});
+
 // ─── Start Game ───────────────────────────────────
 router.post('/api/game/start', async (_req, res): Promise<void> => {
   const { postId } = context;
@@ -99,6 +142,7 @@ router.post('/api/game/start', async (_req, res): Promise<void> => {
 
   try {
     const state = await startGame(postId);
+    await saveTurnSnapshot(state, 'initial');
     res.json({ type: 'start', gameState: state });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to start';
@@ -187,6 +231,7 @@ router.post('/api/game/orders', async (req, res): Promise<void> => {
     const { results, dislodged, log } = resolveOrders(state, allOrders);
     applyResults(state, results, dislodged);
     state.turnLog.push(...log);
+    await saveTurnSnapshot(state, 'after-orders');
 
     if (dislodged.length > 0) {
       state.dislodged = dislodged;
@@ -293,6 +338,8 @@ router.post('/api/game/retreats', async (req, res): Promise<void> => {
     return;
   }
 
+  await saveTurnSnapshot(state, 'after-retreats');
+
   // Advance to next phase
   if (state.turn.season === 'Fall') {
     updateSupplyCenters(state);
@@ -367,6 +414,7 @@ router.post('/api/game/builds', async (req, res): Promise<void> => {
   await autoSubmitBotBuilds(state);
 
   if (state.builds.length === 0) {
+    await saveTurnSnapshot(state, 'after-builds');
     advanceTurn(state);
     state.ordersSubmitted = [];
     state.turnLog.push(`=== ${state.turn.season} ${state.turn.year} ===`);
@@ -376,6 +424,117 @@ router.post('/api/game/builds', async (req, res): Promise<void> => {
   await saveGameState(state);
   res.json({ type: 'builds', success: true, gameState: state });
 });
+
+// ─── Deadline Auto-Resolve ────────────────────────
+async function autoResolveIfExpired(state: GameState): Promise<boolean> {
+  if (!state.turnDeadline || Date.now() < state.turnDeadline) return false;
+  if (state.phase === 'complete' || state.phase === 'waiting') return false;
+
+  const postId = state.postId;
+
+  if (state.phase === 'orders') {
+    const activePlayers = getActivePlayers(state);
+    for (const country of activePlayers) {
+      if (!state.ordersSubmitted.includes(country)) {
+        const holdOrders: Order[] = state.units
+          .filter((u) => u.country === country)
+          .map((u) => ({ type: 'hold' as const, country, unitType: u.type, province: u.province }));
+        const orderKey = `game:${postId}:orders:${state.turn.season}:${state.turn.year}:${country}`;
+        await redis.set(orderKey, JSON.stringify(holdOrders));
+        state.ordersSubmitted.push(country);
+      }
+    }
+    state.turnLog.push('⏱ Turn timer expired — hold orders auto-submitted for missing players');
+
+    const allOrders: Record<string, Order[]> = {};
+    for (const country of activePlayers) {
+      const key = `game:${postId}:orders:${state.turn.season}:${state.turn.year}:${country}`;
+      const raw = await redis.get(key);
+      allOrders[country] = raw ? (JSON.parse(raw) as Order[]) : [];
+    }
+
+    const { results, dislodged, log } = resolveOrders(state, allOrders);
+    applyResults(state, results, dislodged);
+    state.turnLog.push(...log);
+    await saveTurnSnapshot(state, 'after-orders');
+
+    if (dislodged.length > 0) {
+      state.dislodged = dislodged;
+      setPhase(state, 'retreats');
+    } else if (state.turn.season === 'Fall') {
+      updateSupplyCenters(state);
+      const winner = checkWinner(state);
+      if (winner) {
+        state.winner = winner;
+        setPhase(state, 'complete');
+      } else {
+        const builds = calculateBuilds(state);
+        if (builds.some((b) => b.delta !== 0)) {
+          state.builds = builds;
+          setPhase(state, 'builds');
+        } else {
+          advanceTurn(state);
+          state.ordersSubmitted = [];
+          state.turnLog.push(`=== ${state.turn.season} ${state.turn.year} ===`);
+          setPhase(state, 'orders');
+        }
+      }
+    } else {
+      advanceTurn(state);
+      state.ordersSubmitted = [];
+      state.turnLog.push(`=== ${state.turn.season} ${state.turn.year} ===`);
+      setPhase(state, 'orders');
+    }
+    await saveGameState(state);
+    return true;
+  }
+
+  if (state.phase === 'retreats') {
+    state.turnLog.push('⏱ Turn timer expired — remaining dislodged units disbanded');
+    state.dislodged = [];
+    await saveTurnSnapshot(state, 'after-retreats');
+    if (state.turn.season === 'Fall') {
+      updateSupplyCenters(state);
+      const winner = checkWinner(state);
+      if (winner) {
+        state.winner = winner;
+        setPhase(state, 'complete');
+      } else {
+        const builds = calculateBuilds(state);
+        if (builds.some((b) => b.delta !== 0)) {
+          state.builds = builds;
+          setPhase(state, 'builds');
+        } else {
+          advanceTurn(state);
+          state.ordersSubmitted = [];
+          state.turnLog.push(`=== ${state.turn.season} ${state.turn.year} ===`);
+          setPhase(state, 'orders');
+        }
+      }
+    } else {
+      advanceTurn(state);
+      state.ordersSubmitted = [];
+      state.turnLog.push(`=== ${state.turn.season} ${state.turn.year} ===`);
+      setPhase(state, 'orders');
+    }
+    await saveGameState(state);
+    return true;
+  }
+
+  if (state.phase === 'builds') {
+    state.turnLog.push('⏱ Turn timer expired — pending builds/disbands waived');
+    state.builds = [];
+    await saveTurnSnapshot(state, 'after-builds');
+    advanceTurn(state);
+    state.ordersSubmitted = [];
+    state.turnLog.push(`=== ${state.turn.season} ${state.turn.year} ===`);
+    setPhase(state, 'orders');
+    await saveGameState(state);
+    return true;
+  }
+
+  return false;
+}
 
 // ─── Get State ────────────────────────────────────
 router.get('/api/game/state', async (_req, res): Promise<void> => {
@@ -391,7 +550,85 @@ router.get('/api/game/state', async (_req, res): Promise<void> => {
     return;
   }
 
+  await autoResolveIfExpired(state);
+
   res.json(state);
+});
+
+// ─── My Games ─────────────────────────────────────
+router.get('/api/user/games', async (_req, res): Promise<void> => {
+  const { userId, postId } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' } satisfies ErrorResponse);
+    return;
+  }
+
+  const postIds = await getUserGamePostIds(userId);
+
+  // Also register the current post if the user is in it but wasn't tracked yet
+  if (postId) {
+    const currentState = await getGameState(postId);
+    if (currentState?.players.some((p) => p.userId === userId) && !postIds.includes(postId)) {
+      await addUserGame(userId, postId);
+      postIds.push(postId);
+    }
+  }
+
+  const games: Array<{
+    postId: string;
+    gameId: string;
+    phase: string;
+    turn: { year: number; season: string };
+    country: string;
+    playerCount: number;
+    isYourTurn: boolean;
+    winner: string | null;
+    turnDeadline: number | null;
+  }> = [];
+
+  for (const pid of postIds) {
+    try {
+      const state = await getGameState(pid);
+      if (!state) continue;
+      const player = state.players.find((p) => p.userId === userId);
+      if (!player) continue;
+
+      const activePlayers = state.players
+        .filter((p) => state.units.some((u) => u.country === p.country))
+        .map((p) => p.country);
+      const isYourTurn =
+        (state.phase === 'orders' && !state.ordersSubmitted.includes(player.country) && activePlayers.includes(player.country)) ||
+        (state.phase === 'retreats' && state.dislodged.some((d) => d.unit.country === player.country)) ||
+        (state.phase === 'builds' && state.builds.some((b) => b.country === player.country));
+
+      games.push({
+        postId: pid,
+        gameId: state.gameId,
+        phase: state.phase,
+        turn: state.turn,
+        country: player.country,
+        playerCount: state.players.length,
+        isYourTurn,
+        winner: state.winner,
+        turnDeadline: state.turnDeadline ?? null,
+      });
+    } catch { /* skip inaccessible games */ }
+  }
+
+  res.json({ games });
+});
+
+// ─── Game History ─────────────────────────────────
+router.get('/api/game/history', async (_req, res): Promise<void> => {
+  const { postId } = context;
+  if (!postId) {
+    res.status(400).json({ status: 'error', message: 'Missing postId' } satisfies ErrorResponse);
+    return;
+  }
+
+  const snapshots = await getTurnHistory(postId);
+  const response: HistoryResponse = { snapshots };
+  res.json(response);
 });
 
 // ─── Chat ─────────────────────────────────────────

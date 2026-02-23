@@ -1,3 +1,131 @@
+## v0.0.2.127 — Game History / Replay (2026-02-23)
+
+### New Feature
+- **Turn snapshots**: Board state (units, supply centers, turn log) is saved after each phase resolution (orders, retreats, builds) and at game start. Stored as a Redis sorted set per game.
+- **History panel**: DOM overlay with timeline slider, previous/next buttons, turn label with snapshot counter, and scrollable turn log with color-coded entries.
+- **Replay mode**: Clicking "History" in the GamePlay scene hides the orders panel and renders the selected snapshot's units and supply center ownership on the map. Province interactions are disabled during replay.
+- **History button**: Gold-styled button positioned below "My Games" in the top-left corner of the GamePlay scene.
+- **GameOver integration**: "View History" button on the Game Over screen launches GamePlay in history mode.
+- **Graceful fallback**: If no snapshots exist (games started before this version), the history button returns to normal view without errors.
+
+### Technical Details
+- `TurnSnapshot` interface: `{ turn, phase, units, supplyCenters, log }` stored in `game:{postId}:history` sorted set.
+- `saveTurnSnapshot()` and `getTurnHistory()` in `gameState.ts` handle persistence.
+- `GET /api/game/history` endpoint returns all snapshots for a game.
+- `HistoryPanelDOM` singleton manages the DOM overlay lifecycle.
+- `renderSnapshot()` in GamePlay destroys current unit tokens and redraws from snapshot data, including supply center color updates.
+- Snapshots are saved in both normal turn resolution and auto-resolve (timer expiry) code paths.
+
+### Files Changed
+- `src/shared/types/game.ts` — Added `TurnSnapshot` interface
+- `src/shared/types/api.ts` — Added `HistoryResponse` type
+- `src/server/core/gameState.ts` — Added `saveTurnSnapshot()`, `getTurnHistory()`, `historyKey()`
+- `src/server/index.ts` — Added `GET /api/game/history` endpoint, snapshot saves after orders/retreats/builds/start/auto-resolve
+- `src/client/game/ui/HistoryPanelDOM.ts` — New file: history panel DOM overlay
+- `src/client/game/scenes/GamePlay.ts` — Added history button, toggle/exit history mode, `renderSnapshot()`, `initOrdersPanel()`, history mode guards
+- `src/client/game/scenes/GameOver.ts` — Added "View History" button
+- `src/client/game/game.css` — Added history panel and button styles
+
+---
+
+## v0.0.2.121 — Tier 2 Bot AI: Outcome Simulation (2026-02-21)
+
+### Enhancement
+- **Outcome simulation**: Bots now generate multiple candidate order sets and simulate each one using the real `resolveOrders` engine. The order set that produces the highest-scoring board position is selected.
+- **Position scoring function**: Evaluates board states based on supply centers owned (×100), units alive (×30), units adjacent to target SCs (×15), units threatening enemy SCs (×5), and a penalty for own SCs under threat (×-20).
+- **Candidate generation**: Up to 40 candidate order sets are generated per bot by swapping individual unit orders (hold, all valid moves) and creating coordinated move+support pairs.
+- **Opponent prediction**: Assumes all opponents hold all units (conservative baseline). Orders that succeed against holding opponents will succeed against most real orders.
+- **Improved retreats**: Bots now prefer retreating to supply centers (especially their own), not just the nearest province to home.
+
+### Technical Details
+- `scorePosition(state, country)` evaluates a board position with a weighted multi-factor formula.
+- `generateCandidates(state, country, baseline)` creates variant order sets by single-unit swaps and coordinated move+support pairs.
+- `simulateAndScore(state, candidateOrders, country, activeCountries)` deep-clones the game state, builds hold orders for opponents, runs `resolveOrders` + `applyResults`, and returns the position score.
+- `generateBotOrders()` now generates the Tier 1 baseline, creates candidates, simulates all of them, and picks the highest-scoring set.
+- `deepCloneState()` uses JSON round-trip for safe state isolation during simulation.
+- Performance budget: ~40 candidates × ~1ms per resolveOrders call = ~40ms per bot country, well within acceptable limits.
+
+### Files Changed
+- `src/server/core/botLogic.ts` — Added `scorePosition()`, `generateCandidates()`, `simulateAndScore()`, `deepCloneState()`, `buildHoldOrders()`, `generateAlternativeOrders()`, `isSameOrder()`. Refactored `generateBotOrders()` to use simulation. Improved retreat scoring.
+
+---
+
+## v0.0.2.117 — Tier 1 Bot AI (2026-02-21)
+
+### New Feature
+- **Strategic bot behavior**: Bots now use rule-based heuristic AI instead of holding all units every turn.
+- **Orders phase**: Bots defend threatened supply centers, attack undefended/neutral SCs, support their own attacks, and pathfind toward distant targets. Anti-self-bounce logic prevents two bot units from moving to the same province.
+- **Retreats phase**: Bots retreat toward their nearest friendly supply center instead of always disbanding. Only disband when no valid retreat exists.
+- **Builds phase**: Naval powers (England, Turkey) prefer building fleets at coastal home SCs. All bots prioritize building at SCs closest to the front line. When disbanding, bots remove the unit furthest from enemy territory.
+
+### Technical Details
+- BFS-based pathfinding (`distanceTo()`) calculates shortest distance from any province to a target set, respecting unit type movement rules (armies can't cross water, fleets can't cross inland).
+- `findThreatenedSCs()` identifies owned SCs with adjacent enemy units for defensive prioritization.
+- `scoreTarget()` ranks attack targets by distance and ownership (neutral preferred over enemy-owned).
+- `generateBotOrders()` uses a 4-tier priority system: defend → attack reachable SC → pathfind toward distant SC → support friendly moves → hold.
+- `claimedDestinations` map prevents self-bounces and converts duplicate moves into support orders.
+- Multi-coast provinces (STP, SPA, BUL) handled via `determineCoast()`.
+
+### Files Changed
+- `src/server/core/botLogic.ts` — Complete rewrite of `generateBotOrders()`, `autoSubmitBotRetreats()`, `autoSubmitBotBuilds()` with strategic heuristics
+
+---
+
+## v0.0.2.113 — Configurable Turn Timer (2026-02-21)
+
+### New Feature
+- **Turn timer configuration**: Game host can select a turn time limit in the lobby before starting. Presets: None (default), 5m, 15m, 1h, 24h, 48h.
+- **Countdown display**: During gameplay, a live countdown timer appears in the Orders Panel showing remaining time. Turns red and pulses when under 1 minute.
+- **Auto-resolve on expiry**: When the deadline passes, the server auto-submits hold orders for players who haven't submitted and resolves the turn. During retreats, remaining dislodged units are disbanded. During builds, pending builds are waived.
+- **Lazy deadline enforcement**: The deadline is checked whenever any client polls `/api/game/state`, avoiding the need for server-side cron jobs.
+
+### Technical Details
+- New `GameState` fields: `turnTimeLimitMs` (configured duration per turn, null = no limit), `turnDeadline` (Unix timestamp when current turn expires).
+- New endpoint: `POST /api/game/configure` — sets game options (currently `turnTimeLimitMs`) during the `waiting` phase.
+- `setPhase()` automatically resets `turnDeadline = Date.now() + turnTimeLimitMs` when transitioning to `orders`, `retreats`, or `builds`.
+- `autoResolveIfExpired()` handles all three timed phases with appropriate default behavior (hold orders, disband retreats, waive builds).
+- Timer display uses `setInterval(1s)` on the client with monospace font for smooth countdown.
+- Shared `TURN_TIMER_PRESETS` constant ensures lobby UI and validation stay in sync.
+
+### Files Changed
+- `src/shared/types/game.ts` — Added `turnTimeLimitMs`, `turnDeadline` to `GameState`, exported `TURN_TIMER_PRESETS`
+- `src/shared/types/api.ts` — Added `turnDeadline` to `GameSummary`
+- `src/server/core/gameState.ts` — Updated `createGame()`, `startGame()`, `setPhase()` for timer fields
+- `src/server/index.ts` — Added `POST /api/game/configure`, `autoResolveIfExpired()`, updated `/api/game/state` and `/api/user/games`
+- `src/client/game/ui/OrdersPanelDOM.ts` — Added `timerEl`, `setDeadline()`, `formatCountdown()`, timer cleanup in `destroy()`
+- `src/client/game/scenes/MainMenu.ts` — Added timer picker UI (`createTimerPicker()`, `setTimer()`)
+- `src/client/game/scenes/GamePlay.ts` — Passes `turnDeadline` to `OrdersPanelDOM.setDeadline()`
+- `src/client/game/game.css` — Added `.orders-timer`, `.timer-warning`, `.timer-expired` styles with pulse animation
+
+---
+
+## v0.0.2.109 — Multi-Game Support / "My Games" Dashboard (2026-02-23)
+
+### New Feature
+- **My Games scene**: A new Phaser scene that shows all Diplomacy games the user is participating in across different Reddit posts. Games are grouped into sections: "YOUR TURN", "WAITING FOR OTHERS", "IN LOBBY", and "COMPLETED". Each game card shows the player's country, turn/phase info, player count, and action badges ("YOUR TURN", "VICTORY", "DEFEATED", "DRAW").
+- **My Games button in GamePlay**: A floating "My Games" button in the top-left corner of the active game view allows quick access to the dashboard.
+- **My Games button in MainMenu**: The lobby screen now includes a "MY GAMES" button with a badge showing the count of games needing attention.
+- **Per-user game index**: When a user joins a game, the postId is tracked in a Redis sorted set (`user:{userId}:games`). Existing games are backfilled when users visit them.
+
+### Technical Details
+- New Redis key: `user:{userId}:games` — sorted set of postIds the user has joined, scored by join timestamp.
+- New endpoint: `GET /api/user/games` — returns `GameSummary[]` with phase, turn, country, player count, isYourTurn flag, and winner info for each game.
+- The `/api/init` endpoint now backfills the user's game index for existing games (ensures pre-existing players are tracked).
+- Clicking a game card opens that post in a new browser tab via `window.open()`.
+- Scrollable list with drag and wheel scroll support.
+
+### Files Changed
+- `src/shared/types/api.ts` — Added `GameSummary`, `MyGamesResponse` types
+- `src/server/core/gameState.ts` — Added `addUserGame()`, `getUserGamePostIds()` functions
+- `src/server/index.ts` — Added `GET /api/user/games` endpoint, backfill in `/api/init`
+- `src/client/game/scenes/MyGames.ts` — New scene with game card list, scrolling, back navigation
+- `src/client/game/scenes/MainMenu.ts` — Added "MY GAMES" button with badge
+- `src/client/game/scenes/GamePlay.ts` — Added floating "My Games" DOM button
+- `src/client/game/game.ts` — Registered MyGames scene
+- `src/client/game/game.css` — Added `#my-games-btn` styles
+
+---
+
 ## v0.0.2.101 — Camera Panning Fix (2026-02-22)
 
 ### Bug Fix

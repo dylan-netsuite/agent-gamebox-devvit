@@ -202,11 +202,30 @@ export class GameOver extends Scene {
     // Buttons
     const btnY = Math.max(y + 10, height - 60);
 
-    const lobbyBg = this.add.rectangle(width / 2, btnY, 200, 36, 0x2c3e50);
+    const historyBg = this.add.rectangle(width / 2 - 110, btnY, 200, 36, 0x2c3e50);
+    historyBg.setStrokeStyle(2, 0xe6c200);
+    historyBg.setInteractive({ useHandCursor: true });
+    this.add
+      .text(width / 2 - 110, btnY, 'VIEW HISTORY', {
+        fontFamily: 'Georgia, serif',
+        fontSize: '13px',
+        color: '#e6c200',
+        letterSpacing: 2,
+      })
+      .setOrigin(0.5);
+
+    historyBg.on('pointerover', () => historyBg.setStrokeStyle(3, 0xe6c200));
+    historyBg.on('pointerout', () => historyBg.setStrokeStyle(2, 0xe6c200));
+    historyBg.on('pointerdown', () => {
+      SoundManager.destroy();
+      this.scene.start('GamePlay', { gameState: this.gameState, currentPlayer: null, historyMode: true });
+    });
+
+    const lobbyBg = this.add.rectangle(width / 2 + 110, btnY, 200, 36, 0x2c3e50);
     lobbyBg.setStrokeStyle(2, 0xe6c200);
     lobbyBg.setInteractive({ useHandCursor: true });
     this.add
-      .text(width / 2, btnY, 'RETURN TO LOBBY', {
+      .text(width / 2 + 110, btnY, 'RETURN TO LOBBY', {
         fontFamily: 'Georgia, serif',
         fontSize: '13px',
         color: '#e6c200',
