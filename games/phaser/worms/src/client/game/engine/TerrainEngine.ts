@@ -1,14 +1,9 @@
 import * as Phaser from 'phaser';
-import { generateHeightMap } from './TerrainGenerator';
+import { generateHeightMap, generateCeilingMap } from './TerrainGenerator';
 import type { Crater } from '../../../shared/types/game';
+import type { MapPreset } from '../../../shared/types/maps';
+import { getMapPreset } from '../../../shared/types/maps';
 
-/**
- * Bitmap-based destructible terrain engine.
- *
- * Maintains a collision mask (Uint8Array) where 1 = solid, 0 = empty.
- * Renders terrain to a Phaser RenderTexture with grass-top and dirt layers.
- * Supports carving circular craters for explosions.
- */
 export class TerrainEngine {
   private scene: Phaser.Scene;
   private collisionMask: Uint8Array;
@@ -17,27 +12,58 @@ export class TerrainEngine {
   private terrainHeight: number;
   private heightMap: number[];
   private dirty = true;
+  private mapPreset: MapPreset;
 
-  constructor(scene: Phaser.Scene, width: number, height: number, seed: number) {
+  constructor(
+    scene: Phaser.Scene,
+    width: number,
+    height: number,
+    seed: number,
+    mapId?: string,
+  ) {
     this.scene = scene;
     this.terrainWidth = width;
     this.terrainHeight = height;
     this.collisionMask = new Uint8Array(width * height);
+    this.mapPreset = getMapPreset(mapId ?? 'hills');
 
-    this.heightMap = generateHeightMap({ width, height, seed });
-    this.buildCollisionMask();
+    this.heightMap = generateHeightMap({
+      width,
+      height,
+      seed,
+      style: this.mapPreset.terrainStyle,
+    });
+    this.buildCollisionMask(seed);
 
     this.renderTexture = scene.add.renderTexture(0, 0, width, height);
     this.renderTexture.setOrigin(0, 0);
     this.redraw();
   }
 
-  private buildCollisionMask(): void {
+  getMapPreset(): MapPreset {
+    return this.mapPreset;
+  }
+
+  private buildCollisionMask(seed: number): void {
     this.collisionMask.fill(0);
     for (let x = 0; x < this.terrainWidth; x++) {
       const surfaceY = this.heightMap[x]!;
       for (let y = surfaceY; y < this.terrainHeight; y++) {
         this.collisionMask[y * this.terrainWidth + x] = 1;
+      }
+    }
+
+    if (this.mapPreset.terrainStyle.cavern) {
+      const ceilingMap = generateCeilingMap(
+        this.terrainWidth,
+        this.terrainHeight,
+        seed,
+      );
+      for (let x = 0; x < this.terrainWidth; x++) {
+        const ceilY = ceilingMap[x]!;
+        for (let y = 0; y < ceilY; y++) {
+          this.collisionMask[y * this.terrainWidth + x] = 1;
+        }
       }
     }
   }
@@ -92,10 +118,11 @@ export class TerrainEngine {
     const canvas = document.createElement('canvas');
     canvas.width = this.terrainWidth;
     canvas.height = this.terrainHeight;
-    const ctx = canvas.getContext('2d')!;
+    const ctxObj = canvas.getContext('2d')!;
 
-    const imageData = ctx.createImageData(this.terrainWidth, this.terrainHeight);
+    const imageData = ctxObj.createImageData(this.terrainWidth, this.terrainHeight);
     const data = imageData.data;
+    const c = this.mapPreset.colors;
 
     for (let y = 0; y < this.terrainHeight; y++) {
       for (let x = 0; x < this.terrainWidth; x++) {
@@ -107,23 +134,20 @@ export class TerrainEngine {
           const depth = y - surfaceY;
 
           if (depth <= 2) {
-            // Grass top
-            data[pixIdx] = 76;
-            data[pixIdx + 1] = 175;
-            data[pixIdx + 2] = 80;
+            data[pixIdx] = c.topSurface[0];
+            data[pixIdx + 1] = c.topSurface[1];
+            data[pixIdx + 2] = c.topSurface[2];
             data[pixIdx + 3] = 255;
           } else if (depth <= 6) {
-            // Dark grass transition
-            data[pixIdx] = 56;
-            data[pixIdx + 1] = 142;
-            data[pixIdx + 2] = 60;
+            data[pixIdx] = c.subSurface[0];
+            data[pixIdx + 1] = c.subSurface[1];
+            data[pixIdx + 2] = c.subSurface[2];
             data[pixIdx + 3] = 255;
           } else {
-            // Dirt with depth variation
-            const shade = Math.max(0, 1 - depth * 0.002);
-            data[pixIdx] = Math.floor(121 * shade);
-            data[pixIdx + 1] = Math.floor(85 * shade);
-            data[pixIdx + 2] = Math.floor(72 * shade);
+            const shade = Math.max(0.3, 1 - depth * 0.002);
+            data[pixIdx] = Math.floor(c.deep[0] * shade);
+            data[pixIdx + 1] = Math.floor(c.deep[1] * shade);
+            data[pixIdx + 2] = Math.floor(c.deep[2] * shade);
             data[pixIdx + 3] = 255;
           }
         } else {
@@ -135,7 +159,7 @@ export class TerrainEngine {
       }
     }
 
-    ctx.putImageData(imageData, 0, 0);
+    ctxObj.putImageData(imageData, 0, 0);
 
     this.renderTexture.clear();
     this.renderTexture.drawFrame('__canvas_terrain');

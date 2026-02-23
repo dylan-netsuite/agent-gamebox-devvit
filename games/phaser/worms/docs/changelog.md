@@ -1,0 +1,557 @@
+# Worms - Changelog
+
+## Pinch-to-Zoom (v0.0.9.114)
+
+### Added — Pinch-to-Zoom Gesture
+- Two-finger pinch on mobile devices zooms the camera in/out (0.3x – 2.0x range)
+- Two-finger drag simultaneously pans the camera
+- Implemented via raw DOM `touchstart`/`touchmove`/`touchend` listeners on the Phaser canvas
+- `preventDefault()` blocks the browser's native page zoom during the gesture
+- Triggers `onUserPan()` to disable auto-follow during pinch gestures
+- Event listeners cleaned up on scene `shutdown` to prevent leaks
+
+## UI Features: Team Panel, Weapon Preview, Minimap, Touch Controls (v0.0.9.109)
+
+### Added — Team Health Summary Panel
+- New `TeamPanel` component in top-left corner (scroll-independent, depth 200)
+- Displays aggregate HP per team with colored dots, HP bars, and numeric totals
+- Active team highlighted with larger dot and white outline
+- HP bars color-coded: green (>50%), yellow (25-50%), red (<25%)
+
+### Added — Weapon Damage Preview Tooltip
+- Hovering over any weapon slot in the HUD shows a tooltip above it
+- Tooltip displays: weapon name + icon, damage + blast radius, and description
+- Styled with dark background, cyan accent for weapon name, gray for description
+- Auto-positioned to stay within screen bounds
+
+### Added — Minimap
+- New `Minimap` component in top-right corner (150×75px, scroll-independent)
+- Terrain silhouette sampled from `TerrainEngine.getSurfaceY()` at 1:16 scale
+- Team-colored dots for all living worm positions
+- White rectangle showing current camera viewport
+- Click on minimap to pan camera to that world position
+
+### Added — Touch/Mobile Controls
+- New `TouchControls` component (only visible on touch devices)
+- Left side: ← → movement buttons with repeat-fire on hold, ↑ jump button
+- Right side: 🎯 aim/fire button, ◀ ▶ weapon cycle, ⏭ next turn
+- Semi-transparent styling to avoid obscuring gameplay
+- Event-driven: wired into the same callbacks as keyboard input
+
+### Changed — GamePlay Scene
+- Initialized TeamPanel, Minimap, and TouchControls in `create()`
+- TeamPanel and Minimap updated every frame in `update()`
+- Minimap click-to-pan triggers `onUserPan()` for proper camera state management
+
+## Health Bars, Damage Numbers & Map Panning (v0.0.9.101)
+
+### Improved — Health Bars
+- Health bar height increased from 3px to 5px, width expanded from `WORM_WIDTH+4` to `WORM_WIDTH+10`
+- Added 1px black border outline for better contrast against all terrain types
+- Bar centered on worm X position instead of offset from character draw origin
+- HP numeric value now displayed above the worm name as white monospace text (e.g. "100", "75")
+- HP text fades out with worm on death
+
+### Improved — Damage Numbers
+- Font size increased from 16px to 22px for explosion damage, 14px to 20px for fall damage
+- Added scale-in animation: starts at 1.5x scale, springs down to 1x over 200ms (Back.easeOut)
+- Color-coded by severity: yellow (<20 damage), orange (20-39), red (40+)
+- Float duration extended to 1500ms (from 1200ms) with 200ms delay for readability
+- Same improvements applied to fall damage indicators in `Worm.ts`
+
+### Improved — Map Panning
+- **Left-click drag panning**: drag anywhere on the map to pan the camera (with 6px threshold to distinguish from clicks)
+- **Middle-click drag**: also pans the camera
+- **Right-click drag**: retained from before
+- **Drag vs click distinction**: if pointer moves <6px, treated as a click (aim/fire); otherwise treated as a pan
+- **Auto-follow disabled during pan**: `followActiveWorm()` stops tracking when user has panned, preventing the camera from lerping back
+- **F key to recenter**: pressing F immediately recenters the camera on the active worm
+- **Auto-recenter on turn change**: `userPanning` flag resets when a new turn starts
+- **Auto-recenter on movement**: moving with arrow keys resets panning so the camera follows the worm
+- **HUD instruction text** updated: `Click:Aim · W:Jump · ←→:Move · Drag:Pan · F:Center`
+- Aim/fire logic moved from `pointerdown` to `pointerup` to avoid conflicts with drag panning
+
+## Configurable Turn Timer (v0.0.9.98)
+
+### Added — Turn Timer Selection in Game Setup
+- **TIMER row** between MAP and VS CPU in the Game Setup screen
+- 5 presets: 15s (Blitz), 30s (Quick), 45s (Normal), 60s (Relaxed), ∞ (Unlimited)
+- Left/right arrow cycling with wrap-around, matching the MAP selector UX
+- Descriptive label below the value (e.g., "Blitz", "Quick", "Normal")
+
+### Changed — Turn Timer in Gameplay
+- **`GamePlay.ts`**: Turn duration is now read from `GameConfig.turnTimer` instead of a hardcoded constant
+- **`HUD.ts`**: When unlimited mode is active (timer = 0), the HUD shows "⏱∞" in green instead of "⏱0s"
+- When the timer is 0 (unlimited), no countdown event is created — turns never auto-expire
+- Default remains 45s (Normal) for backward compatibility
+
+### Config Pipeline
+- `GameConfig.turnTimer` flows through GameSetup → CharacterSelect → GamePlay
+- `TIMER_PRESETS` array defined in `GameSetup.ts` with value/label/desc for each option
+
+## Fix Aim Angle Range (v0.0.9.94)
+
+### Fixed — Downward Aiming
+- **`WeaponSystem.adjustAngle()`**: Expanded clamp from `[-PI, 0]` to `[-PI, PI]`, allowing full 360-degree aim range via keyboard (Up/Down arrows)
+- **`WeaponSystem.setAngleFromPointer()`**: Removed the `0.1` radian ceiling that prevented pointer-based aiming below horizontal — aim now follows the mouse freely in all directions
+- Players can now aim steeply downward to hit enemies below them on cliffs, shoot into terrain at close range, or fire at targets directly beneath elevated positions
+
+## AI, Sound Effects, and Terrain Variety (v0.0.9.90)
+
+### Added — AI / Single-Player Mode
+- **VS CPU toggle** in Game Setup: when enabled, all teams except Team 1 are AI-controlled
+- **AIController system** (`AIController.ts`): picks closest enemy target, selects weapon (grenade for close range, bazooka otherwise), calculates ballistic angle with intentional inaccuracy for balanced difficulty
+- AI turns execute automatically with a think delay (800ms), aim delay (600ms), and fire delay (400ms)
+- Player input is disabled during AI turns — no accidental interference
+- AI auto-advances to the next turn after its projectile resolves
+- Character Select auto-picks random characters for AI teams and skips their selection step
+- Team preview in Game Setup shows 🤖 CPU labels under AI-controlled teams
+
+### Added — Sound Effects (Web Audio API)
+- **SoundManager** (`SoundManager.ts`): fully procedural sound synthesis using `OscillatorNode` + `GainNode` — no audio asset files needed
+- 10 distinct sounds: `explosion`, `fire`, `bounce`, `damage`, `turn`, `gameover`, `select`, `jump`, `death`, `tick`
+- Each sound uses unique waveforms (sine, sawtooth, square, noise) with frequency sweeps and gain envelopes
+- **Integration points**: explosions, weapon fire, grenade bounce, worm damage, worm death, jump, turn change, game over, timer tick (last 5s), character select navigation, game setup buttons
+- **Sound toggle** in Game Setup: ON/OFF toggle with global mute control
+- Zero external dependencies — works in any browser with Web Audio API support
+
+### Added — Terrain Variety / Map Selection
+- **5 map presets** (`shared/types/maps.ts`):
+  - **Green Hills** — rolling green hills, the classic battlefield (default)
+  - **Island Chain** — scattered islands over deep water, sandy terrain colors, teal sky
+  - **Underground Cavern** — dark cave with stalactite ceiling, grey/purple tones, dark sky
+  - **Flat Arena** — mostly flat terrain for pure aim battles, light green, bright sky
+  - **Cliffside** — extreme peaks and deep valleys, rocky grey terrain, purple sky
+- **MAP selector** in Game Setup: left/right arrows to cycle through presets with name and description
+- `TerrainGenerator` updated with `TerrainStyle` support: `flatness`, `islands` (water gaps), `cavern` (ceiling generation)
+- `TerrainEngine` updated with `MapPreset` colors: per-biome surface, sub-surface, and deep colors
+- `generateCeilingMap()` added for cavern-style terrain with stalactites hanging from above
+- Sky gradient in GamePlay now uses map preset colors for thematic consistency
+
+### Changed
+- `GameConfig` interface extended with `aiTeams?: number[]` and `mapId?: string`
+- `GameSetup` scene redesigned with tighter layout to fit MAP, VS CPU, and SOUND rows
+- `WeaponSystem` gained `setAngleDirect()` and `setPowerDirect()` methods for AI use
+- `CharacterSelect` passes through `aiTeams` and `mapId` config to `GamePlay`
+- `TerrainEngine` constructor now accepts optional `mapId` parameter
+
+## Character Select Polish (v0.0.9.86)
+
+### Changed
+- **Wider portraits**: Images now fill nearly the entire panel width (panelW - 2px) instead of being constrained by large padding
+- **Tighter grid**: Gaps between panels reduced from ~16px margins + 10px padding to just 3px between panels with edge-to-edge layout
+- **Brighter unselected**: Overlay darkening reduced from 60% to 25% opacity; tint changed from dark grey (0x555566) to light grey (0x99999a) at 85% alpha — unselected characters are now clearly visible
+- **Readable names**: Unselected character names brightened from #556677 at 60% to #8899aa at 80% alpha
+
+---
+
+## Character Select Screen Redesign (v0.0.9.82)
+
+### Changed
+- **Layout**: Replaced single-character carousel with TMNT arcade-style 3x2 portrait grid showing all 6 characters at once
+- **Art**: Each character now displays their actual concept art as a portrait image (256x256 JPEG thumbnails loaded at startup)
+- **Selection**: Selected character is fully colorized with a team-color border glow; unselected characters are desaturated and dimmed
+- **Navigation**: Arrow keys navigate the 2D grid (left/right/up/down) instead of just left/right
+- **Preloader**: Added asset loading phase with progress bar for character portraits
+- **Font**: Switched to pixel-style "Press Start 2P" font for retro arcade feel
+
+### Removed
+- **Classic Worm**: Removed from character roster, registry, and all fallback references (replaced with Banana Sam as default)
+- Old single-character preview with procedural drawing in the select screen (procedural drawing still used in-game)
+
+### Added
+- `portrait` field on `CharacterDef` interface for linking characters to their art assets
+- `src/client/public/portraits/` directory with 6 character portrait JPEGs
+- Loading progress bar in Preloader scene
+
+---
+
+## New Character: Professor Orange (v0.0.9.79)
+
+### Added
+- **Professor Orange**: An orange tabby cat professor in a tweed jacket with round glasses
+- **Head**: Round orange cat face with darker tabby stripe markings, lighter cheeks/muzzle
+- **Ears**: Pointy cat ears with pink inner ear coloring
+- **Eyes**: Big round eyes behind dark-framed round glasses with lens reflections
+- **Face details**: Pink triangle nose, cat smile mouth, whiskers extending both sides
+- **Body**: Brown tweed jacket with horizontal texture lines, shirt V-neck, dark lapels
+- **Arms**: Front arm holds an open book (brown cover, white pages, visible spine), back arm holds a magnifying glass (silver rim, translucent lens with glint)
+- **Legs/Feet**: Short stubby legs with orange paw pads showing pink toe beans
+- **Tail**: Big fluffy orange tail extending behind with lighter tip and darker stripe markings
+- **Team color**: Displayed as an elbow patch on the jacket
+- Character registered as 7th entry (id: `professor-orange`)
+- Total characters now: 7
+
+---
+
+## High Noon Snoo Proportions (v0.0.9.75)
+
+### Changed
+- **Head**: Changed from circle (r=8) to wide ellipse (22x18px) — much wider and rounder, matching Snoo's signature big-head look
+- **Body**: Replaced angular polygon torso with a round ellipse poncho (20x18px) — shorter, stubbier, cuter
+- **Cowboy hat**: Brim widened from 22px to 28px, crown from 14x12 to 18x16 — properly oversized Western hat
+- **Legs**: Shortened significantly (start at 72% of hitbox height instead of 62%) — stubby little legs
+- **Ears**: Moved outward to match wider head (at headRx edges)
+- **Eyes**: Scaled up to 5x6px ovals (from 4x5) and spaced wider (4px from center instead of 3px) to fill the bigger face
+- **Mouth**: Repositioned lower on the larger face
+- **Antenna**: Extended outward more (4px instead of 3px) with slightly larger ball
+- Overall silhouette is now a big round head on a compact round body — much more Snoo-like
+
+---
+
+## Fix: High Noon Snoo Colors (v0.0.9.71)
+
+### Changed
+- **High Noon Snoo body color**: Changed from orange-red (`0xff4500`) to white (`0xf0ece8`) to match the actual Snoo mascot. Snoo's body, head, arms, legs, and hands are now all white with warm-tinted shading.
+- **Eyes**: Changed from white ovals to orange-red (`0xff4500`) ovals with white glint highlights, matching Snoo's signature look.
+- **Antenna**: Changed stalk from orange-red to dark/black (`0x333333`), ball from orange-red to white. Antenna now curves to one side like the real Snoo.
+- **Ears**: Added small white ear bumps on sides of head.
+- **Mouth**: Changed from flat line to a slight smirk matching Snoo's expression.
+- **primaryColor** in character definition updated from `0xff4500` to `0xf0ece8`.
+
+---
+
+## New Character: High Noon Snoo (v0.0.9.68)
+
+### Added
+- **High Noon Snoo** — 6th playable character: Reddit's Snoo reimagined as a Wild West cowboy gunslinger.
+- `drawHighNoonSnoo.ts` — Procedural drawing function with:
+  - Classic orange-red Snoo round head with white oval eyes (no pupils) and antenna
+  - Large brown cowboy hat with tall crown, wide brim, hat band, and crown dent
+  - Tan poncho/duster coat over the torso with drape lines and edge highlights
+  - Brown cowboy boots with gold spurs
+  - Silver revolver with cylinder, grip, and hammer detail
+  - Belt with gold buckle and diagonal bandolier with bullet details
+  - Team-color sheriff star badge (6-pointed) on coat
+  - Small neutral Snoo mouth, brim shadow on face
+- Character definition: id `high-noon-snoo`, tagline "Draw."
+- Registered in `CharacterRegistry.ts`
+
+---
+
+## New Character: Fish Attawater (v0.0.9.64)
+
+### Added
+- **Fish Attawater** — 5th playable character: a fish in a trench coat and fedora, disguised with a fake nose, mustache, and round glasses.
+- `drawFishAttawater.ts` — Procedural drawing function with:
+  - Green fish head with gill lines and lighter cheek area
+  - Round glasses with lens glare over white/black eyes
+  - Oversized fake nose (Groucho-style, orange/pink)
+  - Bushy black fake mustache
+  - Tan detective trench coat filling the 16px hitbox width, with button flap, belt, collar, and tie
+  - Algae/slime stains on the coat (green and purple spots)
+  - Fish tail poking out the back of the coat with fin detail lines
+  - Yellow/blue water gun held in a green fin-hand
+  - Fedora hat with crown, brim, band, and dent detail
+  - Team-color detective badge on coat lapel
+- Character definition: id `fish-attawater`, tagline "Staying deep undercover."
+- Registered in `CharacterRegistry.ts`
+
+---
+
+## Character Proportions — Final (v0.0.9.60)
+
+### Changed — Classic Worm, Banana Sam, Always Hastronaut
+Found the middle ground between too-wide (v0.0.9.52) and too-skinny (v0.0.9.56). Bodies now fill the full 16px hitbox width at their widest point, with natural tapering. Arms and accessories extend slightly beyond.
+
+- **Classic Worm**: Body 14px at belly (`cx-7` to `cx+7`), bulges to 16px at mid-body, tapers to 10px at head. Solid, satisfying worm shape.
+- **Banana Sam**: Body 14px at belly (`cx-7` to `cx+7`), crescent curve clearly visible. Tapers to 8px at top. Noodle arms extend past body.
+- **Always Hastronaut**: Torso 16px at shoulders (`cx-8` to `cx+8`), tapers to 12px at waist. Properly puffy spacesuit. Helmet radius 8.5. Arms, backpack, pistol extend naturally.
+- **Turtle Tank**: Unchanged.
+
+---
+
+## Normal Character Proportions (v0.0.9.56)
+
+### Changed — Classic Worm, Banana Sam, Always Hastronaut
+Dialed back from overly wide v0.0.9.52 proportions to natural sizes matching the concept art. Bodies now mostly fill the 16px hitbox width without extending far beyond. Only appendages (arms, pistol, backpack, tail) extend past the body.
+
+- **Classic Worm**: Body 12px at belly, tapering to 8px at head. Natural worm shape.
+- **Banana Sam**: Body 10-12px wide, natural banana crescent within the hitbox. Thin noodle arms extend out.
+- **Always Hastronaut**: Torso 12-14px wide, slightly puffy suit. Helmet radius 8. Arms, backpack, and pistol extend naturally.
+- **Turtle Tank**: Unchanged — wide shell is correct for the character.
+
+---
+
+## Chunky Character Proportions (v0.0.9.52)
+
+### Changed — Classic Worm, Banana Sam, Always Hastronaut
+Fixed overly narrow character proportions. Characters were too skinny compared to concept art because body widths used small hard-coded pixel values. Now all three use relative widths that fill and extend beyond the 16px hitbox.
+
+- **Classic Worm**: Body width increased from ~10px to `w * 0.9` (14.4px). Fills hitbox naturally with a rounded, chunky profile.
+- **Banana Sam**: Body width increased from ~8px to `w + 4` (20px). Now reads as a distinctly wide, chunky banana shape matching the concept art's belly proportions. Arms, hat, and details scaled proportionally.
+- **Always Hastronaut**: Suit width increased from ~12px to `w + 8` (24px). Puffy, bulky spacesuit silhouette now matches the concept art. Helmet radius increased from 7 to 9. Arms, backpack, and pistol all proportionally wider.
+- **Turtle Tank**: No changes needed — already had `shellW = w + 10` from v0.0.9.51.
+
+---
+
+## Character Visual Redesign (v0.0.9.51)
+
+### Changed — All 4 Characters
+Redesigned all character draw functions to use organic shapes and curved paths instead of rectangular bodies. Characters are now visually distinct at both preview scale and gameplay scale.
+
+- **Classic Worm**: Replaced `fillRoundedRect` body with a tapered worm shape using `beginPath/moveTo/lineTo`. Added visible tail, body segments, belly highlight, headband, cheeky grin, and large expressive eyes.
+- **Banana Sam**: Replaced boxy silhouette with a pronounced banana crescent curve. Added thin noodle arms (one reaching nervously, one swinging), distinct legs with boots, sweat drops, and worried mouth arc. The body now uses a path-based crescent instead of straight-edged polygon.
+- **Turtle Tank**: Shell now extends well beyond the hitbox horizontally (shellW = w + 10) for a wide, low dome. Head extends forward with a visible neck. Stubby legs poke out underneath. Shell has plate pattern lines and underbelly rim. Turret sits distinctly on top with a tapered barrel shape.
+- **Always Hastronaut**: Oversized round helmet as the focal point. Tapered torso with visible waist, distinct legs, and boot shapes. Gun arm with pistol extends to one side, shrug arm with open palm and spread fingers on the other. Life support backpack visible on the back.
+
+### Technical Notes
+- Physics hitbox (16x20) unchanged — collision, movement, and gravity all work identically
+- Draw functions can render outside the hitbox for visual flair (arms, turret barrel, shell edges)
+- All characters use `beginPath/moveTo/lineTo/closePath/fillPath` instead of `fillRoundedRect` for body shapes
+
+---
+
+## New Character: Always Hastronaut (v0.0.9.49)
+
+### Added
+- **Always Hastronaut**: Fourth playable character — an astronaut with a pistol and a shrug, based on the "always has been" meme
+  - Big round helmet with dark reflective visor, curved highlight reflections, and helmet rim
+  - Bulky white spacesuit body with chest control panel (red, green, blue buttons)
+  - Life support backpack on the back with tube detail
+  - Gun arm holding a brown pistol with barrel tip detail (front hand)
+  - Shrug arm with open palm and spread fingers (back hand, casual pose)
+  - Shoulder joints, suit belt line, and boots with tread detail
+  - Team color patch on shoulder for identification
+  - Tagline: "It's just business."
+- Character roster now at **4 characters** (Classic Worm, Banana Sam, Turtle Tank, Always Hastronaut)
+- Character select screen now shows "4 characters available"
+
+---
+
+## New Character: Turtle Tank (v0.0.9.46)
+
+### Added
+- **Turtle Tank**: Third playable character — a grumpy green tortoise with an iron tank turret welded to his shell
+  - Domed shell body with hex-plate pattern and ridge lines
+  - Tank turret base on top of shell with cannon barrel pointing in facing direction
+  - Smoke wisps rising from the barrel
+  - Green turtle head with droopy half-lidded annoyed eyes and flat "meh" mouth
+  - Stubby legs with claws, tiny pointed tail
+  - Team color badge circle on the shell
+  - Tagline: "Meh."
+- Character roster now at **3 characters** (Classic Worm, Banana Sam, Turtle Tank)
+- Character select screen now shows "3 characters available"
+
+---
+
+## Character System + Banana Sam (v0.0.9.44)
+
+### Added — Character System
+- **Character architecture**: Modular character system with `CharacterDef` type definitions, draw function registry, and per-team character selection
+- **CharacterRegistry**: Maps character IDs to procedural draw functions; new characters can be added by writing a single draw function and registering it
+- **Draw function interface**: `CharacterDrawFn(graphics, x, y, w, h, facingRight, teamColor)` — each character is drawn procedurally via Phaser Graphics
+
+### Added — Banana Sam (First Character)
+- **Yellow banana-shaped body** with curved edges and dark ridge lines
+- **Brown helmet/cap** with brim that flips based on facing direction
+- **Big worried eyes** with pupils, highlights, and angled worried eyebrows
+- **Sweat drop** on the side of his face
+- **Worried frown** mouth
+- **Brown boots** with darker soles
+- **Stem** on top of the banana
+- **Team color armband** around the midsection so team identity is clear
+
+### Added — Character Select Screen
+- **New "CHOOSE YOUR FIGHTER" scene** between GameSetup and GamePlay
+- **Team-by-team selection**: Each team picks their character in sequence (Team Red first, then Blue, etc.)
+- **Large 4x preview** of the character with animated idle (flips facing direction every 1.5s)
+- **Character info**: Name, tagline (in quotes), and full description displayed below the preview
+- **Left/right arrow navigation** (click or keyboard) to browse the roster
+- **Team progress dots** at top: Active team has white ring, completed teams show checkmark
+- **"LOCK IN" button** with ENTER keyboard shortcut
+- **Camera flash** transition effect when locking in a character
+- **ESC to go back** to GameSetup
+- **Footer**: Keyboard control hints
+
+### Changed
+- **Scene flow**: Boot → Preloader → GameSetup → **CharacterSelect** → GamePlay
+- **GameConfig**: Now includes `teamCharacters: string[]` to pass character selections through
+- **Worm entity**: Accepts `characterId` parameter; delegates drawing to the character registry instead of hardcoded rendering
+- **Classic Worm**: Original worm appearance extracted into its own draw function (`drawClassicWorm.ts`) as the default character
+
+---
+
+## Camera Follow + Game Setup Menu (v0.0.9.41)
+
+### Fixed — Camera Follow
+- **Camera now tracks the active worm**: Added smooth lerp-based camera follow in the `update()` loop. The camera gently pans to keep the active worm centered as it walks, jumps, or gets knocked back. Uses a lerp factor of 0.08 for smooth, non-jarring movement that doesn't interfere with manual camera drag.
+
+### Added — Game Setup Menu
+- **New GameSetup scene**: Inserted between Preloader and GamePlay in the scene flow
+- **Team configuration**: Choose 2-4 teams with +/- buttons
+- **Worms per team**: Choose 1-3 worms per team with +/- buttons
+- **Team preview**: Visual preview showing colored dots and worm icons for each team
+- **Dark themed UI**: Styled with dark navy background, cyan accents, and a red "START BATTLE" button
+- **Keyboard shortcut**: Press ENTER to start the battle
+- **Dynamic spawning**: GamePlay now accepts config from setup and spawns the correct number of teams/worms
+- **Return to setup**: Game Over screen now returns to GameSetup instead of restarting, letting players reconfigure
+
+### Changed
+- **Scene flow**: Boot → Preloader → GameSetup → GamePlay → (Game Over) → GameSetup
+- **Worm spawning**: Now supports 2-4 teams with dynamic spacing and names from the shared `WORM_NAMES` pool
+- **Game Over**: Updated to support all 4 team colors (Red, Blue, Yellow, Purple)
+
+---
+
+## Teams, Health System & Movement (v0.0.9.39)
+
+### Added — Team-Based Turn System
+- **2 teams**: Team Red (Boggy, Spadge) vs Team Blue (Mac, Bazza), each with 2 worms
+- **Alternating turn rotation**: Red → Blue → Red → Blue, skipping dead worms
+- **Configurable turn timer** (default 45s): Countdown displayed in HUD; auto-resolves turn when time expires
+- **Win condition**: Game ends when all worms on one team are eliminated
+- **Game Over screen**: Dark overlay with winning team name/color and "Press ENTER to Play Again"
+- **Scene restart**: ENTER on Game Over screen restarts the match with fresh terrain and teams
+
+### Added — Health & Death System
+- **Health persistence**: Damage carries across turns (health bars visually reflect accumulated damage)
+- **Worm death**: When health reaches 0, worm plays death animation (fade out) and a tombstone (🪦) marker appears
+- **Dead worm removal**: Dead worms are skipped in turn rotation and excluded from gameplay
+- **Explosion knockback**: Worms near an explosion are pushed away proportional to proximity (force = falloff × 6, with upward bias)
+- **Fall damage**: Worms take damage when falling more than 40px (0.8 damage per pixel beyond threshold)
+
+### Added — Movement Improvements
+- **Jump**: Press W while idle to jump (velocity -6)
+- **Backflip**: Press W while moving opposite to facing direction (velocity -8 up, ±4 horizontal)
+- **Horizontal velocity during airborne**: Worms maintain horizontal momentum when knocked back or backflipping, with 0.98 friction per frame
+- **Grounded state tracking**: Worms track whether they're on the ground, preventing mid-air jumps
+
+### Changed — HUD Updates
+- **Team indicator**: Red circle (🔴) or blue circle (🔵) shown next to weapon name
+- **Turn timer**: ⏱ countdown displayed in yellow/red, hidden during firing/resolved states
+- **Updated instructions**: Now shows "Click:Aim · W:Jump · ←→:Move"
+
+---
+
+## Fix: Dynamite Throw + Wind Rebalance (v0.0.9.36)
+
+### Fixed
+- **Dynamite now throws**: Changed dynamite from `placed` to `projectile` firing mode with `projectileSpeed: 5` and `projectileGravity: 0.18`, giving it a short, heavy arc. It lands on terrain and sits until its 4-second fuse expires, then detonates. Previously it just appeared at the worm's feet with no arc.
+- **Wind force reduced 4x**: Lowered `WindSystem.forceFactor` from `0.02` to `0.005`. At the old value, max wind (10) applied `0.2` force per frame — enough to completely overpower projectile velocity. Now wind is a noticeable tactical factor without making it impossible to fire into the wind.
+
+---
+
+## Fix: Grenade Falling Through Terrain (v0.0.9.32)
+
+### Fixed
+- **Grenade no longer falls through the ground**: When a bouncing projectile exhausted its bounce count but still had fuse time remaining, neither the bounce nor the detonate branch executed — gravity kept pulling it through terrain. Now the projectile is pushed out of terrain and stopped (vx=0, vy=0) to rest on the surface until the fuse expires.
+- This also fixes any future bouncing + fused weapon that could hit the same edge case.
+
+---
+
+## Unified Bottom Bar Status (v0.0.9.29)
+
+### Changed
+- **Status display moved into bottom bar**: Weapon name, turn state, and instructions now display centered between POWER and WIND in the always-visible info bar — no more floating overlay at the top of the screen
+- **Cleaner game view**: Removed the separate floating status container, freeing up the top of the viewport for unobstructed gameplay
+- **Compact info bar**: All critical info (power, status, wind) in one row at the bottom
+
+---
+
+## Horizontal HUD + Physics Tuning (v0.0.9.27)
+
+### Changed
+- **HUD layout**: Complete rewrite to wide horizontal layout — weapon icons in a horizontal row instead of vertical list
+- **Always-visible power/wind**: POWER bar (left) and WIND indicator (right) are always visible, even when weapon row is collapsed
+- **Compact design**: Only 3 rows tall (toggle bar, weapon icons, info bar) — takes up minimal screen space
+- **Weapon slots**: Square icon tiles in a horizontal row with numbered keybinds
+
+### Fixed — Weapon Physics
+- **Bazooka**: Reduced speed (12→8) and gravity (0.15→0.12) for a smoother, more visible arc trajectory
+- **Grenade**: Reduced speed (10→7), gravity (0.2→0.15), bounce friction (0.6→0.5) for bouncier, more predictable behavior; increased max bounce count (3→5); grenades now stop properly when speed is negligible
+- **Dynamite**: Removed all gravity (0.3→0), reduced fuse (5→4 seconds); placed items now skip physics entirely (no gravity applied, stays exactly where placed)
+- **Airstrike**: Reduced missile speed (8→5) and gravity (0.1→0.08); missiles spawn higher (y=-60) with slight random x offset for more natural scatter; increased spacing (30→35) with 150ms stagger between missiles
+- **ProjectileManager**: Placed weapons skip physics loop entirely; grenade bounce extracts from terrain properly and stops at low speed
+
+---
+
+## UI: Bottom Panel HUD Redesign (v0.0.9.23)
+
+### Changed
+- **Complete HUD rewrite**: Replaced top-bar layout with a bottom-pinned, centered panel inspired by Domino Nation's UI
+- **Collapsible panel**: Toggle arrow (▼/▲) at the top of the panel smoothly animates expand/collapse with a Cubic.easeOut tween
+- **Weapon rows**: Full-width rows with icon + name + key number, replacing the old small square slots
+- **Selected state**: Red/pink highlight border and text color on the active weapon row
+- **Hover state**: Lighter background on hovered rows
+- **Collapsed bar**: Shows current weapon icon + name when collapsed, keeping the UI minimal
+- **Section header**: "WEAPONS" label in cyan accent color
+- **Power/Wind inline**: Compact power bar and wind indicator below the weapon list
+- **Floating status**: Game state and instructions moved to a floating bar at the top of the screen
+- **Input handling**: Replaced Phaser Zone-based hit detection with coordinate-based hit testing on scene input for reliable click handling inside scrollFactor(0) containers
+
+---
+
+## UI: Semi-Transparent HUD (v0.0.9.14)
+
+### Changed
+- **Top bar background**: Reduced alpha from 0.92 to 0.55 — sky/game world now visible through the menu
+- **Weapon slot backgrounds**: Reduced alpha from 0.95 to 0.7
+- **Power/Wind panel backgrounds**: Reduced alpha from 0.95 to 0.7
+- **Border opacity**: Reduced across all HUD elements for a lighter feel
+- Confirmed HUD stays pinned to top of screen during camera pan/zoom (scrollFactor 0)
+
+---
+
+## Fix: Weapon Selection + HUD Polish (v0.0.9.11)
+
+### Fixed
+- **Keyboard weapon selection**: Changed Phaser key bindings from `keydown-1` to `keydown-ONE` format (Phaser requires word-form key names)
+- **Click-through prevention**: Clicking HUD weapon slots no longer triggers the game scene's aim/fire handler
+
+### Changed
+- **HUD** (`ui/HUD.ts`): Complete redesign with dark theme (GitHub-inspired palette), clickable weapon slots with hover states, weapon description text, active worm indicator, cleaner layout
+- **GamePlay.ts**: Updated keyboard bindings, added HUD click consumption check, worm name getter for HUD
+
+### UI Improvements
+- Clickable weapon slots with interactive zones (no longer keyboard-only)
+- Hover highlight on weapon slots
+- Weapon description shown below selector
+- Active worm name displayed in top-right
+- Bottom-center status bar with current weapon and contextual instructions
+- Dark semi-transparent panels with rounded corners
+- Color-coded power bar (green/yellow/red)
+- Wind indicator with directional arrow
+
+---
+
+## Phase 2: Weapons & Projectiles (v0.0.9)
+
+### Added
+- **WeaponSystem** (`systems/WeaponSystem.ts`): State machine for weapon selection, aiming, and firing with 5 weapons
+- **ProjectileManager** (`systems/ProjectileManager.ts`): Physics simulation for projectiles with gravity, wind, bouncing, and terrain collision
+- **ExplosionEffect** (`systems/ExplosionEffect.ts`): Visual explosions with particles, screen shake, terrain carving, and distance-based damage
+- **WindSystem** (`systems/WindSystem.ts`): Per-turn random wind affecting projectile trajectories
+- **HUD** (`ui/HUD.ts`): Weapon selector (5 slots), power bar, wind indicator, state text, instructions
+- **AimIndicator** (`ui/AimIndicator.ts`): Aim line with trajectory preview dots
+
+### Changed
+- **weapons.ts**: Enhanced with `firingMode`, `projectileSpeed`, `projectileGravity`, `shotCount`, `bounceFriction`, `icon` fields
+- **GamePlay.ts**: Complete rewrite to integrate all weapon systems, new input handling for aim/fire/turn flow
+
+### Weapons Implemented
+| Weapon | Firing Mode | Status |
+|--------|------------|--------|
+| Bazooka | Projectile (arc) | Working |
+| Grenade | Projectile (bounce + fuse) | Working |
+| Shotgun | Hitscan (2 shots) | Working |
+| Dynamite | Placed (5s fuse) | Working |
+| Airstrike | Targeted (5 missiles) | Working |
+
+---
+
+## Phase 1: Foundation & Terrain (v0.0.7)
+
+### Added
+- Project scaffold: `package.json`, `devvit.json`, TypeScript configs, Vite build
+- Splash screen with WORMS branding and PLAY button
+- **TerrainEngine**: Procedural heightmap generation, bitmap collision mask, RenderTexture rendering, crater carving
+- **TerrainGenerator**: Seeded sine-wave heightmap for deterministic terrain
+- **Worm entity**: Terrain-following movement, gravity/falling, health bar, name labels
+- **GamePlay scene**: Sky gradient, terrain, 4 worms, camera controls (pan/zoom)
+- Server stub: `/api/init`, `/api/game/state`, menu action for post creation
+- Redis-backed game state storage
+
+### Fixed
+- Removed `onAppInstall` trigger that was causing installation failures
+- Added `server.listen(port)` to properly start Express server

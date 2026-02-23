@@ -1,5 +1,7 @@
 import { Boot } from './scenes/Boot';
 import { GamePlay } from './scenes/GamePlay';
+import { GameSetup } from './scenes/GameSetup';
+import { CharacterSelect } from './scenes/CharacterSelect';
 import * as Phaser from 'phaser';
 import { AUTO, Game } from 'phaser';
 import { Preloader } from './scenes/Preloader';
@@ -14,7 +16,7 @@ const config: Phaser.Types.Core.GameConfig = {
     width: '100%',
     height: '100%',
   },
-  scene: [Boot, Preloader, GamePlay],
+  scene: [Boot, Preloader, GameSetup, CharacterSelect, GamePlay],
 };
 
 const StartGame = (parent: string) => {
