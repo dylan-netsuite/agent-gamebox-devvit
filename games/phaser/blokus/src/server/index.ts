@@ -20,7 +20,13 @@ import {
   setPlayerReady,
   updateLobbyStatus,
   saveLobbyGameConfig,
+  setHeartbeat,
+  isPlayerStale,
+  getGameMoves,
+  saveGameMoves,
 } from './core/lobbyState';
+import { BoardValidator } from '../shared/logic/BoardValidator';
+import type { BlokusMove } from '../shared/types/multiplayer';
 
 function lobbyChannel(code: string): string {
   return `blokus_lobby_${code}`;
@@ -326,6 +332,11 @@ router.post('/api/game/leave', async (req, res): Promise<void> => {
   await broadcast(code, { type: 'player-left', userId });
 
   const info = await getLobbyInfo(code);
+  if (info?.status === 'playing') {
+    await updateLobbyStatus(code, 'finished');
+    boardCache.delete(code);
+  }
+
   await broadcast(code, {
     type: 'lobby-update',
     lobbyCode: code,
@@ -408,11 +419,37 @@ router.post('/api/game/start', async (req, res): Promise<void> => {
   };
 
   await saveLobbyGameConfig(code, config);
+
+  boardCache.delete(code);
+  await saveGameMoves(code, JSON.stringify([]));
+
+  for (const p of players) {
+    await setHeartbeat(code, p.userId);
+  }
+
   await broadcast(code, { type: 'game-start', config });
   res.json({ status: 'ok', config });
 });
 
-// ── Game Actions (relay only) ──
+// ── Server Board State Cache ──
+
+const boardCache = new Map<string, BoardValidator>();
+
+async function getOrCreateBoard(code: string): Promise<BoardValidator> {
+  const cached = boardCache.get(code);
+  if (cached) return cached;
+
+  const movesJson = await getGameMoves(code);
+  const board = movesJson ? BoardValidator.deserialize(movesJson) : new BoardValidator();
+  boardCache.set(code, board);
+  return board;
+}
+
+async function persistBoard(code: string, board: BoardValidator): Promise<void> {
+  await saveGameMoves(code, board.serialize());
+}
+
+// ── Game Actions (server-validated) ──
 
 router.post('/api/game/move', async (req, res): Promise<void> => {
   const { userId } = context;
@@ -428,12 +465,22 @@ router.post('/api/game/move', async (req, res): Promise<void> => {
     return;
   }
 
-  await broadcast(code, {
-    type: 'player-move',
-    move: body.move as import('../shared/types/multiplayer').BlokusMove,
-    userId,
-  });
+  const move = body.move as BlokusMove;
 
+  const board = await getOrCreateBoard(code);
+  const validation = board.validateMove(move);
+
+  if (!validation.valid) {
+    console.warn(`[MoveValidation] Rejected move from ${userId}: ${validation.reason}`);
+    await broadcast(code, { type: 'move-rejected', reason: validation.reason!, userId });
+    res.status(400).json({ status: 'error', message: validation.reason });
+    return;
+  }
+
+  board.applyMove(move);
+  await persistBoard(code, board);
+
+  await broadcast(code, { type: 'player-move', move, userId });
   res.json({ status: 'ok' });
 });
 
@@ -451,11 +498,55 @@ router.post('/api/game/pass', async (req, res): Promise<void> => {
     return;
   }
 
-  await broadcast(code, {
-    type: 'player-pass',
-    player: (body?.player ?? 1) as 1 | 2,
-    userId,
-  });
+  const player = (body?.player ?? 1) as 1 | 2;
+  const board = await getOrCreateBoard(code);
+  const validation = board.applyPass(player);
+
+  if (!validation.valid) {
+    console.warn(`[MoveValidation] Rejected pass from ${userId}: ${validation.reason}`);
+    res.status(400).json({ status: 'error', message: validation.reason });
+    return;
+  }
+
+  await persistBoard(code, board);
+
+  await broadcast(code, { type: 'player-pass', player, userId });
+  res.json({ status: 'ok' });
+});
+
+// ── Heartbeat ──
+
+router.post('/api/game/heartbeat', async (req, res): Promise<void> => {
+  const { userId } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' });
+    return;
+  }
+
+  const body = req.body as { lobbyCode?: string } | undefined;
+  const code = body?.lobbyCode?.toUpperCase();
+  if (!code) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' });
+    return;
+  }
+
+  await setHeartbeat(code, userId);
+
+  const info = await getLobbyInfo(code);
+  if (info && info.status === 'playing') {
+    const players = await getLobbyPlayers(code);
+    const opponent = players.find((p) => p.userId !== userId);
+
+    if (opponent) {
+      const stale = await isPlayerStale(code, opponent.userId);
+      if (stale) {
+        console.log(`[Heartbeat] Player ${opponent.userId} is stale in lobby ${code}, broadcasting player-left`);
+        await broadcast(code, { type: 'player-left', userId: opponent.userId });
+        await updateLobbyStatus(code, 'finished');
+        boardCache.delete(code);
+      }
+    }
+  }
 
   res.json({ status: 'ok' });
 });
@@ -480,6 +571,7 @@ router.post('/api/game/game-over', async (req, res): Promise<void> => {
   }
 
   await updateLobbyStatus(code, 'finished');
+  boardCache.delete(code);
 
   await broadcast(code, {
     type: 'game-over',

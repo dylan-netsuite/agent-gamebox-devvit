@@ -128,6 +128,7 @@ export class Game extends Scene {
 
     if (this.isMultiplayer && this.mp) {
       this.setupMultiplayerListeners();
+      this.mp.startHeartbeat();
     }
 
     this.cameras.main.setBackgroundColor(0x0d0d1a);
@@ -268,6 +269,12 @@ export class Game extends Scene {
           break;
         case 'player-left':
           this.handleOpponentLeft();
+          break;
+        case 'move-rejected':
+          if (msg.userId === this.mp?.userId) {
+            console.warn(`[MP] Move rejected by server: ${msg.reason}`);
+            SoundManager.playInvalid();
+          }
           break;
       }
     };
@@ -417,9 +424,12 @@ export class Game extends Scene {
   }
 
   private cleanupMultiplayer(): void {
-    if (this.mp && this.messageHandler) {
-      this.mp.offMessage(this.messageHandler);
-      this.messageHandler = null;
+    if (this.mp) {
+      this.mp.stopHeartbeat();
+      if (this.messageHandler) {
+        this.mp.offMessage(this.messageHandler);
+        this.messageHandler = null;
+      }
     }
   }
 

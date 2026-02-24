@@ -9,6 +9,8 @@ import type {
 
 type MessageHandler = (msg: MultiplayerMessage) => void;
 
+const HEARTBEAT_INTERVAL_MS = 10_000;
+
 export class MultiplayerManager {
   private connection: { disconnect: () => Promise<void> } | null = null;
   private handlers: MessageHandler[] = [];
@@ -17,6 +19,7 @@ export class MultiplayerManager {
   private _userId: string;
   private _username: string;
   private _lobbyCode: string;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(postId: string, userId: string, username: string, lobbyCode: string) {
     this._postId = postId;
@@ -67,11 +70,35 @@ export class MultiplayerManager {
   }
 
   async disconnect(): Promise<void> {
+    this.stopHeartbeat();
     if (this.connection) {
       await this.connection.disconnect();
       this.connection = null;
       this._connected = false;
     }
+  }
+
+  startHeartbeat(): void {
+    this.stopHeartbeat();
+    this.sendHeartbeat();
+    this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), HEARTBEAT_INTERVAL_MS);
+    console.log('[MP] Heartbeat started');
+  }
+
+  stopHeartbeat(): void {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+      console.log('[MP] Heartbeat stopped');
+    }
+  }
+
+  private sendHeartbeat(): void {
+    fetch('/api/game/heartbeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lobbyCode: this._lobbyCode }),
+    }).catch((err) => console.warn('[MP] Heartbeat failed:', err));
   }
 
   static async createLobby(): Promise<{ lobbyCode: string; players: LobbyPlayer[]; isHost: boolean }> {

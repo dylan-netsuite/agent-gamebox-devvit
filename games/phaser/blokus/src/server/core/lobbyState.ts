@@ -24,6 +24,18 @@ function lobbyConfigKey(code: string): string {
   return `blokus_lobby_${code}_config`;
 }
 
+function lobbyHeartbeatKey(code: string, userId: string): string {
+  return `blokus_lobby_${code}_hb_${sanitizeId(userId)}`;
+}
+
+function lobbyMovesKey(code: string): string {
+  return `blokus_lobby_${code}_moves`;
+}
+
+function lobbyPassesKey(code: string): string {
+  return `blokus_lobby_${code}_passes`;
+}
+
 function postLobbiesKey(postId: string): string {
   return `blokus_${sanitizeId(postId)}_lobbies`;
 }
@@ -220,4 +232,46 @@ export async function setPlayerReady(
     await saveLobbyPlayers(code, players);
   }
   return players;
+}
+
+// ── Heartbeat ──
+
+const HEARTBEAT_TTL = 60;
+
+export async function setHeartbeat(code: string, userId: string): Promise<void> {
+  const key = lobbyHeartbeatKey(code, userId);
+  await redis.set(key, String(Date.now()));
+  await redis.expire(key, HEARTBEAT_TTL);
+}
+
+export async function getHeartbeat(code: string, userId: string): Promise<number | null> {
+  const raw = await redis.get(lobbyHeartbeatKey(code, userId));
+  if (!raw) return null;
+  return parseInt(raw, 10);
+}
+
+const STALE_THRESHOLD_MS = 30_000;
+
+export async function isPlayerStale(code: string, userId: string): Promise<boolean> {
+  const ts = await getHeartbeat(code, userId);
+  if (ts === null) return true;
+  return Date.now() - ts > STALE_THRESHOLD_MS;
+}
+
+// ── Game Move History ──
+
+export async function getGameMoves(code: string): Promise<string | null> {
+  return await redis.get(lobbyMovesKey(code));
+}
+
+export async function saveGameMoves(code: string, movesJson: string): Promise<void> {
+  await setWithTTL(lobbyMovesKey(code), movesJson);
+}
+
+export async function getGamePasses(code: string): Promise<string | null> {
+  return await redis.get(lobbyPassesKey(code));
+}
+
+export async function saveGamePasses(code: string, passesJson: string): Promise<void> {
+  await setWithTTL(lobbyPassesKey(code), passesJson);
 }

@@ -36,4 +36,5 @@ export type MultiplayerMessage =
   | { type: 'player-pass'; player: 1 | 2; userId: string }
   | { type: 'game-over'; winnerPlayer: 1 | 2 | null; p1Score: number; p2Score: number }
   | { type: 'player-left'; userId: string }
-  | { type: 'rematch'; lobbyCode: string };
+  | { type: 'rematch'; lobbyCode: string }
+  | { type: 'move-rejected'; reason: string; userId: string };

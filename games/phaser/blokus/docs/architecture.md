@@ -26,12 +26,12 @@ games/phaser/blokus/
 │   │       ├── audio/
 │   │       │   └── SoundManager.ts # Procedural Web Audio API sounds
 │   │       ├── data/
-│   │       │   └── pieces.ts    # 21 polyomino piece definitions + transforms
+│   │       │   └── pieces.ts    # Re-exports piece definitions from shared/logic
 │   │       ├── logic/
 │   │       │   ├── BoardLogic.ts # Board state, validation, scoring
 │   │       │   └── AIPlayer.ts   # AI opponent with scoring heuristics
 │   │       ├── systems/
-│   │       │   └── MultiplayerManager.ts # Realtime connection + lobby management
+│   │       │   └── MultiplayerManager.ts # Realtime connection, lobby management, heartbeat
 │   │       └── scenes/
 │   │           ├── Boot.ts       # Minimal bootstrap
 │   │           ├── Preloader.ts  # Loading screen
@@ -49,6 +49,9 @@ games/phaser/blokus/
 │   │       ├── post.ts          # Devvit post creation
 │   │       └── lobbyState.ts    # Redis-backed lobby state management
 │   └── shared/
+│       ├── logic/
+│       │   ├── pieces.ts        # Canonical piece definitions (shared by client + server)
+│       │   └── BoardValidator.ts # Server-side move validation engine
 │       └── types/
 │           ├── api.ts           # Shared API types
 │           └── multiplayer.ts   # Multiplayer message + lobby types
@@ -70,14 +73,16 @@ games/phaser/blokus/
 2. **Lobby join**: Guest calls `/api/lobbies/join` with code -> server adds player to Redis state.
 3. **Realtime connection**: Both clients call `connectRealtime(channel)` to join the lobby's Realtime channel.
 4. **Ready + Start**: Players toggle ready via `/api/game/ready`. Host starts via `/api/game/start` -> server broadcasts `game-start` message.
-5. **Game moves**: Active player places piece -> POST `/api/game/move` -> server broadcasts `player-move` via `realtime.send()` -> opponent applies via `BoardLogic`.
-6. **Turn management**: After each move, active player switches. Both clients derive game state from the initial setup + ordered move messages.
+5. **Game moves**: Active player places piece -> POST `/api/game/move` -> server validates via `BoardValidator` -> if valid, broadcasts `player-move` via `realtime.send()` -> opponent applies via `BoardLogic`. If invalid, server responds 400 and broadcasts `move-rejected`.
+6. **Turn management**: After each move, active player switches. Server maintains authoritative game state via `BoardValidator`; clients derive display state from broadcast messages.
+7. **Heartbeat**: Both clients send periodic heartbeat POSTs to `/api/game/heartbeat` (every 10s). Server checks opponent's last heartbeat timestamp. If >30s stale, broadcasts `player-left` and ends the game.
 
 ## Key Design Decisions
 
-- **Client-side game logic**: All Blokus rules, AI, and board state run in the browser. Server only handles persistence and relay.
+- **Server-side move validation**: `BoardValidator` in `shared/logic/` reconstructs game state from move history and validates each incoming move against Blokus placement rules before broadcasting. Prevents cheating.
+- **Heartbeat disconnection detection**: Client-side 10s heartbeat interval with server-side 30s staleness threshold. On disconnect, remaining player wins automatically.
+- **Shared logic layer**: Piece definitions and board validation logic live in `src/shared/logic/` so both client and server can use the same code.
 - **Procedural graphics**: No external image assets. All pieces, board, and UI drawn with Phaser Graphics API.
 - **Responsive layout**: Board and tray scale dynamically using `Phaser.Scale.RESIZE` mode.
 - **Blokus Duo variant**: 14x14 board, 2 players, center starting positions. Simpler than full 4-player Blokus.
-- **Thin server relay**: Server broadcasts moves without validating game rules. Active-player authority model.
-- **Redis lobby storage**: Lobbies stored with 2-hour TTL. Keys: `blokus_lobby_{code}_state`, `blokus_lobby_{code}_players`.
+- **Redis lobby storage**: Lobbies stored with 2-hour TTL. Keys: `blokus_lobby_{code}_state`, `blokus_lobby_{code}_players`, `blokus_lobby_{code}_heartbeat_{userId}`, `blokus_lobby_{code}_moves`.

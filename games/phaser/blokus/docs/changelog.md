@@ -1,5 +1,35 @@
 # Blokus - Changelog
 
+## v0.5.0 - Heartbeat & Server-Side Validation (2026-02-24)
+
+### Added
+- **Heartbeat disconnection detection**: Client sends heartbeat every 10s; server detects stale opponents after 30s and broadcasts `player-left`, ending the game with the remaining player winning
+- **Server-side move validation**: `BoardValidator` class validates all moves against Blokus rules before broadcasting. Invalid moves are rejected with a `move-rejected` message
+- **Shared logic layer**: Piece definitions and board validation moved to `src/shared/logic/` for use by both client and server
+- **`BoardValidator` class**: Deterministic game state engine supporting `validateMove()`, `applyMove()`, `applyPass()`, `isGameOver()`, `calculateScore()`, and state serialization
+- **New Redis keys**: `blokus_lobby_{code}_heartbeat_{userId}` (heartbeat timestamps), `blokus_lobby_{code}_moves` (move history)
+- **`/api/game/heartbeat` endpoint**: Receives heartbeat POSTs and checks opponent staleness
+
+### Changed
+- `/api/game/move` now validates moves via `BoardValidator` before broadcasting; returns 400 on invalid moves
+- `/api/game/pass` now validates passes via `BoardValidator`
+- `/api/game/start` initializes server-side board cache and move history
+- `MultiplayerManager` now manages heartbeat lifecycle (`startHeartbeat()`, `stopHeartbeat()`)
+- `Game.ts` handles `move-rejected` messages from server
+- `pieces.ts` in client now re-exports from shared logic (single source of truth)
+
+### Verified (E2E Two-Player Test)
+- Lobby creation and Quick Match joining works across two browser sessions
+- Both players show `[MP] Heartbeat started` when game begins
+- Game board renders correctly with synchronized turn management
+- After closing one player's browser, the remaining player detects disconnection within ~35s
+- Remaining player sees "YOU WIN!" screen after opponent disconnect
+- `[MP] Heartbeat stopped` logged on game end
+- Zero critical console errors during normal gameplay
+
+### Known Issues
+- Transient 400 error on `/api/game/start` if host clicks START before server processes both players' ready state (game still starts on retry)
+
 ## v0.4.0 - Live Multiplayer (2026-02-24)
 
 ### Added
@@ -42,9 +72,9 @@
 - Scores update correctly on both clients
 - Zero critical console errors during full multiplayer flow
 
-### Known Gaps
-- Opponent-left detection requires explicit `leaveLobby()` call; closing the browser dialog doesn't trigger it
-- Server-side heartbeat/timeout needed for reliable disconnection detection
+### Known Gaps (resolved in v0.5.0)
+- ~~Opponent-left detection requires explicit `leaveLobby()` call; closing the browser dialog doesn't trigger it~~
+- ~~Server-side heartbeat/timeout needed for reliable disconnection detection~~
 
 ## v0.3.1 - Rotation Controls Overhaul (2026-02-24)
 

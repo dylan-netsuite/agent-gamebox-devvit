@@ -74,6 +74,30 @@ Triggered on app install. Creates the initial Blokus post.
 
 Creates a new Blokus post from the subreddit menu.
 
+### `POST /api/game/heartbeat`
+
+Sends a heartbeat to indicate the player is still connected. Checks opponent's heartbeat for staleness.
+
+**Request**: `{ "lobbyCode": "ABC123" }`
+
+**Response**: `{ "success": true }`
+
+**Side effects**: If opponent's heartbeat is >30s stale, broadcasts `player-left` via realtime and sets lobby status to `finished`.
+
+### `POST /api/game/move` (updated)
+
+Now validates moves server-side using `BoardValidator` before broadcasting.
+
+**Request**: `{ "lobbyCode": "ABC123", "move": { "pieceId": "monomino", "cells": [[4,4]], "playerNumber": 1 } }`
+
+**On valid**: Applies move to server board, persists state, broadcasts `player-move`. Returns `{ "success": true }`.
+
+**On invalid**: Returns 400 with `{ "error": "Invalid move: <reason>" }` and broadcasts `move-rejected` to the player.
+
+### `POST /api/game/pass` (updated)
+
+Now validates passes server-side using `BoardValidator`.
+
 ## Redis Keys
 
 | Key Pattern | Type | Description |
@@ -82,15 +106,22 @@ Creates a new Blokus post from the subreddit menu.
 | `blokus:lb:score` | Sorted Set | Best scores (member=userId, score=bestScore) |
 | `blokus:lb:names` | Hash | userId -> username mapping |
 | `blokus:community` | Hash | Aggregate stats (gamesPlayed, totalPiecesPlaced) |
+| `blokus_lobby_{code}_state` | String (JSON) | Lobby state (players, status, host) |
+| `blokus_lobby_{code}_players` | String (JSON) | Player list for the lobby |
+| `blokus_lobby_{code}_heartbeat_{userId}` | String | Last heartbeat timestamp (ms) per player |
+| `blokus_lobby_{code}_moves` | String (JSON) | Serialized move history for server-side validation |
+| `blokus_lobby_{code}_passes` | String (JSON) | Player pass state for server-side validation |
 
 ## Shared Types
 
-All types are defined in `src/shared/types/api.ts`:
+All types are defined in `src/shared/types/`:
 
-- `UserStats` - Player statistics
-- `GameResult` - Full game result (client-side)
-- `SubmitResultRequest` - POST body for submitting results
-- `StatsResponse` - GET /api/stats response
-- `LeaderboardEntry` - Single leaderboard row
-- `LeaderboardResponse` - GET /api/leaderboard response
-- `CommunityStatsResponse` - GET /api/community-stats response
+- `api.ts`: `UserStats`, `GameResult`, `SubmitResultRequest`, `StatsResponse`, `LeaderboardEntry`, `LeaderboardResponse`, `CommunityStatsResponse`
+- `multiplayer.ts`: `LobbyInfo`, `LobbyPlayer`, `MultiplayerGameConfig`, `BlokusMove`, `MultiplayerMessage` (includes `move-rejected` type)
+
+## Shared Logic
+
+Located in `src/shared/logic/`:
+
+- `pieces.ts`: Canonical `PieceDefinition` interface and `PIECE_DEFINITIONS` array (21 polyominoes)
+- `BoardValidator.ts`: Server-side game state engine with methods: `validateMove()`, `applyMove()`, `applyPass()`, `isGameOver()`, `calculateScore()`, `serialize()`, `deserialize()`
