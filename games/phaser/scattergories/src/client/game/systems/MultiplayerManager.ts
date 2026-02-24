@@ -68,8 +68,18 @@ export class MultiplayerManager {
     }
   }
 
+  async resetForLobby(newLobbyCode: string): Promise<void> {
+    await this.disconnect();
+    this._lobbyCode = newLobbyCode;
+    this.handlers = [];
+  }
+
   static async createLobby(): Promise<{ lobbyCode: string; players: LobbyPlayer[]; isHost: boolean }> {
     const res = await fetch('/api/lobbies/create', { method: 'POST' });
+    if (!res.ok) {
+      const err = (await res.json()) as { message?: string };
+      throw new Error(err.message ?? 'Failed to create lobby');
+    }
     return (await res.json()) as { lobbyCode: string; players: LobbyPlayer[]; isHost: boolean; status: string };
   }
 

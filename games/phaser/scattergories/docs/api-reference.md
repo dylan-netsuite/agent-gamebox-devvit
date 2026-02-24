@@ -28,7 +28,7 @@
 |--------|------|-------------|
 | POST | `/api/game/start` | Host starts game; server picks letter + categories |
 | POST | `/api/game/submit-answers` | Player submits 12 answers for current round |
-| POST | `/api/game/finalize-round` | Force-finalizes round (timer expiry fallback) |
+| POST | `/api/game/finalize-round` | Force-finalizes round (timer expiry fallback). Caller must be a lobby member. |
 | POST | `/api/game/rematch` | Creates new lobby for rematch |
 
 ### Stats

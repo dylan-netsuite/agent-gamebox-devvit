@@ -11,6 +11,10 @@ export interface GamePlayData {
   mode: 'single' | 'multiplayer';
   multiplayerManager?: MultiplayerManager;
   round?: RoundConfig;
+  usedListIds?: number[];
+  usedLetters?: string[];
+  totalScore?: number;
+  roundNumber?: number;
 }
 
 export class GamePlay extends Scene {
@@ -58,6 +62,10 @@ export class GamePlay extends Scene {
       this.categoryListId = data.round.categoryListId;
       this.roundNumber = data.round.roundNumber;
     } else {
+      if (data.usedListIds) this.usedListIds = data.usedListIds;
+      if (data.usedLetters) this.usedLetters = data.usedLetters;
+      if (data.totalScore != null) this.totalScore = data.totalScore;
+      if (data.roundNumber != null) this.roundNumber = data.roundNumber;
       this.pickSinglePlayerRound();
     }
 
@@ -200,7 +208,7 @@ export class GamePlay extends Scene {
     this.submitBtn.add(submitZone);
 
     submitZone.on('pointerdown', () => {
-      void this.submitAnswers();
+      void this.submitAnswers(false);
     });
   }
 
@@ -300,7 +308,7 @@ export class GamePlay extends Scene {
 
         if (this.timeRemaining <= 0) {
           this.timerEvent?.destroy();
-          void this.submitAnswers();
+          void this.submitAnswers(true);
         }
       },
     });
@@ -312,7 +320,7 @@ export class GamePlay extends Scene {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  private async submitAnswers(): Promise<void> {
+  private async submitAnswers(timerExpired = false): Promise<void> {
     if (this.submitted) return;
     this.submitted = true;
     this.timerEvent?.destroy();
@@ -332,6 +340,9 @@ export class GamePlay extends Scene {
     if (this.mode === 'multiplayer' && this.mp) {
       this.statusText.setText('Waiting for other players...');
       await this.mp.submitAnswers(this.answers);
+      if (timerExpired) {
+        await this.mp.finalizeRound();
+      }
     } else {
       const { result, totalScore: newTotal } = scoreSinglePlayer(
         this.roundNumber,

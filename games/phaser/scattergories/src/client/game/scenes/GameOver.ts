@@ -17,7 +17,7 @@ export class GameOver extends Scene {
   }
 
   create(data: GameOverData) {
-    const { scores, winnerName, mp } = data;
+    const { scores, mp } = data;
     this.cameras.main.setBackgroundColor('#1a1a2e');
 
     const { width } = this.scale;
@@ -35,6 +35,9 @@ export class GameOver extends Scene {
       .setOrigin(0.5)
       .setShadow(2, 2, '#000000', 4);
 
+    const sorted = [...scores].sort((a, b) => b.totalScore - a.totalScore);
+    const winnerName = sorted[0]?.username ?? 'Nobody';
+
     this.add
       .text(cx, 60, `Winner: ${winnerName}`, {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
@@ -43,8 +46,6 @@ export class GameOver extends Scene {
         color: '#f39c12',
       })
       .setOrigin(0.5);
-
-    const sorted = [...scores].sort((a, b) => b.totalScore - a.totalScore);
     const tableW = Math.min(width - 32, 360);
     const tableX = cx - tableW / 2;
     const startY = 95;
@@ -131,6 +132,7 @@ export class GameOver extends Scene {
   private async handleRematch(mp: MultiplayerManager): Promise<void> {
     const newCode = await mp.requestRematch();
     if (newCode) {
+      await mp.resetForLobby(newCode);
       this.scene.start('Lobby', { mp, lobbyCode: newCode });
     }
   }

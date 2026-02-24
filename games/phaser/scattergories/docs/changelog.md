@@ -1,5 +1,22 @@
 # Scattergories - Changelog
 
+## [0.2.0] - 2026-02-24
+
+### Fixed
+- Single-player round progression now preserves state (used letters, used lists, total score, round number) across rounds — no more repeat letters/categories or score resets
+- Multiplayer timer expiry now calls `finalizeRound()` on the server so rounds complete even if not all players submit manually
+- Rematch now disconnects from the old lobby channel and reconnects to the new one via `resetForLobby()`
+- GameOver screen no longer crashes on empty scores — derives winner from sorted array with fallback
+- Post creation endpoint returns `navigateTo` URL (matching worms pattern) and proper error handling
+- Server startup now binds to port with error handler (matching worms pattern)
+
+### Hardened
+- `createLobby()` API call now checks `res.ok` and throws on error, preventing undefined crashes
+- LobbyBrowser actions (quick match, create, join) now await `ensurePostId()` before proceeding, fixing a race condition
+- `/api/game/finalize-round` server endpoint now verifies the caller is a member of the lobby
+
+Workflow: wf-1771955085
+
 ## [0.1.0] - 2026-02-24
 
 ### Added

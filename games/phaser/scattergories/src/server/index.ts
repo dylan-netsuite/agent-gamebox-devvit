@@ -288,9 +288,16 @@ router.post('/api/game/submit-answers', async (req, res): Promise<void> => {
 // --- Finalize Round (called when timer expires or all submit) ---
 
 router.post('/api/game/finalize-round', async (req, res): Promise<void> => {
+  const { userId } = context;
   const { lobbyCode } = req.body as { lobbyCode: string };
-  if (!lobbyCode) {
-    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' } satisfies ErrorResponse);
+  if (!lobbyCode || !userId) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode or userId' } satisfies ErrorResponse);
+    return;
+  }
+
+  const players = await getLobbyPlayers(lobbyCode);
+  if (!players.some((p) => p.userId === userId)) {
+    res.status(403).json({ status: 'error', message: 'Not a member of this lobby' } satisfies ErrorResponse);
     return;
   }
 
@@ -300,7 +307,6 @@ router.post('/api/game/finalize-round', async (req, res): Promise<void> => {
     return;
   }
 
-  const players = await getLobbyPlayers(lobbyCode);
   await finalizeRound(lobbyCode, roundConfig, players.map((p) => ({ userId: p.userId, username: p.username })));
   res.json({ status: 'ok' });
 });
@@ -434,11 +440,18 @@ router.get('/api/leaderboard', async (_req, res): Promise<void> => {
 router.post('/internal/menu/post-create', async (_req, res): Promise<void> => {
   try {
     const post = await createPost();
-    res.json({ status: 'ok', postId: post.id });
-  } catch (err) {
-    res.status(500).json({ status: 'error', message: 'Failed to create post' } satisfies ErrorResponse);
+    res.json({
+      navigateTo: `https://reddit.com/r/${context.subredditName}/comments/${post.id}`,
+    });
+  } catch (error) {
+    console.error(`Error creating post: ${error}`);
+    res.status(400).json({ status: 'error', message: 'Failed to create post' });
   }
 });
 
 app.use(router);
-createServer(app);
+
+const port = process.env.WEBBIT_PORT || 3000;
+const server = createServer(app);
+server.on('error', (err) => console.error(`server error; ${err.stack}`));
+server.listen(port);

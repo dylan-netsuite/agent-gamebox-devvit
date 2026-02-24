@@ -222,9 +222,20 @@ export class LobbyBrowser extends Scene {
     zone.on('pointerdown', action);
   }
 
+  private async ensurePostId(): Promise<boolean> {
+    if (this.postId) return true;
+    await this.fetchPostId();
+    if (!this.postId) {
+      this.statusText.setText('Error: Could not connect to server');
+      return false;
+    }
+    return true;
+  }
+
   private async quickMatch(): Promise<void> {
     if (this.busy) return;
     this.busy = true;
+    if (!(await this.ensurePostId())) { this.busy = false; return; }
     this.startLoadingDots('Searching for open games');
     try {
       const lobby = await MultiplayerManager.findOpenLobby();
@@ -252,6 +263,7 @@ export class LobbyBrowser extends Scene {
   private async createLobby(): Promise<void> {
     if (this.busy) return;
     this.busy = true;
+    if (!(await this.ensurePostId())) { this.busy = false; return; }
     this.startLoadingDots('Creating lobby');
     try {
       const result = await MultiplayerManager.createLobby();
@@ -272,6 +284,7 @@ export class LobbyBrowser extends Scene {
       return;
     }
     this.busy = true;
+    if (!(await this.ensurePostId())) { this.busy = false; return; }
     this.startLoadingDots(`Joining ${this.codeInput}`);
     try {
       const result = await MultiplayerManager.joinLobbyByCode(this.codeInput);
