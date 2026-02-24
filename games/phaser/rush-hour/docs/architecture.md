@@ -17,7 +17,7 @@ games/phaser/rush-hour/
 │   │   ├── splash/       # Inline splash screen (pre-expand)
 │   │   └── game/         # Phaser game (post-expand)
 │   │       ├── scenes/   # Phaser scene classes
-│   │       ├── data/     # Puzzle catalog data
+│   │       ├── data/     # Puzzle catalog + daily puzzle pool
 │   │       ├── utils/    # BFS solver, validation, sounds
 │   │       └── data/__tests__/  # BFS puzzle validation tests
 │   ├── server/           # Devvit serverless backend

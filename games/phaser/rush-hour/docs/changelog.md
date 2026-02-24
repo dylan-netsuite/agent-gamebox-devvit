@@ -212,3 +212,24 @@
 - Build, type-check, and lint all pass cleanly
 - Deployed to playtest v0.0.6.1
 - Simulated annealing generator confirmed working (found 20-move puzzle in ~1500 iterations)
+
+## v0.8.1 - Unique Daily Puzzles (2026-02-24)
+
+### Added
+- **365 daily-exclusive puzzles** (`dailyPuzzles.ts`): A separate pool of puzzles sourced from the Fogleman database that never overlap with the catalog. Each daily puzzle is unique.
+- **Weighted difficulty distribution**: 155 advanced (42%), 175 expert (48%), 35 grandmaster (10%). Deterministically shuffled so difficulties are interleaved across the year.
+- **Daily pool import tool** (`tools/import-daily-pool.ts`): Extracts daily puzzles from the Fogleman database, excludes catalog entries, shuffles with a seeded PRNG, and outputs TypeScript.
+
+### Changed
+- `getDailyPuzzle()` now selects from the dedicated `DAILY_PUZZLES` pool instead of the catalog. Uses the same date-based hash but indexes into the 365-puzzle daily pool.
+- Daily puzzles are always Advanced (19-30 moves), Expert (31-42 moves), or Grandmaster (43-51 moves) -- no more beginner/intermediate dailies.
+
+### Removed
+- Old daily puzzle selection that recycled from `CATALOG_PUZZLES`
+
+### Tested
+- Zero ID overlap between daily pool and catalog confirmed
+- 30-day simulation shows good difficulty mix (17 advanced, 12 expert, 1 grandmaster)
+- All 111 catalog tests still pass
+- Build, type-check, and lint all clean
+- Deployed to playtest v0.0.6.15

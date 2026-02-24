@@ -50,7 +50,9 @@ Puzzle catalog cards display completion status: stars earned and best result (mo
 
 ### Daily Puzzle
 - One puzzle per day, same for all users
-- Selected deterministically from the catalog using a date-based hash
+- Selected from a dedicated pool of 365 daily-exclusive puzzles (never duplicated from the catalog)
+- Distribution: ~42% advanced (19-30 moves), ~48% expert (31-42 moves), ~10% grandmaster (43-51 moves)
+- Selected deterministically using a date-based hash into the shuffled daily pool
 - Daily leaderboard tracks moves and time
 - Daily streak tracking for consecutive days played
 

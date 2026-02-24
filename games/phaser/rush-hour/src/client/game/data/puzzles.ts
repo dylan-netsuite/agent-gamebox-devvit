@@ -1986,13 +1986,19 @@ export function getPuzzlesByDifficulty(difficulty: string): PuzzleConfig[] {
   return CATALOG_PUZZLES.filter((p) => p.difficulty === difficulty);
 }
 
+import { DAILY_PUZZLES } from './dailyPuzzles';
+
+function dateHash(dateStr: string): number {
+  let h = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    h = (h * 31 + dateStr.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
+
 export function getDailyPuzzle(): PuzzleConfig {
   const today = new Date();
   const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-  let hash = 0;
-  for (let i = 0; i < dateStr.length; i++) {
-    hash = (hash * 31 + dateStr.charCodeAt(i)) | 0;
-  }
-  const index = Math.abs(hash) % CATALOG_PUZZLES.length;
-  return CATALOG_PUZZLES[index]!;
+  const h = dateHash(dateStr);
+  return DAILY_PUZZLES[h % DAILY_PUZZLES.length]!;
 }
