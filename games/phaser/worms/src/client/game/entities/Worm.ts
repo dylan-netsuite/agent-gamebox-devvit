@@ -12,8 +12,10 @@ const MAX_CLIMB = 8;
 const JUMP_VELOCITY = -6;
 const BACKFLIP_VY = -8;
 const BACKFLIP_VX = 4;
-const FALL_DAMAGE_THRESHOLD = 40;
-const FALL_DAMAGE_PER_PIXEL = 0.8;
+const FALL_DAMAGE_THRESHOLD = 60;
+const FALL_DAMAGE_PER_PIXEL = 0.5;
+const PARACHUTE_MAX_FALL_SPEED = 1.0;
+const PARACHUTE_DRAG = 0.9;
 
 export class Worm {
   private terrain: TerrainEngine;
@@ -39,6 +41,8 @@ export class Worm {
   private horizontalVelocity: number;
   private grounded: boolean;
   private deathPlayed: boolean;
+  private _parachuteOpen: boolean;
+  private parachuteGraphics: Phaser.GameObjects.Graphics;
 
   constructor(
     scene: Phaser.Scene,
@@ -68,6 +72,7 @@ export class Worm {
     this.horizontalVelocity = 0;
     this.grounded = true;
     this.deathPlayed = false;
+    this._parachuteOpen = false;
 
     const surfaceY = terrain.getSurfaceY(x);
     this.y = surfaceY - WORM_HEIGHT;
@@ -95,6 +100,8 @@ export class Worm {
       .setOrigin(0.5, 1)
       .setShadow(1, 1, '#000000', 3)
       .setDepth(25);
+
+    this.parachuteGraphics = scene.add.graphics().setDepth(24);
 
     this.draw();
   }
@@ -127,6 +134,19 @@ export class Worm {
     this.falling = true;
     this.grounded = false;
     this.fallStartY = this.y;
+  }
+
+  get parachuteOpen(): boolean {
+    return this._parachuteOpen;
+  }
+
+  openParachute(): void {
+    if (!this.alive || this.grounded) return;
+    this._parachuteOpen = true;
+  }
+
+  closeParachute(): void {
+    this._parachuteOpen = false;
   }
 
   applyKnockback(forceX: number, forceY: number): void {
@@ -178,7 +198,12 @@ export class Worm {
     if (!this.alive) return;
 
     if (this.falling) {
-      this.fallVelocity = Math.min(this.fallVelocity + 0.5, GRAVITY);
+      if (this._parachuteOpen) {
+        this.fallVelocity = Math.min(this.fallVelocity + 0.15, PARACHUTE_MAX_FALL_SPEED);
+        this.horizontalVelocity *= PARACHUTE_DRAG;
+      } else {
+        this.fallVelocity = Math.min(this.fallVelocity + 0.5, GRAVITY);
+      }
       this.y += this.fallVelocity;
 
       if (this.horizontalVelocity !== 0) {
@@ -217,12 +242,14 @@ export class Worm {
 
   private onLand(): void {
     const fallDistance = this.y - this.fallStartY;
+    const hadParachute = this._parachuteOpen;
     this.falling = false;
     this.grounded = true;
     this.fallVelocity = 0;
     this.horizontalVelocity = 0;
+    this._parachuteOpen = false;
 
-    if (fallDistance > FALL_DAMAGE_THRESHOLD) {
+    if (!hadParachute && fallDistance > FALL_DAMAGE_THRESHOLD) {
       const damage = Math.round((fallDistance - FALL_DAMAGE_THRESHOLD) * FALL_DAMAGE_PER_PIXEL);
       if (damage > 0) {
         this.takeDamage(damage);
@@ -267,9 +294,11 @@ export class Worm {
 
   private draw(): void {
     this.graphics.clear();
+    this.parachuteGraphics.clear();
 
     if (!this.alive) {
       this.graphics.setVisible(false);
+      this.parachuteGraphics.setVisible(false);
       this.nameText.setVisible(false);
       this.hpText.setVisible(false);
       return;
@@ -281,6 +310,10 @@ export class Worm {
     const drawY = y + bobOffset;
 
     this.characterDraw(this.graphics, x, drawY, WORM_WIDTH, WORM_HEIGHT, this.facingRight, this.color);
+
+    if (this._parachuteOpen) {
+      this.drawParachute(this.x, drawY);
+    }
 
     const barWidth = WORM_WIDTH + 10;
     const barHeight = 5;
@@ -302,6 +335,32 @@ export class Worm {
     this.nameText.setPosition(this.x, drawY - 12);
     this.hpText.setText(`${this.health}`);
     this.hpText.setPosition(this.x, drawY - 22);
+  }
+
+  private drawParachute(cx: number, topY: number): void {
+    const g = this.parachuteGraphics;
+    const canopyW = 32;
+    const canopyH = 16;
+    const canopyTop = topY - 28;
+
+    g.fillStyle(0xffffff, 0.85);
+    g.fillEllipse(cx, canopyTop + canopyH / 2, canopyW, canopyH);
+
+    g.fillStyle(0xe94560, 0.7);
+    g.fillEllipse(cx - canopyW * 0.22, canopyTop + canopyH / 2, canopyW * 0.3, canopyH * 0.85);
+    g.fillEllipse(cx + canopyW * 0.22, canopyTop + canopyH / 2, canopyW * 0.3, canopyH * 0.85);
+
+    g.lineStyle(1, 0x666666, 0.7);
+    g.beginPath();
+    g.moveTo(cx - canopyW / 2 + 2, canopyTop + canopyH);
+    g.lineTo(cx, topY - 2);
+    g.moveTo(cx + canopyW / 2 - 2, canopyTop + canopyH);
+    g.lineTo(cx, topY - 2);
+    g.moveTo(cx - canopyW / 4, canopyTop + canopyH - 1);
+    g.lineTo(cx, topY - 2);
+    g.moveTo(cx + canopyW / 4, canopyTop + canopyH - 1);
+    g.lineTo(cx, topY - 2);
+    g.strokePath();
   }
 
   takeDamage(amount: number): void {
@@ -353,11 +412,12 @@ export class Worm {
     });
 
     this.scene.tweens.add({
-      targets: [this.graphics, this.nameText, this.hpText],
+      targets: [this.graphics, this.parachuteGraphics, this.nameText, this.hpText],
       alpha: 0,
       duration: 400,
       onComplete: () => {
         this.graphics.setVisible(false);
+        this.parachuteGraphics.setVisible(false);
         this.nameText.setVisible(false);
         this.hpText.setVisible(false);
       },
@@ -370,6 +430,7 @@ export class Worm {
 
   destroy(): void {
     this.graphics.destroy();
+    this.parachuteGraphics.destroy();
     this.nameText.destroy();
     this.hpText.destroy();
   }

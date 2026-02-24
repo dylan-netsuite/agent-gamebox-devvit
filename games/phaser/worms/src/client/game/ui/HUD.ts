@@ -506,7 +506,7 @@ export class HUD {
     switch (state) {
       case 'idle':
         this.stateText.setText(`${teamLabel} ${weapon.icon} ${weapon.name}`);
-        this.instructionText.setText('Click:Aim · W:Jump · B:Backflip · ←→:Move · Drag:Pan');
+        this.instructionText.setText('Click:Aim · W:Jump · B:Backflip · P:Parachute · ←→:Move');
         break;
       case 'aiming':
         this.stateText.setText(`${teamLabel} Aiming ${weapon.icon} ${weapon.name}`);

@@ -15,6 +15,7 @@ export interface TouchCallbacks {
   onNextWeapon: () => void;
   onPrevWeapon: () => void;
   onNextTurn: () => void;
+  onParachute: () => void;
   getState: () => string;
 }
 
@@ -62,6 +63,13 @@ export class TouchControls {
       baseY - BTN_SIZE - BTN_GAP,
       '↑',
       () => this.callbacks.onJump(),
+    );
+
+    this.makeButton(
+      baseX + (BTN_SIZE + BTN_GAP) / 2,
+      baseY - 2 * (BTN_SIZE + BTN_GAP),
+      '🪂',
+      () => this.callbacks.onParachute(),
     );
   }
 

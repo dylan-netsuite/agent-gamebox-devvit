@@ -1,5 +1,30 @@
 # Reddit Royale - Changelog
 
+## Parachute, Reduced Fall Damage & Initial-Aiming Fix (v0.0.12.11)
+
+### Added — Parachute Utility
+- **Worm.ts**: Added `openParachute()` / `closeParachute()` methods with `parachuteOpen` getter. When open mid-fall, fall velocity caps at 1.0 (vs normal gravity of 4), horizontal velocity is dampened by 0.9 drag per frame, and fall damage is completely negated on landing. Parachute auto-closes when the worm touches ground.
+- **Visual**: White/red canopy drawn above the worm with 4 string lines when parachute is active.
+- **Keyboard**: `P` key toggles the parachute (works in idle and aiming states, only activatable while airborne).
+- **Touch**: 🪂 button added above the jump button on the mobile D-pad.
+- **HUD**: Idle instruction text updated to include "P:Parachute".
+
+### Changed — Fall Damage Reduced
+- `FALL_DAMAGE_THRESHOLD`: 40 → 60 pixels (worms can fall further before taking damage)
+- `FALL_DAMAGE_PER_PIXEL`: 0.8 → 0.5 (less damage per pixel of excess fall)
+- Example: A 100px fall now deals 20 damage (was 48). A 200px fall deals 70 (was 128).
+
+### Fixed — Initial-Aiming Bug
+- **Problem**: When the game first started, the very first click on the canvas would immediately put the player into aiming mode instead of movement mode.
+- **Root cause**: The `pointerup` handler treated any non-drag click as an "aim" command, including the initial canvas focus click.
+- **Fix**: Added `turnStartClickConsumed` flag that consumes the first click of each turn, preventing accidental aiming on game start or turn change.
+
+### Files Changed
+- `src/client/game/entities/Worm.ts` — Parachute physics, visuals, fall damage constants
+- `src/client/game/scenes/GamePlay.ts` — P key binding, first-click fix, touch callback
+- `src/client/game/ui/TouchControls.ts` — Parachute button, updated callback interface
+- `src/client/game/ui/HUD.ts` — Updated instruction text
+
 ## AI Hitscan Accuracy + Unit Tests (v0.0.12.2)
 
 ### Improved — AI Hitscan Simulation

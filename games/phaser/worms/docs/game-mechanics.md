@@ -33,6 +33,7 @@ Utility weapon that teleports the worm to the aimed position. The worm lands at 
 | ← → | Move worm left/right |
 | W | Jump |
 | B | Backflip (higher jump, moves backward) |
+| P | Toggle parachute (while airborne) |
 | Click / Space | Start aiming / Fire |
 | Mouse move | Adjust aim angle |
 | Scroll wheel | Adjust power (while aiming) / Zoom (while idle) |
@@ -87,6 +88,19 @@ Worms are placed on the terrain floor via `getSurfaceY()`, which scans downward 
 - Floating damage numbers: scale-in animation (1.5x → 1x), color-coded by severity (yellow <20, orange 20-39, red 40+)
 - Worms die at 0 HP or by falling off the map
 
+### Fall Damage
+- Falls exceeding 60 pixels deal damage: `round((fallDistance - 60) * 0.5)`
+- Example: 100px fall = 20 damage, 200px fall = 70 damage
+- Fall damage is completely negated when landing with an open parachute
+
+### Parachute
+- Toggle with **P** key (keyboard) or 🪂 button (touch) while airborne
+- Slows fall velocity to a gentle 1.0 max (normal gravity max is 4.0)
+- Applies horizontal drag (0.9× per frame) for controlled descent
+- Cancels all fall damage on landing
+- Auto-closes when the worm touches ground
+- Visual: white and red canopy rendered above the worm with suspension lines
+
 ## Camera
 
 - Camera follows active worm with smooth lerp (0.08)
@@ -118,9 +132,10 @@ Worms are placed on the terrain floor via `getSurfaceY()`, which scans downward 
 
 ### Touch Controls (Mobile)
 - Only shown on touch devices
-- D-pad (left, right, jump) on left side
+- D-pad (left, right, jump, parachute) on left side
 - Action buttons (aim/fire, weapon cycle, next turn) on right side
 - Movement buttons repeat-fire while held
+- Parachute (🪂) button above jump button
 
 ## Wind
 

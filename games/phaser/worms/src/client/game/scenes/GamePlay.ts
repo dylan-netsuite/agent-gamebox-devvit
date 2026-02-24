@@ -73,6 +73,7 @@ export class GamePlay extends Scene {
   private isRemoteTurn = false;
   private mpHandler: ((msg: MultiplayerMessage) => void) | null = null;
   private pendingMoveThrottle = 0;
+  private turnStartClickConsumed = false;
 
   constructor() {
     super('GamePlay');
@@ -230,6 +231,17 @@ export class GamePlay extends Scene {
       onNextTurn: () => {
         if (this.weaponSystem.currentState === 'resolved' && this.canAct()) {
           this.requestNextTurn();
+        }
+      },
+      onParachute: () => {
+        if (!this.canAct()) return;
+        const worm = this.activeWorm;
+        if (worm) {
+          if (worm.parachuteOpen) {
+            worm.closeParachute();
+          } else {
+            worm.openParachute();
+          }
         }
       },
       getState: () => this.weaponSystem.currentState,
@@ -520,6 +532,7 @@ export class GamePlay extends Scene {
 
   private startTurn(): void {
     this.startTurnTimer();
+    this.turnStartClickConsumed = false;
     const worm = this.activeWorm;
     if (!worm) return;
 
@@ -856,6 +869,18 @@ export class GamePlay extends Scene {
       }
     });
 
+    this.input.keyboard.on('keydown-P', () => {
+      if (!this.canAct()) return;
+      const worm = this.activeWorm;
+      if (worm) {
+        if (worm.parachuteOpen) {
+          worm.closeParachute();
+        } else {
+          worm.openParachute();
+        }
+      }
+    });
+
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
       if (!this.canAct()) return;
       if (pointer.rightButtonReleased() || pointer.middleButtonReleased()) return;
@@ -864,6 +889,11 @@ export class GamePlay extends Scene {
         return;
       }
       if (this.hud.consumeClick()) return;
+
+      if (!this.turnStartClickConsumed) {
+        this.turnStartClickConsumed = true;
+        return;
+      }
 
       const state = this.weaponSystem.currentState;
       if (state === 'idle') {
