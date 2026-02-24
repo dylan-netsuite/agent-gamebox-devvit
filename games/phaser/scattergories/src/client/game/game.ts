@@ -1,6 +1,7 @@
 import { Boot } from './scenes/Boot';
 import { Preloader } from './scenes/Preloader';
 import { ModeSelect } from './scenes/ModeSelect';
+import { LocalSetup } from './scenes/LocalSetup';
 import { LobbyBrowser } from './scenes/LobbyBrowser';
 import { Lobby } from './scenes/Lobby';
 import { GamePlay } from './scenes/GamePlay';
@@ -20,7 +21,7 @@ const config: Phaser.Types.Core.GameConfig = {
     width: '100%',
     height: '100%',
   },
-  scene: [Boot, Preloader, ModeSelect, LobbyBrowser, Lobby, GamePlay, RoundResults, GameOver, Leaderboard],
+  scene: [Boot, Preloader, ModeSelect, LocalSetup, LobbyBrowser, Lobby, GamePlay, RoundResults, GameOver, Leaderboard],
 };
 
 document.addEventListener('DOMContentLoaded', () => {

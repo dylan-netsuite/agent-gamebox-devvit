@@ -1,5 +1,23 @@
 # Scattergories - Changelog
 
+## [0.5.0] - 2026-02-24
+
+### Added
+- **Three Game Modes** — ModeSelect now offers Single Player (vs AI), Local Play (pass & play), and Live Multiplayer (online) alongside Leaderboard.
+- **AI Opponents** — Single player mode now pits you against 2 AI opponents with curated word banks per category type. AI skill varies — they sometimes leave blanks or give duplicate answers.
+- **Local Multiplayer** — New `LocalSetup` scene lets 2-6 players enter names, then take turns on the same device. After all players submit, results show side-by-side with duplicate detection.
+- **AI Answer Generation System** — New `AIOpponent.ts` with word banks for names, cities, countries, animals, food, things, sports, clothing, shows, and occupations.
+- **Local Scoring Module** — New `localScoring.ts` handles multi-player scoring with cross-player duplicate detection.
+
+### Fixed
+- **Lobby UI** — Completely rewrote `LobbyBrowser.ts` to remove the cluttered inline lobby list and duplicated JOIN buttons. Now shows three clean action cards: Quick Match, Create Lobby, and Join by Code.
+
+### Changed
+- **ModeSelect** — Now shows 4 mode cards with unique colors: Single Player (purple), Local Play (green), Live Multiplayer (blue), Leaderboard (orange).
+- **Single Player Scoring** — Now includes AI opponents in the results table with duplicate detection across all players (human + AI).
+
+Workflow: wf-1771959200
+
 ## [0.4.0] - 2026-02-24
 
 ### Added

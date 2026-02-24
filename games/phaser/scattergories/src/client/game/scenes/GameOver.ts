@@ -2,13 +2,15 @@ import { Scene } from 'phaser';
 import { SoundManager } from '../systems/SoundManager';
 import type { MultiplayerManager } from '../systems/MultiplayerManager';
 import type { PlayerScore } from '../../../shared/types/game';
+import type { GameMode } from './GamePlay';
 
 export interface GameOverData {
   scores: PlayerScore[];
   winnerId: string;
   winnerName: string;
   mp?: MultiplayerManager | null;
-  mode?: 'single' | 'multiplayer';
+  mode?: GameMode;
+  localPlayers?: string[];
 }
 
 export class GameOver extends Scene {
@@ -17,7 +19,7 @@ export class GameOver extends Scene {
   }
 
   create(data: GameOverData) {
-    const { scores, mp } = data;
+    const { scores, mp, mode } = data;
     this.cameras.main.setBackgroundColor('#1a1a2e');
 
     const { width } = this.scale;
@@ -46,8 +48,9 @@ export class GameOver extends Scene {
     const sorted = [...scores].sort((a, b) => b.totalScore - a.totalScore);
     const winnerName = sorted[0]?.username ?? 'Nobody';
 
+    const winnerLabel = sorted.length > 1 ? `Winner: ${winnerName}` : `Final Score: ${sorted[0]?.totalScore ?? 0}`;
     const winnerText = this.add
-      .text(cx, 60, `Winner: ${winnerName}`, {
+      .text(cx, 60, winnerLabel, {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '18px',
         fontStyle: 'bold',
@@ -126,7 +129,18 @@ export class GameOver extends Scene {
       });
     }
 
-    this.createAnimatedButton(cx, btnY + (mp ? 50 : 0), 'BACK TO MENU', 0x3498db, btnDelay + 150, () => {
+    if (mode === 'local' && data.localPlayers) {
+      this.createAnimatedButton(cx, btnY, 'PLAY AGAIN', 0x2ecc71, btnDelay, () => {
+        SoundManager.play('select');
+        this.scene.start('GamePlay', {
+          mode: 'local',
+          localPlayers: data.localPlayers,
+        });
+      });
+    }
+
+    const extraOffset = mp || (mode === 'local' && data.localPlayers) ? 50 : 0;
+    this.createAnimatedButton(cx, btnY + extraOffset, 'BACK TO MENU', 0x3498db, btnDelay + 150, () => {
       SoundManager.play('select');
       this.scene.start('ModeSelect');
     });
@@ -151,9 +165,8 @@ export class GameOver extends Scene {
     const zone = this.add
       .zone(cx, y + btnH / 2, btnW, btnH)
       .setInteractive({ useHandCursor: true });
-    zone.setAlpha(0);
 
-    this.tweens.add({ targets: [bg, text, zone], alpha: 1, duration: 400, delay, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: [bg, text], alpha: 1, duration: 400, delay, ease: 'Back.easeOut' });
     zone.on('pointerdown', action);
   }
 

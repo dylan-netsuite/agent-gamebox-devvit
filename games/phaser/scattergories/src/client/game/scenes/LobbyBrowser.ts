@@ -3,11 +3,6 @@ import * as Phaser from 'phaser';
 import { context } from '@devvit/web/client';
 import { SoundManager } from '../systems/SoundManager';
 import { MultiplayerManager } from '../systems/MultiplayerManager';
-import type { LobbyInfo, LobbyPlayer } from '../../../shared/types/multiplayer';
-
-interface LobbyListEntry extends LobbyInfo {
-  players: LobbyPlayer[];
-}
 
 export class LobbyBrowser extends Scene {
   private statusText!: Phaser.GameObjects.Text;
@@ -17,9 +12,6 @@ export class LobbyBrowser extends Scene {
   private busy = false;
   private dotsTimer: Phaser.Time.TimerEvent | null = null;
   private dotCount = 0;
-  private lobbyListContainer: Phaser.GameObjects.Container | null = null;
-  private lobbyListLabel!: Phaser.GameObjects.Text;
-  private refreshTimer: Phaser.Time.TimerEvent | null = null;
 
   constructor() {
     super('LobbyBrowser');
@@ -34,12 +26,15 @@ export class LobbyBrowser extends Scene {
     this.cameras.main.setBackgroundColor('#1a1a2e');
     this.postId = '';
 
+    this.cameras.main.setAlpha(0);
+    this.tweens.add({ targets: this.cameras.main, alpha: 1, duration: 300, ease: 'Sine.easeOut' });
+
     void this.fetchPostId();
 
     this.add
-      .text(cx, 24, 'ONLINE PLAY', {
+      .text(cx, 22, 'LIVE MULTIPLAYER', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '24px',
+        fontSize: '22px',
         fontStyle: 'bold',
         color: '#ffffff',
       })
@@ -47,7 +42,7 @@ export class LobbyBrowser extends Scene {
       .setShadow(2, 2, '#000000', 4);
 
     this.statusText = this.add
-      .text(cx, 52, '', {
+      .text(cx, 48, '', {
         fontFamily: 'monospace',
         fontSize: '10px',
         color: '#3498db',
@@ -56,29 +51,36 @@ export class LobbyBrowser extends Scene {
 
     const panelW = Math.min(width - 32, 360);
 
-    this.createActionButton(cx, 80, panelW, 44, '⚡', 'QUICK MATCH', 'Find an open game', 0x3498db, () => {
+    this.createActionButton(cx, 72, panelW, 56, '⚡', 'QUICK MATCH', 'Find or create a game instantly', 0x3498db, () => {
       void this.quickMatch();
     });
 
-    this.createActionButton(cx, 134, panelW, 44, '➕', 'CREATE LOBBY', 'Start a new game room', 0x2ecc71, () => {
+    this.createActionButton(cx, 140, panelW, 56, '➕', 'CREATE LOBBY', 'Start a private room for friends', 0x2ecc71, () => {
       void this.createLobby();
     });
 
-    const codeY = 196;
+    const codeY = 216;
+    const codePanelH = 90;
+
+    const codePanelBg = this.add.graphics();
+    codePanelBg.fillStyle(0x16213e, 0.6);
+    codePanelBg.fillRoundedRect(cx - panelW / 2, codeY, panelW, codePanelH, 10);
+    codePanelBg.lineStyle(1, 0xf39c12, 0.3);
+    codePanelBg.strokeRoundedRect(cx - panelW / 2, codeY, panelW, codePanelH, 10);
+
     this.add
-      .text(cx, codeY, 'JOIN BY CODE', {
-        fontFamily: 'monospace',
-        fontSize: '9px',
+      .text(cx, codeY + 14, '🔑  JOIN BY CODE', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '13px',
         fontStyle: 'bold',
-        color: '#8899aa',
-        letterSpacing: 2,
+        color: '#ffffff',
       })
       .setOrigin(0.5);
 
-    const inputW = 170;
-    const inputH = 34;
-    const inputX = cx - inputW / 2;
-    const inputY = codeY + 16;
+    const inputW = 180;
+    const inputH = 36;
+    const inputX = cx - inputW / 2 - 20;
+    const inputY = codeY + 36;
 
     const inputBg = this.add.graphics();
     inputBg.fillStyle(0x0a0a1a, 1);
@@ -87,25 +89,25 @@ export class LobbyBrowser extends Scene {
     inputBg.strokeRoundedRect(inputX, inputY, inputW, inputH, 8);
 
     this.codeDisplay = this.add
-      .text(cx, inputY + inputH / 2, '______', {
+      .text(inputX + inputW / 2, inputY + inputH / 2, '_ _ _ _ _ _', {
         fontFamily: 'monospace',
-        fontSize: '18px',
+        fontSize: '16px',
         fontStyle: 'bold',
         color: '#ffffff',
-        letterSpacing: 4,
+        letterSpacing: 2,
       })
       .setOrigin(0.5);
 
-    const joinBtnW = 70;
-    const joinBtnX = cx + inputW / 2 + 8;
+    const joinBtnW = 72;
+    const joinBtnX = inputX + inputW + 10;
     const joinBg = this.add.graphics();
-    joinBg.fillStyle(0x2ecc71, 1);
+    joinBg.fillStyle(0xf39c12, 1);
     joinBg.fillRoundedRect(joinBtnX, inputY, joinBtnW, inputH, 8);
 
     this.add
       .text(joinBtnX + joinBtnW / 2, inputY + inputH / 2, 'JOIN', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '12px',
+        fontSize: '13px',
         fontStyle: 'bold',
         color: '#ffffff',
       })
@@ -118,26 +120,6 @@ export class LobbyBrowser extends Scene {
     joinZone.on('pointerdown', () => {
       SoundManager.play('select');
       void this.joinByCode();
-    });
-
-    const lobbyListY = inputY + inputH + 16;
-    this.lobbyListLabel = this.add
-      .text(cx, lobbyListY, 'OPEN LOBBIES', {
-        fontFamily: 'monospace',
-        fontSize: '9px',
-        fontStyle: 'bold',
-        color: '#8899aa',
-        letterSpacing: 2,
-      })
-      .setOrigin(0.5);
-
-    this.lobbyListContainer = this.add.container(0, lobbyListY + 16);
-
-    void this.refreshLobbyList();
-    this.refreshTimer = this.time.addEvent({
-      delay: 5000,
-      loop: true,
-      callback: () => { void this.refreshLobbyList(); },
     });
 
     if (this.input.keyboard) {
@@ -158,7 +140,7 @@ export class LobbyBrowser extends Scene {
     }
 
     this.add
-      .text(cx, height - 16, '[ ESC \u2014 Back ]', {
+      .text(cx, height - 16, '[ ESC — Back ]', {
         fontFamily: 'monospace',
         fontSize: '10px',
         color: '#666688',
@@ -182,8 +164,8 @@ export class LobbyBrowser extends Scene {
   }
 
   private updateCodeDisplay(): void {
-    const display = this.codeInput.padEnd(6, '_');
-    this.codeDisplay.setText(display.split('').join(' '));
+    const display = this.codeInput.padEnd(6, '_').split('').join(' ');
+    this.codeDisplay.setText(display);
   }
 
   private startLoadingDots(baseText: string): void {
@@ -326,130 +308,6 @@ export class LobbyBrowser extends Scene {
     }
   }
 
-  private async refreshLobbyList(): Promise<void> {
-    try {
-      const res = await fetch('/api/lobbies/list');
-      if (!res.ok) return;
-      const data = (await res.json()) as { lobbies: LobbyListEntry[] };
-      this.renderLobbyList(data.lobbies);
-    } catch { /* ignore */ }
-  }
-
-  private renderLobbyList(lobbies: LobbyListEntry[]): void {
-    if (!this.lobbyListContainer) return;
-    this.lobbyListContainer.removeAll(true);
-
-    const { width } = this.scale;
-    const cx = width / 2;
-    const listW = Math.min(width - 32, 360);
-    const rowH = 32;
-
-    if (lobbies.length === 0) {
-      const emptyText = this.add.text(cx, 4, 'No open lobbies — create one!', {
-        fontFamily: 'monospace',
-        fontSize: '9px',
-        color: '#555577',
-      }).setOrigin(0.5, 0);
-      this.lobbyListContainer.add(emptyText);
-      return;
-    }
-
-    const now = Date.now();
-    lobbies.forEach((lobby, i) => {
-      const y = i * (rowH + 4);
-      const x = cx - listW / 2;
-
-      const bg = this.add.graphics();
-      bg.fillStyle(0x16213e, 0.9);
-      bg.fillRoundedRect(x, y, listW, rowH, 6);
-      bg.lineStyle(1, 0x2a3a5a, 0.6);
-      bg.strokeRoundedRect(x, y, listW, rowH, 6);
-      this.lobbyListContainer!.add(bg);
-
-      const hostText = this.add.text(x + 10, y + rowH / 2, lobby.hostUsername.slice(0, 12), {
-        fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '10px',
-        color: '#ffffff',
-      }).setOrigin(0, 0.5);
-      this.lobbyListContainer!.add(hostText);
-
-      const countText = this.add.text(x + listW * 0.5, y + rowH / 2, `${lobby.playerCount}/${lobby.maxPlayers}`, {
-        fontFamily: 'monospace',
-        fontSize: '10px',
-        fontStyle: 'bold',
-        color: '#3498db',
-      }).setOrigin(0.5, 0.5);
-      this.lobbyListContainer!.add(countText);
-
-      const ageMs = now - lobby.createdAt;
-      const ageStr = ageMs < 60000 ? `${Math.floor(ageMs / 1000)}s` : `${Math.floor(ageMs / 60000)}m`;
-      const ageText = this.add.text(x + listW * 0.7, y + rowH / 2, ageStr + ' ago', {
-        fontFamily: 'monospace',
-        fontSize: '8px',
-        color: '#666688',
-      }).setOrigin(0.5, 0.5);
-      this.lobbyListContainer!.add(ageText);
-
-      const joinBtnW = 50;
-      const joinBtnX = x + listW - joinBtnW - 6;
-      const joinBg = this.add.graphics();
-      joinBg.fillStyle(0x2ecc71, 1);
-      joinBg.fillRoundedRect(joinBtnX, y + 4, joinBtnW, rowH - 8, 4);
-      this.lobbyListContainer!.add(joinBg);
-
-      const joinLabel = this.add.text(joinBtnX + joinBtnW / 2, y + rowH / 2, 'JOIN', {
-        fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '9px',
-        fontStyle: 'bold',
-        color: '#ffffff',
-      }).setOrigin(0.5);
-      this.lobbyListContainer!.add(joinLabel);
-
-      const zone = this.add.zone(joinBtnX + joinBtnW / 2, y + rowH / 2, joinBtnW, rowH)
-        .setInteractive({ useHandCursor: true });
-      this.lobbyListContainer!.add(zone);
-
-      zone.on('pointerover', () => {
-        bg.clear();
-        bg.fillStyle(0x1e2d4f, 0.95);
-        bg.fillRoundedRect(x, y, listW, rowH, 6);
-        bg.lineStyle(2, 0x2ecc71, 0.8);
-        bg.strokeRoundedRect(x, y, listW, rowH, 6);
-      });
-      zone.on('pointerout', () => {
-        bg.clear();
-        bg.fillStyle(0x16213e, 0.9);
-        bg.fillRoundedRect(x, y, listW, rowH, 6);
-        bg.lineStyle(1, 0x2a3a5a, 0.6);
-        bg.strokeRoundedRect(x, y, listW, rowH, 6);
-      });
-      zone.on('pointerdown', () => {
-        SoundManager.play('select');
-        void this.joinLobbyByCode(lobby.lobbyCode);
-      });
-    });
-
-    const countLabel = lobbies.length === 1 ? '1 lobby' : `${lobbies.length} lobbies`;
-    this.lobbyListLabel.setText(`OPEN LOBBIES (${countLabel})`);
-  }
-
-  private async joinLobbyByCode(code: string): Promise<void> {
-    if (this.busy) return;
-    this.busy = true;
-    if (!(await this.ensurePostId())) { this.busy = false; return; }
-    this.startLoadingDots(`Joining ${code}`);
-    try {
-      const result = await MultiplayerManager.joinLobbyByCode(code);
-      this.stopLoadingDots();
-      this.goToLobby(result.lobbyCode);
-    } catch (err) {
-      this.stopLoadingDots();
-      this.statusText.setText(`Error: ${err instanceof Error ? err.message : 'Unknown'}`);
-    } finally {
-      this.busy = false;
-    }
-  }
-
   private goToLobby(lobbyCode: string): void {
     const mp = new MultiplayerManager(
       this.postId,
@@ -461,8 +319,6 @@ export class LobbyBrowser extends Scene {
   }
 
   shutdown(): void {
-    this.refreshTimer?.destroy();
-    this.refreshTimer = null;
     this.dotsTimer?.destroy();
     this.dotsTimer = null;
   }

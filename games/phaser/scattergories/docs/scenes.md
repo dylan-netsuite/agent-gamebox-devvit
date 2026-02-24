@@ -4,11 +4,13 @@
 
 ```
 Boot -> Preloader -> ModeSelect -> [branch]
-                                    ├── GamePlay (single player)
-                                    ├── LobbyBrowser -> Lobby -> GamePlay (multiplayer)
+                                    ├── GamePlay (single player vs AI)
+                                    ├── LocalSetup -> GamePlay (local pass & play)
+                                    ├── LobbyBrowser -> Lobby -> GamePlay (live multiplayer)
                                     └── Leaderboard
 
-GamePlay -> RoundResults -> GamePlay (next round) or GameOver
+GamePlay (local) -> GamePlay (next player's turn) -> RoundResults
+GamePlay (single/mp) -> RoundResults -> GamePlay (next round) or GameOver
 GameOver -> ModeSelect or Lobby (rematch)
 ```
 
@@ -25,15 +27,21 @@ GameOver -> ModeSelect or Lobby (rematch)
 
 ### ModeSelect
 - **File**: `scenes/ModeSelect.ts`
-- **Purpose**: Main menu with 3 options
-- **Options**: Single Player, Online Play, Leaderboard
+- **Purpose**: Main menu with 4 options
+- **Options**: Single Player (vs AI, purple), Local Play (pass & play, green), Live Multiplayer (online, blue), Leaderboard (orange)
 - **Animation**: Camera fade-in on scene enter
+
+### LocalSetup
+- **File**: `scenes/LocalSetup.ts`
+- **Purpose**: Player name entry for local multiplayer
+- **Features**: Player count (2-6) with +/- buttons, DOM text inputs for each player name, START GAME button
+- **Navigation**: ESC or back button returns to ModeSelect
 
 ### LobbyBrowser
 - **File**: `scenes/LobbyBrowser.ts`
-- **Purpose**: Online matchmaking hub
-- **Features**: Quick Match, Create Lobby, Join by Code (6-char input), Browse Open Lobbies
-- **Lobby List**: Shows all open lobbies with host name, player count (e.g. "2/6"), age (e.g. "1m ago"), and JOIN button. Auto-refreshes every 5 seconds via `/api/lobbies/list`.
+- **Purpose**: Online matchmaking hub with clean 3-section layout
+- **Features**: Quick Match (find or create game), Create Lobby (private room), Join by Code (6-char input with orange JOIN button)
+- **Animation**: Camera fade-in on scene enter
 
 ### Lobby
 - **File**: `scenes/Lobby.ts`
@@ -44,14 +52,18 @@ GameOver -> ModeSelect or Lobby (rematch)
 ### GamePlay
 - **File**: `scenes/GamePlay.ts`
 - **Purpose**: Core gameplay - category list with text inputs
+- **Modes**: `single` (vs 2 AI opponents), `local` (pass & play), `multiplayer` (online)
 - **Features**:
   - Animated letter dice roll (cycles random letters ~1s before settling)
   - Round/timer display with urgency effects (pulse + red flash at ≤10s)
   - 12 category rows with DOM overlay text inputs
   - Submit button (or auto-submit on timer expiry)
+  - Player name badge in top-left for local mode with turn indicator
+  - AI answer generation for single player mode
   - Player submission status indicators (multiplayer)
 - **Input**: DOM `<input>` elements overlaid on canvas for keyboard support
 - **Animation**: Dice roll on letter reveal, timer pulse at ≤10s, header flash
+- **Local flow**: After submission, transitions to next player's turn with same letter/categories; after last player, scores and shows RoundResults
 
 ### RoundResults
 - **File**: `scenes/RoundResults.ts`
@@ -61,14 +73,15 @@ GameOver -> ModeSelect or Lobby (rematch)
   - Green for unique valid answers, red/strikethrough for duplicates
   - Per-row sound effects (correct chime or duplicate buzz)
   - Round score and running total (animate in after rows)
-  - Next Round button for both single player AND multiplayer (no more auto-advance)
+  - Next Round button for single player, local, AND multiplayer
   - Multiplayer: buffers `round-start` message, shows "Reviewing..." until ready, then enables "NEXT ROUND ▶"
+  - Local: passes player names, scores, and used lists/letters to next round
 - **Animation**: Camera fade-in, staggered row reveal, fade-out on transition
 
 ### GameOver
 - **File**: `scenes/GameOver.ts`
 - **Purpose**: Final standings after 3 rounds
-- **Features**: Ranked player list with medals, total scores, Rematch and Back buttons
+- **Features**: Ranked player list with medals, total scores, mode-appropriate buttons (Rematch for online, Play Again for local, Back to Menu for all)
 - **Animation**: Camera fade-in, title drop from above, winner text fade-in, score rows slide in sequentially, buttons fade in with staggered delays
 
 ### Leaderboard

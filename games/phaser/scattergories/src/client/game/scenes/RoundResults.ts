@@ -5,17 +5,20 @@ import type { MultiplayerManager } from '../systems/MultiplayerManager';
 import type { RoundResult, PlayerScore } from '../../../shared/types/game';
 import type { ScatterMessage } from '../../../shared/types/multiplayer';
 import { TOTAL_ROUNDS } from '../../../shared/types/categories';
+import type { GameMode } from './GamePlay';
 
 export interface RoundResultsData {
   result: RoundResult;
   roundNumber: number;
   totalRounds: number;
-  mode: 'single' | 'multiplayer';
+  mode: GameMode;
   mp?: MultiplayerManager | null;
   scores?: PlayerScore[];
   usedListIds?: number[];
   usedLetters?: string[];
   totalScore?: number;
+  localPlayers?: string[];
+  localScores?: number[];
 }
 
 export class RoundResults extends Scene {
@@ -242,7 +245,7 @@ export class RoundResults extends Scene {
     const btnDelay = scoresDelay + 400;
     const isFinalRound = roundNumber >= TOTAL_ROUNDS;
 
-    if (isFinalRound && mode === 'single') {
+    if (isFinalRound && (mode === 'single' || mode === 'local')) {
       this.createAnimatedButton(cx, btnY, 'VIEW FINAL SCORES', 0x3498db, btnDelay, () => {
         this.fadeOutAndRun(() => {
           const scores: PlayerScore[] = playerResults.map((pr) => ({
@@ -256,7 +259,8 @@ export class RoundResults extends Scene {
             winnerId: scores[0]?.userId ?? '',
             winnerName: scores[0]?.username ?? '',
             mp: null,
-            mode: 'single',
+            mode,
+            localPlayers: data.localPlayers,
           });
         });
       });
@@ -270,6 +274,22 @@ export class RoundResults extends Scene {
               usedListIds: data.usedListIds,
               usedLetters: data.usedLetters,
               totalScore: data.totalScore,
+              roundNumber: roundNumber + 1,
+            });
+          });
+        });
+      } else if (mode === 'local') {
+        this.createAnimatedButton(cx, btnY, 'NEXT ROUND', 0x2ecc71, btnDelay, () => {
+          SoundManager.play('select');
+          this.fadeOutAndRun(() => {
+            this.scene.start('GamePlay', {
+              mode: 'local',
+              localPlayers: data.localPlayers,
+              localPlayerIndex: 0,
+              localAllAnswers: [],
+              localScores: data.localScores,
+              usedListIds: data.usedListIds,
+              usedLetters: data.usedLetters,
               roundNumber: roundNumber + 1,
             });
           });
@@ -348,9 +368,8 @@ export class RoundResults extends Scene {
     const zone = this.add
       .zone(cx, y + btnH / 2, btnW, btnH)
       .setInteractive({ useHandCursor: true });
-    zone.setAlpha(0);
 
-    this.tweens.add({ targets: [bg, text, zone], alpha: 1, duration: 400, delay, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: [bg, text], alpha: 1, duration: 400, delay, ease: 'Back.easeOut' });
     zone.on('pointerdown', action);
   }
 
