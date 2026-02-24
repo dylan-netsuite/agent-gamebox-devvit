@@ -12,7 +12,8 @@
         "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/profiles/p1",
         "--output-dir",
         "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/screenshots/p1"
-      ]
+      ],
+      "cwd": "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/screenshots/p1"
     },
     "player_two": {
       "command": "npx",
@@ -22,7 +23,8 @@
         "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/profiles/p2",
         "--output-dir",
         "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/screenshots/p2"
-      ]
+      ],
+      "cwd": "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/screenshots/p2"
     }
   }
 }
