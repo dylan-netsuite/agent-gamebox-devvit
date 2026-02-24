@@ -1,4 +1,4 @@
-type SoundId = 'select' | 'tick' | 'submit' | 'reveal' | 'roundEnd' | 'gameOver' | 'correct' | 'duplicate';
+type SoundId = 'select' | 'tick' | 'submit' | 'reveal' | 'roundEnd' | 'gameOver' | 'correct' | 'duplicate' | 'diceRoll';
 
 let audioCtx: AudioContext | null = null;
 let muted = false;
@@ -29,6 +29,7 @@ export const SoundManager = {
         case 'gameOver': this._gameOver(); break;
         case 'correct': this._correct(); break;
         case 'duplicate': this._duplicate(); break;
+        case 'diceRoll': this._diceRoll(); break;
       }
     } catch { /* Audio unavailable */ }
   },
@@ -155,5 +156,22 @@ export const SoundManager = {
     osc.connect(g).connect(ac.destination);
     osc.start(t);
     osc.stop(t + 0.15);
+  },
+
+  _diceRoll() {
+    const ac = ctx();
+    const t = ac.currentTime;
+    for (let i = 0; i < 6; i++) {
+      const osc = ac.createOscillator();
+      osc.type = 'sine';
+      const freq = 300 + Math.random() * 600;
+      osc.frequency.setValueAtTime(freq, t + i * 0.08);
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0.06, t + i * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.08 + 0.06);
+      osc.connect(g).connect(ac.destination);
+      osc.start(t + i * 0.08);
+      osc.stop(t + i * 0.08 + 0.07);
+    }
   },
 };

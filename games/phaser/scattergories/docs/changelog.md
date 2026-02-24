@@ -1,5 +1,16 @@
 # Scattergories - Changelog
 
+## [0.3.0] - 2026-02-24
+
+### Added
+- **Round Results: Manual Continue** — Multiplayer round results now buffer the `round-start` message and display a "NEXT ROUND" button instead of auto-advancing after 5 seconds. Players can review all answers at their own pace.
+- **Letter Dice Roll Animation** — GamePlay scene now animates a "dice roll" effect when showing the round letter: rapidly cycles through random letters for ~1 second before settling on the actual letter with a bounce effect.
+- **Timer Urgency Effects** — When the timer reaches ≤10 seconds, the timer text pulses larger and the header background flashes between dark red and normal.
+- **Staggered Score Reveal** — RoundResults rows now animate in one at a time with per-row sound effects (correct/duplicate) instead of appearing all at once.
+- **GameOver Entrance Animation** — Title drops in from above, winner text fades in, score rows slide in sequentially, and buttons fade in with staggered delays.
+- **Scene Fade Transitions** — ModeSelect, RoundResults, and GameOver scenes now fade in smoothly. RoundResults fades out before transitioning to the next scene.
+- **Dice Roll Sound Effect** — New `diceRoll` sound added to SoundManager for the letter animation.
+
 ## [0.2.1] - 2026-02-24
 
 ### Verified

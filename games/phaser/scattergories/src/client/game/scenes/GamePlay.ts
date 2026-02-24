@@ -105,23 +105,29 @@ export class GamePlay extends Scene {
     this.usedLetters.push(this.currentLetter);
   }
 
+  private headerBg!: Phaser.GameObjects.Graphics;
+  private letterText!: Phaser.GameObjects.Text;
+  private diceRollEvent: Phaser.Time.TimerEvent | null = null;
+
   private buildUI(): void {
     const { width } = this.scale;
     const cx = width / 2;
 
     const headerH = 70;
-    const headerBg = this.add.graphics();
-    headerBg.fillStyle(0x0f1a30, 0.95);
-    headerBg.fillRect(0, 0, width, headerH);
+    this.headerBg = this.add.graphics();
+    this.headerBg.fillStyle(0x0f1a30, 0.95);
+    this.headerBg.fillRect(0, 0, width, headerH);
 
-    this.add
-      .text(cx, 20, this.currentLetter, {
+    this.letterText = this.add
+      .text(cx, 20, '?', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '36px',
         fontStyle: 'bold',
         color: '#3498db',
       })
       .setOrigin(0.5);
+
+    this.animateLetterRoll(cx);
 
     this.add
       .text(width - 16, 10, `Round ${this.roundNumber}/${TOTAL_ROUNDS}`, {
@@ -290,6 +296,44 @@ export class GamePlay extends Scene {
     this.inputElements = [];
   }
 
+  private animateLetterRoll(cx: number): void {
+    let rollCount = 0;
+    const totalRolls = 12;
+    SoundManager.play('diceRoll');
+
+    this.diceRollEvent = this.time.addEvent({
+      delay: 80,
+      repeat: totalRolls - 1,
+      callback: () => {
+        rollCount++;
+        if (rollCount < totalRolls) {
+          const randomLetter = VALID_LETTERS[Math.floor(Math.random() * VALID_LETTERS.length)]!;
+          this.letterText.setText(randomLetter);
+          this.tweens.add({
+            targets: this.letterText,
+            scaleX: 1.15, scaleY: 1.15,
+            duration: 40,
+            yoyo: true,
+            ease: 'Sine.easeOut',
+          });
+        } else {
+          this.letterText.setText(this.currentLetter);
+          this.tweens.add({
+            targets: this.letterText,
+            scaleX: 1.3, scaleY: 1.3,
+            duration: 150,
+            yoyo: true,
+            ease: 'Back.easeOut',
+          });
+          this.letterText.setColor('#ffffff');
+          this.time.delayedCall(200, () => {
+            this.letterText.setColor('#3498db');
+          });
+        }
+      },
+    });
+  }
+
   private startTimer(): void {
     this.timeRemaining = ROUND_TIMER_SECONDS;
     this.timerEvent = this.time.addEvent({
@@ -302,6 +346,19 @@ export class GamePlay extends Scene {
         if (this.timeRemaining <= 10) {
           this.timerText.setColor('#e74c3c');
           SoundManager.play('tick');
+
+          this.tweens.add({
+            targets: this.timerText,
+            scaleX: 1.2, scaleY: 1.2,
+            duration: 200,
+            yoyo: true,
+            ease: 'Sine.easeOut',
+          });
+
+          const { width } = this.scale;
+          this.headerBg.clear();
+          this.headerBg.fillStyle(this.timeRemaining % 2 === 0 ? 0x1a0a0a : 0x0f1a30, 0.95);
+          this.headerBg.fillRect(0, 0, width, 70);
         } else if (this.timeRemaining <= 30) {
           this.timerText.setColor('#f39c12');
         }
@@ -388,6 +445,7 @@ export class GamePlay extends Scene {
   shutdown(): void {
     this.cleanupDOM();
     this.timerEvent?.destroy();
+    this.diceRollEvent?.destroy();
     if (this.messageHandler && this.mp) {
       this.mp.offMessage(this.messageHandler);
     }

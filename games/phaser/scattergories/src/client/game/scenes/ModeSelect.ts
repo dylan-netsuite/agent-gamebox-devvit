@@ -18,6 +18,8 @@ export class ModeSelect extends Scene {
     const cx = width / 2;
 
     this.cameras.main.setBackgroundColor('#1a1a2e');
+    this.cameras.main.setAlpha(0);
+    this.tweens.add({ targets: this.cameras.main, alpha: 1, duration: 400, ease: 'Sine.easeOut' });
 
     this.add
       .text(cx, 28, 'SCATTERGORIES', {
