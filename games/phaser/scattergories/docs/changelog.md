@@ -1,5 +1,19 @@
 # Scattergories - Changelog
 
+## [0.2.1] - 2026-02-24
+
+### Verified
+- Full multiplayer E2E test completed with 2 players (suitegeek + BarryBetsALot)
+- Matchmaking flow: CREATE LOBBY + JOIN BY CODE successfully syncs players
+- Lobby UI correctly shows both players, ready states, and host designation
+- All 3 rounds play through with unique letters and category lists per round
+- DOM text inputs render and accept answers correctly for both players simultaneously
+- Server-authoritative scoring works: duplicate answers scored for both, unique answers scored individually
+- Game Over screen shows correct final standings with winner, scores, REMATCH + BACK TO MENU
+- Zero console errors across both players throughout entire session
+
+Workflow: wf-1771956062
+
 ## [0.2.0] - 2026-02-24
 
 ### Fixed
