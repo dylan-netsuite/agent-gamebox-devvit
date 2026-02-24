@@ -4,6 +4,7 @@ import type { PuzzleConfig } from '../../../shared/types/api';
 import { CATALOG_PUZZLES } from '../data/puzzles';
 import { playCelebrate } from '../utils/sounds';
 import { drawSceneBackground, updateSceneBlocks, type SceneBg } from '../utils/sceneBackground';
+import { transitionTo, fadeIn, SCENE_COLORS } from '../utils/transitions';
 
 interface CompleteData {
   puzzle: PuzzleConfig;
@@ -47,7 +48,7 @@ export class PuzzleComplete extends Scene {
 
   create() {
     this.cameras.main.setBackgroundColor(0x0d0d1a);
-    this.cameras.main.fadeIn(400, 0, 0, 0);
+    fadeIn(this, SCENE_COLORS.teal);
     this.allObjects = [];
     this.elapsed = 0;
     this.confetti = [];
@@ -266,10 +267,7 @@ export class PuzzleComplete extends Scene {
           label: 'NEXT PUZZLE ▶',
           color: 0x2a9d8f,
           action: () => {
-            this.cameras.main.fadeOut(300, 0, 0, 0);
-            this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-              this.scene.start('Game', { puzzle: nextPuzzle, isDaily: false });
-            });
+            transitionTo(this, 'Game', { puzzle: nextPuzzle, isDaily: false }, SCENE_COLORS.dark);
           },
         });
       }
@@ -279,10 +277,7 @@ export class PuzzleComplete extends Scene {
       label: 'REPLAY',
       color: 0x457b9d,
       action: () => {
-        this.cameras.main.fadeOut(300, 0, 0, 0);
-        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-          this.scene.start('Game', { puzzle: this.completeData.puzzle, isDaily: this.completeData.isDaily });
-        });
+        transitionTo(this, 'Game', { puzzle: this.completeData.puzzle, isDaily: this.completeData.isDaily }, SCENE_COLORS.dark);
       },
     });
 
@@ -290,10 +285,7 @@ export class PuzzleComplete extends Scene {
       label: 'MAIN MENU',
       color: 0x6a4c93,
       action: () => {
-        this.cameras.main.fadeOut(300, 0, 0, 0);
-        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-          this.scene.start('MainMenu');
-        });
+        transitionTo(this, 'MainMenu', undefined, SCENE_COLORS.dark);
       },
     });
 

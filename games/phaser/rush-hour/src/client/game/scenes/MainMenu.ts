@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
+import { transitionTo, fadeIn, SCENE_COLORS } from '../utils/transitions';
 
 interface FloatingBlock {
   graphics: Phaser.GameObjects.Graphics;
@@ -31,7 +32,7 @@ export class MainMenu extends Scene {
 
   create() {
     this.cameras.main.setBackgroundColor(0x0d0d1a);
-    this.cameras.main.fadeIn(400, 0, 0, 0);
+    fadeIn(this, SCENE_COLORS.dark);
     this.allObjects = [];
     this.blocks = [];
     this.elapsed = 0;
@@ -382,10 +383,13 @@ export class MainMenu extends Scene {
           yoyo: true,
           ease: 'Power2',
           onComplete: () => {
-            this.cameras.main.fadeOut(300, 0, 0, 0);
-            this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-              this.scene.start(btn.scene);
-            });
+            const colorMap: Record<string, number> = {
+              PuzzleSelect: SCENE_COLORS.teal,
+              DailyPuzzle: SCENE_COLORS.gold,
+              LeaderboardScene: SCENE_COLORS.gold,
+              PuzzleEditor: SCENE_COLORS.purple,
+            };
+            transitionTo(this, btn.scene, undefined, colorMap[btn.scene] ?? SCENE_COLORS.dark);
           },
         });
       });

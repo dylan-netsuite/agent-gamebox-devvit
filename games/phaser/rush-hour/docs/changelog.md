@@ -162,3 +162,23 @@
 - Entrance animations on cards/buttons
 - All navigation works across all scenes
 - 0 console errors
+
+## v0.7.0 - Scene Transitions, Puzzle Scrolling & Mobile Layout (2026-02-23)
+
+### Added
+- **Accent-colored scene transitions** (`transitions.ts`): New `transitionTo()` and `fadeIn()` helpers replace raw camera fade calls. Transitions use scene-appropriate tint colors — teal for PuzzleSelect, gold for DailyPuzzle/Leaderboard, purple for PuzzleEditor, red for Preloader, dark for game-focused scenes.
+- **Puzzle scrolling**: PuzzleSelect now supports mouse wheel scrolling, touch drag scrolling with momentum/inertia, and boundary clamping. A geometry mask clips cards to the list area. A "↕ Scroll for more" hint appears when content overflows.
+- **Scroll-drag awareness**: Touch-dragging on the card list doesn't accidentally open a puzzle — `pointerdown` on cards is suppressed if the user was scroll-dragging.
+
+### Changed
+- All 8 Phaser scenes refactored to use shared `transitionTo()` / `fadeIn()` helpers instead of inline `camera.fadeOut`/`fadeIn` calls
+- `PuzzleSelect` cards are now rendered inside a masked container with proper viewport culling and on-demand rebuilding during scroll
+- Scene color constants centralized in `SCENE_COLORS` object
+
+### Tested
+- Splash screen renders without overflow on desktop and mobile (375x667)
+- Main menu shows all 4 buttons on mobile viewport
+- Game scene fits properly on iPhone SE viewport (375x667)
+- Scene transitions execute with accent-colored fades
+- 0 console errors across all tested scenarios
+- Build compiles cleanly with no type errors

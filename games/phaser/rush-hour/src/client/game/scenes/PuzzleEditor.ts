@@ -4,6 +4,7 @@ import type { Vehicle, VehicleType, Orientation } from '../../../shared/types/ap
 import { VEHICLE_COLORS } from '../data/puzzles';
 import { solve, validatePuzzle } from '../utils/solver';
 import { drawSceneBackground, updateSceneBlocks, type SceneBg } from '../utils/sceneBackground';
+import { transitionTo, fadeIn, SCENE_COLORS } from '../utils/transitions';
 
 const GRID_SIZE = 6;
 const EXIT_ROW = 2;
@@ -31,7 +32,7 @@ export class PuzzleEditor extends Scene {
 
   create() {
     this.cameras.main.setBackgroundColor(0x0d0d1a);
-    this.cameras.main.fadeIn(400, 0, 0, 0);
+    fadeIn(this, SCENE_COLORS.purple);
     this.allObjects = [];
     this.vehicles = [];
     this.nextId = 1;
@@ -73,10 +74,7 @@ export class PuzzleEditor extends Scene {
       })
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        this.cameras.main.fadeOut(300, 0, 0, 0);
-        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-          this.scene.start('MainMenu');
-        });
+        transitionTo(this, 'MainMenu', undefined, SCENE_COLORS.dark);
       });
     this.allObjects.push(back);
 
@@ -471,10 +469,7 @@ export class PuzzleEditor extends Scene {
 
     void this.savePuzzle(puzzle);
 
-    this.cameras.main.fadeOut(300, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.scene.start('Game', { puzzle, isDaily: false });
-    });
+    transitionTo(this, 'Game', { puzzle, isDaily: false }, SCENE_COLORS.dark);
   }
 
   private async savePuzzle(puzzle: { id: string; name: string; vehicles: Vehicle[]; minMoves: number }): Promise<void> {

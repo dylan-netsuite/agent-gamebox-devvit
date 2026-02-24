@@ -3,6 +3,7 @@ import * as Phaser from 'phaser';
 import type { PuzzleConfig } from '../../../shared/types/api';
 import { getDailyPuzzle } from '../data/puzzles';
 import { drawSceneBackground, updateSceneBlocks, type SceneBg } from '../utils/sceneBackground';
+import { transitionTo, fadeIn, SCENE_COLORS } from '../utils/transitions';
 
 export class DailyPuzzle extends Scene {
   private allObjects: Phaser.GameObjects.GameObject[] = [];
@@ -20,7 +21,7 @@ export class DailyPuzzle extends Scene {
 
   create() {
     this.cameras.main.setBackgroundColor(0x0d0d1a);
-    this.cameras.main.fadeIn(400, 0, 0, 0);
+    fadeIn(this, SCENE_COLORS.gold);
     this.allObjects = [];
     this.elapsed = 0;
 
@@ -87,9 +88,6 @@ export class DailyPuzzle extends Scene {
       puzzle = getDailyPuzzle();
     }
 
-    this.cameras.main.fadeOut(200, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-      this.scene.start('Game', { puzzle, isDaily: true });
-    });
+    transitionTo(this, 'Game', { puzzle, isDaily: true }, SCENE_COLORS.dark, 200);
   }
 }

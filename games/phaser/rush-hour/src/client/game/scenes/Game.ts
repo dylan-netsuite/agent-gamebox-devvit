@@ -2,6 +2,7 @@ import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
 import type { PuzzleConfig, Vehicle } from '../../../shared/types/api';
 import { playSnap, playWhoosh } from '../utils/sounds';
+import { transitionTo, fadeIn, SCENE_COLORS } from '../utils/transitions';
 
 const GRID_SIZE = 6;
 const EXIT_ROW = 2;
@@ -64,7 +65,7 @@ export class Game extends Scene {
 
   create() {
     this.cameras.main.setBackgroundColor(0x0d0d1a);
-    this.cameras.main.fadeIn(400, 0, 0, 0);
+    fadeIn(this, SCENE_COLORS.dark);
     this.allObjects = [];
     this.vehicleSprites = [];
     this.moveCount = 0;
@@ -152,14 +153,11 @@ export class Game extends Scene {
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
         this.timerEvent?.destroy();
-        this.cameras.main.fadeOut(300, 0, 0, 0);
-        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-          if (this.isDaily) {
-            this.scene.start('MainMenu');
-          } else {
-            this.scene.start('PuzzleSelect');
-          }
-        });
+        if (this.isDaily) {
+          transitionTo(this, 'MainMenu', undefined, SCENE_COLORS.dark);
+        } else {
+          transitionTo(this, 'PuzzleSelect', undefined, SCENE_COLORS.dark);
+        }
       });
     this.allObjects.push(back);
 
@@ -682,16 +680,13 @@ export class Game extends Scene {
     void this.submitResult(elapsed, stars);
 
     this.time.delayedCall(400, () => {
-      this.cameras.main.fadeOut(400, 0, 0, 0);
-      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-        this.scene.start('PuzzleComplete', {
-          puzzle: this.puzzle,
-          moves: this.moveCount,
-          time: elapsed,
-          stars,
-          isDaily: this.isDaily,
-        });
-      });
+      transitionTo(
+        this,
+        'PuzzleComplete',
+        { puzzle: this.puzzle, moves: this.moveCount, time: elapsed, stars, isDaily: this.isDaily },
+        SCENE_COLORS.teal,
+        400
+      );
     });
   }
 

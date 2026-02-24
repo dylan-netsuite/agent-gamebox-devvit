@@ -1,5 +1,5 @@
 import { Scene } from 'phaser';
-import * as Phaser from 'phaser';
+import { transitionTo, SCENE_COLORS } from '../utils/transitions';
 
 export class Preloader extends Scene {
   constructor() {
@@ -66,10 +66,7 @@ export class Preloader extends Scene {
     });
 
     this.time.delayedCall(500, () => {
-      this.cameras.main.fadeOut(300, 0, 0, 0);
-      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-        this.scene.start('MainMenu');
-      });
+      transitionTo(this, 'MainMenu', undefined, SCENE_COLORS.red);
     });
   }
 }

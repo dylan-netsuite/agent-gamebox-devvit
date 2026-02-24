@@ -2,6 +2,7 @@ import { Scene, GameObjects } from 'phaser';
 import * as Phaser from 'phaser';
 import type { LeaderboardResponse, LeaderboardEntry } from '../../../shared/types/api';
 import { drawSceneBackground, updateSceneBlocks, type SceneBg } from '../utils/sceneBackground';
+import { transitionTo, fadeIn, SCENE_COLORS } from '../utils/transitions';
 
 type TabType = 'daily' | 'alltime';
 
@@ -23,7 +24,7 @@ export class LeaderboardScene extends Scene {
 
   create() {
     this.cameras.main.setBackgroundColor(0x0d0d1a);
-    this.cameras.main.fadeIn(400, 0, 0, 0);
+    fadeIn(this, SCENE_COLORS.gold);
     this.allObjects = [];
     this.entries = [];
     this.userEntry = null;
@@ -97,10 +98,7 @@ export class LeaderboardScene extends Scene {
       })
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        this.cameras.main.fadeOut(300, 0, 0, 0);
-        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-          this.scene.start('MainMenu');
-        });
+        transitionTo(this, 'MainMenu', undefined, SCENE_COLORS.dark);
       });
     this.allObjects.push(back);
 

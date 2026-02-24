@@ -3,6 +3,7 @@ import * as Phaser from 'phaser';
 import { CATALOG_PUZZLES } from '../data/puzzles';
 import type { Difficulty, PuzzleBest, PuzzleConfig } from '../../../shared/types/api';
 import { drawSceneBackground, updateSceneBlocks, type SceneBg } from '../utils/sceneBackground';
+import { transitionTo, fadeIn, SCENE_COLORS } from '../utils/transitions';
 
 const DIFFICULTY_COLORS: Record<Difficulty, number> = {
   beginner: 0x2a9d8f,
@@ -20,11 +21,22 @@ const DIFFICULTY_LABELS: Record<Difficulty, string> = {
 
 export class PuzzleSelect extends Scene {
   private allObjects: Phaser.GameObjects.GameObject[] = [];
+  private cardObjects: Phaser.GameObjects.GameObject[] = [];
   private selectedDifficulty: Difficulty = 'beginner';
   private scrollY = 0;
+  private scrollVelocity = 0;
+  private scrollDragging = false;
+  private scrollDragStartY = 0;
+  private scrollDragLastY = 0;
+  private scrollDragMoved = false;
   private progress: Record<string, PuzzleBest> = {};
   private sceneBg: SceneBg | null = null;
   private elapsed = 0;
+  private listTopY = 0;
+  private listMaxScroll = 0;
+  private scrollMask: Phaser.Display.Masks.GeometryMask | null = null;
+  private scrollMaskShape: Phaser.GameObjects.Graphics | null = null;
+  private cardContainer: Phaser.GameObjects.Container | null = null;
 
   constructor() {
     super('PuzzleSelect');
@@ -36,12 +48,51 @@ export class PuzzleSelect extends Scene {
 
   create() {
     this.cameras.main.setBackgroundColor(0x0d0d1a);
-    this.cameras.main.fadeIn(400, 0, 0, 0);
+    fadeIn(this, SCENE_COLORS.teal);
     this.allObjects = [];
+    this.cardObjects = [];
     this.scrollY = 0;
+    this.scrollVelocity = 0;
     this.elapsed = 0;
     this.buildUI();
     void this.loadProgress();
+
+    this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _gos: Phaser.GameObjects.GameObject[], _dx: number, dy: number) => {
+      this.scrollY -= dy * 0.5;
+      this.clampScroll();
+      this.rebuildCards();
+    });
+
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      if (pointer.y > this.listTopY) {
+        this.scrollDragging = true;
+        this.scrollDragStartY = pointer.y;
+        this.scrollDragLastY = pointer.y;
+        this.scrollVelocity = 0;
+        this.scrollDragMoved = false;
+      }
+    });
+
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+      if (!this.scrollDragging || !pointer.isDown) return;
+      const dy = pointer.y - this.scrollDragLastY;
+      if (Math.abs(pointer.y - this.scrollDragStartY) > 5) {
+        this.scrollDragMoved = true;
+      }
+      this.scrollY += dy;
+      this.scrollVelocity = dy;
+      this.scrollDragLastY = pointer.y;
+      this.clampScroll();
+      this.rebuildCards();
+    });
+
+    this.input.on('pointerup', () => {
+      this.scrollDragging = false;
+    });
+
+    this.input.on('pointerupoutside', () => {
+      this.scrollDragging = false;
+    });
 
     this.scale.on('resize', () => {
       this.destroyAll();
@@ -52,6 +103,15 @@ export class PuzzleSelect extends Scene {
   override update(_time: number, delta: number) {
     this.elapsed += delta;
     if (this.sceneBg) updateSceneBlocks(this.sceneBg.blocks, this.elapsed);
+
+    if (!this.scrollDragging && Math.abs(this.scrollVelocity) > 0.2) {
+      this.scrollY += this.scrollVelocity;
+      this.scrollVelocity *= 0.92;
+      this.clampScroll();
+      this.rebuildCards();
+    } else if (!this.scrollDragging) {
+      this.scrollVelocity = 0;
+    }
   }
 
   private async loadProgress(): Promise<void> {
@@ -68,13 +128,35 @@ export class PuzzleSelect extends Scene {
     }
   }
 
+  private clampScroll(): void {
+    this.scrollY = Math.min(0, Math.max(-this.listMaxScroll, this.scrollY));
+  }
+
   private destroyAll(): void {
     for (const obj of this.allObjects) obj.destroy();
     this.allObjects = [];
+    this.destroyCards();
     if (this.sceneBg) {
       for (const obj of this.sceneBg.objects) obj.destroy();
       this.sceneBg = null;
     }
+    if (this.scrollMask) {
+      this.scrollMask.destroy();
+      this.scrollMask = null;
+    }
+    if (this.scrollMaskShape) {
+      this.scrollMaskShape.destroy();
+      this.scrollMaskShape = null;
+    }
+    if (this.cardContainer) {
+      this.cardContainer.destroy();
+      this.cardContainer = null;
+    }
+  }
+
+  private destroyCards(): void {
+    for (const obj of this.cardObjects) obj.destroy();
+    this.cardObjects = [];
   }
 
   private buildUI(): void {
@@ -92,10 +174,7 @@ export class PuzzleSelect extends Scene {
       })
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => {
-        this.cameras.main.fadeOut(300, 0, 0, 0);
-        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-          this.scene.start('MainMenu');
-        });
+        transitionTo(this, 'MainMenu', undefined, SCENE_COLORS.dark);
       });
     this.allObjects.push(back);
 
@@ -157,25 +236,69 @@ export class PuzzleSelect extends Scene {
       tabHit.on('pointerdown', () => {
         this.selectedDifficulty = diff;
         this.scrollY = 0;
+        this.scrollVelocity = 0;
         this.destroyAll();
         this.buildUI();
       });
       this.allObjects.push(tabHit);
     }
 
+    this.listTopY = tabY + tabH + Math.max(10, 14 * sf);
+    const visibleHeight = height - this.listTopY;
+
+    this.scrollMaskShape = this.make.graphics({ x: 0, y: 0 });
+    this.scrollMaskShape.fillStyle(0xffffff);
+    this.scrollMaskShape.fillRect(0, this.listTopY, width, visibleHeight);
+    this.scrollMask = new Phaser.Display.Masks.GeometryMask(this, this.scrollMaskShape);
+
+    this.cardContainer = this.add.container(0, 0);
+    this.cardContainer.setMask(this.scrollMask);
+    this.allObjects.push(this.cardContainer);
+
     const puzzles = CATALOG_PUZZLES.filter((p) => p.difficulty === this.selectedDifficulty);
-    const listY = tabY + Math.max(40, 50 * sf);
+    const cardH = Math.max(50, 70 * sf);
+    const cardGap = Math.max(6, 10 * sf);
+    const totalContentHeight = puzzles.length * (cardH + cardGap) - cardGap;
+    this.listMaxScroll = Math.max(0, totalContentHeight - visibleHeight);
+
+    this.rebuildCards();
+
+    if (this.listMaxScroll > 0) {
+      const scrollHint = this.add
+        .text(cx, height - Math.max(12, 16 * sf), '↕ Scroll for more', {
+          fontFamily: 'Arial',
+          fontSize: `${Math.max(9, Math.round(11 * sf))}px`,
+          color: '#556677',
+          align: 'center',
+        })
+        .setOrigin(0.5)
+        .setAlpha(0);
+      this.allObjects.push(scrollHint);
+      this.tweens.add({ targets: scrollHint, alpha: 0.7, duration: 600, delay: 800, ease: 'Power2' });
+    }
+  }
+
+  private rebuildCards(): void {
+    this.destroyCards();
+    if (!this.cardContainer) return;
+
+    const { width, height } = this.scale;
+    const cx = width / 2;
+    const sf = this.sf;
+
+    const puzzles = CATALOG_PUZZLES.filter((p) => p.difficulty === this.selectedDifficulty);
     const cardH = Math.max(50, 70 * sf);
     const cardGap = Math.max(6, 10 * sf);
     const cardW = Math.min(width * 0.85, 400);
+    const listY = this.listTopY + 4;
 
     for (let i = 0; i < puzzles.length; i++) {
       const puzzle = puzzles[i]!;
       const y = listY + i * (cardH + cardGap) + this.scrollY;
 
-      if (y + cardH < listY || y > height) continue;
+      if (y + cardH < this.listTopY - 10 || y > height + 10) continue;
 
-      this.drawPuzzleCard(puzzle, cx, y, cardW, cardH, i + 1, i);
+      this.drawPuzzleCard(puzzle, cx, y, cardW, cardH, i + 1);
     }
   }
 
@@ -185,8 +308,7 @@ export class PuzzleSelect extends Scene {
     y: number,
     w: number,
     h: number,
-    num: number,
-    index: number
+    num: number
   ): void {
     const sf = this.sf;
     const best = this.progress[puzzle.id];
@@ -194,8 +316,8 @@ export class PuzzleSelect extends Scene {
     const accentW = 5;
 
     const container = this.add.container(cx, y + h / 2);
-    container.setAlpha(0);
-    this.allObjects.push(container);
+    this.cardObjects.push(container);
+    if (this.cardContainer) this.cardContainer.add(container);
 
     const cardBg = this.add.graphics();
     cardBg.fillStyle(0x1a2a3e, 0.7);
@@ -287,26 +409,15 @@ export class PuzzleSelect extends Scene {
     });
 
     hitArea.on('pointerdown', () => {
+      if (this.scrollDragMoved) return;
       this.tweens.add({
         targets: container,
         scaleX: 0.97, scaleY: 0.97,
         duration: 80, yoyo: true, ease: 'Power2',
         onComplete: () => {
-          this.cameras.main.fadeOut(300, 0, 0, 0);
-          this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-            this.scene.start('Game', { puzzle, isDaily: false });
-          });
+          transitionTo(this, 'Game', { puzzle, isDaily: false }, SCENE_COLORS.dark);
         },
       });
-    });
-
-    this.tweens.add({
-      targets: container,
-      alpha: 1,
-      x: { from: cx + 40, to: cx },
-      duration: 350,
-      delay: 80 + index * 60,
-      ease: 'Power3',
     });
   }
 
