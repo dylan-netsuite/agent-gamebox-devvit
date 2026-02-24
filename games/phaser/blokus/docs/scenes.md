@@ -3,11 +3,13 @@
 ## Scene Flow
 
 ```
-Boot -> Preloader -> MainMenu -> Game -> GameOver -> MainMenu
-                        |                               |
-                        +-> HowToPlay -> MainMenu       |
-                        +-> Leaderboard -> MainMenu     |
-                        +-------------------------------+
+Boot -> Preloader -> MainMenu -> ModeSelect -> Game (vs AI) -> GameOver -> ModeSelect
+                        |            |                                        |
+                        |            +-> LobbyBrowser -> Lobby -> Game (MP) --+
+                        |            +-> HowToPlay -> MainMenu
+                        |            +-> Leaderboard -> MainMenu
+                        +-> HowToPlay -> MainMenu
+                        +-> Leaderboard -> MainMenu
 ```
 
 ## Scenes
@@ -29,32 +31,70 @@ Boot -> Preloader -> MainMenu -> Game -> GameOver -> MainMenu
 - **Purpose**: Title screen with navigation buttons
 - **Features**:
   - BLOKUS title with decorative polyomino pieces in background
-  - PLAY button -> Game
+  - PLAY button -> ModeSelect
   - HOW TO PLAY button -> HowToPlay
   - LEADERBOARD button -> Leaderboard
-- **Transitions**: -> Game, HowToPlay, Leaderboard (all with fade)
+- **Transitions**: -> ModeSelect, HowToPlay, Leaderboard (all with fade)
+
+### ModeSelect
+- **File**: `scenes/ModeSelect.ts`
+- **Purpose**: Mode selection hub
+- **Features**:
+  - VS AI button -> Game (single-player)
+  - ONLINE PLAY button -> LobbyBrowser
+  - HOW TO PLAY button -> HowToPlay
+  - LEADERBOARD button -> Leaderboard
+- **Transitions**: -> Game, LobbyBrowser, HowToPlay, Leaderboard (all with fade)
+
+### LobbyBrowser
+- **File**: `scenes/LobbyBrowser.ts`
+- **Purpose**: Online play entry point for finding/creating multiplayer games
+- **Features**:
+  - Quick Match: finds open lobby or creates one
+  - Create Lobby: creates a new lobby
+  - Join by Code: 6-character code input with keyboard support
+  - Loading dots animation during async operations
+  - Back button -> ModeSelect
+- **Transitions**: -> Lobby, ModeSelect
+
+### Lobby
+- **File**: `scenes/Lobby.ts`
+- **Purpose**: Waiting room for 2 players before game starts
+- **Features**:
+  - Lobby code display (shareable 6-char code)
+  - 2 player slots showing username, color (Blue/Orange), ready state
+  - Host tag on first player
+  - READY/UNREADY toggle button
+  - START GAME button (host only, visible when both players ready)
+  - Realtime connection via MultiplayerManager
+  - Listens for `lobby-update`, `game-start`, `player-left` messages
+  - Back button -> LobbyBrowser
+- **Transitions**: -> Game (multiplayer), LobbyBrowser
 
 ### Game
 - **File**: `scenes/Game.ts`
-- **Purpose**: Core gameplay scene
+- **Purpose**: Core gameplay scene (supports both single-player and multiplayer)
+- **Scene data**:
+  - `multiplayer: boolean` - whether this is a multiplayer game
+  - `mp: MultiplayerManager` - realtime connection (multiplayer only)
+  - `playerNumber: 1 | 2` - which player this client is (multiplayer only)
+  - `opponentName: string` - opponent's username (multiplayer only)
 - **Features**:
   - 14x14 board with grid lines and starting position markers, centered horizontally
   - Bottom piece tray: horizontal scrollable strip with larger piece previews (18px cells)
   - Size category tabs (ALL, 1-2, 3, 4, 5) for filtering pieces by polyomino size
   - Ghost preview on board hover (green=valid, red=invalid)
-  - **Drag-and-drop**: Drag pieces from tray directly onto the board with ghost preview
-  - On-screen control buttons: ↺ CCW, ↻ CW, ↔ Flip, ↩ Undo, ✕ Clear, ⏭ Pass (touch-friendly)
-  - Keyboard shortcuts: R=rotate CW, E=rotate CCW, F=flip, ESC=deselect, Z=undo
-  - Orientation indicator in status text (e.g. "90° flipped")
-  - **Undo**: Reverts last player move + AI response, single-level
-  - **Sound effects**: Procedural audio for all actions (placement, rotation, selection, AI move, undo, game over)
-  - Playability indicators: unplayable pieces dimmed with red dot, used pieces shown as ghosts
+  - Drag-and-drop: Drag pieces from tray directly onto the board with ghost preview
+  - On-screen control buttons: CCW, CW, Flip, Undo (SP only), Clear, Pass
+  - Keyboard shortcuts: R=rotate CW, E=rotate CCW, F=flip, ESC=deselect, Z=undo (SP only)
+  - Orientation indicator in status text
+  - Sound effects: Procedural audio for all actions
+  - Playability indicators: unplayable pieces dimmed with red dot
   - Turn indicator and score display in top bar
-  - AI opponent with delayed moves (500ms think time)
-  - Auto-selects first playable piece at start of each turn
-  - Auto-detects game over condition
-  - Horizontal drag/swipe to scroll piece tray on mobile
-- **Layout**: Top bar | Centered board | Tab bar + Piece strip + Control buttons (6)
+  - **Single-player**: AI opponent with delayed moves, undo enabled
+  - **Multiplayer**: Sends moves via MultiplayerManager, listens for opponent moves, undo disabled, "Waiting for opponent..." status
+  - Opponent left detection with forfeit win notification
+- **Layout**: Top bar | Centered board | Tab bar + Piece strip + Control buttons
 - **Audio**: `audio/SoundManager.ts` - Web Audio API oscillator-based procedural sounds
 - **Transitions**: -> GameOver (with fade)
 
@@ -63,11 +103,13 @@ Boot -> Preloader -> MainMenu -> Game -> GameOver -> MainMenu
 - **Purpose**: Displays game results
 - **Features**:
   - Win/Lose/Tie/Perfect result header
-  - Score comparison (player vs AI)
+  - Score comparison (player vs opponent)
+  - Opponent label shows username in multiplayer, "AI" in single-player
   - Pieces placed count
   - Perfect game bonus display
-  - Play Again and Main Menu buttons
-- **Transitions**: -> Game, MainMenu (with fade)
+  - Play Again -> ModeSelect
+  - Main Menu -> MainMenu
+- **Transitions**: -> ModeSelect, MainMenu (with fade)
 
 ### HowToPlay
 - **File**: `scenes/HowToPlay.ts`

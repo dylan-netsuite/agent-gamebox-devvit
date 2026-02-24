@@ -4,6 +4,8 @@ import { BoardLogic, BOARD_SIZE, PLAYER_COLORS, PLAYER_COLOR_NAMES, START_POSITI
 import { AIPlayer } from '../logic/AIPlayer';
 import { PIECE_DEFINITIONS, getTransformedCells } from '../data/pieces';
 import { SoundManager } from '../audio/SoundManager';
+import type { MultiplayerManager } from '../systems/MultiplayerManager';
+import type { MultiplayerMessage, BlokusMove } from '../../../shared/types/multiplayer';
 
 type SizeFilter = 'all' | '1-2' | '3' | '4' | '5';
 
@@ -28,6 +30,13 @@ interface UndoSnapshot {
   aiCells: [number, number][] | null;
 }
 
+interface GameSceneData {
+  multiplayer?: boolean;
+  mp?: MultiplayerManager;
+  playerNumber?: 1 | 2;
+  opponentName?: string;
+}
+
 export class Game extends Scene {
   private board: BoardLogic;
   private ai: AIPlayer;
@@ -35,6 +44,13 @@ export class Game extends Scene {
   private selectedPieceId: string | null = null;
   private rotation = 0;
   private flipped = false;
+
+  // Multiplayer state
+  private isMultiplayer = false;
+  private mp: MultiplayerManager | null = null;
+  private myPlayerNumber: 1 | 2 = 1;
+  private opponentName = 'Opponent';
+  private messageHandler: ((msg: MultiplayerMessage) => void) | null = null;
 
   private boardGraphics: Phaser.GameObjects.Graphics;
   private pieceGraphics: Phaser.GameObjects.Graphics;
@@ -73,7 +89,6 @@ export class Game extends Scene {
   private dragStartX = 0;
   private dragStartScrollX = 0;
 
-  // Drag-and-drop state
   private isDraggingPiece = false;
   private dragPieceId: string | null = null;
   private dragPointerX = 0;
@@ -81,16 +96,15 @@ export class Game extends Scene {
   private dragDistanceSq = 0;
   private dragOriginX = 0;
   private dragOriginY = 0;
-  private static readonly DRAG_THRESHOLD_SQ = 64; // 8px
+  private static readonly DRAG_THRESHOLD_SQ = 64;
 
-  // Undo state
   private undoSnapshot: UndoSnapshot | null = null;
 
   constructor() {
     super('Game');
   }
 
-  create() {
+  create(data?: GameSceneData) {
     this.board = new BoardLogic();
     this.ai = new AIPlayer('medium');
     this.currentPlayer = 1;
@@ -106,6 +120,15 @@ export class Game extends Scene {
     this.isDraggingPiece = false;
     this.dragPieceId = null;
     this.undoSnapshot = null;
+
+    this.isMultiplayer = data?.multiplayer ?? false;
+    this.mp = data?.mp ?? null;
+    this.myPlayerNumber = data?.playerNumber ?? 1;
+    this.opponentName = data?.opponentName ?? 'Opponent';
+
+    if (this.isMultiplayer && this.mp) {
+      this.setupMultiplayerListeners();
+    }
 
     this.cameras.main.setBackgroundColor(0x0d0d1a);
     this.cameras.main.fadeIn(400, 0, 0, 0);
@@ -206,7 +229,9 @@ export class Game extends Scene {
     });
 
     this.input.keyboard?.on('keydown-Z', () => {
-      this.handleUndo();
+      if (!this.isMultiplayer) {
+        this.handleUndo();
+      }
     });
 
     this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
@@ -218,10 +243,187 @@ export class Game extends Scene {
       this.updateUI();
     });
 
-    this.selectFirstAvailable();
+    if (this.isMyTurn()) {
+      this.selectFirstAvailable();
+    }
     this.drawTray();
     this.updateUI();
   }
+
+  // ── Multiplayer ──
+
+  private setupMultiplayerListeners(): void {
+    this.messageHandler = (msg: MultiplayerMessage) => {
+      switch (msg.type) {
+        case 'player-move':
+          this.handleRemoteMove(msg.move);
+          break;
+        case 'player-pass':
+          this.handleRemotePass(msg.player);
+          break;
+        case 'game-over':
+          if (!this.gameOver) {
+            this.finishGame();
+          }
+          break;
+        case 'player-left':
+          this.handleOpponentLeft();
+          break;
+      }
+    };
+    this.mp!.onMessage(this.messageHandler);
+  }
+
+  private handleRemoteMove(move: BlokusMove): void {
+    if (move.player === this.myPlayerNumber) return;
+
+    this.board.placePiece(move.pieceId, move.cells, move.player);
+    this.playerSkipped[move.player - 1] = false;
+
+    SoundManager.playAiMove();
+
+    for (const [r, c] of move.cells) {
+      const flash = this.add.graphics();
+      flash.fillStyle(0xffffff, 0.6);
+      flash.fillRoundedRect(
+        this.boardX + c * this.cellSize + 1,
+        this.boardY + r * this.cellSize + 1,
+        this.cellSize - 2,
+        this.cellSize - 2,
+        3,
+      );
+      this.tweens.add({
+        targets: flash,
+        alpha: 0,
+        duration: 400,
+        onComplete: () => flash.destroy(),
+      });
+    }
+
+    this.drawPlacedPieces();
+
+    this.currentPlayer = this.myPlayerNumber;
+    this.playableCacheDirty = true;
+
+    if (this.board.isGameOver() || (this.playerSkipped[0] && this.playerSkipped[1])) {
+      this.finishGame();
+      return;
+    }
+
+    if (!this.board.hasValidMoves(this.myPlayerNumber)) {
+      this.playerSkipped[this.myPlayerNumber - 1] = true;
+      if (this.playerSkipped[0] && this.playerSkipped[1]) {
+        this.finishGame();
+        return;
+      }
+      this.mp?.sendPass(this.myPlayerNumber);
+      this.currentPlayer = this.opponentPlayerNumber();
+      this.updateUI();
+      return;
+    }
+
+    this.selectFirstAvailable();
+    this.rotation = 0;
+    this.flipped = false;
+    this.drawTray();
+    this.drawControls();
+    this.updateUI();
+  }
+
+  private handleRemotePass(player: 1 | 2): void {
+    if (player === this.myPlayerNumber) return;
+
+    this.playerSkipped[player - 1] = true;
+
+    if (this.playerSkipped[0] && this.playerSkipped[1]) {
+      this.finishGame();
+      return;
+    }
+
+    this.currentPlayer = this.myPlayerNumber;
+    this.playableCacheDirty = true;
+
+    if (!this.board.hasValidMoves(this.myPlayerNumber)) {
+      this.playerSkipped[this.myPlayerNumber - 1] = true;
+      this.mp?.sendPass(this.myPlayerNumber);
+      this.finishGame();
+      return;
+    }
+
+    this.selectFirstAvailable();
+    this.rotation = 0;
+    this.flipped = false;
+    this.drawTray();
+    this.drawControls();
+    this.updateUI();
+  }
+
+  private handleOpponentLeft(): void {
+    if (this.gameOver) return;
+    this.gameOver = true;
+    this.ghostGraphics.clear();
+
+    const sf = this.getSf();
+    const { width, height } = this.scale;
+
+    const overlay = this.add.graphics();
+    overlay.fillStyle(0x000000, 0.7);
+    overlay.fillRect(0, 0, width, height);
+    overlay.setDepth(200);
+
+    this.add
+      .text(width / 2, height / 2 - 30, 'Opponent Left', {
+        fontFamily: '"Arial Black", sans-serif',
+        fontSize: `${Math.round(28 * sf)}px`,
+        color: '#e8913a',
+      })
+      .setOrigin(0.5)
+      .setDepth(201);
+
+    this.add
+      .text(width / 2, height / 2 + 10, 'You win by forfeit!', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: `${Math.round(16 * sf)}px`,
+        color: '#44cc44',
+      })
+      .setOrigin(0.5)
+      .setDepth(201);
+
+    this.time.delayedCall(2500, () => {
+      this.cleanupMultiplayer();
+      this.cameras.main.fadeOut(600, 0, 0, 0);
+      this.cameras.main.once('camerafadeoutcomplete', () => {
+        this.scene.start('GameOver', {
+          playerScore: this.board.calculateScore(this.myPlayerNumber),
+          aiScore: this.board.calculateScore(this.opponentPlayerNumber()),
+          playerPiecesPlaced: this.board.getPiecesPlaced(this.myPlayerNumber),
+          aiPiecesPlaced: this.board.getPiecesPlaced(this.opponentPlayerNumber()),
+          won: true,
+          perfect: false,
+          multiplayer: true,
+          opponentName: this.opponentName,
+        });
+      });
+    });
+  }
+
+  private opponentPlayerNumber(): 1 | 2 {
+    return this.myPlayerNumber === 1 ? 2 : 1;
+  }
+
+  private isMyTurn(): boolean {
+    if (!this.isMultiplayer) return this.currentPlayer === 1;
+    return this.currentPlayer === this.myPlayerNumber;
+  }
+
+  private cleanupMultiplayer(): void {
+    if (this.mp && this.messageHandler) {
+      this.mp.offMessage(this.messageHandler);
+      this.messageHandler = null;
+    }
+  }
+
+  // ── Core ──
 
   private getSf(): number {
     const { width, height } = this.scale;
@@ -229,7 +431,13 @@ export class Game extends Scene {
   }
 
   private canAct(): boolean {
-    return this.currentPlayer === 1 && !this.gameOver && !this.isAiThinking;
+    if (this.gameOver || this.isAiThinking) return false;
+    if (this.isMultiplayer) return this.currentPlayer === this.myPlayerNumber;
+    return this.currentPlayer === 1;
+  }
+
+  private myDisplayPlayer(): 1 | 2 {
+    return this.isMultiplayer ? this.myPlayerNumber : 1;
   }
 
   private layout(width: number, height: number) {
@@ -325,11 +533,12 @@ export class Game extends Scene {
     if (!this.playableCacheDirty) return;
     this.playablePieceCache.clear();
 
-    const remaining = this.board.remainingPieces.get(1);
+    const myP = this.myDisplayPlayer();
+    const remaining = this.board.remainingPieces.get(myP);
     if (!remaining) return;
 
-    const corners = this.board.getCornerPositions(1);
-    if (corners.size === 0 && !this.board.isFirstMove(1)) return;
+    const corners = this.board.getCornerPositions(myP);
+    if (corners.size === 0 && !this.board.isFirstMove(myP)) return;
 
     for (const pieceId of remaining) {
       const piece = PIECE_DEFINITIONS.find((p) => p.id === pieceId);
@@ -345,7 +554,7 @@ export class Game extends Scene {
             const [cr, cc] = cornerStr.split(',').map(Number) as [number, number];
             for (const [cellR, cellC] of cells) {
               const placed = cells.map(([r, c]): [number, number] => [cr - cellR + r, cc - cellC + c]);
-              if (this.board.isValidPlacement(placed, 1)) {
+              if (this.board.isValidPlacement(placed, myP)) {
                 this.playablePieceCache.add(pieceId);
                 found = true;
                 break;
@@ -365,25 +574,24 @@ export class Game extends Scene {
 
     const { width } = this.scale;
     const sf = this.getSf();
-    const remaining = this.board.remainingPieces.get(1);
+    const myP = this.myDisplayPlayer();
+    const remaining = this.board.remainingPieces.get(myP);
     const allPieceIds = remaining ?? new Set<string>();
 
     this.refreshPlayableCache();
 
-    // ── Tray background ──
     this.trayGraphics.fillStyle(0x111122, 0.95);
     this.trayGraphics.fillRoundedRect(0, this.trayAreaY, width, this.trayAreaH, { tl: 12, tr: 12, bl: 0, br: 0 });
     this.trayGraphics.lineStyle(1, 0x2a2a4e, 0.8);
     this.trayGraphics.lineBetween(0, this.trayAreaY, width, this.trayAreaY);
 
-    // ── Size Tabs ──
     const tabW = Math.round(Math.min(60 * sf, (width - 20) / SIZE_TABS.length));
     const tabH = 26;
     const tabY = this.trayAreaY + 4;
     const tabTotalW = tabW * SIZE_TABS.length + (SIZE_TABS.length - 1) * 4;
     let tabX = Math.round((width - tabTotalW) / 2);
 
-    const playerColor = PLAYER_COLORS[0]!;
+    const playerColor = PLAYER_COLORS[myP - 1]!;
 
     for (const tab of SIZE_TABS) {
       const isActive = this.sizeFilter === tab.filter;
@@ -411,7 +619,6 @@ export class Game extends Scene {
       tabX += tabW + 4;
     }
 
-    // ── Piece Strip ──
     const cellSz = Math.round(Math.max(14, 18 * sf));
     const gap = Math.round(12 * sf);
     const stripPadding = 12;
@@ -473,7 +680,6 @@ export class Game extends Scene {
       curX += slotW + gap;
     }
 
-    // Clean up old tray labels
     this.children.list
       .filter((c) => c instanceof Phaser.GameObjects.Text && c.getData('_trayLabel'))
       .forEach((c) => c.destroy());
@@ -491,13 +697,15 @@ export class Game extends Scene {
     const btnGap = 6;
     const btnY = this.trayStripY + this.trayStripH + 8;
 
-    const canUndo = this.undoSnapshot !== null && this.canAct();
+    const canUndo = !this.isMultiplayer && this.undoSnapshot !== null && this.canAct();
 
     const buttons = [
       { action: 'rotateCCW', label: '↺', color: 0x3a6ea5, enabled: true },
       { action: 'rotateCW', label: '↻', color: 0x3a6ea5, enabled: true },
       { action: 'flip', label: '↔ Flip', color: 0x3a6ea5, enabled: true },
-      { action: 'undo', label: '↩ Undo', color: canUndo ? 0x7a6ea5 : 0x333344, enabled: canUndo },
+      ...(this.isMultiplayer
+        ? []
+        : [{ action: 'undo', label: '↩ Undo', color: canUndo ? 0x7a6ea5 : 0x333344, enabled: canUndo }]),
       { action: 'deselect', label: '✕', color: 0x555566, enabled: true },
       { action: 'pass', label: '⏭ Pass', color: 0x994444, enabled: true },
     ];
@@ -540,7 +748,8 @@ export class Game extends Scene {
 
     const cells = getTransformedCells(piece.cells, this.rotation, this.flipped);
     const { boardX, boardY, cellSize } = this;
-    const playerColor = PLAYER_COLORS[0]!;
+    const myP = this.myDisplayPlayer();
+    const playerColor = PLAYER_COLORS[myP - 1]!;
 
     const col = Math.floor((this.dragPointerX - boardX) / cellSize);
     const row = Math.floor((this.dragPointerY - boardY) / cellSize);
@@ -548,7 +757,7 @@ export class Game extends Scene {
 
     if (overBoard) {
       const placedCells = cells.map(([r, c]): [number, number] => [row + r, col + c]);
-      const valid = this.board.isValidPlacement(placedCells, 1);
+      const valid = this.board.isValidPlacement(placedCells, myP);
       const ghostColor = valid ? 0x44cc44 : 0xcc4444;
       const ghostAlpha = valid ? 0.4 : 0.25;
 
@@ -611,20 +820,26 @@ export class Game extends Scene {
     const { boardX, boardY, cellSize } = this;
     const col = Math.floor((pointer.x - boardX) / cellSize);
     const row = Math.floor((pointer.y - boardY) / cellSize);
+    const myP = this.myDisplayPlayer();
 
     if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
       const cells = getTransformedCells(piece.cells, this.rotation, this.flipped);
       const placedCells = cells.map(([r, c]): [number, number] => [row + r, col + c]);
 
-      if (this.board.placePiece(this.dragPieceId, placedCells, 1)) {
+      if (this.board.placePiece(this.dragPieceId, placedCells, myP)) {
         SoundManager.playPlace();
-        this.saveUndoSnapshot(this.dragPieceId, placedCells);
+        if (!this.isMultiplayer) {
+          this.saveUndoSnapshot(this.dragPieceId, placedCells);
+        }
+        if (this.isMultiplayer && this.mp) {
+          this.mp.sendMove({ pieceId: this.dragPieceId, cells: placedCells, player: myP });
+        }
         this.selectedPieceId = null;
         this.rotation = 0;
         this.flipped = false;
         this.playableCacheDirty = true;
         this.drawPlacedPieces();
-        this.playerSkipped[0] = false;
+        this.playerSkipped[myP - 1] = false;
         this.dragPieceId = null;
         this.endTurn();
         return;
@@ -653,10 +868,11 @@ export class Game extends Scene {
     const piece = PIECE_DEFINITIONS.find((p) => p.id === this.selectedPieceId);
     if (!piece) return;
 
+    const myP = this.myDisplayPlayer();
     const cells = getTransformedCells(piece.cells, this.rotation, this.flipped);
     const placedCells = cells.map(([r, c]): [number, number] => [row + r, col + c]);
 
-    const valid = this.board.isValidPlacement(placedCells, 1);
+    const valid = this.board.isValidPlacement(placedCells, myP);
     const ghostColor = valid ? 0x44cc44 : 0xcc4444;
     const ghostAlpha = valid ? 0.4 : 0.25;
 
@@ -690,9 +906,9 @@ export class Game extends Scene {
   }
 
   private handlePointerDown(pointer: Phaser.Input.Pointer) {
-    if (this.gameOver || this.isAiThinking || this.currentPlayer !== 1) return;
+    if (this.gameOver || this.isAiThinking) return;
+    if (!this.canAct()) return;
 
-    // Check tab clicks
     for (const tab of this.tabBounds) {
       if (pointer.x >= tab.x && pointer.x <= tab.x + tab.w && pointer.y >= tab.y && pointer.y <= tab.y + tab.h) {
         this.sizeFilter = tab.filter;
@@ -703,7 +919,6 @@ export class Game extends Scene {
       }
     }
 
-    // Check control button clicks
     for (const btn of this.btnBounds) {
       if (pointer.x >= btn.x && pointer.x <= btn.x + btn.w && pointer.y >= btn.y && pointer.y <= btn.y + btn.h) {
         this.handleButtonAction(btn.action);
@@ -711,7 +926,6 @@ export class Game extends Scene {
       }
     }
 
-    // Check tray piece clicks / drag initiation
     for (const [pieceId, bounds] of this.trayPiecePositions) {
       if (
         pointer.x >= bounds.x &&
@@ -738,7 +952,6 @@ export class Game extends Scene {
       }
     }
 
-    // Tray scroll drag (empty area of tray strip)
     if (pointer.y >= this.trayStripY && pointer.y <= this.trayStripY + this.trayStripH) {
       this.isDraggingTray = true;
       this.dragStartX = pointer.x;
@@ -746,7 +959,6 @@ export class Game extends Scene {
       return;
     }
 
-    // Check board clicks (tap-to-place)
     if (!this.selectedPieceId) return;
 
     const { boardX, boardY, cellSize } = this;
@@ -758,19 +970,25 @@ export class Game extends Scene {
     const piece = PIECE_DEFINITIONS.find((p) => p.id === this.selectedPieceId);
     if (!piece) return;
 
+    const myP = this.myDisplayPlayer();
     const cells = getTransformedCells(piece.cells, this.rotation, this.flipped);
     const placedCells = cells.map(([r, c]): [number, number] => [row + r, col + c]);
 
-    if (this.board.placePiece(this.selectedPieceId, placedCells, 1)) {
+    if (this.board.placePiece(this.selectedPieceId, placedCells, myP)) {
       SoundManager.playPlace();
-      this.saveUndoSnapshot(this.selectedPieceId, placedCells);
+      if (!this.isMultiplayer) {
+        this.saveUndoSnapshot(this.selectedPieceId, placedCells);
+      }
+      if (this.isMultiplayer && this.mp) {
+        this.mp.sendMove({ pieceId: this.selectedPieceId, cells: placedCells, player: myP });
+      }
       this.ghostGraphics.clear();
       this.selectedPieceId = null;
       this.rotation = 0;
       this.flipped = false;
       this.playableCacheDirty = true;
       this.drawPlacedPieces();
-      this.playerSkipped[0] = false;
+      this.playerSkipped[myP - 1] = false;
       this.endTurn();
     } else {
       SoundManager.playInvalid();
@@ -804,7 +1022,9 @@ export class Game extends Scene {
         }
         break;
       case 'undo':
-        this.handleUndo();
+        if (!this.isMultiplayer) {
+          this.handleUndo();
+        }
         break;
       case 'deselect':
         this.deselectPiece();
@@ -827,7 +1047,8 @@ export class Game extends Scene {
   }
 
   private selectFirstAvailable() {
-    const remaining = this.board.remainingPieces.get(1);
+    const myP = this.myDisplayPlayer();
+    const remaining = this.board.remainingPieces.get(myP);
     if (remaining && remaining.size > 0) {
       this.refreshPlayableCache();
       for (const pid of remaining) {
@@ -840,7 +1061,7 @@ export class Game extends Scene {
     }
   }
 
-  // ── Undo ──
+  // ── Undo (single-player only) ──
 
   private saveUndoSnapshot(pieceId: string, cells: [number, number][]) {
     this.undoSnapshot = {
@@ -852,7 +1073,7 @@ export class Game extends Scene {
   }
 
   private handleUndo() {
-    if (!this.undoSnapshot || !this.canAct()) return;
+    if (!this.undoSnapshot || !this.canAct() || this.isMultiplayer) return;
 
     const snap = this.undoSnapshot;
 
@@ -880,10 +1101,20 @@ export class Game extends Scene {
   private async handlePass() {
     if (!this.canAct()) return;
     SoundManager.playPass();
-    this.playerSkipped[0] = true;
+
+    const myP = this.myDisplayPlayer();
+    this.playerSkipped[myP - 1] = true;
     this.selectedPieceId = null;
     this.ghostGraphics.clear();
-    this.undoSnapshot = null;
+
+    if (!this.isMultiplayer) {
+      this.undoSnapshot = null;
+    }
+
+    if (this.isMultiplayer && this.mp) {
+      this.mp.sendPass(myP);
+    }
+
     this.endTurn();
   }
 
@@ -893,6 +1124,15 @@ export class Game extends Scene {
       return;
     }
 
+    if (this.isMultiplayer) {
+      this.currentPlayer = this.opponentPlayerNumber();
+      this.updateUI();
+      this.drawTray();
+      this.drawControls();
+      return;
+    }
+
+    // Single-player: AI turn
     this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
 
     if (this.currentPlayer === 2) {
@@ -985,25 +1225,42 @@ export class Game extends Scene {
     this.ghostGraphics.clear();
     this.undoSnapshot = null;
 
-    const p1Score = this.board.calculateScore(1);
-    const p2Score = this.board.calculateScore(2);
-    const p1Placed = this.board.getPiecesPlaced(1);
-    const p2Placed = this.board.getPiecesPlaced(2);
-    const won = p1Score > p2Score;
-    const perfect = (this.board.remainingPieces.get(1)?.size ?? 1) === 0;
+    const myP = this.myDisplayPlayer();
+    const oppP = this.isMultiplayer ? this.opponentPlayerNumber() : 2;
+
+    const myScore = this.board.calculateScore(myP);
+    const oppScore = this.board.calculateScore(oppP);
+    const myPlaced = this.board.getPiecesPlaced(myP);
+    const oppPlaced = this.board.getPiecesPlaced(oppP);
+    const won = myScore > oppScore;
+    const perfect = (this.board.remainingPieces.get(myP)?.size ?? 1) === 0;
 
     SoundManager.playGameOver(won);
-    void this.submitResult(p1Score, p2Score, p1Placed, won, perfect);
+
+    if (this.isMultiplayer && this.mp) {
+      const winnerPlayer = myScore > oppScore ? myP : (oppScore > myScore ? oppP : null);
+      this.mp.sendGameOver(
+        winnerPlayer,
+        this.board.calculateScore(1),
+        this.board.calculateScore(2),
+      );
+    }
+
+    void this.submitResult(myScore, oppScore, myPlaced, won, perfect);
+
+    this.cleanupMultiplayer();
 
     this.cameras.main.fadeOut(600, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start('GameOver', {
-        playerScore: p1Score,
-        aiScore: p2Score,
-        playerPiecesPlaced: p1Placed,
-        aiPiecesPlaced: p2Placed,
+        playerScore: myScore,
+        aiScore: oppScore,
+        playerPiecesPlaced: myPlaced,
+        aiPiecesPlaced: oppPlaced,
         won,
         perfect,
+        multiplayer: this.isMultiplayer,
+        opponentName: this.opponentName,
       });
     });
   }
@@ -1033,29 +1290,47 @@ export class Game extends Scene {
     const sf = this.getSf();
     const padding = 10;
 
-    const p1Score = this.board.calculateScore(1);
-    const p2Score = this.board.calculateScore(2);
+    const myP = this.myDisplayPlayer();
+    const oppP = this.isMultiplayer ? this.opponentPlayerNumber() : 2;
+    const myScore = this.board.calculateScore(myP);
+    const oppScore = this.board.calculateScore(oppP);
 
-    const turnLabel = this.isAiThinking
-      ? 'AI is thinking...'
-      : this.currentPlayer === 1
-        ? `Your turn (${PLAYER_COLOR_NAMES[0]})`
-        : `AI turn (${PLAYER_COLOR_NAMES[1]})`;
+    let turnLabel: string;
+    if (this.isMultiplayer) {
+      if (this.isMyTurn()) {
+        turnLabel = `Your turn (${PLAYER_COLOR_NAMES[myP - 1]})`;
+      } else {
+        turnLabel = `${this.opponentName}'s turn...`;
+      }
+    } else {
+      turnLabel = this.isAiThinking
+        ? 'AI is thinking...'
+        : this.currentPlayer === 1
+          ? `Your turn (${PLAYER_COLOR_NAMES[0]})`
+          : `AI turn (${PLAYER_COLOR_NAMES[1]})`;
+    }
+
+    const turnColor = this.isMyTurn()
+      ? (myP === 1 ? '#4a90d9' : '#e8913a')
+      : (myP === 1 ? '#e8913a' : '#4a90d9');
 
     this.turnText
       .setPosition(padding, 10)
       .setText(turnLabel)
       .setFontSize(Math.round(16 * sf))
-      .setColor(this.currentPlayer === 1 ? '#4a90d9' : '#e8913a');
+      .setColor(turnColor);
 
+    const oppLabel = this.isMultiplayer ? this.opponentName : 'AI';
     this.scoreText
       .setPosition(width - padding, 10)
       .setOrigin(1, 0)
-      .setText(`You: ${p1Score}  |  AI: ${p2Score}`)
+      .setText(`You: ${myScore}  |  ${oppLabel}: ${oppScore}`)
       .setFontSize(Math.round(13 * sf));
 
     let statusMsg: string;
-    if (this.selectedPieceId) {
+    if (!this.canAct()) {
+      statusMsg = this.isMultiplayer ? `Waiting for ${this.opponentName}...` : '';
+    } else if (this.selectedPieceId) {
       const pName = PIECE_DEFINITIONS.find((p) => p.id === this.selectedPieceId)?.name ?? '';
       const deg = this.rotation * 90;
       const orient = deg === 0 && !this.flipped
@@ -1072,10 +1347,13 @@ export class Game extends Scene {
       .setText(statusMsg)
       .setFontSize(Math.round(11 * sf));
 
-    // Destroy old control labels and redraw
     this.children.list
       .filter((c) => c instanceof Phaser.GameObjects.Text && c.getData('_ctrlLabel'))
       .forEach((c) => c.destroy());
     this.drawControls();
+  }
+
+  shutdown(): void {
+    this.cleanupMultiplayer();
   }
 }

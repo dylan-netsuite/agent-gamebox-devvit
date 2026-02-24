@@ -34,7 +34,7 @@
   "triggers": {
     "onAppInstall": "/internal/on-app-install"
   },
-  "permissions": {},
+  "permissions": { "realtime": true },
   "dev": {
     "subreddit": "blokus_devvit_dev"
   }

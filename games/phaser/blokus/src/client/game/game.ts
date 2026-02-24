@@ -4,6 +4,9 @@ import { GameOver } from './scenes/GameOver';
 import { HowToPlay } from './scenes/HowToPlay';
 import { LeaderboardScene } from './scenes/Leaderboard';
 import { MainMenu } from './scenes/MainMenu';
+import { ModeSelect } from './scenes/ModeSelect';
+import { LobbyBrowser } from './scenes/LobbyBrowser';
+import { Lobby } from './scenes/Lobby';
 import { Preloader } from './scenes/Preloader';
 import * as Phaser from 'phaser';
 import { AUTO, Game } from 'phaser';
@@ -18,7 +21,7 @@ const config: Phaser.Types.Core.GameConfig = {
     width: 1024,
     height: 768,
   },
-  scene: [Boot, Preloader, MainMenu, MainGame, GameOver, HowToPlay, LeaderboardScene],
+  scene: [Boot, Preloader, MainMenu, ModeSelect, LobbyBrowser, Lobby, MainGame, GameOver, HowToPlay, LeaderboardScene],
 };
 
 const StartGame = (parent: string) => {

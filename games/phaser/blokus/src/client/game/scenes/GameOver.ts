@@ -8,6 +8,8 @@ interface GameOverData {
   aiPiecesPlaced: number;
   won: boolean;
   perfect: boolean;
+  multiplayer?: boolean;
+  opponentName?: string;
 }
 
 export class GameOver extends Scene {
@@ -40,7 +42,7 @@ export class GameOver extends Scene {
   }
 
   private buildUI(width: number, height: number, sf: number) {
-    const { won, perfect, playerScore, aiScore, playerPiecesPlaced, aiPiecesPlaced } = this.data_;
+    const { won, perfect, playerScore, aiScore, playerPiecesPlaced, aiPiecesPlaced, multiplayer, opponentName } = this.data_;
 
     const resultText = perfect ? 'PERFECT GAME!' : won ? 'YOU WIN!' : playerScore === aiScore ? 'TIE GAME!' : 'YOU LOSE!';
     const resultColor = won || perfect ? '#44cc44' : playerScore === aiScore ? '#e8913a' : '#cc4444';
@@ -55,6 +57,7 @@ export class GameOver extends Scene {
       })
       .setOrigin(0.5);
 
+    const oppLabel = multiplayer ? (opponentName ?? 'Opponent') : 'AI';
     const lineH = Math.round(28 * sf);
     let y = height * 0.32;
 
@@ -79,9 +82,9 @@ export class GameOver extends Scene {
     };
 
     addLine('Your Score', `${playerScore}`, '#4a90d9');
-    addLine('AI Score', `${aiScore}`, '#e8913a');
+    addLine(`${oppLabel} Score`, `${aiScore}`, '#e8913a');
     addLine('Your Pieces Placed', `${playerPiecesPlaced}/21`, '#4a90d9');
-    addLine('AI Pieces Placed', `${aiPiecesPlaced}/21`, '#e8913a');
+    addLine(`${oppLabel} Pieces Placed`, `${aiPiecesPlaced}/21`, '#e8913a');
 
     if (perfect) {
       y += lineH / 2;
@@ -95,16 +98,14 @@ export class GameOver extends Scene {
         .setOrigin(0.5);
     }
 
-    // Play Again button
     const btnY = height * 0.72;
     this.createButton(width / 2, btnY, 'PLAY AGAIN', 0x4a90d9, sf, () => {
       this.cameras.main.fadeOut(300, 0, 0, 0);
       this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('Game');
+        this.scene.start('ModeSelect');
       });
     });
 
-    // Main Menu button
     this.createButton(width / 2, btnY + 64 * sf, 'MAIN MENU', 0x3a3a5e, sf, () => {
       this.cameras.main.fadeOut(300, 0, 0, 0);
       this.cameras.main.once('camerafadeoutcomplete', () => {

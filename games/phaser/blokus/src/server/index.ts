@@ -7,8 +7,28 @@ import type {
   UserStats,
   CommunityStatsResponse,
 } from '../shared/types/api';
-import { redis, createServer, context } from '@devvit/web/server';
+import type { MultiplayerMessage, MultiplayerGameConfig } from '../shared/types/multiplayer';
+import { redis, createServer, context, realtime } from '@devvit/web/server';
 import { createPost } from './core/post';
+import {
+  createLobby,
+  getLobbyInfo,
+  findOpenLobby,
+  getLobbyPlayers,
+  addLobbyPlayer,
+  removeLobbyPlayer,
+  setPlayerReady,
+  updateLobbyStatus,
+  saveLobbyGameConfig,
+} from './core/lobbyState';
+
+function lobbyChannel(code: string): string {
+  return `blokus_lobby_${code}`;
+}
+
+async function broadcast(lobbyCode: string, message: MultiplayerMessage): Promise<void> {
+  await realtime.send(lobbyChannel(lobbyCode), JSON.parse(JSON.stringify(message)));
+}
 
 const app = express();
 
@@ -17,6 +37,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.text());
 
 const router = express.Router();
+
+// ── Stats helpers ──
 
 function emptyStats(): UserStats {
   return {
@@ -56,6 +78,8 @@ async function getUsername(userId: string): Promise<string> {
   }
   return userId.replace('t2_', 'u/');
 }
+
+// ── Stats endpoints ──
 
 router.get('/api/stats', async (_req, res): Promise<void> => {
   try {
@@ -177,6 +201,329 @@ router.get('/api/community-stats', async (_req, res): Promise<void> => {
     res.status(500).json({ success: false, gamesPlayed: 0, totalPiecesPlaced: 0, error: 'Internal server error' } as CommunityStatsResponse);
   }
 });
+
+// ── Lobby CRUD ──
+
+router.post('/api/lobbies/create', async (_req, res): Promise<void> => {
+  const { postId, userId, username } = context;
+  if (!postId || !userId) {
+    res.status(400).json({ status: 'error', message: 'Missing postId or userId' });
+    return;
+  }
+
+  const info = await createLobby(postId, userId, username ?? `Player ${userId.slice(0, 4)}`);
+  const { players, isHost } = await addLobbyPlayer(info.lobbyCode, userId, username ?? `Player ${userId.slice(0, 4)}`);
+
+  res.json({ status: 'ok', lobbyCode: info.lobbyCode, players, isHost });
+});
+
+router.post('/api/lobbies/join', async (req, res): Promise<void> => {
+  const { userId, username } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' });
+    return;
+  }
+
+  const body = req.body as { lobbyCode?: string } | undefined;
+  const code = body?.lobbyCode?.toUpperCase();
+  if (!code) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' });
+    return;
+  }
+
+  const info = await getLobbyInfo(code);
+  if (!info) {
+    res.status(404).json({ status: 'error', message: 'Lobby not found' });
+    return;
+  }
+  if (info.status !== 'waiting') {
+    res.status(400).json({ status: 'error', message: 'Lobby is not accepting players' });
+    return;
+  }
+  if (info.playerCount >= info.maxPlayers) {
+    res.status(400).json({ status: 'error', message: 'Lobby is full' });
+    return;
+  }
+
+  const { players, isHost } = await addLobbyPlayer(code, userId, username ?? `Player ${userId.slice(0, 4)}`);
+
+  await broadcast(code, {
+    type: 'lobby-update',
+    lobbyCode: code,
+    players,
+    hostUserId: info.hostUserId,
+  });
+
+  res.json({ status: 'ok', lobbyCode: code, players, isHost });
+});
+
+router.get('/api/lobbies/open', async (_req, res): Promise<void> => {
+  const { postId } = context;
+  if (!postId) {
+    res.status(400).json({ status: 'error', message: 'Missing postId' });
+    return;
+  }
+
+  const lobby = await findOpenLobby(postId);
+  if (!lobby) {
+    res.status(404).json({ status: 'error', message: 'No open lobbies' });
+    return;
+  }
+
+  res.json({ status: 'ok', lobby });
+});
+
+// ── In-Lobby Actions ──
+
+router.post('/api/game/join', async (req, res): Promise<void> => {
+  const { userId, username } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' });
+    return;
+  }
+
+  const body = req.body as { lobbyCode?: string } | undefined;
+  const code = body?.lobbyCode?.toUpperCase();
+  if (!code) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' });
+    return;
+  }
+
+  const info = await getLobbyInfo(code);
+  if (!info || info.status !== 'waiting') {
+    res.status(400).json({ status: 'error', message: 'Lobby not available' });
+    return;
+  }
+
+  const { players, isHost } = await addLobbyPlayer(code, userId, username ?? `Player ${userId.slice(0, 4)}`);
+
+  await broadcast(code, {
+    type: 'lobby-update',
+    lobbyCode: code,
+    players,
+    hostUserId: info.hostUserId,
+  });
+
+  res.json({ status: 'ok', players, isHost });
+});
+
+router.post('/api/game/leave', async (req, res): Promise<void> => {
+  const { userId } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' });
+    return;
+  }
+
+  const body = req.body as { lobbyCode?: string } | undefined;
+  const code = body?.lobbyCode?.toUpperCase();
+  if (!code) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' });
+    return;
+  }
+
+  const players = await removeLobbyPlayer(code, userId);
+
+  await broadcast(code, { type: 'player-left', userId });
+
+  const info = await getLobbyInfo(code);
+  await broadcast(code, {
+    type: 'lobby-update',
+    lobbyCode: code,
+    players,
+    hostUserId: info?.hostUserId ?? (players[0]?.userId ?? ''),
+  });
+
+  res.json({ status: 'ok' });
+});
+
+router.post('/api/game/ready', async (req, res): Promise<void> => {
+  const { userId } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' });
+    return;
+  }
+
+  const body = req.body as { lobbyCode?: string; ready?: boolean } | undefined;
+  const code = body?.lobbyCode?.toUpperCase();
+  if (!code) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' });
+    return;
+  }
+
+  const ready = body?.ready ?? true;
+  const players = await setPlayerReady(code, userId, ready);
+  const info = await getLobbyInfo(code);
+
+  await broadcast(code, {
+    type: 'lobby-update',
+    lobbyCode: code,
+    players,
+    hostUserId: info?.hostUserId ?? '',
+  });
+
+  res.json({ status: 'ok', players });
+});
+
+router.post('/api/game/start', async (req, res): Promise<void> => {
+  const { userId } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' });
+    return;
+  }
+
+  const body = req.body as { lobbyCode?: string } | undefined;
+  const code = body?.lobbyCode?.toUpperCase();
+  if (!code) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' });
+    return;
+  }
+
+  const info = await getLobbyInfo(code);
+  if (!info) {
+    res.status(404).json({ status: 'error', message: 'Lobby not found' });
+    return;
+  }
+  if (info.hostUserId !== userId) {
+    res.status(403).json({ status: 'error', message: 'Only host can start' });
+    return;
+  }
+
+  const players = await getLobbyPlayers(code);
+  if (players.length < 2) {
+    res.status(400).json({ status: 'error', message: 'Need 2 players' });
+    return;
+  }
+
+  const allReady = players.every((p) => p.ready || p.userId === info.hostUserId);
+  if (!allReady) {
+    res.status(400).json({ status: 'error', message: 'Not all players ready' });
+    return;
+  }
+
+  await updateLobbyStatus(code, 'playing');
+
+  const config: MultiplayerGameConfig = {
+    lobbyCode: code,
+    players,
+  };
+
+  await saveLobbyGameConfig(code, config);
+  await broadcast(code, { type: 'game-start', config });
+  res.json({ status: 'ok', config });
+});
+
+// ── Game Actions (relay only) ──
+
+router.post('/api/game/move', async (req, res): Promise<void> => {
+  const { userId } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' });
+    return;
+  }
+
+  const body = req.body as { lobbyCode?: string; move?: unknown } | undefined;
+  const code = body?.lobbyCode?.toUpperCase();
+  if (!code || !body?.move) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode or move' });
+    return;
+  }
+
+  await broadcast(code, {
+    type: 'player-move',
+    move: body.move as import('../shared/types/multiplayer').BlokusMove,
+    userId,
+  });
+
+  res.json({ status: 'ok' });
+});
+
+router.post('/api/game/pass', async (req, res): Promise<void> => {
+  const { userId } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' });
+    return;
+  }
+
+  const body = req.body as { lobbyCode?: string; player?: number } | undefined;
+  const code = body?.lobbyCode?.toUpperCase();
+  if (!code) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' });
+    return;
+  }
+
+  await broadcast(code, {
+    type: 'player-pass',
+    player: (body?.player ?? 1) as 1 | 2,
+    userId,
+  });
+
+  res.json({ status: 'ok' });
+});
+
+router.post('/api/game/game-over', async (req, res): Promise<void> => {
+  const { userId } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' });
+    return;
+  }
+
+  const body = req.body as {
+    lobbyCode?: string;
+    winnerPlayer?: number | null;
+    p1Score?: number;
+    p2Score?: number;
+  } | undefined;
+  const code = body?.lobbyCode?.toUpperCase();
+  if (!code) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' });
+    return;
+  }
+
+  await updateLobbyStatus(code, 'finished');
+
+  await broadcast(code, {
+    type: 'game-over',
+    winnerPlayer: (body?.winnerPlayer ?? null) as 1 | 2 | null,
+    p1Score: body?.p1Score ?? 0,
+    p2Score: body?.p2Score ?? 0,
+  });
+
+  res.json({ status: 'ok' });
+});
+
+router.post('/api/game/rematch', async (req, res): Promise<void> => {
+  const { postId, userId, username } = context;
+  if (!postId || !userId) {
+    res.status(400).json({ status: 'error', message: 'Missing postId or userId' });
+    return;
+  }
+
+  const body = req.body as { lobbyCode?: string } | undefined;
+  const oldCode = body?.lobbyCode?.toUpperCase();
+  if (!oldCode) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' });
+    return;
+  }
+
+  const oldPlayers = await getLobbyPlayers(oldCode);
+  if (oldPlayers.length < 2) {
+    res.status(400).json({ status: 'error', message: 'Not enough players for rematch' });
+    return;
+  }
+
+  const info = await createLobby(postId, userId, username ?? 'Player');
+  const newCode = info.lobbyCode;
+
+  for (const p of oldPlayers) {
+    await addLobbyPlayer(newCode, p.userId, p.username);
+  }
+
+  await broadcast(oldCode, { type: 'rematch', lobbyCode: newCode });
+
+  res.json({ status: 'ok', lobbyCode: newCode });
+});
+
+// ── Internal ──
 
 router.post('/internal/on-app-install', async (_req, res): Promise<void> => {
   try {

@@ -53,7 +53,7 @@ export class MainMenu extends Scene {
     this.createButton(width / 2, height * 0.45, 'PLAY', 0x4a90d9, sf, () => {
       this.cameras.main.fadeOut(300, 0, 0, 0);
       this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('Game');
+        this.scene.start('ModeSelect');
       });
     });
 

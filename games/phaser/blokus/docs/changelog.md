@@ -1,5 +1,51 @@
 # Blokus - Changelog
 
+## v0.4.0 - Live Multiplayer (2026-02-24)
+
+### Added
+- **Live multiplayer** via Devvit Realtime channels (2-player online)
+- **ModeSelect scene**: Choose between VS AI, Online Play, How to Play, or Leaderboard
+- **LobbyBrowser scene**: Quick Match (find or create), Create Lobby, Join by Code (6-char code)
+- **Lobby scene**: Shows lobby code, 2 player slots with ready state, host can start when both ready
+- **MultiplayerManager**: Client-side realtime connection manager (`connectRealtime` from `@devvit/web/client`)
+- **Server lobby endpoints**: `/api/lobbies/create`, `/api/lobbies/join`, `/api/lobbies/open`, `/api/game/join`, `/api/game/leave`, `/api/game/ready`, `/api/game/start`, `/api/game/move`, `/api/game/pass`, `/api/game/game-over`, `/api/game/rematch`
+- **Server lobby state**: Redis-backed lobby storage with 2-hour TTL (`lobbyState.ts`)
+- **Shared multiplayer types**: `LobbyInfo`, `LobbyPlayer`, `MultiplayerGameConfig`, `BlokusMove`, `MultiplayerMessage`
+- Realtime permission added to `devvit.json`
+
+### Changed
+- MainMenu PLAY button now navigates to ModeSelect instead of directly to Game
+- Game scene refactored to support both single-player (AI) and multiplayer modes
+- Undo button hidden in multiplayer mode (can't undo opponent's move)
+- GameOver scene shows opponent name instead of "AI" in multiplayer
+- GameOver "Play Again" navigates to ModeSelect instead of directly to Game
+- Game scene uses `myPlayerNumber` to determine which color/tray to show
+
+### Architecture
+- Server acts as thin relay: broadcasts moves via `realtime.send()`, no server-side validation
+- Active-player authority: the player whose turn it is sends their move; opponent applies it locally
+- Turn flow: Player places piece -> POST /api/game/move -> server broadcasts -> opponent applies via BoardLogic
+
+### Verified (E2E Two-Player Test)
+- ModeSelect scene renders with 4 mode buttons
+- VS AI single-player mode preserved with no regressions
+- LobbyBrowser scene shows Quick Match, Create Lobby, Join by Code
+- Lobby creation works: lobby code generated, realtime channel connected
+- Player slot shows username and [HOST] tag
+- Player Two joins lobby by typing 6-char code and pressing Enter
+- Both players visible in lobby with correct roles (Blue host, Orange guest)
+- Ready-up flow works: READY/UNREADY toggle, both players can ready
+- Game auto-starts when both players are ready (host triggers)
+- Both clients transition to Game scene with correct player colors
+- Move placement by Player One (Blue monomino) syncs to Player Two's board in real-time
+- Turn switching works: status updates on both clients after move
+- Scores update correctly on both clients
+- Zero critical console errors during full multiplayer flow
+
+### Known Gaps
+- Opponent-left detection requires explicit `leaveLobby()` call; closing the browser dialog doesn't trigger it
+- Server-side heartbeat/timeout needed for reliable disconnection detection
+
 ## v0.3.1 - Rotation Controls Overhaul (2026-02-24)
 
 ### Changed
