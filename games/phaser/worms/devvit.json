@@ -1,6 +1,9 @@
 {
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
   "name": "worms-devvit",
+  "permissions": {
+    "realtime": true
+  },
   "post": {
     "dir": "dist/client",
     "entrypoints": {
@@ -24,7 +27,7 @@
   "menu": {
     "items": [
       {
-        "label": "New Worms Game",
+        "label": "New Reddit Royale Game",
         "description": "worms-devvit",
         "location": "subreddit",
         "forUserType": "moderator",

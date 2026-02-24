@@ -13,6 +13,10 @@ export interface TerrainStyle {
   flatness: number;
   islands: boolean;
   cavern: boolean;
+  plateaus?: boolean;
+  ridged?: boolean;
+  terraced?: number;
+  waterLevel?: number;
 }
 
 export interface TerrainColors {
@@ -23,6 +27,8 @@ export interface TerrainColors {
   skyMid: number;
   skyLow: number;
   skyBottom: number;
+  waterColor?: [number, number, number];
+  waterAlpha?: number;
 }
 
 export const MAP_PRESETS: MapPreset[] = [
@@ -51,7 +57,7 @@ export const MAP_PRESETS: MapPreset[] = [
   {
     id: 'islands',
     name: 'Island Chain',
-    description: 'Scattered islands over deep water',
+    description: 'Tropical islands over crystal-clear ocean',
     terrainStyle: {
       minHeight: 0.15,
       maxHeight: 0.6,
@@ -59,6 +65,7 @@ export const MAP_PRESETS: MapPreset[] = [
       flatness: 0,
       islands: true,
       cavern: false,
+      waterLevel: 0.82,
     },
     colors: {
       topSurface: [194, 178, 128],
@@ -68,34 +75,36 @@ export const MAP_PRESETS: MapPreset[] = [
       skyMid: 0x80deea,
       skyLow: 0xb2ebf2,
       skyBottom: 0x0097a7,
+      waterColor: [30, 120, 200],
+      waterAlpha: 0.55,
     },
   },
   {
     id: 'cavern',
     name: 'Underground Cavern',
-    description: 'Dark cave with stalactites and tight spaces',
+    description: 'A dark cave with stalactites — watch your head',
     terrainStyle: {
-      minHeight: 0.2,
-      maxHeight: 0.85,
-      octaves: 6,
-      flatness: 0,
+      minHeight: 0.15,
+      maxHeight: 0.4,
+      octaves: 4,
+      flatness: 0.3,
       islands: false,
       cavern: true,
     },
     colors: {
-      topSurface: [100, 100, 110],
-      subSurface: [70, 70, 80],
-      deep: [50, 45, 55],
-      skyTop: 0x1a1a2e,
-      skyMid: 0x16213e,
-      skyLow: 0x0f3460,
-      skyBottom: 0x1a1a2e,
+      topSurface: [110, 105, 100],
+      subSurface: [80, 75, 70],
+      deep: [55, 50, 50],
+      skyTop: 0x0a0a14,
+      skyMid: 0x10101e,
+      skyLow: 0x0a0a14,
+      skyBottom: 0x0a0a14,
     },
   },
   {
     id: 'flatlands',
     name: 'Flat Arena',
-    description: 'Mostly flat terrain — pure aim battles',
+    description: 'Wide-open plains — nowhere to hide',
     terrainStyle: {
       minHeight: 0.45,
       maxHeight: 0.55,
@@ -117,7 +126,7 @@ export const MAP_PRESETS: MapPreset[] = [
   {
     id: 'cliffs',
     name: 'Cliffside',
-    description: 'Extreme peaks and deep valleys',
+    description: 'Extreme peaks and plunging valleys',
     terrainStyle: {
       minHeight: 0.1,
       maxHeight: 0.9,
@@ -125,6 +134,7 @@ export const MAP_PRESETS: MapPreset[] = [
       flatness: 0,
       islands: false,
       cavern: false,
+      terraced: 6,
     },
     colors: {
       topSurface: [120, 120, 120],
@@ -134,6 +144,81 @@ export const MAP_PRESETS: MapPreset[] = [
       skyMid: 0x9fa8da,
       skyLow: 0xc5cae9,
       skyBottom: 0x3949ab,
+    },
+  },
+  {
+    id: 'desert',
+    name: 'Desert Dunes',
+    description: 'Sun-scorched sand dunes under a blazing sky',
+    terrainStyle: {
+      minHeight: 0.35,
+      maxHeight: 0.7,
+      octaves: 3,
+      flatness: 0,
+      islands: false,
+      cavern: false,
+      plateaus: true,
+    },
+    colors: {
+      topSurface: [218, 189, 132],
+      subSurface: [194, 160, 100],
+      deep: [160, 120, 70],
+      skyTop: 0xff7043,
+      skyMid: 0xffab91,
+      skyLow: 0xffe0b2,
+      skyBottom: 0xffa726,
+    },
+  },
+  {
+    id: 'tundra',
+    name: 'Frozen Tundra',
+    description: 'Icy peaks and frozen lakes in a winter storm',
+    terrainStyle: {
+      minHeight: 0.25,
+      maxHeight: 0.8,
+      octaves: 5,
+      flatness: 0,
+      islands: false,
+      cavern: false,
+      ridged: true,
+      waterLevel: 0.88,
+    },
+    colors: {
+      topSurface: [220, 230, 240],
+      subSurface: [180, 200, 215],
+      deep: [100, 120, 140],
+      skyTop: 0x546e7a,
+      skyMid: 0x78909c,
+      skyLow: 0xb0bec5,
+      skyBottom: 0x455a64,
+      waterColor: [140, 180, 210],
+      waterAlpha: 0.45,
+    },
+  },
+  {
+    id: 'volcano',
+    name: 'Volcanic Ridge',
+    description: 'Charred rock over rivers of molten lava',
+    terrainStyle: {
+      minHeight: 0.2,
+      maxHeight: 0.85,
+      octaves: 5,
+      flatness: 0,
+      islands: false,
+      cavern: false,
+      ridged: true,
+      waterLevel: 0.9,
+    },
+    colors: {
+      topSurface: [70, 60, 55],
+      subSurface: [50, 40, 35],
+      deep: [35, 25, 20],
+      skyTop: 0x4a0000,
+      skyMid: 0x8b0000,
+      skyLow: 0xb71c1c,
+      skyBottom: 0x3e0000,
+      waterColor: [255, 90, 0],
+      waterAlpha: 0.8,
     },
   },
 ];

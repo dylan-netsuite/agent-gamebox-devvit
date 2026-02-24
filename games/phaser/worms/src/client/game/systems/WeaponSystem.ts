@@ -144,10 +144,19 @@ export class WeaponSystem {
         break;
 
       case 'targeted':
-        // For airstrike, use the aim direction to determine target X
         {
           const targetX = center.x + Math.cos(this.aimAngle) * this.power * 3;
           this.projectiles.fireAirstrike(targetX, weapon);
+        }
+        break;
+
+      case 'teleport':
+        {
+          const dist = this.power * 3;
+          const targetX = center.x + Math.cos(this.aimAngle) * dist;
+          const targetY = center.y + Math.sin(this.aimAngle) * dist;
+          this.projectiles.teleportWorm(worm, targetX, targetY);
+          this.setState('resolved');
         }
         break;
     }
@@ -158,7 +167,9 @@ export class WeaponSystem {
     const center = worm.getCenter();
     const weapon = this.currentWeapon;
 
-    if (weapon.firingMode === 'hitscan') {
+    if (weapon.firingMode === 'teleport') {
+      this.aimIndicator.drawTeleportAim(center.x, center.y, this.aimAngle, this.power);
+    } else if (weapon.firingMode === 'hitscan') {
       this.aimIndicator.drawHitscanAim(center.x, center.y, this.aimAngle);
     } else {
       this.aimIndicator.drawAim(

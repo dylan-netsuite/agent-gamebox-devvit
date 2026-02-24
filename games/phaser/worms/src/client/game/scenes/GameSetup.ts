@@ -4,6 +4,8 @@ import { TEAM_COLORS } from '../../../shared/types/game';
 import { MAP_PRESETS } from '../../../shared/types/maps';
 import { SoundManager } from '../systems/SoundManager';
 
+export type AIDifficulty = 'easy' | 'medium' | 'hard';
+
 export interface GameConfig {
   numTeams: number;
   wormsPerTeam: number;
@@ -11,6 +13,7 @@ export interface GameConfig {
   aiTeams?: number[];
   mapId?: string;
   turnTimer?: number;
+  aiDifficulty?: AIDifficulty;
 }
 
 const TEAM_NAMES = ['Red', 'Blue', 'Yellow', 'Purple'];
@@ -24,12 +27,20 @@ const TIMER_PRESETS = [
 ];
 const DEFAULT_TIMER_INDEX = 2; // 45s Normal
 
+const AI_DIFFICULTY_PRESETS: { value: AIDifficulty; label: string; desc: string }[] = [
+  { value: 'easy', label: 'Easy', desc: 'Forgiving aim' },
+  { value: 'medium', label: 'Medium', desc: 'Balanced challenge' },
+  { value: 'hard', label: 'Hard', desc: 'Deadly precision' },
+];
+const DEFAULT_AI_DIFFICULTY_INDEX = 1;
+
 export class GameSetup extends Scene {
   private numTeams = 2;
   private wormsPerTeam = 2;
   private vsCPU = false;
   private mapIndex = 0;
   private timerIndex = DEFAULT_TIMER_INDEX;
+  private aiDifficultyIndex = DEFAULT_AI_DIFFICULTY_INDEX;
 
   private teamCountText!: Phaser.GameObjects.Text;
   private wormCountText!: Phaser.GameObjects.Text;
@@ -42,19 +53,26 @@ export class GameSetup extends Scene {
   private cpuToggleText!: Phaser.GameObjects.Text;
   private soundToggleBg!: Phaser.GameObjects.Graphics;
   private soundToggleText!: Phaser.GameObjects.Text;
+  private difficultyContainer!: Phaser.GameObjects.Container;
+  private difficultyValueText!: Phaser.GameObjects.Text;
+  private difficultyDescText!: Phaser.GameObjects.Text;
 
   constructor() {
     super('GameSetup');
   }
 
-  create() {
+  create(data?: { forceVsCPU?: boolean }) {
+    if (data?.forceVsCPU !== undefined) {
+      this.vsCPU = data.forceVsCPU;
+    }
+
     const { width, height } = this.scale;
     const cx = width / 2;
 
     this.cameras.main.setBackgroundColor('#1a1a2e');
 
     this.add
-      .text(cx, 28, '🪱 WORMS', {
+      .text(cx, 28, '👑 REDDIT ROYALE', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '32px',
         fontStyle: 'bold',
@@ -76,7 +94,7 @@ export class GameSetup extends Scene {
     const panelW = Math.min(width - 24, 400);
     const panelX = cx - panelW / 2;
 
-    const panelH = 320;
+    const panelH = 356;
     const panelBg = this.add.graphics();
     panelBg.fillStyle(0x16213e, 0.9);
     panelBg.fillRoundedRect(panelX, panelY, panelW, panelH, 12);
@@ -97,7 +115,7 @@ export class GameSetup extends Scene {
     });
 
     // Worms per team row
-    this.buildRow(cx, rowY2, panelW, 'WORMS PER TEAM', 1, 3, this.wormsPerTeam, (val) => {
+    this.buildRow(cx, rowY2, panelW, 'FIGHTERS PER TEAM', 1, 3, this.wormsPerTeam, (val) => {
       this.wormsPerTeam = val;
       this.updateDisplay();
     });
@@ -111,8 +129,11 @@ export class GameSetup extends Scene {
     // VS CPU toggle
     this.buildCPUToggle(cx, rowY5, panelW);
 
+    // AI difficulty row (only visible when VS CPU is on)
+    this.buildDifficultyRow(cx, rowY5 + 32, panelW);
+
     // Sound toggle
-    this.buildSoundToggle(cx, rowY5 + 36, panelW);
+    this.buildSoundToggle(cx, rowY5 + 64, panelW);
 
     // Team preview dots
     this.teamPreview = this.add.container(cx, panelY + panelH - 28);
@@ -161,14 +182,34 @@ export class GameSetup extends Scene {
       });
     }
 
-    const totalWorms = this.numTeams * this.wormsPerTeam;
     this.add
-      .text(cx, height - 12, `${totalWorms} worms • Destructible Terrain • Turn-Based`, {
+      .text(cx, height - 28, '[ ESC — Back to Menu ]', {
+        fontFamily: 'monospace',
+        fontSize: '10px',
+        color: '#666688',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        SoundManager.play('select');
+        this.scene.start('ModeSelect');
+      });
+
+    const totalFighters = this.numTeams * this.wormsPerTeam;
+    this.add
+      .text(cx, height - 12, `${totalFighters} fighters • Destructible Terrain • Turn-Based`, {
         fontFamily: 'monospace',
         fontSize: '9px',
         color: '#555577',
       })
       .setOrigin(0.5);
+
+    if (this.input.keyboard) {
+      this.input.keyboard.on('keydown-ESC', () => {
+        SoundManager.play('select');
+        this.scene.start('ModeSelect');
+      });
+    }
   }
 
   private buildRow(
@@ -472,6 +513,7 @@ export class GameSetup extends Scene {
       this.vsCPU = !this.vsCPU;
       SoundManager.play('select');
       this.drawCPUToggle(controlX, y + 4, toggleW, toggleH);
+      this.difficultyContainer.setVisible(this.vsCPU);
     });
   }
 
@@ -542,6 +584,108 @@ export class GameSetup extends Scene {
     }
   }
 
+  private buildDifficultyRow(cx: number, y: number, panelW: number): void {
+    this.difficultyContainer = this.add.container(0, 0);
+
+    const labelX = cx - panelW / 2 + 20;
+    const label = this.add.text(labelX, y + 4, 'AI LEVEL', {
+      fontFamily: 'monospace',
+      fontSize: '10px',
+      fontStyle: 'bold',
+      color: '#8899aa',
+      letterSpacing: 1,
+    });
+    this.difficultyContainer.add(label);
+
+    const controlX = cx + panelW / 2 - 20;
+    const btnSize = 22;
+
+    const leftBg = this.add.graphics();
+    leftBg.fillStyle(0x2a3a5a, 1);
+    leftBg.fillRoundedRect(controlX - 120, y + 2, btnSize, btnSize, 5);
+    this.difficultyContainer.add(leftBg);
+
+    const leftArrow = this.add
+      .text(controlX - 120 + btnSize / 2, y + 2 + btnSize / 2, '◀', {
+        fontSize: '11px',
+        color: '#ffffff',
+        fontFamily: 'monospace',
+      })
+      .setOrigin(0.5);
+    this.difficultyContainer.add(leftArrow);
+
+    const leftZone = this.add
+      .zone(controlX - 120 + btnSize / 2, y + 2 + btnSize / 2, btnSize, btnSize)
+      .setInteractive({ useHandCursor: true });
+
+    this.difficultyValueText = this.add
+      .text(controlX - 65, y + 2 + btnSize / 2, '', {
+        fontSize: '11px',
+        color: '#ffffff',
+        fontFamily: 'monospace',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5);
+    this.difficultyContainer.add(this.difficultyValueText);
+
+    const rightBg = this.add.graphics();
+    rightBg.fillStyle(0x2a3a5a, 1);
+    rightBg.fillRoundedRect(controlX - 20, y + 2, btnSize, btnSize, 5);
+    this.difficultyContainer.add(rightBg);
+
+    const rightArrow = this.add
+      .text(controlX - 20 + btnSize / 2, y + 2 + btnSize / 2, '▶', {
+        fontSize: '11px',
+        color: '#ffffff',
+        fontFamily: 'monospace',
+      })
+      .setOrigin(0.5);
+    this.difficultyContainer.add(rightArrow);
+
+    const rightZone = this.add
+      .zone(controlX - 20 + btnSize / 2, y + 2 + btnSize / 2, btnSize, btnSize)
+      .setInteractive({ useHandCursor: true });
+
+    this.difficultyDescText = this.add
+      .text(controlX - 65, y + btnSize + 6, '', {
+        fontSize: '8px',
+        color: '#6e7681',
+        fontFamily: 'monospace',
+        fontStyle: 'italic',
+      })
+      .setOrigin(0.5);
+    this.difficultyContainer.add(this.difficultyDescText);
+
+    leftZone.on('pointerdown', () => {
+      this.aiDifficultyIndex =
+        (this.aiDifficultyIndex - 1 + AI_DIFFICULTY_PRESETS.length) % AI_DIFFICULTY_PRESETS.length;
+      SoundManager.play('select');
+      this.updateDifficultyDisplay();
+    });
+
+    rightZone.on('pointerdown', () => {
+      this.aiDifficultyIndex = (this.aiDifficultyIndex + 1) % AI_DIFFICULTY_PRESETS.length;
+      SoundManager.play('select');
+      this.updateDifficultyDisplay();
+    });
+
+    this.updateDifficultyDisplay();
+    this.difficultyContainer.setVisible(this.vsCPU);
+  }
+
+  private updateDifficultyDisplay(): void {
+    const preset = AI_DIFFICULTY_PRESETS[this.aiDifficultyIndex]!;
+    this.difficultyValueText.setText(preset.label);
+    this.difficultyDescText.setText(preset.desc);
+
+    const colors: Record<AIDifficulty, string> = {
+      easy: '#3fb950',
+      medium: '#f0ad4e',
+      hard: '#e94560',
+    };
+    this.difficultyValueText.setColor(colors[preset.value]);
+  }
+
   private updateDisplay(): void {
     this.updateTeamPreview();
   }
@@ -572,9 +716,9 @@ export class GameSetup extends Scene {
         .setOrigin(0.5, 0);
       this.teamPreview.add(name);
 
-      const wormIcons = '🪱'.repeat(this.wormsPerTeam);
+      const fighterIcons = '⚔'.repeat(this.wormsPerTeam);
       const icons = this.add
-        .text(x, -16, wormIcons, { fontSize: '8px' })
+        .text(x, -16, fighterIcons, { fontSize: '8px' })
         .setOrigin(0.5, 1);
       this.teamPreview.add(icons);
 
@@ -609,6 +753,7 @@ export class GameSetup extends Scene {
       aiTeams,
       mapId: MAP_PRESETS[this.mapIndex]!.id,
       turnTimer: TIMER_PRESETS[this.timerIndex]!.value,
+      aiDifficulty: AI_DIFFICULTY_PRESETS[this.aiDifficultyIndex]!.value,
     } satisfies GameConfig);
   }
 }

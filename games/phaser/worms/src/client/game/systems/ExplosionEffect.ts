@@ -27,7 +27,7 @@ export class ExplosionEffect {
     baseDamage: number,
     worms: Worm[],
   ): ExplosionResult {
-    this.terrain.carve(x, y, radius);
+    this.terrain.addCrater(x, y, radius);
     this.terrain.redraw();
 
     SoundManager.play('explosion');
@@ -66,7 +66,7 @@ export class ExplosionEffect {
 
   private playVisual(x: number, y: number, radius: number): void {
     const gfx = this.scene.add.graphics().setDepth(50);
-    const particleCount = 15 + Math.floor(radius / 3);
+    const particleCount = 20 + Math.floor(radius / 2);
     const particles: {
       x: number;
       y: number;
@@ -74,56 +74,122 @@ export class ExplosionEffect {
       vy: number;
       life: number;
       size: number;
+      type: 'fire' | 'smoke' | 'debris';
     }[] = [];
 
     for (let i = 0; i < particleCount; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const speed = 1.5 + Math.random() * (radius * 0.1);
+      const speed = 2 + Math.random() * (radius * 0.12);
       particles.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 2,
+        vy: Math.sin(angle) * speed - 3,
         life: 1,
-        size: 1.5 + Math.random() * 2.5,
+        size: 2 + Math.random() * 3,
+        type: 'fire',
       });
     }
 
-    // Flash circle
+    const smokeCount = 8 + Math.floor(radius / 5);
+    for (let i = 0; i < smokeCount; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 0.5 + Math.random() * (radius * 0.04);
+      particles.push({
+        x: x + (Math.random() - 0.5) * radius * 0.3,
+        y: y + (Math.random() - 0.5) * radius * 0.3,
+        vx: Math.cos(angle) * speed,
+        vy: -0.5 - Math.random() * 1.5,
+        life: 1,
+        size: 4 + Math.random() * 6,
+        type: 'smoke',
+      });
+    }
+
+    const debrisCount = 6 + Math.floor(radius / 8);
+    for (let i = 0; i < debrisCount; i++) {
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.8;
+      const speed = 3 + Math.random() * (radius * 0.08);
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 4,
+        life: 1,
+        size: 1 + Math.random() * 2,
+        type: 'debris',
+      });
+    }
+
     const flash = this.scene.add.graphics().setDepth(49);
-    flash.fillStyle(0xffffff, 0.8);
-    flash.fillCircle(x, y, radius * 0.6);
+    flash.fillStyle(0xffffff, 0.9);
+    flash.fillCircle(x, y, radius * 0.7);
     this.scene.tweens.add({
       targets: flash,
       alpha: 0,
-      duration: 150,
+      duration: 120,
       onComplete: () => flash.destroy(),
     });
 
+    const ring = this.scene.add.graphics().setDepth(48);
+    let ringRadius = radius * 0.3;
+    let ringAlpha = 0.5;
+
     const timer = this.scene.time.addEvent({
       delay: 16,
-      repeat: 30,
+      repeat: 40,
       callback: () => {
         gfx.clear();
         for (const p of particles) {
           p.x += p.vx;
           p.y += p.vy;
-          p.vy += 0.15;
-          p.life -= 0.03;
-          if (p.life > 0) {
-            const r = 255;
-            const g = Math.floor(180 * p.life);
-            const b = Math.floor(40 * p.life);
-            gfx.fillStyle(Phaser.Display.Color.GetColor(r, g, b), p.life);
-            gfx.fillCircle(p.x, p.y, p.size * p.life);
+          p.life -= p.type === 'smoke' ? 0.02 : 0.025;
+
+          if (p.type === 'fire') {
+            p.vy += 0.12;
+            if (p.life > 0) {
+              const r = 255;
+              const g = Math.floor(200 * p.life);
+              const b = Math.floor(50 * p.life * p.life);
+              gfx.fillStyle(Phaser.Display.Color.GetColor(r, g, b), p.life * 0.9);
+              gfx.fillCircle(p.x, p.y, p.size * p.life);
+            }
+          } else if (p.type === 'smoke') {
+            p.vy -= 0.01;
+            p.size += 0.15;
+            if (p.life > 0) {
+              const grey = Math.floor(60 + 40 * p.life);
+              gfx.fillStyle(Phaser.Display.Color.GetColor(grey, grey, grey), p.life * 0.4);
+              gfx.fillCircle(p.x, p.y, p.size * (1.2 - p.life * 0.2));
+            }
+          } else {
+            p.vy += 0.25;
+            if (p.life > 0) {
+              const brown = Phaser.Display.Color.GetColor(
+                120 + Math.floor(Math.random() * 40),
+                80 + Math.floor(Math.random() * 30),
+                40,
+              );
+              gfx.fillStyle(brown, p.life);
+              gfx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+            }
           }
+        }
+
+        ring.clear();
+        ringRadius += 1.5;
+        ringAlpha -= 0.015;
+        if (ringAlpha > 0) {
+          ring.lineStyle(2, 0xffaa44, ringAlpha);
+          ring.strokeCircle(x, y, ringRadius);
         }
       },
     });
 
-    this.scene.time.delayedCall(550, () => {
+    this.scene.time.delayedCall(700, () => {
       timer.destroy();
       gfx.destroy();
+      ring.destroy();
     });
   }
 

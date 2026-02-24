@@ -277,13 +277,15 @@ export class Worm {
 
     const x = this.x - WORM_WIDTH / 2;
     const y = this.y;
+    const bobOffset = this.grounded ? Math.sin(this.scene.time.now * 0.003) * 1.5 : 0;
+    const drawY = y + bobOffset;
 
-    this.characterDraw(this.graphics, x, y, WORM_WIDTH, WORM_HEIGHT, this.facingRight, this.color);
+    this.characterDraw(this.graphics, x, drawY, WORM_WIDTH, WORM_HEIGHT, this.facingRight, this.color);
 
     const barWidth = WORM_WIDTH + 10;
     const barHeight = 5;
     const barX = this.x - barWidth / 2;
-    const barY = y - 8;
+    const barY = drawY - 8;
     const healthFraction = this.health / this.maxHealth;
 
     this.graphics.lineStyle(1, 0x000000, 0.7);
@@ -297,19 +299,38 @@ export class Worm {
     this.graphics.fillStyle(barColor, 1);
     this.graphics.fillRect(barX, barY, barWidth * healthFraction, barHeight);
 
-    this.nameText.setPosition(this.x, this.y - 12);
+    this.nameText.setPosition(this.x, drawY - 12);
     this.hpText.setText(`${this.health}`);
-    this.hpText.setPosition(this.x, this.y - 22);
+    this.hpText.setPosition(this.x, drawY - 22);
   }
 
   takeDamage(amount: number): void {
     if (!this.alive) return;
     SoundManager.play('damage');
     this.health = Math.max(0, this.health - amount);
+    this.playHitFlash();
     if (this.health <= 0) {
       this.alive = false;
       this.playDeath();
     }
+  }
+
+  private playHitFlash(): void {
+    const flash = this.scene.add.graphics().setDepth(30);
+    flash.fillStyle(0xffffff, 0.8);
+    flash.fillRoundedRect(
+      this.x - WORM_WIDTH / 2 - 2,
+      this.y - 2,
+      WORM_WIDTH + 4,
+      WORM_HEIGHT + 4,
+      4,
+    );
+    this.scene.tweens.add({
+      targets: flash,
+      alpha: 0,
+      duration: 200,
+      onComplete: () => flash.destroy(),
+    });
   }
 
   private playDeath(): void {

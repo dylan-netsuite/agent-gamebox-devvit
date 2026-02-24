@@ -14,8 +14,8 @@ const TEXT_PRIMARY = '#e6edf3';
 const TEXT_DIM = '#6e7681';
 const TOGGLE_BG = 0x1a2a3a;
 
-const SLOT_SIZE = 48;
-const SLOT_GAP = 5;
+const SLOT_SIZE = 40;
+const SLOT_GAP = 4;
 const PAD = 8;
 const INFO_W = 120;
 const TOGGLE_H = 24;
@@ -56,6 +56,7 @@ export class HUD {
   private getActiveWormName: (() => string) | null = null;
   private getTurnTimer: (() => number) | null = null;
   private getTeam: (() => number) | null = null;
+  private getIsRemoteTurn: (() => boolean) | null = null;
 
   private tooltipContainer: Phaser.GameObjects.Container | null = null;
   private tooltipBg: Phaser.GameObjects.Graphics | null = null;
@@ -104,6 +105,10 @@ export class HUD {
 
   setTeamGetter(fn: () => number): void {
     this.getTeam = fn;
+  }
+
+  setRemoteTurnGetter(fn: () => boolean): void {
+    this.getIsRemoteTurn = fn;
   }
 
   consumeClick(): boolean {
@@ -480,12 +485,28 @@ export class HUD {
     const state = this.weapons.currentState;
     const weapon = this.weapons.currentWeapon;
     const team = this.getTeam?.() ?? 0;
-    const teamLabel = team === 0 ? '🔴' : '🔵';
+    const teamLabels = ['🔴', '🔵', '🟡', '🟣'];
+    const teamLabel = teamLabels[team] ?? '🔴';
+    const isRemote = this.getIsRemoteTurn?.() ?? false;
+
+    if (isRemote) {
+      if (state === 'firing') {
+        this.stateText.setText(`${teamLabel} 💥 Opponent Firing...`);
+        this.instructionText.setText('');
+      } else if (state === 'resolved') {
+        this.stateText.setText(`${teamLabel} ✓ Turn Complete`);
+        this.instructionText.setText('');
+      } else {
+        this.stateText.setText(`${teamLabel} ⏳ Opponent's Turn`);
+        this.instructionText.setText('Watching opponent play...');
+      }
+      return;
+    }
 
     switch (state) {
       case 'idle':
         this.stateText.setText(`${teamLabel} ${weapon.icon} ${weapon.name}`);
-        this.instructionText.setText('Click:Aim · W:Jump · ←→:Move · Drag:Pan · F:Center');
+        this.instructionText.setText('Click:Aim · W:Jump · B:Backflip · ←→:Move · Drag:Pan');
         break;
       case 'aiming':
         this.stateText.setText(`${teamLabel} Aiming ${weapon.icon} ${weapon.name}`);

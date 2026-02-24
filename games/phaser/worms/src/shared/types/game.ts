@@ -36,6 +36,8 @@ export interface Crater {
 export interface GameState {
   postId: string;
   phase: GamePhase;
+  mode: 'local' | 'online';
+  hostUserId: string | null;
   players: PlayerInfo[];
   turn: TurnInfo;
   craters: Crater[];
@@ -53,3 +55,11 @@ export const WORM_NAMES = [
 export const DEFAULT_WORM_HEALTH = 100;
 export const WORMS_PER_TEAM = 3;
 export const TURN_DURATION = 45;
+
+export interface PlayerStats {
+  userId: string;
+  username: string;
+  wins: number;
+  losses: number;
+  gamesPlayed: number;
+}

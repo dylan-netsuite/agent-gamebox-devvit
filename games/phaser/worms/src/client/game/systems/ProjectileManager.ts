@@ -92,23 +92,43 @@ export class ProjectileManager {
     angle: number,
     weapon: WeaponDef,
   ): void {
-    const maxDist = 800;
-    const step = 3;
+    const maxDist = 3000;
+    const step = 2;
     const dx = Math.cos(angle) * step;
     const dy = Math.sin(angle) * step;
 
     let hitX = originX;
     let hitY = originY;
+    let directHitWorm: Worm | null = null;
 
     for (let d = 0; d < maxDist; d += step) {
       hitX += dx;
       hitY += dy;
       if (hitX < 0 || hitX >= this.terrain.getWidth() || hitY >= this.terrain.getHeight()) break;
+
+      // Check worm hit before terrain — a worm standing on terrain should be hit
+      for (const worm of this.worms) {
+        if (!worm.alive) continue;
+        const wx = worm.x;
+        const wy = worm.y;
+        if (hitX >= wx - 10 && hitX <= wx + 10 && hitY >= wy - 2 && hitY <= wy + 22) {
+          directHitWorm = worm;
+          break;
+        }
+      }
+      if (directHitWorm) break;
+
       if (this.terrain.isSolid(hitX, hitY)) break;
     }
 
     this.drawHitscanTracer(originX, originY, hitX, hitY);
-    this.explosions.explode(hitX, hitY, weapon.blastRadius, weapon.damage, this.worms);
+
+    if (directHitWorm) {
+      directHitWorm.takeDamage(weapon.damage);
+      this.explosions.explode(hitX, hitY, Math.max(weapon.blastRadius, 6), 0, []);
+    } else {
+      this.explosions.explode(hitX, hitY, weapon.blastRadius, weapon.damage, this.worms);
+    }
   }
 
   placeDynamite(x: number, y: number, weapon: WeaponDef): void {
@@ -126,6 +146,39 @@ export class ProjectileManager {
       fuseTimer: weapon.fuse * 60,
       bounceCount: 0,
       active: true,
+    });
+  }
+
+  teleportWorm(worm: Worm, targetX: number, targetY: number): void {
+    const clampedX = Math.max(10, Math.min(this.terrain.getWidth() - 10, targetX));
+    const surfaceY = this.terrain.getSurfaceY(clampedX);
+    const finalY = Math.min(targetY, surfaceY - 20);
+
+    // Visual effect at origin
+    const originGfx = this.scene.add.graphics().setDepth(50);
+    originGfx.fillStyle(0x00e5ff, 0.6);
+    originGfx.fillCircle(worm.x, worm.y, 15);
+    this.scene.tweens.add({
+      targets: originGfx,
+      alpha: 0,
+      scaleX: 2,
+      scaleY: 2,
+      duration: 300,
+      onComplete: () => originGfx.destroy(),
+    });
+
+    worm.x = clampedX;
+    worm.y = finalY;
+
+    // Visual effect at destination
+    const destGfx = this.scene.add.graphics().setDepth(50);
+    destGfx.fillStyle(0x00e5ff, 0.8);
+    destGfx.fillCircle(clampedX, finalY, 20);
+    this.scene.tweens.add({
+      targets: destGfx,
+      alpha: 0,
+      duration: 400,
+      onComplete: () => destGfx.destroy(),
     });
   }
 
@@ -240,7 +293,43 @@ export class ProjectileManager {
       p.weapon.damage,
       this.worms,
     );
+
+    if (p.weapon.cluster && p.weapon.clusterCount) {
+      this.spawnClusterBomblets(p.x, p.y, p.weapon);
+    }
+
     this.removeProjectile(p);
+  }
+
+  private spawnClusterBomblets(x: number, y: number, parentWeapon: WeaponDef): void {
+    const count = parentWeapon.clusterCount ?? 4;
+    for (let i = 0; i < count; i++) {
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.8;
+      const speed = 2 + Math.random() * 3;
+
+      const gfx = this.scene.add.graphics().setDepth(40);
+      const trail = this.scene.add.graphics().setDepth(39);
+
+      this.projectiles.push({
+        x,
+        y: y - 5,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 2,
+        weapon: {
+          ...parentWeapon,
+          cluster: false,
+          damage: parentWeapon.clusterDamage ?? 18,
+          blastRadius: parentWeapon.clusterRadius ?? 18,
+          fuse: 0,
+          bounces: false,
+        },
+        graphics: gfx,
+        trail,
+        fuseTimer: 0,
+        bounceCount: 0,
+        active: true,
+      });
+    }
   }
 
   private removeProjectile(p: Projectile): void {
@@ -262,6 +351,19 @@ export class ProjectileManager {
       p.graphics.fillCircle(p.x, p.y, 5);
       p.graphics.fillStyle(0x888888, 1);
       p.graphics.fillRect(p.x - 1, p.y - 7, 2, 3);
+    } else if (p.weapon.id === 'cluster-bomb') {
+      if (p.weapon.cluster) {
+        // Main cluster bomb — larger orange sphere
+        p.graphics.fillStyle(0xff6600, 1);
+        p.graphics.fillCircle(p.x, p.y, 6);
+        p.graphics.fillStyle(0xffcc00, 1);
+        p.graphics.fillCircle(p.x - 2, p.y - 2, 2);
+        p.graphics.fillCircle(p.x + 2, p.y + 2, 2);
+      } else {
+        // Sub-bomblet — small orange dot
+        p.graphics.fillStyle(0xff8800, 1);
+        p.graphics.fillCircle(p.x, p.y, 3);
+      }
     } else {
       // Default rocket shape
       const angle = Math.atan2(p.vy, p.vx);

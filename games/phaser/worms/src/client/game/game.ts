@@ -2,6 +2,10 @@ import { Boot } from './scenes/Boot';
 import { GamePlay } from './scenes/GamePlay';
 import { GameSetup } from './scenes/GameSetup';
 import { CharacterSelect } from './scenes/CharacterSelect';
+import { ModeSelect } from './scenes/ModeSelect';
+import { LobbyBrowser } from './scenes/LobbyBrowser';
+import { Lobby } from './scenes/Lobby';
+import { Leaderboard } from './scenes/Leaderboard';
 import * as Phaser from 'phaser';
 import { AUTO, Game } from 'phaser';
 import { Preloader } from './scenes/Preloader';
@@ -16,11 +20,7 @@ const config: Phaser.Types.Core.GameConfig = {
     width: '100%',
     height: '100%',
   },
-  scene: [Boot, Preloader, GameSetup, CharacterSelect, GamePlay],
-};
-
-const StartGame = (parent: string) => {
-  return new Game({ ...config, parent });
+  scene: [Boot, Preloader, ModeSelect, LobbyBrowser, GameSetup, CharacterSelect, Lobby, GamePlay, Leaderboard],
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function tryStart() {
     const { offsetWidth, offsetHeight } = container!;
     if (offsetWidth > 0 && offsetHeight > 0) {
-      StartGame('game-container');
+      void new Game({ ...config, parent: 'game-container' });
     } else {
       requestAnimationFrame(tryStart);
     }

@@ -4,6 +4,12 @@ import type { Crater } from '../../../shared/types/game';
 import type { MapPreset } from '../../../shared/types/maps';
 import { getMapPreset } from '../../../shared/types/maps';
 
+function hashNoise(x: number, y: number, seed: number): number {
+  let h = seed + x * 374761393 + y * 668265263;
+  h = ((h ^ (h >> 13)) * 1274126177) | 0;
+  return ((h ^ (h >> 16)) >>> 0) / 4294967296;
+}
+
 export class TerrainEngine {
   private scene: Phaser.Scene;
   private collisionMask: Uint8Array;
@@ -13,6 +19,8 @@ export class TerrainEngine {
   private heightMap: number[];
   private dirty = true;
   private mapPreset: MapPreset;
+  private recentCraters: Crater[] = [];
+  private seed: number;
 
   constructor(
     scene: Phaser.Scene,
@@ -24,6 +32,7 @@ export class TerrainEngine {
     this.scene = scene;
     this.terrainWidth = width;
     this.terrainHeight = height;
+    this.seed = seed;
     this.collisionMask = new Uint8Array(width * height);
     this.mapPreset = getMapPreset(mapId ?? 'hills');
 
@@ -44,6 +53,8 @@ export class TerrainEngine {
     return this.mapPreset;
   }
 
+  private ceilingMap: number[] | null = null;
+
   private buildCollisionMask(seed: number): void {
     this.collisionMask.fill(0);
     for (let x = 0; x < this.terrainWidth; x++) {
@@ -54,13 +65,14 @@ export class TerrainEngine {
     }
 
     if (this.mapPreset.terrainStyle.cavern) {
-      const ceilingMap = generateCeilingMap(
+      this.ceilingMap = generateCeilingMap(
         this.terrainWidth,
         this.terrainHeight,
         seed,
+        this.heightMap,
       );
       for (let x = 0; x < this.terrainWidth; x++) {
-        const ceilY = ceilingMap[x]!;
+        const ceilY = this.ceilingMap[x]!;
         for (let y = 0; y < ceilY; y++) {
           this.collisionMask[y * this.terrainWidth + x] = 1;
         }
@@ -79,12 +91,29 @@ export class TerrainEngine {
 
   getSurfaceY(x: number): number {
     const ix = Math.max(0, Math.min(Math.floor(x), this.terrainWidth - 1));
-    for (let y = 0; y < this.terrainHeight; y++) {
-      if (this.collisionMask[y * this.terrainWidth + ix] === 1) {
-        return y;
-      }
+    const w = this.terrainWidth;
+
+    let y = 0;
+    // Skip any initial solid region (cavern ceiling)
+    while (y < this.terrainHeight && this.collisionMask[y * w + ix] === 1) {
+      y++;
     }
-    return this.terrainHeight;
+    // Now in empty space — find the next solid region (floor)
+    while (y < this.terrainHeight && this.collisionMask[y * w + ix] === 0) {
+      y++;
+    }
+    return y < this.terrainHeight ? y : this.terrainHeight;
+  }
+
+  addCrater(cx: number, cy: number, radius: number): void {
+    this.recentCraters.push({ x: cx, y: cy, radius });
+    this.carve(cx, cy, radius);
+  }
+
+  getRecentCraters(): Crater[] {
+    const craters = [...this.recentCraters];
+    this.recentCraters = [];
+    return craters;
   }
 
   carve(cx: number, cy: number, radius: number): void {
@@ -123,31 +152,50 @@ export class TerrainEngine {
     const imageData = ctxObj.createImageData(this.terrainWidth, this.terrainHeight);
     const data = imageData.data;
     const c = this.mapPreset.colors;
+    const w = this.terrainWidth;
+    const h = this.terrainHeight;
 
-    for (let y = 0; y < this.terrainHeight; y++) {
-      for (let x = 0; x < this.terrainWidth; x++) {
-        const idx = y * this.terrainWidth + x;
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const idx = y * w + x;
         const pixIdx = idx * 4;
 
         if (this.collisionMask[idx] === 1) {
+          const isCeiling = this.ceilingMap != null && y < this.ceilingMap[x]!;
+
           const surfaceY = this.findLocalSurface(x, y);
           const depth = y - surfaceY;
 
-          if (depth <= 2) {
-            data[pixIdx] = c.topSurface[0];
-            data[pixIdx + 1] = c.topSurface[1];
-            data[pixIdx + 2] = c.topSurface[2];
+          const noise = hashNoise(x, y, this.seed);
+          const variation = (noise - 0.5) * 16;
+
+          const isEdge = this.isTerrainEdge(x, y);
+          const edgeBrightness = isEdge ? 15 : 0;
+
+          if (isCeiling) {
+            // Ceiling uses darker, blue-shifted tones
+            const ceilDepth = this.ceilingMap ? this.ceilingMap[x]! - y : 0;
+            const ceilShade = Math.max(0.4, 1 - ceilDepth * 0.003);
+            data[pixIdx] = clamp(c.deep[0] * 0.7 * ceilShade + variation * 0.2 + edgeBrightness * 0.5);
+            data[pixIdx + 1] = clamp(c.deep[1] * 0.7 * ceilShade + variation * 0.2 + edgeBrightness * 0.5);
+            data[pixIdx + 2] = clamp((c.deep[2] + 15) * ceilShade + variation * 0.15);
+            data[pixIdx + 3] = 255;
+          } else if (depth <= 2) {
+            const grassNoise = hashNoise(x, depth, this.seed + 100);
+            data[pixIdx] = clamp(c.topSurface[0] + variation * 0.5 + grassNoise * 10 + edgeBrightness);
+            data[pixIdx + 1] = clamp(c.topSurface[1] + variation * 0.3 + grassNoise * 8 + edgeBrightness);
+            data[pixIdx + 2] = clamp(c.topSurface[2] + variation * 0.3);
             data[pixIdx + 3] = 255;
           } else if (depth <= 6) {
-            data[pixIdx] = c.subSurface[0];
-            data[pixIdx + 1] = c.subSurface[1];
-            data[pixIdx + 2] = c.subSurface[2];
+            data[pixIdx] = clamp(c.subSurface[0] + variation * 0.4 + edgeBrightness * 0.5);
+            data[pixIdx + 1] = clamp(c.subSurface[1] + variation * 0.4 + edgeBrightness * 0.5);
+            data[pixIdx + 2] = clamp(c.subSurface[2] + variation * 0.3);
             data[pixIdx + 3] = 255;
           } else {
             const shade = Math.max(0.3, 1 - depth * 0.002);
-            data[pixIdx] = Math.floor(c.deep[0] * shade);
-            data[pixIdx + 1] = Math.floor(c.deep[1] * shade);
-            data[pixIdx + 2] = Math.floor(c.deep[2] * shade);
+            data[pixIdx] = clamp(c.deep[0] * shade + variation * 0.3);
+            data[pixIdx + 1] = clamp(c.deep[1] * shade + variation * 0.3);
+            data[pixIdx + 2] = clamp(c.deep[2] * shade + variation * 0.2);
             data[pixIdx + 3] = 255;
           }
         } else {
@@ -157,6 +205,10 @@ export class TerrainEngine {
           data[pixIdx + 3] = 0;
         }
       }
+    }
+
+    if (!this.mapPreset.terrainStyle.cavern) {
+      this.addGrassTufts(data, w, h, c.topSurface);
     }
 
     ctxObj.putImageData(imageData, 0, 0);
@@ -172,6 +224,56 @@ export class TerrainEngine {
     this.renderTexture.drawFrame('__canvas_terrain');
 
     this.dirty = false;
+  }
+
+  private isTerrainEdge(x: number, y: number): boolean {
+    if (x <= 0 || x >= this.terrainWidth - 1 || y <= 0 || y >= this.terrainHeight - 1)
+      return false;
+    const w = this.terrainWidth;
+    return (
+      this.collisionMask[(y - 1) * w + x] === 0 ||
+      this.collisionMask[(y + 1) * w + x] === 0 ||
+      this.collisionMask[y * w + x - 1] === 0 ||
+      this.collisionMask[y * w + x + 1] === 0
+    );
+  }
+
+  private addGrassTufts(
+    data: Uint8ClampedArray,
+    w: number,
+    h: number,
+    surfaceColor: [number, number, number],
+  ): void {
+    const tufSpacing = 8;
+    for (let x = 2; x < w - 2; x += tufSpacing) {
+      const noise = hashNoise(x, 0, this.seed + 500);
+      if (noise < 0.4) continue;
+
+      for (let y = 1; y < h - 1; y++) {
+        const below = this.collisionMask[y * w + x];
+        const above = this.collisionMask[(y - 1) * w + x];
+        if (below === 1 && above === 0) {
+          const tufHeight = 1 + Math.floor(noise * 3);
+          const tufWidth = 1 + Math.floor(hashNoise(x, 1, this.seed + 501) * 2);
+          for (let ty = 1; ty <= tufHeight; ty++) {
+            const py = y - ty;
+            if (py < 0) break;
+            for (let tx = -tufWidth; tx <= tufWidth; tx++) {
+              const px = x + tx;
+              if (px < 0 || px >= w) continue;
+              if (this.collisionMask[py * w + px] === 1) continue;
+              const pIdx = (py * w + px) * 4;
+              const brighten = (1 - ty / (tufHeight + 1)) * 30;
+              data[pIdx] = clamp(surfaceColor[0] + brighten - 10);
+              data[pIdx + 1] = clamp(surfaceColor[1] + brighten + 10);
+              data[pIdx + 2] = clamp(surfaceColor[2] - 15);
+              data[pIdx + 3] = Math.floor(200 * (1 - ty / (tufHeight + 2)));
+            }
+          }
+          break;
+        }
+      }
+    }
   }
 
   private findLocalSurface(x: number, y: number): number {
@@ -201,4 +303,8 @@ export class TerrainEngine {
       this.scene.textures.remove('__canvas_terrain');
     }
   }
+}
+
+function clamp(v: number): number {
+  return Math.max(0, Math.min(255, Math.round(v)));
 }

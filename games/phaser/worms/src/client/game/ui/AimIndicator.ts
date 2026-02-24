@@ -88,19 +88,57 @@ export class AimIndicator {
     if (!this.visible) return;
     this.graphics.clear();
 
-    const maxLen = 600;
+    const maxLen = 3000;
     const endX = originX + Math.cos(angle) * maxLen;
     const endY = originY + Math.sin(angle) * maxLen;
 
+    // Dashed laser-sight style line
     this.graphics.lineStyle(1, 0xff4444, 0.3);
     this.graphics.beginPath();
     this.graphics.moveTo(originX, originY);
     this.graphics.lineTo(endX, endY);
     this.graphics.strokePath();
 
-    // Crosshair at end
-    this.graphics.lineStyle(1, 0xff4444, 0.6);
-    this.graphics.strokeCircle(endX, endY, 4);
+    // Bright dot every 80px for visibility at distance
+    this.graphics.fillStyle(0xff4444, 0.5);
+    for (let d = 80; d < maxLen; d += 80) {
+      const dx = originX + Math.cos(angle) * d;
+      const dy = originY + Math.sin(angle) * d;
+      if (dx < -50 || dx > 2500 || dy < -50 || dy > 1300) break;
+      this.graphics.fillCircle(dx, dy, 1.5);
+    }
+  }
+
+  drawTeleportAim(
+    originX: number,
+    originY: number,
+    angle: number,
+    power: number,
+  ): void {
+    if (!this.visible) return;
+    this.graphics.clear();
+
+    const dist = power * 3;
+    const targetX = originX + Math.cos(angle) * dist;
+    const targetY = originY + Math.sin(angle) * dist;
+
+    // Dashed line from worm to target
+    this.graphics.lineStyle(1, 0x00e5ff, 0.4);
+    this.graphics.beginPath();
+    this.graphics.moveTo(originX, originY);
+    this.graphics.lineTo(targetX, targetY);
+    this.graphics.strokePath();
+
+    // Landing crosshair
+    this.graphics.lineStyle(2, 0x00e5ff, 0.8);
+    this.graphics.strokeCircle(targetX, targetY, 8);
+    this.graphics.lineStyle(1, 0x00e5ff, 0.6);
+    this.graphics.beginPath();
+    this.graphics.moveTo(targetX - 12, targetY);
+    this.graphics.lineTo(targetX + 12, targetY);
+    this.graphics.moveTo(targetX, targetY - 12);
+    this.graphics.lineTo(targetX, targetY + 12);
+    this.graphics.strokePath();
   }
 
   destroy(): void {

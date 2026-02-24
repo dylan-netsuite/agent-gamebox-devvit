@@ -13,12 +13,21 @@ import { TeamPanel } from '../ui/TeamPanel';
 import { Minimap } from '../ui/Minimap';
 import { TouchControls } from '../ui/TouchControls';
 import { SoundManager } from '../systems/SoundManager';
+import { BackgroundRenderer } from '../systems/BackgroundRenderer';
 import { WORM_NAMES, TEAM_COLORS } from '../../../shared/types/game';
-import type { GameConfig } from './GameSetup';
+import type { GameConfig, AIDifficulty } from './GameSetup';
+import { MultiplayerManager } from '../systems/MultiplayerManager';
+import type { MultiplayerMessage, LobbyPlayer, PlayerAction } from '../../../shared/types/multiplayer';
 
 const WORLD_WIDTH = 2400;
 const WORLD_HEIGHT = 1200;
 const DEFAULT_TURN_DURATION = 45;
+
+interface OnlineGameConfig extends GameConfig {
+  multiplayerManager?: MultiplayerManager;
+  terrainSeed?: number;
+  onlinePlayers?: LobbyPlayer[];
+}
 
 export class GamePlay extends Scene {
   private terrain!: TerrainEngine;
@@ -49,6 +58,7 @@ export class GamePlay extends Scene {
   private wormsPerTeam = 2;
   private teamCharacters: string[] = [];
   private aiTeams: number[] = [];
+  private aiDifficulty: AIDifficulty = 'medium';
   private mapId = 'hills';
   private isAITurn = false;
 
@@ -56,33 +66,56 @@ export class GamePlay extends Scene {
   private panReturnTimer: Phaser.Time.TimerEvent | null = null;
   private wasDragging = false;
 
+  // Multiplayer state
+  private mp: MultiplayerManager | null = null;
+  private onlinePlayers: LobbyPlayer[] = [];
+  private localTeamIndex = -1;
+  private isRemoteTurn = false;
+  private mpHandler: ((msg: MultiplayerMessage) => void) | null = null;
+  private pendingMoveThrottle = 0;
+
   constructor() {
     super('GamePlay');
   }
 
-  create(data?: GameConfig) {
+  create(data?: OnlineGameConfig) {
     if (data?.numTeams) this.numTeams = data.numTeams;
     if (data?.wormsPerTeam) this.wormsPerTeam = data.wormsPerTeam;
     this.teamCharacters = data?.teamCharacters ?? [];
     this.aiTeams = data?.aiTeams ?? [];
+    this.aiDifficulty = data?.aiDifficulty ?? 'medium';
     this.mapId = data?.mapId ?? 'hills';
     this.turnDuration = data?.turnTimer ?? DEFAULT_TURN_DURATION;
 
+    // Multiplayer setup
+    this.mp = data?.multiplayerManager ?? null;
+    this.onlinePlayers = data?.onlinePlayers ?? [];
+    if (this.mp && this.onlinePlayers.length > 0) {
+      const myPlayer = this.onlinePlayers.find((p) => p.userId === this.mp!.userId);
+      this.localTeamIndex = myPlayer?.teamIndex ?? -1;
+    }
+
     if (this.aiTeams.length > 0) {
-      this.aiController = new AIController(this.aiTeams);
+      this.aiController = new AIController(this.aiTeams, this.aiDifficulty);
     }
 
     this.cameras.main.setBackgroundColor('#87CEEB');
 
-    const seed = Math.floor(Math.random() * 1_000_000);
+    const seed = data?.terrainSeed ?? Math.floor(Math.random() * 1_000_000);
     this.terrain = new TerrainEngine(this, WORLD_WIDTH, WORLD_HEIGHT, seed, this.mapId);
 
     this.drawSky();
+    new BackgroundRenderer(this, seed).draw(this.terrain.getMapPreset());
+    this.drawWater();
     this.spawnWorms();
     this.buildTurnOrder();
 
     this.windSystem = new WindSystem();
     this.windSystem.randomize();
+
+    if (this.aiController) {
+      this.aiController.setContext(this.terrain, this.windSystem);
+    }
 
     this.explosionEffect = new ExplosionEffect(this, this.terrain);
 
@@ -104,9 +137,20 @@ export class GamePlay extends Scene {
       if (state === 'resolved') {
         this.stopTurnTimer();
         this.settleWorms(() => {
+          if (this.isOnline && this.isLocalTurn) {
+            this.broadcastTurnResult();
+          }
           this.checkWinCondition();
-          if (!this.gameOver && this.isAITurn) {
-            this.time.delayedCall(600, () => this.nextTurn());
+          if (!this.gameOver) {
+            if (this.isAITurn) {
+              this.time.delayedCall(600, () => this.advanceTurn());
+            } else if (this.isOnline && this.isLocalTurn) {
+              this.time.delayedCall(2500, () => {
+                if (this.weaponSystem.currentState === 'resolved' && !this.gameOver) {
+                  this.requestNextTurn();
+                }
+              });
+            }
           }
         });
       }
@@ -119,6 +163,7 @@ export class GamePlay extends Scene {
       const w = this.activeWorm;
       return w ? w.team : 0;
     });
+    this.hud.setRemoteTurnGetter(() => this.isRemoteTurn);
 
     this.teamPanel = new TeamPanel(
       this,
@@ -141,44 +186,50 @@ export class GamePlay extends Scene {
 
     void new TouchControls(this, {
       onMoveLeft: () => {
-        if (this.gameOver || this.isAITurn) return;
+        if (!this.canAct()) return;
         if (this.weaponSystem.currentState === 'idle') {
           this.activeWorm?.moveLeft();
           this.userPanning = false;
+          this.broadcastMove();
         }
       },
       onMoveRight: () => {
-        if (this.gameOver || this.isAITurn) return;
+        if (!this.canAct()) return;
         if (this.weaponSystem.currentState === 'idle') {
           this.activeWorm?.moveRight();
           this.userPanning = false;
+          this.broadcastMove();
         }
       },
       onJump: () => {
-        if (this.gameOver || this.isAITurn) return;
+        if (!this.canAct()) return;
         if (this.weaponSystem.currentState === 'idle') {
           this.activeWorm?.jump();
+          this.broadcastJump();
         }
       },
       onAimFire: () => {
-        if (this.gameOver || this.isAITurn) return;
+        if (!this.canAct()) return;
         const state = this.weaponSystem.currentState;
         if (state === 'idle') {
           this.weaponSystem.startAiming();
         } else if (state === 'aiming') {
           const worm = this.activeWorm;
-          if (worm) this.weaponSystem.fire(worm);
+          if (worm) {
+            this.broadcastFire(worm);
+            this.weaponSystem.fire(worm);
+          }
         }
       },
       onNextWeapon: () => {
-        if (!this.gameOver && !this.isAITurn) this.weaponSystem.nextWeapon();
+        if (this.canAct()) this.weaponSystem.nextWeapon();
       },
       onPrevWeapon: () => {
-        if (!this.gameOver && !this.isAITurn) this.weaponSystem.prevWeapon();
+        if (this.canAct()) this.weaponSystem.prevWeapon();
       },
       onNextTurn: () => {
-        if (this.weaponSystem.currentState === 'resolved' && !this.isAITurn) {
-          this.nextTurn();
+        if (this.weaponSystem.currentState === 'resolved' && this.canAct()) {
+          this.requestNextTurn();
         }
       },
       getState: () => this.weaponSystem.currentState,
@@ -190,7 +241,234 @@ export class GamePlay extends Scene {
     this.setupCameraDrag();
     this.setupPinchZoom();
     this.setupInput();
+
+    if (this.isOnline) {
+      this.setupMultiplayerListeners();
+    }
+
     this.startTurn();
+  }
+
+  private get isOnline(): boolean {
+    return this.mp !== null;
+  }
+
+  private get isLocalTurn(): boolean {
+    if (!this.isOnline) return true;
+    const worm = this.activeWorm;
+    if (!worm) return false;
+    return worm.team === this.localTeamIndex;
+  }
+
+  private canAct(): boolean {
+    if (this.gameOver) return false;
+    if (this.isAITurn) return false;
+    if (this.isRemoteTurn) return false;
+    return true;
+  }
+
+  private setupMultiplayerListeners(): void {
+    if (!this.mp) return;
+
+    this.mpHandler = (msg: MultiplayerMessage) => {
+      switch (msg.type) {
+        case 'player-action':
+          if (msg.playerId !== this.mp!.userId) {
+            this.replayAction(msg.action);
+          }
+          break;
+        case 'turn-result':
+          if (msg.playerId !== this.mp!.userId) {
+            this.applyTurnResult(msg.result);
+          }
+          break;
+        case 'turn-advance':
+          this.onRemoteTurnAdvance(msg.turnOrderIndex, msg.wind);
+          break;
+        case 'game-over':
+          if (!this.gameOver) {
+            this.gameOver = true;
+            this.showGameOver(msg.winningTeam);
+          }
+          break;
+        case 'player-left':
+          console.log(`[MP] Player left: ${msg.userId}`);
+          break;
+        case 'rematch': {
+          console.log(`[MP] Rematch! New lobby: ${msg.lobbyCode}`);
+          if (!this.mp) break;
+          const postId = this.mp.postId;
+          const userId = this.mp.userId;
+          const username = this.mp.username;
+          void this.mp.disconnect();
+          this.mp = null;
+          const newMp = new MultiplayerManager(postId, userId, username, msg.lobbyCode);
+          this.scene.start('Lobby', { mp: newMp, lobbyCode: msg.lobbyCode });
+          break;
+        }
+      }
+    };
+
+    this.mp.onMessage(this.mpHandler);
+
+    this.events.on('shutdown', () => {
+      if (this.mpHandler && this.mp) {
+        this.mp.offMessage(this.mpHandler);
+      }
+    });
+  }
+
+  private replayAction(action: PlayerAction): void {
+    const wormIndex = 'wormIndex' in action ? action.wormIndex : this.turnOrder[this.turnOrderIndex]!;
+    const worm = this.worms[wormIndex];
+    if (!worm) return;
+
+    switch (action.kind) {
+      case 'move':
+        worm.x = action.x;
+        worm.y = action.y;
+        worm.facingRight = action.facingRight;
+        break;
+      case 'jump':
+        if (action.backflip) {
+          worm.backflip();
+        } else {
+          worm.jump();
+        }
+        break;
+      case 'fire': {
+        worm.x = action.x;
+        worm.y = action.y;
+        worm.facingRight = action.facingRight;
+        this.weaponSystem.selectWeapon(action.weaponIndex);
+        this.weaponSystem.startAiming();
+        this.weaponSystem.setAngleDirect(action.angle);
+        this.weaponSystem.setPowerDirect(action.power);
+        this.time.delayedCall(200, () => {
+          this.weaponSystem.fire(worm);
+        });
+        break;
+      }
+    }
+  }
+
+  private applyTurnResult(result: import('../../../shared/types/multiplayer').TurnResult): void {
+    for (const snap of result.wormSnapshots) {
+      const w = this.worms[snap.index];
+      if (!w) continue;
+      w.x = snap.x;
+      w.y = snap.y;
+      w.facingRight = snap.facingRight;
+      if (!snap.alive && w.alive) {
+        w.takeDamage(w.health);
+      } else if (w.health !== snap.health) {
+        const diff = w.health - snap.health;
+        if (diff > 0) w.takeDamage(diff);
+      }
+    }
+
+    for (const crater of result.craters) {
+      this.terrain.addCrater(crater.x, crater.y, crater.radius);
+    }
+  }
+
+  private onRemoteTurnAdvance(turnOrderIndex: number, wind: number): void {
+    if (this.gameOver) return;
+
+    SoundManager.play('turn');
+    this.turnOrderIndex = turnOrderIndex;
+    this.windSystem.setWind(wind);
+    this.weaponSystem.reset();
+    this.userPanning = false;
+    this.centerCameraOnWorm();
+
+    const worm = this.activeWorm;
+    this.isRemoteTurn = worm ? worm.team !== this.localTeamIndex : true;
+    this.isAITurn = false;
+
+    this.startTurn();
+  }
+
+  private broadcastMove(): void {
+    if (!this.mp || !this.isLocalTurn) return;
+    const now = Date.now();
+    if (now - this.pendingMoveThrottle < 100) return;
+    this.pendingMoveThrottle = now;
+
+    const worm = this.activeWorm;
+    if (!worm) return;
+    const wormIndex = this.turnOrder[this.turnOrderIndex]!;
+    void this.mp.sendAction({
+      kind: 'move',
+      wormIndex,
+      x: worm.x,
+      y: worm.y,
+      facingRight: worm.facingRight,
+    });
+  }
+
+  private broadcastJump(backflip = false): void {
+    if (!this.mp || !this.isLocalTurn) return;
+    const wormIndex = this.turnOrder[this.turnOrderIndex]!;
+    void this.mp.sendAction({ kind: 'jump', wormIndex, backflip });
+  }
+
+  private broadcastFire(worm: Worm): void {
+    if (!this.mp || !this.isLocalTurn) return;
+    const wormIndex = this.turnOrder[this.turnOrderIndex]!;
+    void this.mp.sendAction({
+      kind: 'fire',
+      wormIndex,
+      weaponIndex: this.weaponSystem.weaponIndex,
+      angle: this.weaponSystem.angle,
+      power: this.weaponSystem.currentPower,
+      x: worm.x,
+      y: worm.y,
+      facingRight: worm.facingRight,
+    });
+  }
+
+  private broadcastTurnResult(): void {
+    if (!this.mp) return;
+    const snapshots = this.worms.map((w, i) => ({
+      index: i,
+      x: w.x,
+      y: w.y,
+      health: w.health,
+      alive: w.alive,
+      facingRight: w.facingRight,
+    }));
+
+    const newCraters = this.terrain.getRecentCraters();
+
+    void this.mp.sendTurnResult({
+      damages: [],
+      craters: newCraters,
+      wormSnapshots: snapshots,
+    });
+  }
+
+  private requestNextTurn(): void {
+    if (this.isOnline) {
+      const next = this.findNextAliveIndex();
+      this.windSystem.randomize();
+      const wind = this.windSystem.getWind();
+      void this.mp!.sendEndTurn(next, wind);
+    } else {
+      this.advanceTurn();
+    }
+  }
+
+  private findNextAliveIndex(): number {
+    let next = (this.turnOrderIndex + 1) % this.turnOrder.length;
+    let attempts = 0;
+    while (attempts < this.turnOrder.length) {
+      const worm = this.worms[this.turnOrder[next]!];
+      if (worm?.alive) break;
+      next = (next + 1) % this.turnOrder.length;
+      attempts++;
+    }
+    return next;
   }
 
   private spawnWorms(): void {
@@ -246,6 +524,7 @@ export class GamePlay extends Scene {
     if (!worm) return;
 
     this.isAITurn = this.aiController?.isAITeam(worm.team) ?? false;
+    this.isRemoteTurn = this.isOnline && worm.team !== this.localTeamIndex;
 
     if (this.isAITurn && this.aiController) {
       this.aiController.executeTurn(
@@ -254,8 +533,7 @@ export class GamePlay extends Scene {
         this.worms,
         this.weaponSystem,
         () => {
-          // AI couldn't act — advance turn
-          this.nextTurn();
+          this.advanceTurn();
         },
       );
     }
@@ -291,6 +569,7 @@ export class GamePlay extends Scene {
 
   private onTurnTimeout(): void {
     this.stopTurnTimer();
+    if (!this.canAct()) return;
     const state = this.weaponSystem.currentState;
     if (state === 'aiming') {
       this.weaponSystem.stopAiming();
@@ -332,6 +611,9 @@ export class GamePlay extends Scene {
     if (teamsAlive.size <= 1) {
       this.gameOver = true;
       const winningTeam = teamsAlive.size === 1 ? [...teamsAlive][0]! : -1;
+      if (this.isOnline && this.isLocalTurn) {
+        void this.mp!.sendGameOver(winningTeam);
+      }
       this.showGameOver(winningTeam);
     }
   }
@@ -354,29 +636,60 @@ export class GamePlay extends Scene {
     const teamColorMap = ['#e74c3c', '#3498db', '#f39c12', '#9b59b6'];
     const teamColor = winningTeam >= 0 ? (teamColorMap[winningTeam] ?? '#ffffff') : '#ffffff';
 
-    const title = this.add
-      .text(cam.width / 2, cam.height * 0.35, 'GAME OVER', {
-        fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '48px',
-        fontStyle: 'bold',
-        color: '#ffffff',
-        stroke: '#000000',
-        strokeThickness: 4,
-      })
-      .setOrigin(0.5);
-    this.gameOverOverlay.add(title);
+    if (this.isOnline) {
+      const onlinePlayer = this.onlinePlayers[winningTeam];
+      if (onlinePlayer) {
+        const title = this.add
+          .text(cam.width / 2, cam.height * 0.35, 'GAME OVER', {
+            fontFamily: 'Segoe UI, system-ui, sans-serif',
+            fontSize: '48px',
+            fontStyle: 'bold',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 4,
+          })
+          .setOrigin(0.5);
+        this.gameOverOverlay.add(title);
 
-    const winner = this.add
-      .text(cam.width / 2, cam.height * 0.48, `${teamName} Wins!`, {
-        fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '28px',
-        fontStyle: 'bold',
-        color: teamColor,
-        stroke: '#000000',
-        strokeThickness: 3,
-      })
-      .setOrigin(0.5);
-    this.gameOverOverlay.add(winner);
+        const winner = this.add
+          .text(cam.width / 2, cam.height * 0.48, `${onlinePlayer.username} Wins!`, {
+            fontFamily: 'Segoe UI, system-ui, sans-serif',
+            fontSize: '28px',
+            fontStyle: 'bold',
+            color: teamColor,
+            stroke: '#000000',
+            strokeThickness: 3,
+          })
+          .setOrigin(0.5);
+        this.gameOverOverlay.add(winner);
+      }
+    }
+
+    if (!this.gameOverOverlay.list.some((o) => o instanceof Phaser.GameObjects.Text && (o as Phaser.GameObjects.Text).text === 'GAME OVER')) {
+      const title = this.add
+        .text(cam.width / 2, cam.height * 0.35, 'GAME OVER', {
+          fontFamily: 'Segoe UI, system-ui, sans-serif',
+          fontSize: '48px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5);
+      this.gameOverOverlay.add(title);
+
+      const winner = this.add
+        .text(cam.width / 2, cam.height * 0.48, `${teamName} Wins!`, {
+          fontFamily: 'Segoe UI, system-ui, sans-serif',
+          fontSize: '28px',
+          fontStyle: 'bold',
+          color: teamColor,
+          stroke: '#000000',
+          strokeThickness: 3,
+        })
+        .setOrigin(0.5);
+      this.gameOverOverlay.add(winner);
+    }
 
     const restartText = this.add
       .text(cam.width / 2, cam.height * 0.62, '[ ENTER — New Game ]', {
@@ -384,8 +697,17 @@ export class GamePlay extends Scene {
         fontSize: '16px',
         color: '#aaaaaa',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
     this.gameOverOverlay.add(restartText);
+
+    restartText.on('pointerdown', () => {
+      if (this.mp) {
+        void this.mp.disconnect();
+        this.mp = null;
+      }
+      this.scene.start('ModeSelect');
+    });
 
     this.tweens.add({
       targets: restartText,
@@ -394,21 +716,54 @@ export class GamePlay extends Scene {
       repeat: -1,
       duration: 800,
     });
+
+    if (this.isOnline && this.mp) {
+      const rematchText = this.add
+        .text(cam.width / 2, cam.height * 0.72, '[ REMATCH ]', {
+          fontFamily: 'monospace',
+          fontSize: '16px',
+          fontStyle: 'bold',
+          color: '#3fb950',
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+      this.gameOverOverlay!.add(rematchText);
+
+      rematchText.on('pointerdown', () => {
+        if (!this.mp) return;
+        const postId = this.mp.postId;
+        const userId = this.mp.userId;
+        const username = this.mp.username;
+        rematchText.setText('Setting up rematch...');
+        rematchText.removeInteractive();
+        void this.mp.requestRematch().then((newCode) => {
+          if (newCode) {
+            void this.mp?.disconnect();
+            const newMp = new MultiplayerManager(postId, userId, username, newCode);
+            this.scene.start('Lobby', { mp: newMp, lobbyCode: newCode });
+          } else {
+            rematchText.setText('Rematch failed');
+            rematchText.setInteractive({ useHandCursor: true });
+          }
+        });
+      });
+
+      this.tweens.add({
+        targets: rematchText,
+        alpha: 0.6,
+        yoyo: true,
+        repeat: -1,
+        duration: 600,
+      });
+    }
   }
 
-  private nextTurn(): void {
+  private advanceTurn(): void {
     if (this.gameOver) return;
 
     SoundManager.play('turn');
 
-    let next = (this.turnOrderIndex + 1) % this.turnOrder.length;
-    let attempts = 0;
-    while (attempts < this.turnOrder.length) {
-      const worm = this.worms[this.turnOrder[next]!];
-      if (worm?.alive) break;
-      next = (next + 1) % this.turnOrder.length;
-      attempts++;
-    }
+    const next = this.findNextAliveIndex();
     this.turnOrderIndex = next;
 
     this.userPanning = false;
@@ -428,33 +783,37 @@ export class GamePlay extends Scene {
     if (!this.input.keyboard) return;
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    const NUMBER_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
+    const NUMBER_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'];
     for (let i = 0; i < NUMBER_KEYS.length; i++) {
       const idx = i;
       this.input.keyboard.on(`keydown-${NUMBER_KEYS[i]}`, () => {
-        if (!this.gameOver && !this.isAITurn) this.weaponSystem.selectWeapon(idx);
+        if (this.canAct()) this.weaponSystem.selectWeapon(idx);
       });
     }
 
     this.input.keyboard.on('keydown-Q', () => {
-      if (!this.gameOver && !this.isAITurn) this.weaponSystem.prevWeapon();
+      if (this.canAct()) this.weaponSystem.prevWeapon();
     });
     this.input.keyboard.on('keydown-E', () => {
-      if (!this.gameOver && !this.isAITurn) this.weaponSystem.nextWeapon();
+      if (this.canAct()) this.weaponSystem.nextWeapon();
     });
 
     this.input.keyboard.on('keydown-ENTER', () => {
       if (this.gameOver) {
-        this.scene.start('GameSetup');
+        if (this.mp) {
+          void this.mp.disconnect();
+          this.mp = null;
+        }
+        this.scene.start('ModeSelect');
         return;
       }
-      if (this.weaponSystem.currentState === 'resolved' && !this.isAITurn) {
-        this.nextTurn();
+      if (this.weaponSystem.currentState === 'resolved' && this.canAct()) {
+        this.requestNextTurn();
       }
     });
 
     this.input.keyboard.on('keydown-ESC', () => {
-      if (!this.gameOver && !this.isAITurn) this.weaponSystem.stopAiming();
+      if (this.canAct()) this.weaponSystem.stopAiming();
     });
 
     this.input.keyboard.on('keydown-F', () => {
@@ -462,26 +821,43 @@ export class GamePlay extends Scene {
     });
 
     this.input.keyboard.on('keydown-SPACE', () => {
-      if (this.gameOver || this.isAITurn) return;
+      if (!this.canAct()) return;
       const state = this.weaponSystem.currentState;
       if (state === 'idle') {
         this.weaponSystem.startAiming();
       } else if (state === 'aiming') {
         const worm = this.activeWorm;
-        if (worm) this.weaponSystem.fire(worm);
+        if (worm) {
+          this.broadcastFire(worm);
+          this.weaponSystem.fire(worm);
+        }
       }
     });
 
     this.input.keyboard.on('keydown-W', () => {
-      if (this.gameOver || this.isAITurn) return;
+      if (!this.canAct()) return;
       if (this.weaponSystem.currentState === 'idle') {
         const worm = this.activeWorm;
-        if (worm) worm.jump();
+        if (worm) {
+          worm.jump();
+          this.broadcastJump();
+        }
+      }
+    });
+
+    this.input.keyboard.on('keydown-B', () => {
+      if (!this.canAct()) return;
+      if (this.weaponSystem.currentState === 'idle') {
+        const worm = this.activeWorm;
+        if (worm) {
+          worm.backflip();
+          this.broadcastJump(true);
+        }
       }
     });
 
     this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      if (this.gameOver || this.isAITurn) return;
+      if (!this.canAct()) return;
       if (pointer.rightButtonReleased() || pointer.middleButtonReleased()) return;
       if (this.wasDragging) {
         this.wasDragging = false;
@@ -494,12 +870,15 @@ export class GamePlay extends Scene {
         this.weaponSystem.startAiming();
       } else if (state === 'aiming') {
         const worm = this.activeWorm;
-        if (worm) this.weaponSystem.fire(worm);
+        if (worm) {
+          this.broadcastFire(worm);
+          this.weaponSystem.fire(worm);
+        }
       }
     });
 
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      if (this.gameOver || this.isAITurn) return;
+      if (!this.canAct()) return;
       if (this.weaponSystem.currentState === 'aiming') {
         const worm = this.activeWorm;
         if (worm) {
@@ -517,7 +896,7 @@ export class GamePlay extends Scene {
       'wheel',
       (_pointer: Phaser.Input.Pointer, _gos: unknown[], _dx: number, dy: number) => {
         if (this.gameOver) return;
-        if (this.isAITurn) return;
+        if (this.isAITurn || this.isRemoteTurn) return;
         if (this.weaponSystem.currentState === 'aiming') {
           this.weaponSystem.adjustPower(-dy * 0.05);
         } else {
@@ -558,6 +937,34 @@ export class GamePlay extends Scene {
         this.skyGradient.fillRect(0, y, WORLD_WIDTH, 1);
       }
     }
+  }
+
+  private drawWater(): void {
+    const preset = this.terrain.getMapPreset();
+    const waterLevel = preset.terrainStyle.waterLevel;
+    if (waterLevel == null || waterLevel <= 0) return;
+
+    const waterY = Math.floor(WORLD_HEIGHT * waterLevel);
+    const waterH = WORLD_HEIGHT - waterY;
+    const wc = preset.colors.waterColor ?? [30, 100, 200];
+    const alpha = preset.colors.waterAlpha ?? 0.5;
+
+    const waterGfx = this.add.graphics();
+    waterGfx.setDepth(5);
+
+    const color = Phaser.Display.Color.GetColor(wc[0], wc[1], wc[2]);
+    waterGfx.fillStyle(color, alpha);
+    waterGfx.fillRect(0, waterY, WORLD_WIDTH, waterH);
+
+    waterGfx.fillStyle(
+      Phaser.Display.Color.GetColor(
+        Math.min(255, wc[0] + 40),
+        Math.min(255, wc[1] + 40),
+        Math.min(255, wc[2] + 40),
+      ),
+      alpha * 0.4,
+    );
+    waterGfx.fillRect(0, waterY, WORLD_WIDTH, 3);
   }
 
   private setupCameraDrag(): void {
@@ -708,13 +1115,15 @@ export class GamePlay extends Scene {
     const worm = this.activeWorm;
     if (!worm) return;
 
-    if (!this.isAITurn && this.weaponSystem.currentState === 'idle' && this.cursors) {
+    if (this.canAct() && this.weaponSystem.currentState === 'idle' && this.cursors) {
       if (this.cursors.left.isDown) {
         worm.moveLeft();
         this.userPanning = false;
+        this.broadcastMove();
       } else if (this.cursors.right.isDown) {
         worm.moveRight();
         this.userPanning = false;
+        this.broadcastMove();
       }
 
       if (this.cursors.up.isDown) {

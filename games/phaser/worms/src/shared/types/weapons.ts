@@ -1,6 +1,14 @@
-export type WeaponType = 'bazooka' | 'grenade' | 'shotgun' | 'dynamite' | 'airstrike';
+export type WeaponType =
+  | 'bazooka'
+  | 'grenade'
+  | 'shotgun'
+  | 'dynamite'
+  | 'airstrike'
+  | 'cluster-bomb'
+  | 'sniper'
+  | 'teleport';
 
-export type FiringMode = 'projectile' | 'hitscan' | 'placed' | 'targeted';
+export type FiringMode = 'projectile' | 'hitscan' | 'placed' | 'targeted' | 'teleport';
 
 export interface WeaponDef {
   id: WeaponType;
@@ -17,6 +25,10 @@ export interface WeaponDef {
   shotCount: number;
   bounceFriction: number;
   icon: string;
+  cluster?: boolean;
+  clusterCount?: number;
+  clusterDamage?: number;
+  clusterRadius?: number;
 }
 
 export const WEAPONS: Record<WeaponType, WeaponDef> = {
@@ -55,7 +67,7 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
   shotgun: {
     id: 'shotgun',
     name: 'Shotgun',
-    blastRadius: 15,
+    blastRadius: 20,
     damage: 25,
     affectedByWind: false,
     fuse: 0,
@@ -100,6 +112,67 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
     bounceFriction: 0,
     icon: '✈️',
   },
+  'cluster-bomb': {
+    id: 'cluster-bomb',
+    name: 'Cluster Bomb',
+    blastRadius: 20,
+    damage: 20,
+    affectedByWind: true,
+    fuse: 2,
+    bounces: true,
+    description: 'Splits into 4 bomblets on detonation',
+    firingMode: 'projectile',
+    projectileSpeed: 7,
+    projectileGravity: 0.14,
+    shotCount: 1,
+    bounceFriction: 0.4,
+    icon: '💥',
+    cluster: true,
+    clusterCount: 4,
+    clusterDamage: 18,
+    clusterRadius: 18,
+  },
+  sniper: {
+    id: 'sniper',
+    name: 'Sniper Rifle',
+    blastRadius: 8,
+    damage: 60,
+    affectedByWind: false,
+    fuse: 0,
+    bounces: false,
+    description: 'Precise long-range shot — high damage, tiny crater',
+    firingMode: 'hitscan',
+    projectileSpeed: 0,
+    projectileGravity: 0,
+    shotCount: 1,
+    bounceFriction: 0,
+    icon: '🎯',
+  },
+  teleport: {
+    id: 'teleport',
+    name: 'Teleport',
+    blastRadius: 0,
+    damage: 0,
+    affectedByWind: false,
+    fuse: 0,
+    bounces: false,
+    description: 'Instantly teleport to the aimed location',
+    firingMode: 'teleport',
+    projectileSpeed: 0,
+    projectileGravity: 0,
+    shotCount: 0,
+    bounceFriction: 0,
+    icon: '⚡',
+  },
 };
 
-export const WEAPON_ORDER: WeaponType[] = ['bazooka', 'grenade', 'shotgun', 'dynamite', 'airstrike'];
+export const WEAPON_ORDER: WeaponType[] = [
+  'bazooka',
+  'grenade',
+  'shotgun',
+  'dynamite',
+  'airstrike',
+  'cluster-bomb',
+  'sniper',
+  'teleport',
+];

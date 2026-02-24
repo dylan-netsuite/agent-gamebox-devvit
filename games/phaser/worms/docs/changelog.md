@@ -1,4 +1,385 @@
-# Worms - Changelog
+# Reddit Royale - Changelog
+
+## AI Movement Fix (v0.0.9.188)
+
+### Fixed — AI Bots Now Actively Move During Turns
+- **Proactive movement**: AI bots now move before shooting on ~25-55% of turns (depending on difficulty), instead of only when no shot was possible
+- **All difficulties can move**: Easy AI can now move (previously locked to standing still). Easy moves 30 steps, Medium 50 steps, Hard 40 steps per turn
+- **Tactical positioning**: AI evaluates distance to enemies, retreat opportunities, and flanking angles when deciding movement direction
+- **Adaptive distance**: Movement distance scales with enemy proximity — bots walk farther when enemies are distant, shorter when close
+- **Jump during movement**: AI occasionally jumps during walks to traverse obstacles and add unpredictability (15% chance, plus terrain-aware obstacle detection)
+- **Movement before shooting**: AI walks, then re-evaluates the best shot from its new position, rather than shooting from a static stance
+
+### Difficulty-Specific Movement Behavior
+| Parameter | Easy | Medium | Hard |
+|-----------|------|--------|------|
+| Move chance | 25% | 45% | 55% |
+| Max steps | 30 | 50 | 40 |
+| Approach threshold | 500px | 400px | 350px |
+
+## Hitscan Weapon Fix (v0.0.9.183)
+
+### Fixed — Shotgun & Sniper Long-Range Effectiveness
+- **Extended hitscan range** from 800px to 3000px (full map diagonal). Both weapons can now reach anywhere on the 2400x1200 world.
+- **Added direct worm hit detection** to hitscan raycast. The ray now checks each step against all alive worms (16x22 bounding box), registering a direct hit with full weapon damage. Previously, the ray only checked terrain collision and relied on tiny blast radius to damage nearby worms.
+- **Increased shotgun blast radius** from 15px to 20px for slightly more forgiving terrain hits.
+- **Extended aim indicator** from 600px to 3000px with dotted laser-sight markers every 80px for visibility at long range.
+
+### Fixed — AI Hitscan Behavior
+- AI `simulateHitscan()` range extended from 800px to 3000px to match
+- AI hitscan scoring improved: direct worm hits scored higher (base 90 + 20 bonus vs 70 for near-miss)
+
+### Technical Details
+- Direct hit: full weapon damage applied via `worm.takeDamage()`, small visual explosion spawned with 0 splash damage
+- Terrain hit: explosion at impact point with normal splash damage (unchanged behavior)
+- Worm hitbox for hitscan: ±10px horizontal, -2 to +22px vertical from worm.x/worm.y
+- Ray step size reduced from 3px to 2px for more accurate hit detection
+
+## Map Backgrounds (v0.0.9.179)
+
+### Added — Procedural Background Decorations
+- **New system**: `BackgroundRenderer` draws thematic visual elements behind terrain for every map
+- **Green Hills**: Sun disc, 3-layer distant rolling hill silhouettes, fluffy cumulus clouds, flying birds
+- **Island Chain**: Tropical sun with radial rays, distant island/palm tree silhouettes, puffy clouds, sea birds
+- **Underground Cavern**: Glowing crystal clusters in 4 colors (cyan, purple, green, pink), ambient light halos, stalactite drip effects
+- **Flat Arena**: Sun, double tree line silhouettes, scattered clouds, birds
+- **Cliffside**: Distant snow-capped mountain range, horizontal mist layers, wispy elongated clouds, eagles
+- **Desert Dunes**: Large blazing sun with glow rings, flat-topped mesa silhouettes, heat shimmer wave lines, cactus silhouettes, circling vultures
+- **Frozen Tundra**: 5-band aurora borealis in green/teal/purple, frozen peak silhouettes with snow highlights, scattered snowflake particles
+- **Volcanic Ridge**: Lava glow on the horizon, dark volcanic peak silhouettes, rising smoke columns, ember particles, dim stars visible through haze
+
+### Technical Details
+- Uses seeded RNG from the terrain seed for deterministic backgrounds across multiplayer clients
+- Decorations rendered at depth -5 (foreground elements) and -8 (distant elements), between sky (-10) and terrain (0)
+- All graphics drawn with Phaser Graphics API — no external image assets required
+- Common helper methods for clouds, mountains, sun discs, stars, birds, and tree lines
+
+## New Weapons & Movement (v0.0.9.178)
+
+### Added — 3 New Weapons
+- **Cluster Bomb** (slot 6): Projectile weapon that splits into 4 bomblets on detonation. Main hit does 20 damage (20px radius), each bomblet does 18 damage (18px radius). Affected by wind, bounces once, 2s fuse.
+- **Sniper Rifle** (slot 7): Single hitscan shot dealing 60 damage with a tiny 8px crater. High precision, not affected by wind.
+- **Teleport** (slot 8): Utility weapon that instantly teleports the worm to the aimed location. No damage, no crater. Resolves immediately. Visual flash effects at origin and destination.
+
+### Added — Movement Ability
+- **Backflip** (B key): Higher vertical jump (-8 vy) that moves the worm backward. Already existed in code but now has a dedicated keybind.
+
+### Changed — Weapon System
+- `WeaponType` extended with `'cluster-bomb' | 'sniper' | 'teleport'`
+- `FiringMode` extended with `'teleport'` mode
+- `WeaponDef` extended with optional `cluster`, `clusterCount`, `clusterDamage`, `clusterRadius` fields
+- `WEAPON_ORDER` expanded to 8 weapons (was 5)
+- Number keys 1-8 now select weapons (was 1-5)
+- HUD weapon slots reduced from 48px to 40px to fit all 8
+
+### Changed — AI
+- AI skips teleport weapon (utility, no offensive value)
+- Cluster bomb added to Easy AI weapon pool
+- Scoring bonuses: cluster bomb preferred at close range, sniper preferred at long range
+
+### Changed — Multiplayer
+- `JumpAction` extended with optional `backflip` flag for multiplayer sync
+- Backflip actions are broadcast and replayed correctly on remote clients
+
+### Changed — UI
+- HUD instruction text now shows "B:Backflip" alongside "W:Jump"
+- Teleport aim indicator shows dashed line with cyan crosshair at landing point
+- Cluster bomb projectile rendered as orange sphere; sub-bomblets as smaller orange dots
+
+## Cavern Map Overhaul (v0.0.9.175)
+
+### Fixed — Cavern Playability
+- Removed `ridged` terrain from cavern preset — floor is now smooth and walkable
+- Reduced floor height range (`minHeight: 0.15, maxHeight: 0.4`) to keep floor in lower portion of world
+- Added `flatness: 0.3` for gentler floor terrain
+- Reduced octaves from 6 to 4 for smoother terrain curves
+
+### Improved — Ceiling Generation
+- Ceiling now occupies 25-45% of world height (was 5-25%) for a proper underground feel
+- Added stalactite features — occasional downward spikes from the ceiling
+- Floor-ceiling gap enforcement — minimum 20% of world height guaranteed between ceiling bottom and floor top
+- Ceiling map now receives the floor heightmap to dynamically avoid overlaps
+
+### Improved — Cave Visuals
+- Ceiling rendered with distinct darker blue-shifted tones, separate from floor coloring
+- Darker cave background (`skyTop/skyMid/skyLow` all near-black) for underground atmosphere
+- Grass tufts disabled for cavern maps (stone caves shouldn't have grass)
+- Warmer floor stone colors for better visual contrast with dark ceiling
+
+### Previous — Cavern Spawn Fix (v0.0.9.172)
+- `getSurfaceY()` updated to skip ceiling solid region and find the floor surface
+- Works correctly for both cavern and non-cavern maps
+
+## Level Design Overhaul (v0.0.9.169)
+
+### Added — 3 New Maps
+- **Desert Dunes**: Sun-scorched sand with mesa-like plateaus, warm orange sky gradient
+- **Frozen Tundra**: Icy ridged peaks with frozen lakes (water), grey stormy sky
+- **Volcanic Ridge**: Charred ridged rock over rivers of molten lava (orange water), dark red sky
+
+### Added — Water Plane Rendering
+- Maps with `waterLevel` now render a semi-transparent water plane at the bottom of the world
+- Water color and opacity configurable per map preset
+- Island Chain: blue ocean water at 55% opacity
+- Frozen Tundra: icy blue-grey water at 45% opacity
+- Volcanic Ridge: glowing orange lava at 80% opacity
+- Surface highlight line at the top of the water for depth cue
+
+### Added — Terrain Visual Improvements
+- **Texture noise**: Hash-based noise variation applied to all terrain pixels for organic appearance
+- **Grass tufts**: Small pixel clusters rendered above the terrain surface at regular intervals
+- **Edge highlighting**: Terrain edge pixels receive a brightness boost for definition
+- **Sub-surface color variation**: Rock/deep terrain has noise-based shading instead of flat color
+
+### Added — Terrain Shape Features
+- `ridged` terrain style: Creates sharp ridge lines by folding sine waves (used by Cavern, Tundra, Volcano)
+- `plateaus` terrain style: Quantizes height to discrete levels for mesa/plateau shapes (used by Desert)
+- `terraced` terrain style: Creates step-like cliff faces with configurable step count (used by Cliffside)
+- Improved island beach transitions with smoother fade at water edges
+
+### Changed — Existing Map Updates
+- **Island Chain**: Now has visible ocean water plane, updated description
+- **Underground Cavern**: Uses ridged terrain for more dramatic stalactites, updated description
+- **Cliffside**: Uses terraced terrain (6 steps) for distinct cliff faces
+- All map descriptions refreshed for flavor
+
+## AI Difficulty Rebalance (v0.0.9.166)
+
+### Changed — Medium AI Nerfed
+- Removed the tight refinement pass (was 5×5) and replaced with a wider 3×3 grid
+- Increased base jitter from ±0.04 rad / ±5 power to ±0.08 rad / ±8 power
+- Increased pick pool from top 3 to top 5 candidates
+- Added 25% miss chance that applies extra ±0.15 rad / ±12 power offset
+
+### Changed — Easy AI Nerfed
+- Reduced coarse grid from 14×6 to 10×5 for fewer accurate candidates
+- Increased jitter from ±0.12 rad / ±12 power to ±0.20 rad / ±18 power
+- Added 30% miss chance with extra ±0.25 rad / ±20 power offset
+- Removed shotgun from weapon pool (now only Bazooka and Grenade)
+- Increased pick pool from top 8 to top 10
+
+### Added — Miss Chance System
+- New `missChance`, `missExtraAngle`, `missExtraPower` fields in `DifficultyConfig`
+- When triggered, adds a large random offset on top of normal jitter
+- Easy: 30% chance, Medium: 25% chance, Hard: 0% (unchanged)
+
+## AI Accuracy Tuning + Difficulty Levels (v0.0.9.160)
+
+### Added — AI Difficulty Levels
+- New "AI LEVEL" selector in Game Setup (Easy / Medium / Hard)
+- Selector only visible when VS CPU is enabled
+- Each difficulty uses distinct parameters for search grid resolution, refinement, jitter, and weapon pool
+- Easy: coarse aim, high jitter, limited weapons (bazooka/grenade/shotgun), no movement
+- Medium: balanced search grid with refinement pass, moderate jitter, all weapons, movement enabled
+- Hard: high-resolution search grid with fine refinement, near-zero jitter, always picks the best shot
+
+### Changed — Two-Pass Accuracy System
+- Projectile weapon targeting now uses a two-pass search (Medium and Hard only):
+  1. **Coarse pass**: sweeps many angles and power levels to find promising candidates
+  2. **Refinement pass**: fine-grained search around the best coarse hit for near-pixel-perfect accuracy
+- Coarse grid increased from 12-16 angle steps to 14-36 (depending on difficulty)
+- Power grid increased from 6 steps to 6-14 (depending on difficulty)
+- Direct hit bonus: shots landing within 5px of target center receive +15 score
+- Estimated damage scoring: shots within blast radius get bonus based on projected damage fraction
+
+### Changed — Difficulty-Aware Jitter
+- Easy: ±0.12 rad angle jitter, ±12 power jitter, random pick from top 8 candidates
+- Medium: ±0.04 rad angle jitter, ±5 power jitter, random pick from top 3
+- Hard: ±0.01 rad angle jitter, ±1 power jitter, always picks the absolute best shot
+
+### Changed — GameConfig
+- Added `aiDifficulty` field to `GameConfig` interface
+- Difficulty passed through GameSetup → CharacterSelect → GamePlay → AIController
+
+## Smart AI Overhaul (v0.0.9.158)
+
+### Changed — AI Controller
+- Complete rewrite of `AIController` with simulation-based targeting
+- AI now simulates actual projectile physics (speed, gravity, wind, bounces, fuse timers) to find shots that will hit enemies
+- Trajectory simulation uses the real weapon parameters from `WeaponDef` instead of hardcoded approximations
+- Wind compensation: AI accounts for current wind force when calculating projectile trajectories
+- Terrain collision checking: simulated shots are rejected if they hit terrain before reaching the target
+- Self-damage prevention: shots that would land within the AI's own blast radius are heavily penalized
+- Friendly fire avoidance: shots near allied fighters are penalized in the scoring system
+
+### Changed — Weapon Selection
+- AI now uses all 5 weapons strategically based on situation:
+  - **Bazooka**: Default ranged projectile for medium-to-long range
+  - **Grenade**: Close-range with bounce simulation for hitting behind cover
+  - **Shotgun**: Hitscan for close-range with simulated line-of-sight verification
+  - **Dynamite**: Placed weapon when adjacent to enemies
+  - **Airstrike**: Targeted weapon for enemies behind terrain or at long range
+- Weapon scoring considers kill potential (bonus if target health <= weapon damage)
+
+### Added — AI Movement
+- AI walks toward the nearest enemy before firing when no good shot is found from current position
+- Movement uses 15 steps at 30ms intervals for natural-looking movement
+
+### Changed — Shot Selection
+- AI evaluates many candidate angle/power combinations per weapon per enemy
+- Candidates scored by: proximity to target, self-damage risk, friendly fire risk, kill potential
+- Top 5 candidates kept; one chosen randomly for slight unpredictability
+- Minimal jitter (±0.03 radians, ±4 power) added for human-like imperfection
+
+### Technical — Context Injection
+- `AIController.setContext(terrain, wind)` called after terrain and wind initialization in `GamePlay.create()`
+- AI has direct access to `TerrainEngine.isSolid()` and `WindSystem.getWindForce()` for accurate simulation
+
+## Splash Screen Redesign (v0.0.9.152)
+
+### Changed — Splash Screen
+- Complete visual overhaul to match in-game dark theme (`#1a1a2e` → `#0f3460` gradient)
+- Added Rambo Snoo pixel-art mascot with bobbing animation and drop-shadow glow
+- PLAY button restyled to match game's `#e94560` red action button
+- Subtitle now uses cyan monospace (`#00e5ff`) matching in-game accent color
+- Added subtle grid overlay with radial fade for tactical atmosphere
+- Added floating glow orbs (red + cyan) for ambient motion
+- Removed old sky-blue/green gradient, terrain silhouette, and weapon emoji icons
+- CSS classes renamed from old `.worm-icon`/`wormBounce` to `.mascot-container`/`mascotBob`
+
+### Added — Assets
+- `public/rambo_snoo.png` — Rambo Snoo pixel-art mascot image
+
+## Rebrand to Reddit Royale (v0.0.9.146)
+
+### Changed — Branding
+- Game title renamed from "Worms" to "Reddit Royale" across all UI surfaces
+- Splash screen: crown icon (👑), "REDDIT ROYALE" title, "Battle Royale on Reddit" subtitle
+- ModeSelect, GameSetup, Preloader scenes: updated title to "👑 REDDIT ROYALE"
+- "WORMS PER TEAM" label renamed to "FIGHTERS PER TEAM"
+- Footer text "X worms •..." changed to "X fighters •..."
+- Team preview worm emojis (🪱) replaced with sword emojis (⚔)
+- Lobby "WORMS" selector renamed to "FIGHTERS"
+- Post title changed from "Worms - Artillery Warfare" to "Reddit Royale"
+- Menu item label changed from "New Worms Game" to "New Reddit Royale Game"
+- CSS classes renamed: `.worm-icon` → `.game-icon`, `wormBounce` → `iconBounce`
+- HTML page titles updated to "Reddit Royale"
+- Internal code identifiers (variables, Redis keys, app name, directory) unchanged
+
+## Multiplayer Turn Sync + Full Game Completion (v0.0.9.138)
+
+### Fixed — Turn Auto-Advance
+- Turns now auto-advance 2.5 seconds after a shot resolves in online mode
+- Previously required manual ENTER press to advance, causing stalled games
+- Active player sends `end-turn` message; both clients advance via `turn-advance` broadcast
+
+### Fixed — Wind Synchronization
+- Wind values are now deterministic between clients
+- Host generates wind in `requestNextTurn()` and broadcasts via `turn-advance`
+- Removed local `windSystem.randomize()` in online mode
+- Previously each client generated its own wind, causing gameplay desync
+
+### Fixed — Double Turn-Advance Bug
+- In online mode, `requestNextTurn()` no longer calls `advanceTurn()` locally
+- Both clients (local and remote) now advance exclusively via the `turn-advance` broadcast
+- Prevents the active player from advancing twice (once locally, once from broadcast)
+
+### Added — Remote Turn HUD Indicator
+- HUD now shows "⏳ Opponent's Turn" with "Watching opponent play..." during remote turns
+- Shows "💥 Opponent Firing..." during remote fire actions
+- Team labels support 4 teams (🔴, 🔵, 🟡, 🟣)
+
+### Fixed — Game Over Cleanup
+- ENTER on game-over screen now properly disconnects the MultiplayerManager before returning to ModeSelect
+- Added clickable "[ ENTER — New Game ]" text for mouse/touch users
+- Clean disconnect logged: `[MP] Disconnected from channel`
+
+### Verified — Full Multiplayer Game (Two Accounts, Start to Game Over)
+- Played complete game: suitegeek vs BarryBetsALot through 10+ turn cycles to game-over
+- Turn sync: Each player's actions (move, aim, fire) replicated correctly on the other client
+- Damage sync: Health bars matched on both clients throughout (200→178→125→100→0)
+- Terrain sync: Craters from explosions visible on both clients
+- Wind sync: All wind values matched between clients
+- Game over: Both clients showed "GAME OVER" + "BarryBetsALot Wins!" simultaneously
+- Return to menu: Both clients returned to ModeSelect cleanly with MP disconnect
+- Zero console errors on both clients
+
+---
+
+## Two-Player Multiplayer E2E Test (v0.0.9.135)
+
+### Verified — Full Multiplayer Flow (Two Accounts)
+- Tested with player_one (suitegeek) and player_two (BarryBetsALot) simultaneously
+- Player reconnection: suitegeek auto-reconnected to existing lobby J9FPSQ on page load
+- Lobby join by code: BarryBetsALot navigated Online Play → typed J9FPSQ → joined lobby
+- Realtime sync: Both players see each other in lobby, names and characters display correctly
+- Ready system: BarryBetsALot clicked READY, status synced to host's view in real-time
+- Game start: Host clicked START GAME, both clients transitioned to GamePlay simultaneously
+- Game state sync: Both players see identical terrain, worms, health bars, and UI
+- Zero console errors on both clients
+
+## Lobby TTL + Player Reconnection (v0.0.9.135)
+
+### Added — Lobby TTL (Auto-Cleanup)
+- All lobby Redis keys (`_state`, `_players`, `_config`) expire after 2 hours
+- TTL refreshed on player join, status changes, and game start
+- Stale/expired lobbies filtered from listings automatically
+- Post lobby list cleaned up when listing detects missing entries
+
+### Added — Player Reconnection
+- New `GET /api/reconnect` endpoint checks if the user is in an active lobby
+- Preloader calls `/api/reconnect` before routing: if lobby found, skips ModeSelect
+- Reconnects to lobby (status=waiting) or gameplay (status=playing with stored config)
+- Game config saved to Redis on game start for reconnecting players
+
+### Added — Game Config Persistence
+- `POST /api/game/start` now saves the `MultiplayerGameConfig` to Redis
+- `GET /api/reconnect` returns stored config so reconnecting players can rejoin mid-game
+
+### Technical — New Redis Keys
+- `worms_lobby_{code}_config` — stored game config for reconnection (2h TTL)
+
+## Mode Selection + Lobby System (v0.0.9.132)
+
+### Added — Mode Selection Scene
+- New `ModeSelect` scene with three mode buttons: Single Player, Local Multiplayer, Online Play
+- Single Player auto-enables VS CPU in GameSetup
+- Local Multiplayer goes to GameSetup with VS CPU off
+- Online Play routes to new LobbyBrowser scene
+
+### Added — Lobby Browser Scene
+- New `LobbyBrowser` scene for online play discovery
+- Quick Match: finds and auto-joins an open lobby, or creates one if none exist
+- Create Lobby: generates a new lobby with a unique 6-character code
+- Join by Code: keyboard input for entering a specific lobby code
+
+### Added — Lobby Code System
+- Server generates 6-character alphanumeric lobby codes (A-Z, 2-9)
+- Codes stored in Redis with collision checking
+- Multiple lobbies can exist per post
+- Each lobby gets its own realtime channel: `worms_lobby_{code}`
+
+### Added — Lobby Code Display
+- Lobby scene prominently displays the lobby code in a bordered box with cyan accent
+- "Share this code with friends!" hint text below the code
+- Code formatted with letter spacing for readability
+
+### Added — Server Lobby Endpoints
+- `POST /api/lobbies/create` - creates a new lobby
+- `POST /api/lobbies/join` - joins by lobby code
+- `GET /api/lobbies/open` - finds a random open lobby
+- `GET /api/lobbies/list` - lists all open lobbies for the post
+
+### Changed — Navigation Flow
+- Preloader now always routes to ModeSelect (removed auto-detect online logic)
+- GameSetup accepts `forceVsCPU` flag from ModeSelect
+- GameSetup and LobbyBrowser have ESC/Back navigation to ModeSelect
+- Lobby has ESC/Back navigation to LobbyBrowser
+- GamePlay game-over returns to ModeSelect instead of GameSetup
+
+### Changed — Multiplayer Architecture
+- MultiplayerManager now uses `lobbyCode` instead of `postId` for channel name
+- All API calls include `lobbyCode` in request body
+- Realtime channels changed from `worms_{postId}` to `worms_lobby_{code}`
+- LobbyInfo type added to shared types with status, player count, host info
+
+### Changed — Splash Screen
+- Simplified to just call `requestExpandedMode` on PLAY click (removed pre-join fetch)
+
+### Technical — Redis Keys
+- `worms_{postId}_lobbies` - set of lobby codes per post
+- `worms_lobby_{code}_state` - lobby metadata (LobbyInfo)
+- `worms_lobby_{code}_players` - lobby player list
 
 ## Pinch-to-Zoom (v0.0.9.114)
 
@@ -555,3 +936,31 @@ Redesigned all character draw functions to use organic shapes and curved paths i
 ### Fixed
 - Removed `onAppInstall` trigger that was causing installation failures
 - Added `server.listen(port)` to properly start Express server
+
+---
+
+## Quick Match + Rematch + Leaderboard + Visual Polish (v0.0.9.143)
+
+### Added
+- **Leaderboard scene**: New scene accessible from ModeSelect showing ranked players by wins, with medals for top 3
+- **Player stats tracking**: Server records wins, losses, and games played per user in Redis on game over
+- **Stats API endpoints**: `GET /api/stats` (user stats) and `GET /api/leaderboard` (top players)
+- **Rematch flow**: REMATCH button on game-over screen (online mode) creates a new lobby with the same players
+- **Rematch server endpoint**: `POST /api/game/rematch` creates new lobby, copies players, broadcasts transition
+- **Rematch message type**: Added `{ type: 'rematch'; lobbyCode: string }` to `MultiplayerMessage`
+- **Hit flash effect**: Worms flash white when taking damage
+- **Idle bobbing animation**: Grounded worms gently bob up and down
+- **Enhanced explosions**: Fire particles, rising smoke, terrain debris, expanding shockwave ring
+- **Quick Match loading dots**: Animated status text with cycling dots during lobby search/create/join
+- **Quick Match busy guard**: Prevents double-click on lobby browser buttons during operations
+
+### Changed
+- **ModeSelect**: Added 4th button for Leaderboard
+- **ExplosionEffect**: Rewritten `playVisual` with three particle types (fire, smoke, debris) and ring effect
+- **Worm**: Added `playHitFlash()` and idle bob in `draw()`
+
+### Technical
+- `PlayerStats` interface in `shared/types/game.ts`
+- `statsKey`, `leaderboardKey`, `recordGameResult`, `getUserStats`, `getLeaderboard` in `gameState.ts`
+- `requestRematch()` in `MultiplayerManager`
+- Leaderboard scene registered in `game.ts`
