@@ -58,8 +58,8 @@ export class HUD {
   private getTeam: (() => number) | null = null;
   private getIsRemoteTurn: (() => boolean) | null = null;
 
-  private tooltipContainer: Phaser.GameObjects.Container | null = null;
-  private tooltipBg: Phaser.GameObjects.Graphics | null = null;
+  private tooltipContainer!: Phaser.GameObjects.Container;
+  private tooltipBg!: Phaser.GameObjects.Graphics;
   private tooltipTexts: Phaser.GameObjects.Text[] = [];
   private lastTooltipSlot = -1;
 
@@ -92,6 +92,7 @@ export class HUD {
     this.buildToggle();
     this.buildWeaponRow();
     this.buildInfoBar();
+    this.buildTooltip();
     this.setupInput();
   }
 
@@ -285,17 +286,18 @@ export class HUD {
     this.statusContainer.y = infoY;
   }
 
-  private pointerToLocal(pointer: Phaser.Input.Pointer): { x: number; y: number } {
-    const zoom = this.scene.cameras.main.zoom;
-    return {
-      x: pointer.x / zoom - this.barContainer.x,
-      y: pointer.y / zoom - this.barContainer.y,
-    };
+  private screenBarY(): number {
+    return this.expanded
+      ? this.scene.cameras.main.height - this.totalExpandedH
+      : this.scene.cameras.main.height - (TOGGLE_H + BAR_H);
   }
 
   private setupInput(): void {
     this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      const local = this.pointerToLocal(pointer);
+      const local = {
+        x: pointer.x - this.panelX,
+        y: pointer.y - this.screenBarY(),
+      };
 
       if (local.x < 0 || local.x > this.panelW || local.y < 0) return;
 
@@ -328,7 +330,10 @@ export class HUD {
     });
 
     this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      const local = this.pointerToLocal(pointer);
+      const local = {
+        x: pointer.x - this.panelX,
+        y: pointer.y - this.screenBarY(),
+      };
 
       if (
         !this.expanded ||
@@ -366,10 +371,10 @@ export class HUD {
     this.expanded = !this.expanded;
 
     const cam = this.scene.cameras.main;
-    const invZ = 1 / cam.zoom;
-    const targetY = this.expanded
-      ? cam.height * invZ - this.totalExpandedH
-      : cam.height * invZ - (TOGGLE_H + BAR_H);
+    const screenTargetY = this.expanded
+      ? cam.height - this.totalExpandedH
+      : cam.height - (TOGGLE_H + BAR_H);
+    const targetY = screenTargetY / cam.zoom;
 
     this.scene.tweens.add({
       targets: this.barContainer,
@@ -547,37 +552,15 @@ export class HUD {
     this.timerText.setText(`⏱${timer}s`);
   }
 
-  private updateTooltip(): void {
-    if (!this.expanded || this.hoveredSlot === -1) {
-      if (this.tooltipContainer) {
-        this.tooltipContainer.setVisible(false);
-      }
-      this.lastTooltipSlot = -1;
-      return;
-    }
-
-    if (this.hoveredSlot === this.lastTooltipSlot && this.tooltipContainer?.visible) return;
-    this.lastTooltipSlot = this.hoveredSlot;
-
-    const weapon = WEAPONS[WEAPON_ORDER[this.hoveredSlot]!]!;
-
-    if (this.tooltipContainer) {
-      this.tooltipContainer.destroy();
-    }
-
-    this.tooltipContainer = this.scene.add.container(0, 0).setDepth(300).setScrollFactor(0);
-    this.tooltipTexts = [];
-
-    const lines = [
-      `${weapon.icon} ${weapon.name}`,
-      `💥 ${weapon.damage} dmg  · 💣 ${weapon.blastRadius}px radius`,
-      weapon.description,
-    ];
-
+  private buildTooltip(): void {
     const TT_PAD = 8;
     const LINE_H = 16;
     const ttW = 220;
-    const ttH = TT_PAD + lines.length * LINE_H + TT_PAD;
+    const numLines = 3;
+    const ttH = TT_PAD + numLines * LINE_H + TT_PAD;
+
+    this.tooltipContainer = this.scene.add.container(0, 0).setDepth(300).setScrollFactor(0);
+    this.tooltipContainer.setVisible(false);
 
     this.tooltipBg = this.scene.add.graphics();
     this.tooltipBg.fillStyle(0x0f1923, 0.95);
@@ -586,53 +569,99 @@ export class HUD {
     this.tooltipBg.strokeRoundedRect(0, 0, ttW, ttH, 6);
     this.tooltipContainer.add(this.tooltipBg);
 
-    for (let i = 0; i < lines.length; i++) {
+    const styles: { fontSize: string; color: string; fontStyle: string }[] = [
+      { fontSize: '11px', color: '#00e5ff', fontStyle: 'bold' },
+      { fontSize: '10px', color: '#e6edf3', fontStyle: 'normal' },
+      { fontSize: '9px', color: '#6e7681', fontStyle: 'normal' },
+    ];
+
+    for (let i = 0; i < numLines; i++) {
       const t = this.scene.add
-        .text(TT_PAD, TT_PAD + i * LINE_H, lines[i]!, {
-          fontSize: i === 0 ? '11px' : i === 2 ? '9px' : '10px',
-          color: i === 0 ? '#00e5ff' : i === 2 ? '#6e7681' : '#e6edf3',
+        .text(TT_PAD, TT_PAD + i * LINE_H, '', {
+          fontSize: styles[i]!.fontSize,
+          color: styles[i]!.color,
           fontFamily: 'monospace',
-          fontStyle: i === 0 ? 'bold' : 'normal',
+          fontStyle: styles[i]!.fontStyle,
           wordWrap: { width: ttW - TT_PAD * 2 },
         })
         .setOrigin(0, 0);
       this.tooltipContainer.add(t);
       this.tooltipTexts.push(t);
     }
+  }
+
+  private updateTooltip(): void {
+    if (!this.expanded || this.hoveredSlot === -1) {
+      this.tooltipContainer.setVisible(false);
+      this.lastTooltipSlot = -1;
+      return;
+    }
+
+    if (this.hoveredSlot === this.lastTooltipSlot && this.tooltipContainer.visible) return;
+    this.lastTooltipSlot = this.hoveredSlot;
+
+    const weapon = WEAPONS[WEAPON_ORDER[this.hoveredSlot]!]!;
+    const ttW = 220;
+    const TT_PAD = 8;
+    const LINE_H = 16;
+    const ttH = TT_PAD + 3 * LINE_H + TT_PAD;
+
+    const lines = [
+      `${weapon.icon} ${weapon.name}`,
+      `\u{1F4A5} ${weapon.damage} dmg  \u00B7 \u{1F4A3} ${weapon.blastRadius}px radius`,
+      weapon.description,
+    ];
+
+    for (let i = 0; i < this.tooltipTexts.length; i++) {
+      this.tooltipTexts[i]!.setText(lines[i] ?? '');
+    }
+
+    this.tooltipBg.clear();
+    this.tooltipBg.fillStyle(0x0f1923, 0.95);
+    this.tooltipBg.fillRoundedRect(0, 0, ttW, ttH, 6);
+    this.tooltipBg.lineStyle(1, 0x00e5ff, 0.4);
+    this.tooltipBg.strokeRoundedRect(0, 0, ttW, ttH, 6);
 
     const weaponCount = WEAPON_ORDER.length;
     const totalSlotsW = weaponCount * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP;
     const startX = (this.panelW - totalSlotsW) / 2;
     const slotX = startX + this.hoveredSlot * (SLOT_SIZE + SLOT_GAP);
 
-    const invZ = 1 / this.scene.cameras.main.zoom;
-    const tooltipX = this.barContainer.x + slotX + SLOT_SIZE / 2 - ttW / 2;
-    const tooltipY = this.barContainer.y - ttH - 6;
+    const screenTooltipX = this.panelX + slotX + SLOT_SIZE / 2 - ttW / 2;
+    const screenBarY = this.expanded
+      ? this.scene.cameras.main.height - this.totalExpandedH
+      : this.scene.cameras.main.height - (TOGGLE_H + BAR_H);
+    const screenTooltipY = screenBarY - ttH - 6;
 
-    this.tooltipContainer.setPosition(
-      Math.max(4 * invZ, Math.min(tooltipX, this.scene.cameras.main.width * invZ - ttW - 4 * invZ)),
-      Math.max(4 * invZ, tooltipY),
-    );
+    const clampedX = Math.max(4, Math.min(screenTooltipX, this.scene.cameras.main.width - ttW - 4));
+    const clampedY = Math.max(4, screenTooltipY);
+
+    this.tooltipContainer.setData('_screenX', clampedX);
+    this.tooltipContainer.setData('_screenY', clampedY);
+
+    const z = this.scene.cameras.main.zoom;
+    this.tooltipContainer.setScale(1 / z);
+    this.tooltipContainer.setPosition(clampedX / z, clampedY / z);
     this.tooltipContainer.setVisible(true);
   }
 
   reposition(cam: Phaser.Cameras.Scene2D.Camera): void {
-    const invZ = 1 / cam.zoom;
+    const z = cam.zoom;
 
-    const weaponCount = WEAPON_ORDER.length;
-    const naturalW = INFO_W + PAD + weaponCount * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP + PAD + INFO_W;
-    this.panelW = Math.min(naturalW, cam.width * invZ - 20);
-    this.panelX = (cam.width * invZ - this.panelW) / 2;
+    const screenBarY = this.expanded
+      ? cam.height - this.totalExpandedH
+      : cam.height - (TOGGLE_H + BAR_H);
 
-    const barY = this.expanded
-      ? cam.height * invZ - this.totalExpandedH
-      : cam.height * invZ - (TOGGLE_H + BAR_H);
+    this.barContainer.setScale(1 / z);
+    this.barContainer.setPosition(this.panelX / z, screenBarY / z);
 
-    this.barContainer.setScale(invZ);
-    this.barContainer.setPosition(this.panelX, barY);
-
-    if (this.tooltipContainer) {
-      this.tooltipContainer.setScale(invZ);
+    if (this.tooltipContainer.visible) {
+      this.tooltipContainer.setScale(1 / z);
+      const tx = this.tooltipContainer.getData('_screenX') as number | undefined;
+      const ty = this.tooltipContainer.getData('_screenY') as number | undefined;
+      if (tx != null && ty != null) {
+        this.tooltipContainer.setPosition(tx / z, ty / z);
+      }
     }
   }
 

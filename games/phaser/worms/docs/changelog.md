@@ -1,11 +1,17 @@
 # Reddit Royale - Changelog
 
+## HUD Viewport Pinning Fix v2 (v0.0.12.28)
+
+### Fixed — HUD flying across screen when zooming
+- **Root cause**: Previous `reposition()` used `cam.width * (1/zoom)` to compute positions, which incorrectly scales the screen dimension instead of the desired screen position. Phaser applies camera zoom to objects with `setScrollFactor(0)` during rendering, so the correct formula is `desiredScreenPos / zoom` (not `screenDimension / zoom`).
+- **HUD.ts**: `reposition()` now uses `panelX / zoom` and `screenBarY / zoom` for position, `1/zoom` for scale. Input hit-testing uses raw screen-space `pointer.x - panelX` (no zoom correction needed since pointer coords are screen-space). Tooltip is now a persistent container (created once, reused) instead of being destroyed/recreated on each hover.
+- **TeamPanel.ts / Minimap.ts / TouchControls.ts**: `reposition()` uses `desiredScreenPos / zoom` pattern.
+- **HUD.ts toggle()**: Animation target Y computed as `screenTargetY / cam.zoom`.
+
 ## Rope Polish, AI Rope Usage & HUD Viewport Fix (v0.0.12.24)
 
-### Fixed — HUD Viewport Pinning
-- **HUD.ts / TeamPanel.ts / Minimap.ts / TouchControls.ts**: All UI elements now counter-scale and reposition every frame to stay fixed in screen space regardless of camera zoom level. Previously, `setScrollFactor(0)` only prevented scroll — zoom still scaled and displaced UI elements off-screen.
-- **GamePlay.ts**: Added `repositionUI()` called each frame, invoking `reposition(cam)` on HUD, TeamPanel, Minimap, and TouchControls. Game over overlay now resets zoom to 1x.
-- **HUD.ts**: Input hit-testing updated with `pointerToLocal()` to correctly map screen-space pointer coordinates to the counter-scaled container space. Tooltip positioning also zoom-aware.
+### Fixed — HUD Viewport Pinning (superseded by v0.0.12.28)
+- Initial attempt at counter-scaling UI with zoom. Used incorrect position math causing UI to fly across screen.
 
 ### Improved — Ninja Rope Visual Feedback
 - **Worm.ts `drawRope()`**: Replaced straight-line rope with a quadratic bezier catenary curve that sags when slack and straightens under tension. Rope color shifts from dark brown (relaxed) to bright gold (high tension). Rope thickness varies inversely with angular velocity. Glow effect added at high tension.
