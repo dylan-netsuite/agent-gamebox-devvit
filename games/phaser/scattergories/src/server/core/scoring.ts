@@ -1,4 +1,5 @@
 import type { PlayerAnswer, PlayerRoundResult, RoundResult } from '../../shared/types/game';
+import { isAnswerValid } from '../../shared/validation';
 
 interface SubmittedAnswers {
   userId: string;
@@ -28,7 +29,7 @@ export function scoreRound(
       const raw = sub.answers[catIdx] ?? '';
       const norm = sub.normalized[catIdx] ?? '';
 
-      if (!norm || !norm.startsWith(letter.toLowerCase())) {
+      if (!norm || !isAnswerValid(raw, letter)) {
         answers.push({
           categoryIndex: catIdx,
           answer: raw,
@@ -87,9 +88,7 @@ export function scoreSinglePlayer(
 
   for (let catIdx = 0; catIdx < categories.length; catIdx++) {
     const raw = answers[catIdx] ?? '';
-    const norm = raw.trim().toLowerCase();
-
-    const valid = norm.length > 0 && norm.startsWith(letter.toLowerCase());
+    const valid = isAnswerValid(raw, letter);
 
     playerAnswers.push({
       categoryIndex: catIdx,

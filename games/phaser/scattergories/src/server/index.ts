@@ -5,6 +5,7 @@ import {
   createLobby,
   getLobbyInfo,
   findOpenLobby,
+  listOpenLobbies,
   getLobbyPlayers,
   addLobbyPlayer,
   removeLobbyPlayer,
@@ -121,6 +122,16 @@ router.get('/api/lobbies/open', async (_req, res): Promise<void> => {
   }
   const lobby = await findOpenLobby(postId);
   res.json({ status: 'ok', lobby });
+});
+
+router.get('/api/lobbies/list', async (_req, res): Promise<void> => {
+  const { postId } = context;
+  if (!postId) {
+    res.status(400).json({ status: 'error', message: 'Missing postId' } satisfies ErrorResponse);
+    return;
+  }
+  const lobbies = await listOpenLobbies(postId);
+  res.json({ status: 'ok', lobbies });
 });
 
 // --- In-Lobby ---

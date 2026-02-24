@@ -135,6 +135,32 @@ export async function findOpenLobby(postId: string): Promise<LobbyInfo | null> {
   return found;
 }
 
+export async function listOpenLobbies(postId: string): Promise<(LobbyInfo & { players: LobbyPlayer[] })[]> {
+  const lobbiesKey = postLobbiesKey(postId);
+  const raw = await redis.get(lobbiesKey);
+  if (!raw) return [];
+  const codes = JSON.parse(raw) as string[];
+
+  const results: (LobbyInfo & { players: LobbyPlayer[] })[] = [];
+  const liveCodes: string[] = [];
+
+  for (const code of codes) {
+    const info = await getLobbyInfo(code);
+    if (!info) continue;
+    liveCodes.push(code);
+    if (info.status === 'waiting') {
+      const players = await getLobbyPlayers(code);
+      results.push({ ...info, players });
+    }
+  }
+
+  if (liveCodes.length !== codes.length) {
+    await redis.set(lobbiesKey, JSON.stringify(liveCodes));
+  }
+
+  return results;
+}
+
 export async function updateLobbyStatus(code: string, status: LobbyStatus): Promise<void> {
   const info = await getLobbyInfo(code);
   if (info) {

@@ -1,5 +1,27 @@
 # Scattergories - Changelog
 
+## [0.4.0] - 2026-02-24
+
+### Added
+- **Answer Validation** — Answers are now validated beyond just letter-checking: minimum 2 characters, cannot be a single repeated character, must contain at least one vowel. Applied to both multiplayer (server-side) and single-player (client-side) scoring.
+- **Lobby Browser List** — The Online Play screen now shows an "OPEN LOBBIES" section below the Join by Code area, listing all available lobbies with host name, player count (e.g. "2/6"), age (e.g. "33s ago"), and a JOIN button for each.
+- **Lobby List Auto-Refresh** — The lobby list refreshes every 5 seconds automatically.
+- **`GET /api/lobbies/list` Endpoint** — New server endpoint returns all waiting lobbies with player details for a given post.
+- **`listOpenLobbies()` Function** — New gameState function to query all open lobbies with player info.
+
+### Verified
+- Full multiplayer E2E test completed with 2 players using both `player_one` and `player_two` Playwright instances
+- Answer validation: "H" (too short) and "Hhhh" (repeated chars) correctly rejected
+- Duplicate detection: "Honduras" and "Hiking" correctly marked as duplicates for both players
+- Lobby browser list: correctly shows suitegeek's lobby with "1/6" count and age
+- Quick Match: successfully finds and joins existing lobby
+- NEXT ROUND button: buffers round-start message, transitions from "Reviewing..." to "NEXT ROUND ▶"
+- Timer expiration auto-finalizes final round and transitions to Game Over
+- Game Over shows correct winner (suitegeek) on both player screens
+- Zero console errors on both players
+
+Workflow: wf-1771958400
+
 ## [0.3.0] - 2026-02-24
 
 ### Added

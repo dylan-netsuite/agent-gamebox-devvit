@@ -32,7 +32,8 @@ GameOver -> ModeSelect or Lobby (rematch)
 ### LobbyBrowser
 - **File**: `scenes/LobbyBrowser.ts`
 - **Purpose**: Online matchmaking hub
-- **Features**: Quick Match, Create Lobby, Join by Code (6-char input)
+- **Features**: Quick Match, Create Lobby, Join by Code (6-char input), Browse Open Lobbies
+- **Lobby List**: Shows all open lobbies with host name, player count (e.g. "2/6"), age (e.g. "1m ago"), and JOIN button. Auto-refreshes every 5 seconds via `/api/lobbies/list`.
 
 ### Lobby
 - **File**: `scenes/Lobby.ts`

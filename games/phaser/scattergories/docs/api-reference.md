@@ -14,6 +14,7 @@
 | POST | `/api/lobbies/create` | Creates a new lobby, adds host as first player |
 | POST | `/api/lobbies/join` | Joins an existing lobby by code |
 | GET | `/api/lobbies/open` | Finds first open lobby for quick match |
+| GET | `/api/lobbies/list` | Returns all waiting lobbies with player details for lobby browser |
 
 ### In-Lobby
 | Method | Path | Description |
