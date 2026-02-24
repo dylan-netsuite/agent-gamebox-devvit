@@ -1,5 +1,31 @@
 # Reddit Royale - Changelog
 
+## [2026-02-24] HUD Viewport Pinning Fix v3 — Dedicated UI Camera (v0.0.12.29)
+
+**Workflow:** wf-1771976780
+
+### Fixed — UI elements drifting when zooming
+
+The previous two attempts at zoom-independent UI used manual `setScale(1/zoom)` and `setPosition(desiredPos / zoom)` math. This approach is fundamentally broken because Phaser's camera rendering matrix includes an **origin offset** (`viewport center * (1 - zoom)`), causing UI to drift proportionally to how far zoom deviates from 1.
+
+### Solution — Dedicated UI Camera (Standard Phaser 3 Pattern)
+
+Replaced all manual zoom compensation with a second camera that permanently stays at zoom=1 and scroll=(0,0):
+
+- **Main camera**: Renders world objects (terrain, worms, projectiles, explosions). Ignores all UI containers.
+- **UI camera**: Renders UI containers (HUD, TeamPanel, Minimap, TouchControls, game-over overlay) at exact pixel positions with no transforms.
+- Dynamic game objects (projectiles, explosions, etc.) are auto-ignored on the UI camera via the `addedtoscene` event.
+- Game-over overlay is pre-created (hidden) in `create()` and registered as a UI object, avoiding dynamic registration issues.
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts` — Added `setupUICamera()`, pre-created game-over overlay, removed `repositionUI()`
+- `src/client/game/ui/HUD.ts` — Removed `reposition()`, `screenBarY()`, all `1/zoom` math; added `getContainers()`
+- `src/client/game/ui/TeamPanel.ts` — Removed `reposition()`; added `getContainer()`
+- `src/client/game/ui/Minimap.ts` — Removed `reposition()`; added `getContainer()`
+- `src/client/game/ui/TouchControls.ts` — Removed `reposition()`; added `getContainer()`
+
+---
+
 ## HUD Viewport Pinning Fix v2 (v0.0.12.28)
 
 ### Fixed — HUD flying across screen when zooming

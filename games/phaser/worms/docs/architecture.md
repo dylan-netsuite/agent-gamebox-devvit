@@ -147,6 +147,13 @@ games/phaser/worms/
   - **Volcanic Ridge**: Lava glow on horizon, volcanic peak silhouettes, smoke columns, ember particles, dim stars
 - Common helpers: `drawCloud`, `drawMountainRange`, `drawSunDisc`, `drawStars`, `drawBirds`, `drawTreeLine`
 
+### Dual Camera System (UI Camera)
+- Two cameras: the main game camera and a dedicated UI camera
+- **Main camera** (`cameras.main`): Handles world rendering with zoom (0.3x–2x) and scroll bounds. Ignores all UI containers.
+- **UI camera**: Added via `cameras.add()`, permanently at zoom=1, scroll=(0,0). Renders UI containers (HUD, TeamPanel, Minimap, TouchControls, game-over overlay) at exact pixel positions.
+- Dynamic objects added after setup are auto-ignored on the UI camera via the `addedtoscene` event listener.
+- Container children are automatically handled: `camera.ignore(container)` skips the entire container and all its children during rendering.
+
 ### MultiplayerManager
 - Connects to Devvit Realtime API channels
 - Static methods for lobby CRUD (create, join, find open)

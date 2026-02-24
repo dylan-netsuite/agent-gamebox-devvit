@@ -44,6 +44,8 @@ export class GamePlay extends Scene {
   private teamPanel!: TeamPanel;
   private minimap!: Minimap;
   private touchControls!: TouchControls;
+  private uiCamera!: Phaser.Cameras.Scene2D.Camera;
+  private uiContainers = new Set<Phaser.GameObjects.GameObject>();
   private aiController: AIController | null = null;
 
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -249,7 +251,11 @@ export class GamePlay extends Scene {
       getState: () => this.weaponSystem.currentState,
     });
 
+    this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);
+    this.gameOverOverlay.setVisible(false);
+
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    this.setupUICamera();
     this.centerCameraOnWorm();
 
     this.setupCameraDrag();
@@ -640,8 +646,11 @@ export class GamePlay extends Scene {
   private showGameOver(winningTeam: number): void {
     SoundManager.play('gameover');
     const cam = this.cameras.main;
-    cam.setZoom(1);
-    this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);
+    if (!this.gameOverOverlay) {
+      this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);
+    }
+    this.gameOverOverlay.removeAll(true);
+    this.gameOverOverlay.setVisible(true);
 
     const bg = this.add.graphics();
     bg.fillStyle(0x000000, 0.7);
@@ -1215,18 +1224,41 @@ export class GamePlay extends Scene {
     }
 
     this.followActiveWorm();
-    this.repositionUI();
     this.hud.update();
     this.teamPanel.update();
     this.minimap.update();
   }
 
-  private repositionUI(): void {
+  private setupUICamera(): void {
     const cam = this.cameras.main;
-    this.hud.reposition(cam);
-    this.teamPanel.reposition(cam);
-    this.minimap.reposition(cam);
-    this.touchControls.reposition(cam);
+    this.uiCamera = this.cameras.add(0, 0, cam.width, cam.height);
+    this.uiCamera.setName('ui');
+
+    for (const obj of this.hud.getContainers()) {
+      this.uiContainers.add(obj);
+    }
+    this.uiContainers.add(this.teamPanel.getContainer());
+    this.uiContainers.add(this.minimap.getContainer());
+    this.uiContainers.add(this.touchControls.getContainer());
+    if (this.gameOverOverlay) {
+      this.uiContainers.add(this.gameOverOverlay);
+    }
+
+    for (const obj of this.uiContainers) {
+      cam.ignore(obj);
+    }
+
+    for (const obj of this.children.list) {
+      if (!this.uiContainers.has(obj)) {
+        this.uiCamera.ignore(obj);
+      }
+    }
+
+    this.events.on('addedtoscene', (obj: Phaser.GameObjects.GameObject) => {
+      if (!this.uiContainers.has(obj)) {
+        this.uiCamera.ignore(obj);
+      }
+    });
   }
 
   private followActiveWorm(): void {

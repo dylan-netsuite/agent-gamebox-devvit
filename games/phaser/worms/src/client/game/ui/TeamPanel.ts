@@ -111,10 +111,8 @@ export class TeamPanel {
     }
   }
 
-  reposition(cam: Phaser.Cameras.Scene2D.Camera): void {
-    const z = cam.zoom;
-    this.container.setScale(1 / z);
-    this.container.setPosition(8 / z, 8 / z);
+  getContainer(): Phaser.GameObjects.Container {
+    return this.container;
   }
 
   destroy(): void {

@@ -148,10 +148,8 @@ export class TouchControls {
     });
   }
 
-  reposition(cam: Phaser.Cameras.Scene2D.Camera): void {
-    const z = cam.zoom;
-    this.container.setScale(1 / z);
-    this.container.setPosition(0, 0);
+  getContainer(): Phaser.GameObjects.Container {
+    return this.container;
   }
 
   destroy(): void {

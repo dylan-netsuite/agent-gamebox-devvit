@@ -115,9 +115,11 @@ The main game scene. Manages all gameplay systems. Supports both local and onlin
 4. Draws water plane (for maps with water/lava)
 5. Spawns worms at evenly-spaced positions
 6. Initializes systems: `WindSystem`, `ExplosionEffect`, `ProjectileManager`, `WeaponSystem`
-7. Creates UI: `AimIndicator`, `HUD`
-8. Sets up camera bounds and input handlers
-9. If online: sets up multiplayer message listeners
+7. Creates UI: `AimIndicator`, `HUD`, `TeamPanel`, `Minimap`, `TouchControls`
+8. Pre-creates hidden game-over overlay container
+9. Sets up dedicated UI camera via `setupUICamera()` (main camera ignores UI, UI camera ignores world objects)
+10. Sets up camera bounds and input handlers
+11. If online: sets up multiplayer message listeners
 
 ### Systems Owned
 

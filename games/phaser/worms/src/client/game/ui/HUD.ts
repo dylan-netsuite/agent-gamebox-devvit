@@ -286,17 +286,11 @@ export class HUD {
     this.statusContainer.y = infoY;
   }
 
-  private screenBarY(): number {
-    return this.expanded
-      ? this.scene.cameras.main.height - this.totalExpandedH
-      : this.scene.cameras.main.height - (TOGGLE_H + BAR_H);
-  }
-
   private setupInput(): void {
     this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       const local = {
-        x: pointer.x - this.panelX,
-        y: pointer.y - this.screenBarY(),
+        x: pointer.x - this.barContainer.x,
+        y: pointer.y - this.barContainer.y,
       };
 
       if (local.x < 0 || local.x > this.panelW || local.y < 0) return;
@@ -331,8 +325,8 @@ export class HUD {
 
     this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
       const local = {
-        x: pointer.x - this.panelX,
-        y: pointer.y - this.screenBarY(),
+        x: pointer.x - this.barContainer.x,
+        y: pointer.y - this.barContainer.y,
       };
 
       if (
@@ -371,10 +365,9 @@ export class HUD {
     this.expanded = !this.expanded;
 
     const cam = this.scene.cameras.main;
-    const screenTargetY = this.expanded
+    const targetY = this.expanded
       ? cam.height - this.totalExpandedH
       : cam.height - (TOGGLE_H + BAR_H);
-    const targetY = screenTargetY / cam.zoom;
 
     this.scene.tweens.add({
       targets: this.barContainer,
@@ -627,42 +620,19 @@ export class HUD {
     const startX = (this.panelW - totalSlotsW) / 2;
     const slotX = startX + this.hoveredSlot * (SLOT_SIZE + SLOT_GAP);
 
-    const screenTooltipX = this.panelX + slotX + SLOT_SIZE / 2 - ttW / 2;
-    const screenBarY = this.expanded
-      ? this.scene.cameras.main.height - this.totalExpandedH
-      : this.scene.cameras.main.height - (TOGGLE_H + BAR_H);
-    const screenTooltipY = screenBarY - ttH - 6;
+    const tooltipX = this.barContainer.x + slotX + SLOT_SIZE / 2 - ttW / 2;
+    const tooltipY = this.barContainer.y - ttH - 6;
 
-    const clampedX = Math.max(4, Math.min(screenTooltipX, this.scene.cameras.main.width - ttW - 4));
-    const clampedY = Math.max(4, screenTooltipY);
-
-    this.tooltipContainer.setData('_screenX', clampedX);
-    this.tooltipContainer.setData('_screenY', clampedY);
-
-    const z = this.scene.cameras.main.zoom;
-    this.tooltipContainer.setScale(1 / z);
-    this.tooltipContainer.setPosition(clampedX / z, clampedY / z);
+    const cam = this.scene.cameras.main;
+    this.tooltipContainer.setPosition(
+      Math.max(4, Math.min(tooltipX, cam.width - ttW - 4)),
+      Math.max(4, tooltipY),
+    );
     this.tooltipContainer.setVisible(true);
   }
 
-  reposition(cam: Phaser.Cameras.Scene2D.Camera): void {
-    const z = cam.zoom;
-
-    const screenBarY = this.expanded
-      ? cam.height - this.totalExpandedH
-      : cam.height - (TOGGLE_H + BAR_H);
-
-    this.barContainer.setScale(1 / z);
-    this.barContainer.setPosition(this.panelX / z, screenBarY / z);
-
-    if (this.tooltipContainer.visible) {
-      this.tooltipContainer.setScale(1 / z);
-      const tx = this.tooltipContainer.getData('_screenX') as number | undefined;
-      const ty = this.tooltipContainer.getData('_screenY') as number | undefined;
-      if (tx != null && ty != null) {
-        this.tooltipContainer.setPosition(tx / z, ty / z);
-      }
-    }
+  getContainers(): Phaser.GameObjects.GameObject[] {
+    return [this.barContainer, this.tooltipContainer];
   }
 
   destroy(): void {
