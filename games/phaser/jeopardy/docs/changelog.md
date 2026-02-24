@@ -4,6 +4,39 @@ All notable changes to the Jeopardy Devvit app are documented here, newest first
 
 ---
 
+## [2026-02-24] Fix Special Character Rendering in Clue Text
+
+**Summary:** Fixed broken HTML entity rendering where ampersands and other special characters appeared as garbled Unicode (e.g., `□□mp;` instead of `&`). Root cause was twofold: (1) the scraper's `cleanHtmlText` only handled 5 hardcoded entities, and (2) cached game data in Redis contained corrupted byte sequences from previous encoding issues.
+
+### Changes
+
+**Server-side scraper (`scraper.ts`)**
+- Rewrote `cleanHtmlText()` to use cheerio's HTML parser for full entity decoding (all named, decimal, hex entities)
+- Added iterative decoding loop to handle double/triple-encoded entities
+- Applied `cleanHtmlText()` to category names (J, DJ, FJ) which were previously unprocessed
+- Exported `cleanHtmlText` for use by the server
+
+**Server-side response sanitizer (`index.ts`)**
+- Added `fixCorruptedText()` to detect and repair garbled Unicode sequences from old cache entries (`[non-ASCII]mp;` → `&`)
+- Added `sanitizeGameResponse()` that sanitizes all text fields (categories, questions, answers) in every API response
+- Applied sanitizer to all cached data paths in `GET /api/game`
+
+**Client-side text cleaner (NEW: `textCleaner.ts`)**
+- Added `decodeHtmlEntities()` using browser's built-in `textarea.innerHTML` for authoritative HTML entity decoding
+- Includes corrupted ampersand repair for old cache data
+- Applied in `Game.ts loadGameData()` to all category, question, and answer text
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/server/scraper.ts` | Rewrote `cleanHtmlText()` with cheerio-based decoding, exported it, applied to categories |
+| `src/server/index.ts` | Added `fixCorruptedText()`, `sanitizeGameResponse()`, imported `cleanHtmlText` |
+| `src/client/game/utils/textCleaner.ts` | New file: browser-based HTML entity decoder with corruption repair |
+| `src/client/game/scenes/Game.ts` | Applied `decodeHtmlEntities()` to all text fields in `loadGameData()` |
+
+---
+
 ## [2026-02-22] Playability Updates — Skip, No-Deduct Timeout, Board Persistence
 
 **Summary:** Three quality-of-life improvements: (1) a Skip button on every question so players can pass without penalty, (2) no point deduction when the timer runs out (only wrong answers cost points), and (3) full board state persistence so players can exit mid-game and resume later.

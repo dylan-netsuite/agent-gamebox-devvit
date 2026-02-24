@@ -229,3 +229,5 @@ All scenes use the scale factor (`sf`) to scale font sizes, button dimensions, m
 ## Game Utilities
 
 **`answerMatcher.ts`** — Fuzzy answer matching for typed player responses. Exports `checkAnswer(playerAnswer, correctAnswer): MatchResult` returning `{ correct, similarity }`. Normalizes both strings (lowercase, trim, strip punctuation, Jeopardy prefixes like "What is...", leading articles). Matching strategies: exact normalized match, containment check, or Levenshtein similarity ≥ 0.75.
+
+**`textCleaner.ts`** — Client-side HTML entity decoder. Exports `decodeHtmlEntities(text): string` which uses the browser's `textarea.innerHTML` parser to decode all HTML entities (named, decimal, hex) and handles double-encoding. Also repairs corrupted ampersand sequences from old cache data where `&amp;` got mangled into garbled Unicode.

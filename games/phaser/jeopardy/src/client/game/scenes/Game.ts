@@ -7,6 +7,7 @@ import type { FinalJeopardyQuestion } from '../data/finalJeopardy';
 import { soundManager } from '../audio/SoundManager';
 import { checkAnswer } from '../utils/answerMatcher';
 import type { AnswerResult, GameData, QuestionStatsResponse, SavedGameState } from '../../../shared/types/api';
+import { decodeHtmlEntities } from '../utils/textCleaner';
 
 interface BoardCell {
   rectangle: Phaser.GameObjects.Rectangle;
@@ -156,36 +157,35 @@ export class Game extends Scene {
    * Convert server GameData into the local Question[][] format.
    */
   private loadGameData(gameData: GameData): void {
-    this.gameCategories = gameData.categories.slice(0, 6);
+    const d = decodeHtmlEntities;
 
-    // Pad categories if fewer than 6
+    this.gameCategories = gameData.categories.slice(0, 6).map(d);
+
     while (this.gameCategories.length < 6) {
       this.gameCategories.push(`Category ${this.gameCategories.length + 1}`);
     }
 
-    // Build 2D question array: [categoryIndex][valueIndex]
     const questions: (Question | null)[][] = Array.from({ length: 6 }, () =>
       Array(5).fill(null) as (Question | null)[]
     );
 
     this.missingClueCount = 0;
     for (const clue of gameData.clues) {
-      const catIdx = clue.col - 1; // 0-5
-      const rowIdx = clue.row - 1; // 0-4
+      const catIdx = clue.col - 1;
+      const rowIdx = clue.row - 1;
       if (catIdx >= 0 && catIdx < 6 && rowIdx >= 0 && rowIdx < 5) {
         const catArr = questions[catIdx];
         if (catArr) {
           catArr[rowIdx] = {
-            category: clue.category,
+            category: d(clue.category),
             value: clue.value,
-            question: clue.question,
-            answer: clue.answer,
+            question: d(clue.question),
+            answer: d(clue.answer),
           };
         }
       }
     }
 
-    // Count missing clues
     for (let c = 0; c < 6; c++) {
       const catArr = questions[c];
       if (!catArr) continue;
@@ -196,9 +196,8 @@ export class Game extends Scene {
 
     this.gameQuestions = questions;
 
-    // Load Double Jeopardy data
     if (gameData.djCategories && gameData.djClues && gameData.djClues.length > 0) {
-      this.djGameCategories = gameData.djCategories.slice(0, 6);
+      this.djGameCategories = gameData.djCategories.slice(0, 6).map(d);
       while (this.djGameCategories.length < 6) {
         this.djGameCategories.push(`Category ${this.djGameCategories.length + 1}`);
       }
@@ -214,10 +213,10 @@ export class Game extends Scene {
           const catArr = djQuestions[catIdx];
           if (catArr) {
             catArr[rowIdx] = {
-              category: clue.category,
+              category: d(clue.category),
               value: clue.value,
-              question: clue.question,
-              answer: clue.answer,
+              question: d(clue.question),
+              answer: d(clue.answer),
             };
           }
         }
@@ -236,12 +235,11 @@ export class Game extends Scene {
       this.djMissingClueCount = 0;
     }
 
-    // Final Jeopardy
     if (gameData.finalJeopardy) {
       this.gameFinalJeopardy = {
-        category: gameData.finalJeopardy.category,
-        question: gameData.finalJeopardy.question,
-        answer: gameData.finalJeopardy.answer,
+        category: d(gameData.finalJeopardy.category),
+        question: d(gameData.finalJeopardy.question),
+        answer: d(gameData.finalJeopardy.answer),
       };
     } else {
       this.gameFinalJeopardy = FINAL_JEOPARDY;

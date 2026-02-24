@@ -2,7 +2,7 @@ import express from 'express';
 import type { CommunityStatsResponse, GameResponse, GameResult, GameType, LeaderboardEntry, LeaderboardResponse, QuestionStatsRequest, QuestionStatsResponse, SavedGameResponse, SavedGameState, StatsResponse, UserStats } from '../shared/types/api';
 import { redis, createServer, context } from '@devvit/web/server';
 import { createPost } from './core/post';
-import { findLatestGame, findOnThisDayGame, scrapeGame } from './scraper';
+import { cleanHtmlText, findLatestGame, findOnThisDayGame, scrapeGame } from './scraper';
 
 const app = express();
 
@@ -62,6 +62,42 @@ async function setCachedLatest(response: GameResponse): Promise<void> {
   }
 }
 
+/**
+ * Fix corrupted ampersand sequences from old cache entries.
+ * Redis/JSON round-trips can mangle `&amp;` into garbled Unicode + `mp;`.
+ */
+function fixCorruptedText(text: string): string {
+  return cleanHtmlText(text.replace(/[^\x00-\x7F]{1,3}mp;/g, '&'));
+}
+
+/**
+ * Sanitize all text fields in a GameResponse to fix encoding issues from old cache entries.
+ */
+function sanitizeGameResponse(response: GameResponse): GameResponse {
+  if (!response.data) return response;
+  const d = response.data;
+  d.categories = d.categories.map(fixCorruptedText);
+  if (d.djCategories) d.djCategories = d.djCategories.map(fixCorruptedText);
+  for (const clue of d.clues) {
+    clue.question = fixCorruptedText(clue.question);
+    clue.answer = fixCorruptedText(clue.answer);
+    clue.category = fixCorruptedText(clue.category);
+  }
+  if (d.djClues) {
+    for (const clue of d.djClues) {
+      clue.question = fixCorruptedText(clue.question);
+      clue.answer = fixCorruptedText(clue.answer);
+      clue.category = fixCorruptedText(clue.category);
+    }
+  }
+  if (d.finalJeopardy) {
+    d.finalJeopardy.question = fixCorruptedText(d.finalJeopardy.question);
+    d.finalJeopardy.answer = fixCorruptedText(d.finalJeopardy.answer);
+    d.finalJeopardy.category = fixCorruptedText(d.finalJeopardy.category);
+  }
+  return response;
+}
+
 // ---------------------------------------------------------------------------
 // Game endpoint
 // ---------------------------------------------------------------------------
@@ -75,7 +111,7 @@ router.get('/api/game', async (req, res): Promise<void> => {
     if (requestedGameId && !isNaN(requestedGameId)) {
       const cached = await getCachedGame(requestedGameId);
       if (cached) {
-        res.json(cached);
+        res.json(sanitizeGameResponse(cached));
         return;
       }
     }
@@ -84,7 +120,7 @@ router.get('/api/game', async (req, res): Promise<void> => {
     if (gameType === 'latest') {
       const cachedLatest = await getCachedLatest();
       if (cachedLatest) {
-        res.json(cachedLatest);
+        res.json(sanitizeGameResponse(cachedLatest));
         return;
       }
     }
@@ -111,14 +147,13 @@ router.get('/api/game', async (req, res): Promise<void> => {
     // Check if we have cached game data for this gameId
     const cachedGame = await getCachedGame(lookup.gameId);
     if (cachedGame) {
-      // Update description for the game type context
       if (cachedGame.data) {
         cachedGame.data.gameType = gameType;
       }
       if (gameType === 'latest') {
         await setCachedLatest(cachedGame);
       }
-      res.json(cachedGame);
+      res.json(sanitizeGameResponse(cachedGame));
       return;
     }
 

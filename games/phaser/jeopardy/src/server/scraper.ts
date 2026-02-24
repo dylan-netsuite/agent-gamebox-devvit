@@ -3,13 +3,22 @@ import type { Clue, FinalJeopardyClue, GameData, GameType } from '../shared/type
 
 const USER_AGENT = 'Mozilla/5.0 (Devvit App; Jeopardy Game)';
 
-function cleanHtmlText(text: string): string {
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
+/**
+ * Decode all HTML entities (named, decimal, hex) and handle double-encoding.
+ * Uses cheerio's parser which supports the full HTML5 entity set.
+ */
+export function cleanHtmlText(text: string): string {
+  let decoded = text;
+
+  // Iteratively decode to handle double/triple-encoded entities
+  // e.g. &amp;amp; → &amp; → &
+  for (let i = 0; i < 3; i++) {
+    const pass = cheerio.load(`<p>${decoded}</p>`, null, false)('p').text();
+    if (pass === decoded) break;
+    decoded = pass;
+  }
+
+  return decoded
     .replace(/\\/g, '')
     .replace(/\s+/g, ' ')
     .trim();
@@ -135,19 +144,19 @@ export async function scrapeGame(
     // Extract Jeopardy round categories
     const jCategories: string[] = [];
     $('#jeopardy_round .category_name').each((_i, el) => {
-      jCategories.push($(el).text().trim());
+      jCategories.push(cleanHtmlText($(el).text()));
     });
 
     // Extract Final Jeopardy category
     const fjCategories: string[] = [];
     $('#final_jeopardy_round .category_name').each((_i, el) => {
-      fjCategories.push($(el).text().trim());
+      fjCategories.push(cleanHtmlText($(el).text()));
     });
 
     // Extract Double Jeopardy round categories
     const djCategories: string[] = [];
     $('#double_jeopardy_round .category_name').each((_i, el) => {
-      djCategories.push($(el).text().trim());
+      djCategories.push(cleanHtmlText($(el).text()));
     });
 
     // Extract clues from both Jeopardy and Double Jeopardy rounds
