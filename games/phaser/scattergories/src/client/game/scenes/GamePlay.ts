@@ -8,12 +8,14 @@ import { VALID_LETTERS, CATEGORY_LISTS, TOTAL_ROUNDS, ROUND_TIMER_SECONDS, CATEG
 import { scoreSinglePlayer } from './singlePlayerScoring';
 import { scoreLocalMultiplayer } from './localScoring';
 import type { AIPlayer } from '../systems/AIOpponent';
+import type { AIDifficulty } from '../systems/AIOpponent';
 import { createAIPlayers, generateAIAnswers } from '../systems/AIOpponent';
 
 export type GameMode = 'single' | 'multiplayer' | 'local';
 
 export interface GamePlayData {
   mode: GameMode;
+  aiDifficulty?: AIDifficulty;
   multiplayerManager?: MultiplayerManager;
   round?: RoundConfig;
   usedListIds?: number[];
@@ -24,6 +26,7 @@ export interface GamePlayData {
   localPlayerIndex?: number;
   localAllAnswers?: string[][];
   localScores?: number[];
+  nextPlayerName?: string;
 }
 
 export class GamePlay extends Scene {
@@ -53,6 +56,7 @@ export class GamePlay extends Scene {
   private totalScore = 0;
 
   private aiPlayers: AIPlayer[] = [];
+  private aiDifficulty: AIDifficulty = 'medium';
 
   private localPlayers: string[] = [];
   private localPlayerIndex = 0;
@@ -100,7 +104,8 @@ export class GamePlay extends Scene {
       if (data.usedLetters) this.usedLetters = data.usedLetters;
       if (data.totalScore != null) this.totalScore = data.totalScore;
       if (data.roundNumber != null) this.roundNumber = data.roundNumber;
-      this.aiPlayers = createAIPlayers(2);
+      this.aiDifficulty = data.aiDifficulty ?? 'medium';
+      this.aiPlayers = createAIPlayers(undefined, this.aiDifficulty);
       this.pickSinglePlayerRound();
     }
 
@@ -489,6 +494,7 @@ export class GamePlay extends Scene {
         usedListIds: this.usedListIds,
         usedLetters: this.usedLetters,
         totalScore: this.totalScore,
+        aiDifficulty: this.aiDifficulty,
       });
     });
   }
@@ -501,7 +507,8 @@ export class GamePlay extends Scene {
     if (nextIndex < this.localPlayers.length) {
       this.time.delayedCall(800, () => {
         this.cleanupDOM();
-        this.scene.start('GamePlay', {
+        this.scene.start('PassDevice', {
+          nextPlayerName: this.localPlayers[nextIndex],
           mode: 'local',
           localPlayers: this.localPlayers,
           localPlayerIndex: nextIndex,

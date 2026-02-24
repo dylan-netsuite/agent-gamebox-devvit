@@ -1,5 +1,20 @@
 # Scattergories - Changelog
 
+## [0.6.0] - 2026-02-24
+
+### Added
+- **AI Difficulty Levels** — New `DifficultySelect` scene lets players choose Easy (1 slow AI), Medium (2 balanced AI), or Hard (3 sharp AI) before starting single player. Each difficulty has distinct skill ranges and opponent counts.
+- **Pass Device Interstitial** — New `PassDevice` scene shows between player turns in local multiplayer with a lock icon, next player's name, and "TAP ANYWHERE WHEN READY" prompt. Prevents peeking at previous player's answers.
+- **Expanded AI Word Banks** — Added 12 new category banks: flowers, trees, colors, instruments, cars, holidays, toys, superheroes, mythological creatures, emotions, brands, and bodies of water. Existing banks also expanded with additional entries.
+
+### Changed
+- **ModeSelect** — Single Player now navigates to DifficultySelect instead of directly to GamePlay.
+- **AIOpponent** — `createAIPlayers()` now accepts a difficulty parameter controlling opponent count and skill range. Difficulty-specific AI names (Rookie Bot for easy, Bot Alpha/Beta for medium, CPU Omega/Sigma/Delta for hard).
+- **GamePlay** — Passes `aiDifficulty` through the round cycle so difficulty persists across rounds.
+- **categorize()** — Updated to route niche categories (flowers, trees, colors, instruments, cars, etc.) to their dedicated word banks instead of falling through to generic "thing" bank.
+
+Workflow: wf-1771960800
+
 ## [0.5.0] - 2026-02-24
 
 ### Added

@@ -6,6 +6,7 @@ import type { RoundResult, PlayerScore } from '../../../shared/types/game';
 import type { ScatterMessage } from '../../../shared/types/multiplayer';
 import { TOTAL_ROUNDS } from '../../../shared/types/categories';
 import type { GameMode } from './GamePlay';
+import type { AIDifficulty } from '../systems/AIOpponent';
 
 export interface RoundResultsData {
   result: RoundResult;
@@ -19,6 +20,7 @@ export interface RoundResultsData {
   totalScore?: number;
   localPlayers?: string[];
   localScores?: number[];
+  aiDifficulty?: AIDifficulty;
 }
 
 export class RoundResults extends Scene {
@@ -271,6 +273,7 @@ export class RoundResults extends Scene {
           this.fadeOutAndRun(() => {
             this.scene.start('GamePlay', {
               mode: 'single',
+              aiDifficulty: data.aiDifficulty,
               usedListIds: data.usedListIds,
               usedLetters: data.usedLetters,
               totalScore: data.totalScore,

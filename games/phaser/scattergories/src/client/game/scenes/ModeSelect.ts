@@ -49,7 +49,7 @@ export class ModeSelect extends Scene {
         color: 0x9b59b6,
         action: () => {
           SoundManager.play('select');
-          this.scene.start('GamePlay', { mode: 'single' });
+          this.scene.start('DifficultySelect');
         },
       },
       {

@@ -4,12 +4,12 @@
 
 ```
 Boot -> Preloader -> ModeSelect -> [branch]
-                                    ├── GamePlay (single player vs AI)
+                                    ├── DifficultySelect -> GamePlay (single player vs AI)
                                     ├── LocalSetup -> GamePlay (local pass & play)
                                     ├── LobbyBrowser -> Lobby -> GamePlay (live multiplayer)
                                     └── Leaderboard
 
-GamePlay (local) -> GamePlay (next player's turn) -> RoundResults
+GamePlay (local) -> PassDevice -> GamePlay (next player's turn) -> RoundResults
 GamePlay (single/mp) -> RoundResults -> GamePlay (next round) or GameOver
 GameOver -> ModeSelect or Lobby (rematch)
 ```
@@ -31,6 +31,14 @@ GameOver -> ModeSelect or Lobby (rematch)
 - **Options**: Single Player (vs AI, purple), Local Play (pass & play, green), Live Multiplayer (online, blue), Leaderboard (orange)
 - **Animation**: Camera fade-in on scene enter
 
+### DifficultySelect
+- **File**: `scenes/DifficultySelect.ts`
+- **Purpose**: AI difficulty selection for single player mode
+- **Options**: Easy (1 AI, skill 0.25-0.45), Medium (2 AI, skill 0.45-0.65), Hard (3 AI, skill 0.70-0.90)
+- **Features**: Color-coded buttons (green/yellow/red), AI count badges, descriptive text
+- **Navigation**: ESC or back button returns to ModeSelect
+- **Animation**: Camera fade-in on scene enter
+
 ### LocalSetup
 - **File**: `scenes/LocalSetup.ts`
 - **Purpose**: Player name entry for local multiplayer
@@ -49,10 +57,17 @@ GameOver -> ModeSelect or Lobby (rematch)
 - **Features**: 6 player slots, lobby code display, ready toggle, host start button
 - **Realtime**: Listens for `lobby-update` and `game-start` messages
 
+### PassDevice
+- **File**: `scenes/PassDevice.ts`
+- **Purpose**: Interstitial screen between local multiplayer turns
+- **Features**: Lock icon, "PASS THE DEVICE TO [name]" prompt, "TAP ANYWHERE WHEN READY" with pulsing animation
+- **Behavior**: 900ms delay before accepting input to prevent accidental taps. Accepts pointer click or any key press.
+- **Animation**: Lock icon bounces in, text fades in sequentially, tap prompt pulses continuously
+
 ### GamePlay
 - **File**: `scenes/GamePlay.ts`
 - **Purpose**: Core gameplay - category list with text inputs
-- **Modes**: `single` (vs 2 AI opponents), `local` (pass & play), `multiplayer` (online)
+- **Modes**: `single` (vs AI, count/skill based on difficulty), `local` (pass & play), `multiplayer` (online)
 - **Features**:
   - Animated letter dice roll (cycles random letters ~1s before settling)
   - Round/timer display with urgency effects (pulse + red flash at ≤10s)
@@ -63,7 +78,7 @@ GameOver -> ModeSelect or Lobby (rematch)
   - Player submission status indicators (multiplayer)
 - **Input**: DOM `<input>` elements overlaid on canvas for keyboard support
 - **Animation**: Dice roll on letter reveal, timer pulse at ≤10s, header flash
-- **Local flow**: After submission, transitions to next player's turn with same letter/categories; after last player, scores and shows RoundResults
+- **Local flow**: After submission, transitions to PassDevice interstitial, then next player's turn with same letter/categories; after last player, scores and shows RoundResults
 
 ### RoundResults
 - **File**: `scenes/RoundResults.ts`
