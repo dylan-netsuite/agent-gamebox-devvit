@@ -142,7 +142,30 @@ After documentation is updated:
    - **Performance**: Optimization opportunities
    - **Features**: New capabilities that would enhance the game
 6. Present the top 3-5 recommendations to the user with a brief explanation of each
+7. **Immediately proceed to Phase 8** -- do not pause
+
+### Phase 8: Git Commit
+
+After next steps are generated, commit all changes from this workflow:
+
+1. Read workflow artifacts to understand what was accomplished:
+   - `request.txt`, `plan.md`, `status.json`, `test-results.json`
+2. Run `git status` to verify there are changes to commit
+3. Generate a descriptive commit message:
+   - Type prefix: `feat`, `fix`, `refactor`, etc.
+   - Scope: the game name (e.g., `jeopardy`, `worms`)
+   - Subject: concise summary of what was accomplished (max 72 chars)
+   - Body: 2-4 sentences covering the feature, key technical changes, and test results
+   - Footer: `Workflow: {wf-id}`
+4. Stage relevant files:
+   - `git add games/{game-path}/`
+   - `git add .workflows/{game-path}/{wf-id}/`
+   - Do NOT stage `.env` files or credentials
+5. Commit using a HEREDOC for proper formatting
+6. Run `git status` to verify the commit succeeded
 7. **Then mark the workflow as complete**
+
+See the `/devvit-commit` skill for full commit message guidelines and examples.
 
 ### Iteration Loop
 
