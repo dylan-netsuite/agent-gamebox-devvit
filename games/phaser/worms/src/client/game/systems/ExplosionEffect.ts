@@ -51,11 +51,11 @@ export class ExplosionEffect {
           damages.push({ worm, damage });
           this.showDamageNumber(center.x, center.y - 20, damage);
 
-          const knockbackForce = falloff * 6;
+          const knockbackForce = falloff * 8;
           const angle = Math.atan2(dy, dx);
           worm.applyKnockback(
             Math.cos(angle) * knockbackForce,
-            Math.sin(angle) * knockbackForce - 3,
+            Math.sin(angle) * knockbackForce - 4,
           );
         }
       }

@@ -260,8 +260,7 @@ export class AIController {
 
       if (cfg.weaponFilter && !cfg.weaponFilter.has(weaponId)) continue;
 
-      // AI doesn't use utility weapons
-      if (weapon.firingMode === 'teleport') continue;
+      if (weapon.firingMode === 'teleport' || weapon.firingMode === 'rope') continue;
 
       if (weapon.firingMode === 'placed') {
         const nearestDist = this.closestEnemyDist(self, enemies);

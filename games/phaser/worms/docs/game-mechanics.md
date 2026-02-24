@@ -16,6 +16,7 @@ Turn-based artillery game where players control worms on destructible terrain, u
 | 6 | Cluster Bomb | Projectile | 20px + 18px×4 | 20 + 18×4 | Yes | Splits into 4 bomblets on detonation |
 | 7 | Sniper Rifle | Hitscan | 8px | 60 | No | Single precise long-range shot with direct hit detection |
 | 8 | Teleport | Teleport | — | — | No | Instantly moves worm to aimed location |
+| 9 | Ninja Rope | Rope | — | — | No | Grappling hook for swing traversal |
 
 ### Cluster Bomb Details
 The main projectile bounces once and detonates after a 2s fuse. On detonation, it deals 20 damage (20px radius) and spawns 4 smaller bomblets. Each bomblet flies outward in a random upward arc and detonates on terrain impact, dealing 18 damage (18px radius). Effective for area denial and hitting enemies behind cover.
@@ -25,6 +26,14 @@ Fires a single hitscan ray — instant, no travel time, not affected by wind. Th
 
 ### Teleport Details
 Utility weapon that teleports the worm to the aimed position. The worm lands at the nearest surface below the target point. Uses a turn but deals no damage. Shows a cyan flash at both the origin and destination. The AI does not use this weapon.
+
+### Ninja Rope Details
+Fires a grappling hook in the aimed direction. When the hook hits terrain, it anchors and the worm swings on the rope like a pendulum. Controls while on rope:
+- **Up/Down arrows**: Shorten/lengthen the rope (30px min, 200px max)
+- **Click or Space**: Release the rope — the worm inherits the swing momentum
+- Auto-detaches after 5 seconds
+- Uses a turn but deals no damage. The AI does not use this weapon.
+- Visual: brown rope line between anchor and worm, grey anchor dot on terrain.
 
 ## Controls
 
@@ -37,7 +46,7 @@ Utility weapon that teleports the worm to the aimed position. The worm lands at 
 | Click / Space | Start aiming / Fire |
 | Mouse move | Adjust aim angle |
 | Scroll wheel | Adjust power (while aiming) / Zoom (while idle) |
-| 1-8 / Click weapon slot | Select weapon |
+| 1-9 / Click weapon slot | Select weapon |
 | Q / E | Cycle weapons |
 | Tab | Switch active worm |
 | Enter | Next turn (after firing) |
@@ -82,6 +91,7 @@ Worms are placed on the terrain floor via `getSurfaceY()`, which scans downward 
 ## Damage
 
 - Distance-based falloff: `damage × max(0, 1 - distance / (radius × 1.5))`
+- Knockback force: `falloff × 8` (directional) with `-4` upward bias
 - Worms have 100 HP
 - Health bar: 5px tall, outlined, color-coded: green (>50%) → yellow (25-50%) → red (<25%)
 - HP number displayed above worm name in white monospace text
@@ -100,6 +110,8 @@ Worms are placed on the terrain floor via `getSurfaceY()`, which scans downward 
 - Cancels all fall damage on landing
 - Auto-closes when the worm touches ground
 - Visual: white and red canopy rendered above the worm with suspension lines
+- Sound: whoosh on open, soft thud on landing
+- AI awareness: AI-controlled worms automatically deploy parachute when falling dangerously during post-explosion settling
 
 ## Camera
 
@@ -224,7 +236,7 @@ Selectable in Game Setup via the "AI LEVEL" row (visible only when VS CPU is ON)
 | Pick pool | Top 10 | Top 5 | Best only |
 | Movement | Yes (30 steps, 25% chance) | Yes (50 steps, 45% chance) | Yes (40 steps, 55% chance) |
 | Approach threshold | 500px | 400px | 350px |
-| Weapons | Bazooka, Grenade, Cluster Bomb | All (except Teleport) | All (except Teleport) |
+| Weapons | Bazooka, Grenade, Cluster Bomb | All (except Teleport, Ninja Rope) | All (except Teleport, Ninja Rope) |
 
 ### Miss Chance
 On Easy and Medium difficulties, a percentage of shots receive an additional random offset on top of normal jitter, simulating intentional inaccuracy. This prevents the AI from being too dominant while still making intelligent decisions about weapon choice and positioning.

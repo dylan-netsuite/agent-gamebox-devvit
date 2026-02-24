@@ -141,6 +141,35 @@ export class AimIndicator {
     this.graphics.strokePath();
   }
 
+  drawRopeAim(
+    originX: number,
+    originY: number,
+    angle: number,
+  ): void {
+    if (!this.visible) return;
+    this.graphics.clear();
+
+    const maxLen = 250;
+    const endX = originX + Math.cos(angle) * maxLen;
+    const endY = originY + Math.sin(angle) * maxLen;
+
+    this.graphics.lineStyle(1, 0x8b6914, 0.5);
+    this.graphics.beginPath();
+    this.graphics.moveTo(originX, originY);
+    this.graphics.lineTo(endX, endY);
+    this.graphics.strokePath();
+
+    this.graphics.fillStyle(0x8b6914, 0.7);
+    for (let d = 30; d < maxLen; d += 30) {
+      const dx = originX + Math.cos(angle) * d;
+      const dy = originY + Math.sin(angle) * d;
+      this.graphics.fillCircle(dx, dy, 1.5);
+    }
+
+    this.graphics.fillStyle(0x666666, 0.8);
+    this.graphics.fillCircle(endX, endY, 4);
+  }
+
   destroy(): void {
     this.graphics.destroy();
   }

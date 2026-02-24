@@ -8,7 +8,12 @@ type SoundId =
   | 'select'
   | 'jump'
   | 'death'
-  | 'tick';
+  | 'tick'
+  | 'parachute-open'
+  | 'parachute-land'
+  | 'rope-fire'
+  | 'rope-attach'
+  | 'rope-release';
 
 let audioCtx: AudioContext | null = null;
 let muted = false;
@@ -76,6 +81,21 @@ export const SoundManager = {
           break;
         case 'tick':
           this._tick();
+          break;
+        case 'parachute-open':
+          this._parachuteOpen();
+          break;
+        case 'parachute-land':
+          this._parachuteLand();
+          break;
+        case 'rope-fire':
+          this._ropeFire();
+          break;
+        case 'rope-attach':
+          this._ropeAttach();
+          break;
+        case 'rope-release':
+          this._ropeRelease();
           break;
       }
     } catch {
@@ -248,5 +268,83 @@ export const SoundManager = {
     osc.connect(g).connect(ac.destination);
     osc.start(t);
     osc.stop(t + 0.04);
+  },
+
+  _parachuteOpen() {
+    const ac = ctx();
+    const t = ac.currentTime;
+    const n = noise(ac, 0.35);
+    const f = ac.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.setValueAtTime(800, t);
+    f.frequency.exponentialRampToValueAtTime(2000, t + 0.2);
+    f.Q.setValueAtTime(1.5, t);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0, t);
+    g.gain.linearRampToValueAtTime(0.2, t + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.01, t + 0.35);
+    n.connect(f).connect(g).connect(ac.destination);
+    n.start(t);
+    n.stop(t + 0.35);
+  },
+
+  _parachuteLand() {
+    const ac = ctx();
+    const t = ac.currentTime;
+    const osc = ac.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(80, t);
+    osc.frequency.exponentialRampToValueAtTime(40, t + 0.12);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.25, t);
+    g.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+    osc.connect(g).connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 0.15);
+  },
+
+  _ropeFire() {
+    const ac = ctx();
+    const t = ac.currentTime;
+    const osc = ac.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(600, t);
+    osc.frequency.exponentialRampToValueAtTime(1200, t + 0.08);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.15, t);
+    g.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+    osc.connect(g).connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 0.1);
+  },
+
+  _ropeAttach() {
+    const ac = ctx();
+    const t = ac.currentTime;
+    const osc = ac.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(900, t);
+    osc.frequency.setValueAtTime(1100, t + 0.03);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.12, t);
+    g.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+    osc.connect(g).connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 0.08);
+  },
+
+  _ropeRelease() {
+    const ac = ctx();
+    const t = ac.currentTime;
+    const osc = ac.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(500, t);
+    osc.frequency.exponentialRampToValueAtTime(200, t + 0.1);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.12, t);
+    g.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+    osc.connect(g).connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 0.12);
   },
 };

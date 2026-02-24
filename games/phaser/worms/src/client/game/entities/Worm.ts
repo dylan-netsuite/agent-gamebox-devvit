@@ -44,6 +44,12 @@ export class Worm {
   private _parachuteOpen: boolean;
   private parachuteGraphics: Phaser.GameObjects.Graphics;
 
+  private _ropeAnchor: { x: number; y: number } | null = null;
+  private _ropeLength = 0;
+  private _ropeAngle = 0;
+  private _ropeAngularVel = 0;
+  private ropeGraphics: Phaser.GameObjects.Graphics;
+
   constructor(
     scene: Phaser.Scene,
     terrain: TerrainEngine,
@@ -102,6 +108,7 @@ export class Worm {
       .setDepth(25);
 
     this.parachuteGraphics = scene.add.graphics().setDepth(24);
+    this.ropeGraphics = scene.add.graphics().setDepth(24);
 
     this.draw();
   }
@@ -143,10 +150,53 @@ export class Worm {
   openParachute(): void {
     if (!this.alive || this.grounded) return;
     this._parachuteOpen = true;
+    SoundManager.play('parachute-open');
   }
 
   closeParachute(): void {
     this._parachuteOpen = false;
+  }
+
+  isFallingDangerously(): boolean {
+    return this.falling && !this._parachuteOpen && (this.y - this.fallStartY) > FALL_DAMAGE_THRESHOLD * 0.7;
+  }
+
+  get isOnRope(): boolean {
+    return this._ropeAnchor !== null;
+  }
+
+  attachRope(anchorX: number, anchorY: number): void {
+    if (!this.alive) return;
+    const dx = this.x - anchorX;
+    const dy = this.y - anchorY;
+    this._ropeLength = Math.sqrt(dx * dx + dy * dy);
+    this._ropeAngle = Math.atan2(dx, dy);
+    this._ropeAngularVel = 0;
+    this._ropeAnchor = { x: anchorX, y: anchorY };
+    this.falling = false;
+    this.grounded = false;
+    this.fallVelocity = 0;
+    this.horizontalVelocity = 0;
+    SoundManager.play('rope-attach');
+  }
+
+  detachRope(): void {
+    if (!this._ropeAnchor) return;
+    const tangentialSpeed = this._ropeAngularVel * this._ropeLength;
+    this.horizontalVelocity = Math.cos(this._ropeAngle) * tangentialSpeed;
+    this.fallVelocity = -Math.abs(Math.sin(this._ropeAngle) * tangentialSpeed) - 1;
+    this._ropeAnchor = null;
+    this._ropeLength = 0;
+    this._ropeAngularVel = 0;
+    this.falling = true;
+    this.grounded = false;
+    this.fallStartY = this.y;
+    SoundManager.play('rope-release');
+  }
+
+  adjustRopeLength(delta: number): void {
+    if (!this._ropeAnchor) return;
+    this._ropeLength = Math.max(30, Math.min(200, this._ropeLength + delta));
   }
 
   applyKnockback(forceX: number, forceY: number): void {
@@ -196,6 +246,26 @@ export class Worm {
 
   update(): void {
     if (!this.alive) return;
+
+    if (this._ropeAnchor) {
+      const ROPE_GRAVITY = 0.004;
+      this._ropeAngularVel += Math.sin(this._ropeAngle) * ROPE_GRAVITY;
+      this._ropeAngularVel *= 0.995;
+      this._ropeAngle += this._ropeAngularVel;
+
+      this.x = this._ropeAnchor.x + Math.sin(this._ropeAngle) * this._ropeLength;
+      this.y = this._ropeAnchor.y + Math.cos(this._ropeAngle) * this._ropeLength;
+
+      if (this.y > this.terrain.getHeight()) {
+        this._ropeAnchor = null;
+        this.alive = false;
+        this.health = 0;
+        this.playDeath();
+      }
+
+      this.draw();
+      return;
+    }
 
     if (this.falling) {
       if (this._parachuteOpen) {
@@ -249,7 +319,9 @@ export class Worm {
     this.horizontalVelocity = 0;
     this._parachuteOpen = false;
 
-    if (!hadParachute && fallDistance > FALL_DAMAGE_THRESHOLD) {
+    if (hadParachute) {
+      SoundManager.play('parachute-land');
+    } else if (fallDistance > FALL_DAMAGE_THRESHOLD) {
       const damage = Math.round((fallDistance - FALL_DAMAGE_THRESHOLD) * FALL_DAMAGE_PER_PIXEL);
       if (damage > 0) {
         this.takeDamage(damage);
@@ -295,10 +367,12 @@ export class Worm {
   private draw(): void {
     this.graphics.clear();
     this.parachuteGraphics.clear();
+    this.ropeGraphics.clear();
 
     if (!this.alive) {
       this.graphics.setVisible(false);
       this.parachuteGraphics.setVisible(false);
+      this.ropeGraphics.setVisible(false);
       this.nameText.setVisible(false);
       this.hpText.setVisible(false);
       return;
@@ -313,6 +387,10 @@ export class Worm {
 
     if (this._parachuteOpen) {
       this.drawParachute(this.x, drawY);
+    }
+
+    if (this._ropeAnchor) {
+      this.drawRope(this.x, drawY, this._ropeAnchor.x, this._ropeAnchor.y);
     }
 
     const barWidth = WORM_WIDTH + 10;
@@ -361,6 +439,18 @@ export class Worm {
     g.moveTo(cx + canopyW / 4, canopyTop + canopyH - 1);
     g.lineTo(cx, topY - 2);
     g.strokePath();
+  }
+
+  private drawRope(wormX: number, wormY: number, anchorX: number, anchorY: number): void {
+    const g = this.ropeGraphics;
+    g.lineStyle(2, 0x8b6914, 0.9);
+    g.beginPath();
+    g.moveTo(anchorX, anchorY);
+    g.lineTo(wormX, wormY);
+    g.strokePath();
+
+    g.fillStyle(0x666666, 1);
+    g.fillCircle(anchorX, anchorY, 3);
   }
 
   takeDamage(amount: number): void {
@@ -412,12 +502,13 @@ export class Worm {
     });
 
     this.scene.tweens.add({
-      targets: [this.graphics, this.parachuteGraphics, this.nameText, this.hpText],
+      targets: [this.graphics, this.parachuteGraphics, this.ropeGraphics, this.nameText, this.hpText],
       alpha: 0,
       duration: 400,
       onComplete: () => {
         this.graphics.setVisible(false);
         this.parachuteGraphics.setVisible(false);
+        this.ropeGraphics.setVisible(false);
         this.nameText.setVisible(false);
         this.hpText.setVisible(false);
       },
@@ -431,6 +522,7 @@ export class Worm {
   destroy(): void {
     this.graphics.destroy();
     this.parachuteGraphics.destroy();
+    this.ropeGraphics.destroy();
     this.nameText.destroy();
     this.hpText.destroy();
   }

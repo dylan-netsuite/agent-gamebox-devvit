@@ -1,5 +1,47 @@
 # Reddit Royale - Changelog
 
+## AI Parachute, Ninja Rope, Sounds & Knockback Tuning (v0.0.12.18)
+
+### Added — Ninja Rope Utility Weapon
+- **weapons.ts**: New weapon type `'ninja-rope'` with `firingMode: 'rope'`, weapon #9 in the order. Icon: 🪝
+- **ProjectileManager.ts**: `fireRope()` method fires a grappling hook that travels toward terrain. On hit, the hook anchors and the worm swings on a pendulum.
+- **Worm.ts**: `attachRope()` / `detachRope()` / `adjustRopeLength()` methods for rope physics. Pendulum simulation with gravity and angular damping. On detach, the worm inherits the tangential swing velocity for momentum-based traversal.
+- **WeaponSystem.ts**: Added `'rope'` case in `fire()` method.
+- **AimIndicator.ts**: `drawRopeAim()` method shows a rope-colored dotted line with anchor point preview.
+- **GamePlay.ts**: Rope controls — click/space to detach, up/down arrows to adjust rope length, 5-second auto-detach timeout.
+- AI does not use ninja rope (skipped like teleport).
+
+### Added — Parachute Sound Effects
+- **SoundManager.ts**: Two new sounds:
+  - `'parachute-open'`: Breathy bandpass-filtered noise whoosh (0.35s)
+  - `'parachute-land'`: Soft low-frequency sine thud (0.15s)
+- **Worm.ts**: `openParachute()` plays the whoosh, `onLand()` plays the thud when landing with parachute.
+
+### Added — Rope Sound Effects
+- **SoundManager.ts**: Three new sounds:
+  - `'rope-fire'`: Rising sawtooth tone (0.1s)
+  - `'rope-attach'`: Quick triangle ping (0.08s)
+  - `'rope-release'`: Descending sine tone (0.12s)
+
+### Added — AI Parachute Awareness
+- **GamePlay.ts**: During `settleWorms()`, AI-team worms that are falling dangerously (approaching fall damage threshold) automatically deploy their parachute.
+- **Worm.ts**: `isFallingDangerously()` method returns true when fall distance exceeds 70% of the damage threshold.
+
+### Changed — Knockback Tuning
+- **ExplosionEffect.ts**: Knockback force increased from `falloff * 6` to `falloff * 8` (33% stronger). Upward bias increased from `-3` to `-4`. Explosions now launch worms further, making positioning and parachute use more critical.
+
+### Files Changed
+- `src/shared/types/weapons.ts` — Added ninja-rope weapon type
+- `src/client/game/systems/SoundManager.ts` — 5 new procedural sounds
+- `src/client/game/entities/Worm.ts` — Rope state, dangerous fall check, sound integration
+- `src/client/game/systems/ProjectileManager.ts` — Rope firing and physics
+- `src/client/game/systems/WeaponSystem.ts` — Rope firing mode
+- `src/client/game/systems/ExplosionEffect.ts` — Knockback constants
+- `src/client/game/systems/AIController.ts` — Skip rope weapon
+- `src/client/game/scenes/GamePlay.ts` — AI parachute, rope controls, rope timeout
+- `src/client/game/ui/AimIndicator.ts` — Rope aim display
+- `src/client/game/ui/HUD.ts` — Updated instruction text
+
 ## Parachute, Reduced Fall Damage & Initial-Aiming Fix (v0.0.12.11)
 
 ### Added — Parachute Utility

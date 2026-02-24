@@ -19,6 +19,17 @@ interface Projectile {
   active: boolean;
 }
 
+interface RopeProjectile {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  worm: Worm;
+  graphics: Phaser.GameObjects.Graphics;
+  active: boolean;
+  attached: boolean;
+}
+
 /**
  * Manages active projectiles: physics updates, terrain collision,
  * bounce logic, fuse timers, and triggering explosions on impact.
@@ -30,6 +41,7 @@ export class ProjectileManager {
   private explosions: ExplosionEffect;
   private worms: Worm[];
   private projectiles: Projectile[] = [];
+  private ropeProjectiles: RopeProjectile[] = [];
   private onAllResolved: (() => void) | null = null;
 
   constructor(
@@ -51,7 +63,7 @@ export class ProjectileManager {
   }
 
   get hasActive(): boolean {
-    return this.projectiles.some((p) => p.active);
+    return this.projectiles.some((p) => p.active) || this.ropeProjectiles.some((r) => r.active && !r.attached);
   }
 
   onResolved(cb: () => void): void {
@@ -208,6 +220,23 @@ export class ProjectileManager {
     }
   }
 
+  fireRope(x: number, y: number, angle: number, worm: Worm): void {
+    const speed = 12;
+    const gfx = this.scene.add.graphics().setDepth(42);
+    SoundManager.play('rope-fire');
+
+    this.ropeProjectiles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      worm,
+      graphics: gfx,
+      active: true,
+      attached: false,
+    });
+  }
+
   update(): void {
     let anyActive = false;
 
@@ -277,9 +306,41 @@ export class ProjectileManager {
       this.drawProjectile(p);
     }
 
+    for (const r of this.ropeProjectiles) {
+      if (!r.active || r.attached) continue;
+      anyActive = true;
+
+      r.x += r.vx;
+      r.y += r.vy;
+      r.vy += 0.05;
+
+      if (r.x < -50 || r.x > this.terrain.getWidth() + 50 || r.y > this.terrain.getHeight() + 50) {
+        r.active = false;
+        r.graphics.destroy();
+        continue;
+      }
+
+      if (r.y >= 0 && this.terrain.isSolid(r.x, r.y)) {
+        while (r.y > 0 && this.terrain.isSolid(r.x, r.y)) r.y -= 1;
+        r.attached = true;
+        r.worm.attachRope(r.x, r.y);
+        continue;
+      }
+
+      r.graphics.clear();
+      r.graphics.fillStyle(0x666666, 1);
+      r.graphics.fillCircle(r.x, r.y, 3);
+      r.graphics.lineStyle(1, 0x8b6914, 0.6);
+      r.graphics.beginPath();
+      r.graphics.moveTo(r.worm.x, r.worm.y);
+      r.graphics.lineTo(r.x, r.y);
+      r.graphics.strokePath();
+    }
+
+    const activeRopeFlying = this.ropeProjectiles.some((r) => r.active && !r.attached);
     if (!anyActive && this.projectiles.length > 0) {
       this.projectiles = this.projectiles.filter((p) => p.active);
-      if (this.projectiles.length === 0 && this.onAllResolved) {
+      if (this.projectiles.length === 0 && !activeRopeFlying && this.onAllResolved) {
         this.onAllResolved();
       }
     }
@@ -402,11 +463,19 @@ export class ProjectileManager {
     });
   }
 
+  cleanupRopes(): void {
+    for (const r of this.ropeProjectiles) {
+      r.graphics.destroy();
+    }
+    this.ropeProjectiles = [];
+  }
+
   destroy(): void {
     for (const p of this.projectiles) {
       p.graphics.destroy();
       p.trail.destroy();
     }
     this.projectiles = [];
+    this.cleanupRopes();
   }
 }

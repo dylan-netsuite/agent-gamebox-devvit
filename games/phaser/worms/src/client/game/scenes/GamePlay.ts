@@ -65,6 +65,7 @@ export class GamePlay extends Scene {
   private userPanning = false;
   private panReturnTimer: Phaser.Time.TimerEvent | null = null;
   private wasDragging = false;
+  private ropeAttachTime = 0;
 
   // Multiplayer state
   private mp: MultiplayerManager | null = null;
@@ -602,6 +603,9 @@ export class GamePlay extends Scene {
       settling = false;
       for (const w of this.worms) {
         if (w.alive) {
+          if (this.aiController?.isAITeam(w.team) && w.isFallingDangerously() && !w.parachuteOpen) {
+            w.openParachute();
+          }
           w.update();
           if (!w.isGrounded) settling = true;
         }
@@ -835,11 +839,17 @@ export class GamePlay extends Scene {
 
     this.input.keyboard.on('keydown-SPACE', () => {
       if (!this.canAct()) return;
+      const worm = this.activeWorm;
+      if (worm?.isOnRope) {
+        worm.detachRope();
+        this.projectileManager.cleanupRopes();
+        this.weaponSystem.forceResolve();
+        return;
+      }
       const state = this.weaponSystem.currentState;
       if (state === 'idle') {
         this.weaponSystem.startAiming();
       } else if (state === 'aiming') {
-        const worm = this.activeWorm;
         if (worm) {
           this.broadcastFire(worm);
           this.weaponSystem.fire(worm);
@@ -895,11 +905,18 @@ export class GamePlay extends Scene {
         return;
       }
 
+      const worm = this.activeWorm;
+      if (worm?.isOnRope) {
+        worm.detachRope();
+        this.projectileManager.cleanupRopes();
+        this.weaponSystem.forceResolve();
+        return;
+      }
+
       const state = this.weaponSystem.currentState;
       if (state === 'idle') {
         this.weaponSystem.startAiming();
       } else if (state === 'aiming') {
-        const worm = this.activeWorm;
         if (worm) {
           this.broadcastFire(worm);
           this.weaponSystem.fire(worm);
@@ -1145,22 +1162,43 @@ export class GamePlay extends Scene {
     const worm = this.activeWorm;
     if (!worm) return;
 
-    if (this.canAct() && this.weaponSystem.currentState === 'idle' && this.cursors) {
-      if (this.cursors.left.isDown) {
-        worm.moveLeft();
-        this.userPanning = false;
-        this.broadcastMove();
-      } else if (this.cursors.right.isDown) {
-        worm.moveRight();
-        this.userPanning = false;
-        this.broadcastMove();
-      }
+    if (this.canAct() && this.cursors) {
+      if (worm.isOnRope) {
+        if (this.cursors.up.isDown) {
+          worm.adjustRopeLength(-2);
+        } else if (this.cursors.down.isDown) {
+          worm.adjustRopeLength(2);
+        }
+      } else if (this.weaponSystem.currentState === 'idle') {
+        if (this.cursors.left.isDown) {
+          worm.moveLeft();
+          this.userPanning = false;
+          this.broadcastMove();
+        } else if (this.cursors.right.isDown) {
+          worm.moveRight();
+          this.userPanning = false;
+          this.broadcastMove();
+        }
 
-      if (this.cursors.up.isDown) {
-        this.weaponSystem.adjustAngle(-0.03);
-      } else if (this.cursors.down.isDown) {
-        this.weaponSystem.adjustAngle(0.03);
+        if (this.cursors.up.isDown) {
+          this.weaponSystem.adjustAngle(-0.03);
+        } else if (this.cursors.down.isDown) {
+          this.weaponSystem.adjustAngle(0.03);
+        }
       }
+    }
+
+    if (worm.isOnRope) {
+      if (this.ropeAttachTime === 0) {
+        this.ropeAttachTime = this.time.now;
+      } else if (this.time.now - this.ropeAttachTime > 5000) {
+        worm.detachRope();
+        this.projectileManager.cleanupRopes();
+        this.weaponSystem.forceResolve();
+        this.ropeAttachTime = 0;
+      }
+    } else {
+      this.ropeAttachTime = 0;
     }
 
     if (this.weaponSystem.currentState === 'aiming' && worm) {

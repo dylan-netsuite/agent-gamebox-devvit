@@ -160,6 +160,10 @@ export class WeaponSystem {
           this.setState('resolved');
         }
         break;
+
+      case 'rope':
+        this.projectiles.fireRope(center.x, center.y, this.aimAngle, worm);
+        break;
     }
   }
 
@@ -172,6 +176,8 @@ export class WeaponSystem {
       this.aimIndicator.drawTeleportAim(center.x, center.y, this.aimAngle, this.power);
     } else if (weapon.firingMode === 'hitscan') {
       this.aimIndicator.drawHitscanAim(center.x, center.y, this.aimAngle);
+    } else if (weapon.firingMode === 'rope') {
+      this.aimIndicator.drawRopeAim(center.x, center.y, this.aimAngle);
     } else {
       this.aimIndicator.drawAim(
         center.x,

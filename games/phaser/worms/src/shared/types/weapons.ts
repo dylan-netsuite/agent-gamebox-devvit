@@ -6,9 +6,10 @@ export type WeaponType =
   | 'airstrike'
   | 'cluster-bomb'
   | 'sniper'
-  | 'teleport';
+  | 'teleport'
+  | 'ninja-rope';
 
-export type FiringMode = 'projectile' | 'hitscan' | 'placed' | 'targeted' | 'teleport';
+export type FiringMode = 'projectile' | 'hitscan' | 'placed' | 'targeted' | 'teleport' | 'rope';
 
 export interface WeaponDef {
   id: WeaponType;
@@ -164,6 +165,22 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
     bounceFriction: 0,
     icon: '⚡',
   },
+  'ninja-rope': {
+    id: 'ninja-rope',
+    name: 'Ninja Rope',
+    blastRadius: 0,
+    damage: 0,
+    affectedByWind: false,
+    fuse: 0,
+    bounces: false,
+    description: 'Fire a grappling hook to swing across the map',
+    firingMode: 'rope',
+    projectileSpeed: 12,
+    projectileGravity: 0,
+    shotCount: 0,
+    bounceFriction: 0,
+    icon: '🪝',
+  },
 };
 
 export const WEAPON_ORDER: WeaponType[] = [
@@ -175,4 +192,5 @@ export const WEAPON_ORDER: WeaponType[] = [
   'cluster-bomb',
   'sniper',
   'teleport',
+  'ninja-rope',
 ];
