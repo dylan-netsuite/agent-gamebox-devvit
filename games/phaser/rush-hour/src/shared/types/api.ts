@@ -1,6 +1,6 @@
 export type Orientation = 'h' | 'v';
 export type VehicleType = 'car' | 'truck';
-export type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert';
+export type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert' | 'grandmaster';
 
 export interface Vehicle {
   id: string;

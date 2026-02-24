@@ -1,6 +1,13 @@
 /**
- * Generates valid, BFS-verified Rush Hour puzzles with output ready for puzzles.ts.
- * Run: cd games/phaser/rush-hour && npx tsx tools/gen.ts
+ * Simulated Annealing puzzle generator for Rush Hour.
+ *
+ * Instead of randomly placing vehicles and hoping for a hard puzzle,
+ * this uses simulated annealing to iteratively mutate a board configuration
+ * and maximize the BFS move count.
+ *
+ * Run: cd games/phaser/rush-hour && npx tsx tools/gen.ts [targetMoves] [iterations]
+ *
+ * Example: npx tsx tools/gen.ts 30 10000
  */
 
 const GRID_SIZE = 6;
@@ -8,13 +15,27 @@ const EXIT_ROW = 2;
 
 type O = 'h' | 'v';
 type T = 'car' | 'truck';
-interface V { id: string; type: T; orientation: O; row: number; col: number; isTarget: boolean; }
+
+interface V {
+  id: string;
+  type: T;
+  orientation: O;
+  row: number;
+  col: number;
+  isTarget: boolean;
+}
+
+const COLORS = [
+  '#e63946', '#457b9d', '#2a9d8f', '#e9c46a', '#f4a261',
+  '#6a4c93', '#48bfe3', '#06d6a0', '#ef476f', '#ffd166',
+  '#118ab2', '#073b4c', '#8338ec', '#ff006e', '#fb5607', '#3a86ff',
+];
 
 function encodeState(p: { row: number; col: number }[]): string {
   return p.map(x => `${x.row},${x.col}`).join('|');
 }
 
-function solveBFS(vehicles: V[], maxDepth = 300): number {
+function solveBFS(vehicles: V[], maxDepth = 200): number {
   const init = vehicles.map(v => ({ row: v.row, col: v.col }));
   const won = (pos: { row: number; col: number }[]) => {
     for (let i = 0; i < vehicles.length; i++)
@@ -89,6 +110,19 @@ function solveBFS(vehicles: V[], maxDepth = 300): number {
   return -1;
 }
 
+function buildGrid(vehicles: V[]): boolean[][] {
+  const grid: boolean[][] = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false) as boolean[]);
+  for (const v of vehicles) {
+    const len = v.type === 'truck' ? 3 : 2;
+    for (let j = 0; j < len; j++) {
+      const r = v.orientation === 'v' ? v.row + j : v.row;
+      const c = v.orientation === 'h' ? v.col + j : v.col;
+      if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) grid[r]![c] = true;
+    }
+  }
+  return grid;
+}
+
 function canPlace(grid: boolean[][], type: T, orientation: O, row: number, col: number): boolean {
   const len = type === 'truck' ? 3 : 2;
   for (let j = 0; j < len; j++) {
@@ -100,7 +134,7 @@ function canPlace(grid: boolean[][], type: T, orientation: O, row: number, col: 
   return true;
 }
 
-function place(grid: boolean[][], type: T, orientation: O, row: number, col: number): void {
+function placeOnGrid(grid: boolean[][], type: T, orientation: O, row: number, col: number): void {
   const len = type === 'truck' ? 3 : 2;
   for (let j = 0; j < len; j++) {
     const r = orientation === 'v' ? row + j : row;
@@ -109,128 +143,223 @@ function place(grid: boolean[][], type: T, orientation: O, row: number, col: num
   }
 }
 
-function genPuzzle(targetMin: number, targetMax: number, numVeh: number, maxAttempts: number): { vehicles: V[]; minMoves: number } | null {
-  for (let a = 0; a < maxAttempts; a++) {
-    const grid: boolean[][] = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false) as boolean[]);
-    const tc = Math.floor(Math.random() * 3); // target col 0, 1, or 2
-    const target: V = { id: 'X', type: 'car', orientation: 'h', row: EXIT_ROW, col: tc, isTarget: true };
-    place(grid, 'car', 'h', EXIT_ROW, tc);
-    const vehs: V[] = [target];
+function removeFromGrid(grid: boolean[][], type: T, orientation: O, row: number, col: number): void {
+  const len = type === 'truck' ? 3 : 2;
+  for (let j = 0; j < len; j++) {
+    const r = orientation === 'v' ? row + j : row;
+    const c = orientation === 'h' ? col + j : col;
+    grid[r]![c] = false;
+  }
+}
 
-    for (let v = 0; v < numVeh - 1; v++) {
-      let placed = false;
-      for (let t = 0; t < 100; t++) {
-        const type: T = Math.random() < 0.2 ? 'truck' : 'car';
-        const orientation: O = Math.random() < 0.5 ? 'h' : 'v';
-        const maxR = orientation === 'v' ? GRID_SIZE - (type === 'truck' ? 3 : 2) : GRID_SIZE - 1;
-        const maxC = orientation === 'h' ? GRID_SIZE - (type === 'truck' ? 3 : 2) : GRID_SIZE - 1;
-        const r = Math.floor(Math.random() * (maxR + 1));
+function randomSeed(numVehicles: number): V[] {
+  const grid: boolean[][] = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false) as boolean[]);
+  const tc = Math.floor(Math.random() * 3);
+  const target: V = { id: 'X', type: 'car', orientation: 'h', row: EXIT_ROW, col: tc, isTarget: true };
+  placeOnGrid(grid, 'car', 'h', EXIT_ROW, tc);
+  const vehs: V[] = [target];
+
+  for (let v = 0; v < numVehicles - 1; v++) {
+    let placed = false;
+    for (let t = 0; t < 200; t++) {
+      const type: T = Math.random() < 0.25 ? 'truck' : 'car';
+      const orientation: O = Math.random() < 0.5 ? 'h' : 'v';
+      // No horizontal vehicles on the exit row (row 2) other than target
+      if (orientation === 'h') {
+        const maxC = GRID_SIZE - (type === 'truck' ? 3 : 2);
+        const r = (() => { let rr; do { rr = Math.floor(Math.random() * GRID_SIZE); } while (rr === EXIT_ROW); return rr; })();
         const c = Math.floor(Math.random() * (maxC + 1));
         if (canPlace(grid, type, orientation, r, c)) {
           vehs.push({ id: String.fromCharCode(65 + v), type, orientation, row: r, col: c, isTarget: false });
-          place(grid, type, orientation, r, c);
+          placeOnGrid(grid, type, orientation, r, c);
+          placed = true;
+          break;
+        }
+      } else {
+        const maxR = GRID_SIZE - (type === 'truck' ? 3 : 2);
+        const r = Math.floor(Math.random() * (maxR + 1));
+        const c = Math.floor(Math.random() * GRID_SIZE);
+        if (canPlace(grid, type, orientation, r, c)) {
+          vehs.push({ id: String.fromCharCode(65 + v), type, orientation, row: r, col: c, isTarget: false });
+          placeOnGrid(grid, type, orientation, r, c);
           placed = true;
           break;
         }
       }
-      if (!placed) break;
     }
-    if (vehs.length < numVeh) continue;
-
-    const mm = solveBFS(vehs);
-    if (mm >= targetMin && mm <= targetMax) {
-      return { vehicles: vehs, minMoves: mm };
-    }
+    if (!placed) break;
   }
-  return null;
+  return vehs;
 }
 
-const COLORS = [
-  '#e63946', '#457b9d', '#2a9d8f', '#e9c46a', '#f4a261',
-  '#6a4c93', '#48bfe3', '#06d6a0', '#ef476f', '#ffd166',
-  '#118ab2', '#073b4c', '#8338ec', '#ff006e', '#fb5607', '#3a86ff',
-];
+function cloneVehicles(vehicles: V[]): V[] {
+  return vehicles.map(v => ({ ...v }));
+}
 
-interface Spec { id: string; name: string; difficulty: string; targetMin: number; targetMax: number; numVeh: number; }
+/**
+ * Mutate the board by applying one random change:
+ * 1. Slide a random non-target vehicle by 1 cell
+ * 2. Remove a non-target vehicle and place a new one randomly
+ * 3. Change a non-target vehicle's type (car <-> truck)
+ */
+function mutate(vehicles: V[]): V[] | null {
+  const result = cloneVehicles(vehicles);
+  const nonTarget = result.filter(v => !v.isTarget);
+  if (nonTarget.length === 0) return null;
 
-const specs: Spec[] = [
-  { id: 'b01', name: 'First Steps', difficulty: 'beginner', targetMin: 1, targetMax: 1, numVeh: 1 },
-  { id: 'b02', name: 'One Blocker', difficulty: 'beginner', targetMin: 2, targetMax: 2, numVeh: 3 },
-  { id: 'b03', name: 'Side Step', difficulty: 'beginner', targetMin: 2, targetMax: 3, numVeh: 4 },
-  { id: 'b04', name: 'Tight Squeeze', difficulty: 'beginner', targetMin: 3, targetMax: 4, numVeh: 4 },
-  { id: 'b05', name: 'Two Way', difficulty: 'beginner', targetMin: 3, targetMax: 5, numVeh: 5 },
-  { id: 'b06', name: 'Clear Path', difficulty: 'beginner', targetMin: 4, targetMax: 5, numVeh: 5 },
-  { id: 'b07', name: 'Detour', difficulty: 'beginner', targetMin: 4, targetMax: 6, numVeh: 5 },
-  { id: 'b08', name: 'Shuffle', difficulty: 'beginner', targetMin: 5, targetMax: 7, numVeh: 6 },
-  { id: 'b09', name: 'Warm Up', difficulty: 'beginner', targetMin: 5, targetMax: 7, numVeh: 6 },
-  { id: 'b10', name: 'Getting Started', difficulty: 'beginner', targetMin: 6, targetMax: 8, numVeh: 7 },
+  const mutation = Math.random();
 
-  { id: 'i01', name: 'Crossroads', difficulty: 'intermediate', targetMin: 7, targetMax: 10, numVeh: 7 },
-  { id: 'i02', name: 'Traffic Jam', difficulty: 'intermediate', targetMin: 8, targetMax: 11, numVeh: 8 },
-  { id: 'i03', name: 'Gridlock', difficulty: 'intermediate', targetMin: 9, targetMax: 12, numVeh: 8 },
-  { id: 'i04', name: 'Bottleneck', difficulty: 'intermediate', targetMin: 10, targetMax: 13, numVeh: 9 },
-  { id: 'i05', name: 'Maze Runner', difficulty: 'intermediate', targetMin: 11, targetMax: 14, numVeh: 9 },
-  { id: 'i06', name: 'Rush Hour', difficulty: 'intermediate', targetMin: 12, targetMax: 15, numVeh: 9 },
-  { id: 'i07', name: 'Congestion', difficulty: 'intermediate', targetMin: 13, targetMax: 16, numVeh: 10 },
-  { id: 'i08', name: 'Intersection', difficulty: 'intermediate', targetMin: 14, targetMax: 17, numVeh: 10 },
-  { id: 'i09', name: 'Bumper to Bumper', difficulty: 'intermediate', targetMin: 15, targetMax: 18, numVeh: 10 },
-  { id: 'i10', name: 'Pile Up', difficulty: 'intermediate', targetMin: 16, targetMax: 20, numVeh: 11 },
+  if (mutation < 0.5) {
+    // Slide a random vehicle by 1 cell
+    const veh = nonTarget[Math.floor(Math.random() * nonTarget.length)]!;
+    const grid = buildGrid(result);
+    removeFromGrid(grid, veh.type, veh.orientation, veh.row, veh.col);
 
-  { id: 'a01', name: 'Lockdown', difficulty: 'advanced', targetMin: 17, targetMax: 22, numVeh: 11 },
-  { id: 'a02', name: 'Deadlock', difficulty: 'advanced', targetMin: 18, targetMax: 24, numVeh: 12 },
-  { id: 'a03', name: 'Snarl', difficulty: 'advanced', targetMin: 19, targetMax: 26, numVeh: 12 },
-  { id: 'a04', name: 'Standstill', difficulty: 'advanced', targetMin: 20, targetMax: 28, numVeh: 12 },
-  { id: 'a05', name: 'Impasse', difficulty: 'advanced', targetMin: 21, targetMax: 30, numVeh: 12 },
-  { id: 'a06', name: 'Quagmire', difficulty: 'advanced', targetMin: 22, targetMax: 32, numVeh: 13 },
-  { id: 'a07', name: 'Entangled', difficulty: 'advanced', targetMin: 23, targetMax: 34, numVeh: 13 },
-  { id: 'a08', name: 'Stalemate', difficulty: 'advanced', targetMin: 24, targetMax: 35, numVeh: 13 },
-  { id: 'a09', name: 'Labyrinth', difficulty: 'advanced', targetMin: 25, targetMax: 36, numVeh: 13 },
-  { id: 'a10', name: 'Conundrum', difficulty: 'advanced', targetMin: 26, targetMax: 38, numVeh: 13 },
+    const deltas = veh.orientation === 'h' ? [{ dr: 0, dc: -1 }, { dr: 0, dc: 1 }] : [{ dr: -1, dc: 0 }, { dr: 1, dc: 0 }];
+    const shuffled = deltas.sort(() => Math.random() - 0.5);
 
-  { id: 'e01', name: 'Nightmare', difficulty: 'expert', targetMin: 27, targetMax: 40, numVeh: 13 },
-  { id: 'e02', name: 'Impossible', difficulty: 'expert', targetMin: 28, targetMax: 42, numVeh: 13 },
-  { id: 'e03', name: 'Chaos', difficulty: 'expert', targetMin: 29, targetMax: 44, numVeh: 13 },
-  { id: 'e04', name: 'Inferno', difficulty: 'expert', targetMin: 30, targetMax: 46, numVeh: 13 },
-  { id: 'e05', name: 'Armageddon', difficulty: 'expert', targetMin: 31, targetMax: 48, numVeh: 13 },
-  { id: 'e06', name: 'Catastrophe', difficulty: 'expert', targetMin: 32, targetMax: 50, numVeh: 13 },
-  { id: 'e07', name: 'Apocalypse', difficulty: 'expert', targetMin: 33, targetMax: 52, numVeh: 13 },
-  { id: 'e08', name: 'Oblivion', difficulty: 'expert', targetMin: 34, targetMax: 54, numVeh: 13 },
-  { id: 'e09', name: 'Cataclysm', difficulty: 'expert', targetMin: 35, targetMax: 56, numVeh: 13 },
-  { id: 'e10', name: 'Grand Master', difficulty: 'expert', targetMin: 36, targetMax: 60, numVeh: 13 },
-];
-
-const results: { id: string; name: string; difficulty: string; minMoves: number; vehicles: V[] }[] = [];
-
-for (const spec of specs) {
-  process.stdout.write(`${spec.id} "${spec.name}" (${spec.targetMin}-${spec.targetMax} moves, ${spec.numVeh} veh)... `);
-  let result = genPuzzle(spec.targetMin, spec.targetMax, spec.numVeh, 50000);
-
-  if (!result) {
-    // Try with fewer vehicles
-    for (let fewer = 1; fewer <= 4; fewer++) {
-      result = genPuzzle(Math.max(1, spec.targetMin - 3), spec.targetMax, Math.max(2, spec.numVeh - fewer), 50000);
-      if (result) break;
+    for (const { dr, dc } of shuffled) {
+      const nr = veh.row + dr;
+      const nc = veh.col + dc;
+      if (canPlace(grid, veh.type, veh.orientation, nr, nc)) {
+        veh.row = nr;
+        veh.col = nc;
+        return result;
+      }
     }
-  }
+    return null;
+  } else if (mutation < 0.8) {
+    // Remove a vehicle and place a new one randomly
+    const idx = result.indexOf(nonTarget[Math.floor(Math.random() * nonTarget.length)]!);
+    result.splice(idx, 1);
 
-  if (result) {
-    console.log(`✓ ${result.minMoves} moves, ${result.vehicles.length} veh`);
-    results.push({ id: spec.id, name: spec.name, difficulty: spec.difficulty, minMoves: result.minMoves, vehicles: result.vehicles });
+    const grid = buildGrid(result);
+    for (let t = 0; t < 100; t++) {
+      const type: T = Math.random() < 0.25 ? 'truck' : 'car';
+      const orientation: O = Math.random() < 0.5 ? 'h' : 'v';
+      let r: number, c: number;
+      if (orientation === 'h') {
+        do { r = Math.floor(Math.random() * GRID_SIZE); } while (r === EXIT_ROW);
+        c = Math.floor(Math.random() * (GRID_SIZE - (type === 'truck' ? 3 : 2) + 1));
+      } else {
+        r = Math.floor(Math.random() * (GRID_SIZE - (type === 'truck' ? 3 : 2) + 1));
+        c = Math.floor(Math.random() * GRID_SIZE);
+      }
+      if (canPlace(grid, type, orientation, r, c)) {
+        result.push({ id: String.fromCharCode(65 + result.length), type, orientation, row: r, col: c, isTarget: false });
+        return result;
+      }
+    }
+    return null;
   } else {
-    console.log(`✗ FAILED`);
+    // Toggle car <-> truck for a random vehicle
+    const veh = nonTarget[Math.floor(Math.random() * nonTarget.length)]!;
+    const grid = buildGrid(result);
+    removeFromGrid(grid, veh.type, veh.orientation, veh.row, veh.col);
+
+    const newType: T = veh.type === 'car' ? 'truck' : 'car';
+    if (canPlace(grid, newType, veh.orientation, veh.row, veh.col)) {
+      veh.type = newType;
+      return result;
+    }
+    return null;
   }
 }
+
+function anneal(targetMoves: number, iterations: number, numVehicles: number): { vehicles: V[]; moves: number } {
+  let best = randomSeed(numVehicles);
+  let bestMoves = solveBFS(best);
+  if (bestMoves === -1) bestMoves = 0;
+
+  let current = cloneVehicles(best);
+  let currentMoves = bestMoves;
+
+  const T_INITIAL = 10.0;
+  const T_MIN = 0.01;
+  const coolingRate = Math.pow(T_MIN / T_INITIAL, 1 / iterations);
+
+  let temperature = T_INITIAL;
+  let stagnant = 0;
+
+  for (let i = 0; i < iterations; i++) {
+    const candidate = mutate(current);
+    if (!candidate) {
+      temperature *= coolingRate;
+      continue;
+    }
+
+    const candidateMoves = solveBFS(candidate);
+    if (candidateMoves === -1) {
+      temperature *= coolingRate;
+      continue;
+    }
+
+    const delta = candidateMoves - currentMoves;
+
+    if (delta > 0 || Math.random() < Math.exp(delta / temperature)) {
+      current = candidate;
+      currentMoves = candidateMoves;
+
+      if (currentMoves > bestMoves) {
+        best = cloneVehicles(current);
+        bestMoves = currentMoves;
+        stagnant = 0;
+        process.stdout.write(`\r  [${i}/${iterations}] Best: ${bestMoves} moves (target: ${targetMoves})  `);
+      }
+    }
+
+    temperature *= coolingRate;
+    stagnant++;
+
+    // Restart from a new random seed if stuck for too long
+    if (stagnant > iterations / 5) {
+      current = randomSeed(numVehicles);
+      currentMoves = solveBFS(current);
+      if (currentMoves === -1) currentMoves = 0;
+      stagnant = 0;
+      temperature = T_INITIAL * 0.5;
+    }
+
+    if (bestMoves >= targetMoves) break;
+  }
+
+  return { vehicles: best, moves: bestMoves };
+}
+
+// --- Main ---
+
+const targetMoves = parseInt(process.argv[2] ?? '25', 10);
+const iterations = parseInt(process.argv[3] ?? '5000', 10);
+const numVehicles = parseInt(process.argv[4] ?? '12', 10);
+const runs = parseInt(process.argv[5] ?? '5', 10);
+
+console.log(`Simulated Annealing Rush Hour Generator`);
+console.log(`Target: ${targetMoves} moves, ${iterations} iterations/run, ${numVehicles} vehicles, ${runs} runs\n`);
+
+let globalBest: { vehicles: V[]; moves: number } = { vehicles: [], moves: 0 };
+
+for (let r = 0; r < runs; r++) {
+  console.log(`Run ${r + 1}/${runs}:`);
+  const result = anneal(targetMoves, iterations, numVehicles);
+  console.log(`\n  Result: ${result.moves} moves, ${result.vehicles.length} vehicles`);
+
+  if (result.moves > globalBest.moves) {
+    globalBest = result;
+  }
+
+  if (globalBest.moves >= targetMoves) break;
+}
+
+console.log(`\nBest overall: ${globalBest.moves} moves, ${globalBest.vehicles.length} vehicles\n`);
 
 // Output TypeScript
-console.log('\n// ---- Generated Puzzles ----\n');
-for (const p of results) {
-  console.log(`  {`);
-  console.log(`    id: '${p.id}', name: '${p.name}', difficulty: '${p.difficulty}', minMoves: ${p.minMoves},`);
-  console.log(`    vehicles: [`);
-  for (const v of p.vehicles) {
-    const ci = v.isTarget ? 0 : COLORS.indexOf(v.isTarget ? COLORS[0]! : '') === -1 ? 0 : 0;
-    console.log(`      v('${v.id}', '${v.type}', '${v.orientation}', ${v.row}, ${v.col}, VEHICLE_COLORS[${v.isTarget ? 0 : (COLORS.indexOf(v.isTarget ? '' : '') + 1) || (p.vehicles.indexOf(v))}]!${v.isTarget ? ', true' : ''}),`);
-  }
-  console.log(`    ],`);
-  console.log(`  },`);
+let colorIdx = 1;
+console.log(`  {`);
+console.log(`    id: 'gen01', name: 'Generated', difficulty: 'TODO', minMoves: ${globalBest.moves},`);
+console.log(`    vehicles: [`);
+for (const v of globalBest.vehicles) {
+  const ci = v.isTarget ? 0 : colorIdx++ % COLORS.length;
+  console.log(`      v('${v.id}', '${v.type}', '${v.orientation}', ${v.row}, ${v.col}, VEHICLE_COLORS[${ci}]!${v.isTarget ? ', true' : ''}),`);
 }
+console.log(`    ],`);
+console.log(`  },`);

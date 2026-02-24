@@ -10,13 +10,15 @@ const DIFFICULTY_COLORS: Record<Difficulty, number> = {
   intermediate: 0x457b9d,
   advanced: 0xe9c46a,
   expert: 0xe63946,
+  grandmaster: 0x8b0000,
 };
 
 const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   beginner: 'BEGINNER',
-  intermediate: 'INTERMEDIATE',
+  intermediate: 'INTER.',
   advanced: 'ADVANCED',
   expert: 'EXPERT',
+  grandmaster: 'G.MASTER',
 };
 
 export class PuzzleSelect extends Scene {
@@ -196,8 +198,8 @@ export class PuzzleSelect extends Scene {
     this.allObjects.push(title);
 
     const tabY = Math.max(50, 70 * sf);
-    const difficulties: Difficulty[] = ['beginner', 'intermediate', 'advanced', 'expert'];
-    const tabW = Math.min((width - 40) / 4, 120);
+    const difficulties: Difficulty[] = ['beginner', 'intermediate', 'advanced', 'expert', 'grandmaster'];
+    const tabW = Math.min((width - 40) / difficulties.length, 120);
     const tabH = Math.max(24, 32 * sf);
 
     for (let i = 0; i < difficulties.length; i++) {

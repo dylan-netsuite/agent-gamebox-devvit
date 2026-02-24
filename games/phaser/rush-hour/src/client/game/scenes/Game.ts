@@ -171,7 +171,7 @@ export class Game extends Scene {
       .setOrigin(0.5);
     this.allObjects.push(title);
 
-    const diffColor = { beginner: '#2a9d8f', intermediate: '#457b9d', advanced: '#e9c46a', expert: '#e63946' };
+    const diffColor: Record<string, string> = { beginner: '#2a9d8f', intermediate: '#457b9d', advanced: '#e9c46a', expert: '#e63946', grandmaster: '#8b0000' };
     const sub = this.add
       .text(width / 2, headerH * 0.65, `${this.puzzle.difficulty.toUpperCase()}  •  Min: ${this.puzzle.minMoves} moves`, {
         fontFamily: 'Arial',

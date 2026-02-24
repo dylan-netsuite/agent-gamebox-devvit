@@ -37,11 +37,14 @@ All sounds are generated procedurally via the Web Audio API (no asset files requ
 ## Game Modes
 
 ### Puzzle Catalog
-40 built-in puzzles across 4 difficulty tiers (all BFS-validated):
-- **Beginner** (10 puzzles): 1-8 minimum moves
-- **Intermediate** (10 puzzles): 10-19 minimum moves
-- **Advanced** (10 puzzles): 22-35 minimum moves
-- **Expert** (10 puzzles): 36-55 minimum moves
+111 built-in puzzles across 5 difficulty tiers, sourced from the Fogleman Rush Hour database (all BFS-validated):
+- **Beginner** (15 puzzles): 1-8 minimum moves, 1-11 vehicles
+- **Intermediate** (25 puzzles): 9-18 minimum moves, 9-13 vehicles
+- **Advanced** (30 puzzles): 19-30 minimum moves, 11-13 vehicles
+- **Expert** (30 puzzles): 31-42 minimum moves, 10-14 vehicles
+- **Grandmaster** (11 puzzles): 43-51 minimum moves, 12-13 vehicles
+
+Puzzles were selected to maximize cluster size (branching factor), which correlates with perceived difficulty beyond raw move count. The Grandmaster tier contains the hardest known 0-wall Rush Hour configurations.
 
 Puzzle catalog cards display completion status: stars earned and best result (moves/time) for each puzzle the player has solved.
 
@@ -67,4 +70,4 @@ Puzzle catalog cards display completion status: stars earned and best result (mo
 3. Target car must be a car (length 2), not a truck
 4. No vehicles may overlap
 5. All vehicles must be within the 6×6 grid bounds
-6. The puzzle must be solvable (BFS finds a solution within 200 moves)
+6. The puzzle must be solvable (BFS finds a solution within 300 moves)

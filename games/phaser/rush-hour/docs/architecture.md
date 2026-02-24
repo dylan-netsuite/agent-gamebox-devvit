@@ -25,6 +25,10 @@ games/phaser/rush-hour/
 │   │   └── core/         # Post creation
 │   └── shared/           # Shared types between client/server
 │       └── types/
+├── tools/                # Puzzle generation & import tooling
+│   ├── import-fogleman.ts  # Parses Fogleman database → puzzles.ts
+│   ├── gen.ts              # Simulated annealing puzzle generator
+│   └── rush.txt            # Fogleman Rush Hour database (2.5M configs)
 ├── dist/                 # Build output
 ├── assets/               # Static assets
 └── docs/                 # Documentation
