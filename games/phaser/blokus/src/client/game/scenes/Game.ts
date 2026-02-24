@@ -35,6 +35,8 @@ interface GameSceneData {
   mp?: MultiplayerManager;
   playerNumber?: 1 | 2;
   opponentName?: string;
+  turnTimerSeconds?: number;
+  reconnectMoves?: BlokusMove[];
 }
 
 export class Game extends Scene {
@@ -51,6 +53,19 @@ export class Game extends Scene {
   private myPlayerNumber: 1 | 2 = 1;
   private opponentName = 'Opponent';
   private messageHandler: ((msg: MultiplayerMessage) => void) | null = null;
+
+  // Turn timer
+  private turnTimerSeconds = 90;
+  private turnStartTime = 0;
+  private timerText: Phaser.GameObjects.Text | null = null;
+  private timerEvent: Phaser.Time.TimerEvent | null = null;
+
+  // Disconnect overlay
+  private dcOverlay: Phaser.GameObjects.Graphics | null = null;
+  private dcText: Phaser.GameObjects.Text | null = null;
+  private dcCountdownText: Phaser.GameObjects.Text | null = null;
+  private dcCountdownEvent: Phaser.Time.TimerEvent | null = null;
+  private dcStartTime = 0;
 
   private boardGraphics: Phaser.GameObjects.Graphics;
   private pieceGraphics: Phaser.GameObjects.Graphics;
@@ -125,10 +140,20 @@ export class Game extends Scene {
     this.mp = data?.mp ?? null;
     this.myPlayerNumber = data?.playerNumber ?? 1;
     this.opponentName = data?.opponentName ?? 'Opponent';
+    this.turnTimerSeconds = data?.turnTimerSeconds ?? 90;
+    this.turnStartTime = Date.now();
+    this.dcOverlay = null;
+    this.dcText = null;
+    this.dcCountdownText = null;
+    this.dcCountdownEvent = null;
+    this.dcStartTime = 0;
+    this.timerText = null;
+    this.timerEvent = null;
 
     if (this.isMultiplayer && this.mp) {
       this.setupMultiplayerListeners();
       this.mp.startHeartbeat();
+      this.startTurnTimer();
     }
 
     this.cameras.main.setBackgroundColor(0x0d0d1a);
@@ -244,6 +269,15 @@ export class Game extends Scene {
       this.updateUI();
     });
 
+    if (data?.reconnectMoves && data.reconnectMoves.length > 0) {
+      for (const move of data.reconnectMoves) {
+        this.board.placePiece(move.pieceId, move.cells, move.player);
+      }
+      this.currentPlayer = data.reconnectMoves.length % 2 === 0 ? 1 : 2;
+      this.playableCacheDirty = true;
+      this.drawPlacedPieces();
+    }
+
     if (this.isMyTurn()) {
       this.selectFirstAvailable();
     }
@@ -275,6 +309,19 @@ export class Game extends Scene {
             console.warn(`[MP] Move rejected by server: ${msg.reason}`);
             SoundManager.playInvalid();
           }
+          break;
+        case 'player-disconnected':
+          if (msg.userId !== this.mp?.userId) {
+            this.showDisconnectOverlay();
+          }
+          break;
+        case 'player-reconnected':
+          if (msg.userId !== this.mp?.userId) {
+            this.hideDisconnectOverlay();
+          }
+          break;
+        case 'turn-timeout':
+          this.handleTurnTimeout(msg.player);
           break;
       }
     };
@@ -332,6 +379,7 @@ export class Game extends Scene {
     this.selectFirstAvailable();
     this.rotation = 0;
     this.flipped = false;
+    this.resetTurnTimer();
     this.drawTray();
     this.drawControls();
     this.updateUI();
@@ -360,6 +408,7 @@ export class Game extends Scene {
     this.selectFirstAvailable();
     this.rotation = 0;
     this.flipped = false;
+    this.resetTurnTimer();
     this.drawTray();
     this.drawControls();
     this.updateUI();
@@ -423,9 +472,134 @@ export class Game extends Scene {
     return this.currentPlayer === this.myPlayerNumber;
   }
 
+  // ── Turn Timer ──
+
+  private startTurnTimer(): void {
+    if (!this.isMultiplayer) return;
+    this.turnStartTime = Date.now();
+
+    const sf = this.getSf();
+    const { width } = this.scale;
+
+    if (!this.timerText) {
+      this.timerText = this.add
+        .text(width - 10, 8, '', {
+          fontFamily: '"Arial Black", sans-serif',
+          fontSize: `${Math.round(16 * sf)}px`,
+          color: '#ffffff',
+        })
+        .setOrigin(1, 0)
+        .setDepth(50);
+    }
+
+    this.timerEvent?.destroy();
+    this.timerEvent = this.time.addEvent({
+      delay: 500,
+      loop: true,
+      callback: () => this.updateTimerDisplay(),
+    });
+  }
+
+  private resetTurnTimer(): void {
+    this.turnStartTime = Date.now();
+  }
+
+  private updateTimerDisplay(): void {
+    if (!this.timerText || this.gameOver) return;
+    const elapsed = (Date.now() - this.turnStartTime) / 1000;
+    const remaining = Math.max(0, this.turnTimerSeconds - elapsed);
+    const secs = Math.ceil(remaining);
+
+    this.timerText.setText(`${secs}s`);
+    if (secs <= 15) {
+      this.timerText.setColor('#ff4444');
+    } else if (secs <= 30) {
+      this.timerText.setColor('#e8913a');
+    } else {
+      this.timerText.setColor('#ffffff');
+    }
+  }
+
+  private handleTurnTimeout(player: 1 | 2): void {
+    if (player === this.myPlayerNumber) {
+      console.log('[MP] Turn timed out — auto-pass');
+    }
+    this.playerSkipped[player - 1] = true;
+    if (this.playerSkipped[0] && this.playerSkipped[1]) {
+      this.finishGame();
+      return;
+    }
+    this.currentPlayer = player === 1 ? 2 : 1;
+    this.playableCacheDirty = true;
+    this.resetTurnTimer();
+    this.drawTray();
+    this.drawControls();
+    this.updateUI();
+  }
+
+  // ── Disconnect Overlay ──
+
+  private showDisconnectOverlay(): void {
+    if (this.dcOverlay) return;
+    const { width, height } = this.scale;
+    const sf = this.getSf();
+
+    this.dcOverlay = this.add.graphics();
+    this.dcOverlay.fillStyle(0x000000, 0.6);
+    this.dcOverlay.fillRect(0, 0, width, height);
+    this.dcOverlay.setDepth(300);
+
+    this.dcText = this.add
+      .text(width / 2, height / 2 - 30, 'Opponent Disconnected', {
+        fontFamily: '"Arial Black", sans-serif',
+        fontSize: `${Math.round(22 * sf)}px`,
+        color: '#e8913a',
+      })
+      .setOrigin(0.5)
+      .setDepth(301);
+
+    this.dcStartTime = Date.now();
+    const GRACE_SECONDS = 60;
+    this.dcCountdownText = this.add
+      .text(width / 2, height / 2 + 10, `Waiting for reconnect... ${GRACE_SECONDS}s`, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: `${Math.round(14 * sf)}px`,
+        color: '#aabbcc',
+      })
+      .setOrigin(0.5)
+      .setDepth(301);
+
+    this.dcCountdownEvent = this.time.addEvent({
+      delay: 1000,
+      loop: true,
+      callback: () => {
+        const elapsed = Math.floor((Date.now() - this.dcStartTime) / 1000);
+        const remain = Math.max(0, GRACE_SECONDS - elapsed);
+        if (this.dcCountdownText) {
+          this.dcCountdownText.setText(`Waiting for reconnect... ${remain}s`);
+        }
+      },
+    });
+  }
+
+  private hideDisconnectOverlay(): void {
+    this.dcOverlay?.destroy();
+    this.dcOverlay = null;
+    this.dcText?.destroy();
+    this.dcText = null;
+    this.dcCountdownText?.destroy();
+    this.dcCountdownText = null;
+    this.dcCountdownEvent?.destroy();
+    this.dcCountdownEvent = null;
+    this.dcStartTime = 0;
+  }
+
   private cleanupMultiplayer(): void {
     if (this.mp) {
       this.mp.stopHeartbeat();
+      this.timerEvent?.destroy();
+      this.timerEvent = null;
+      this.hideDisconnectOverlay();
       if (this.messageHandler) {
         this.mp.offMessage(this.messageHandler);
         this.messageHandler = null;

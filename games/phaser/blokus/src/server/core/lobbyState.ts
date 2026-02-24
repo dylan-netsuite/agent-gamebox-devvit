@@ -258,6 +258,60 @@ export async function isPlayerStale(code: string, userId: string): Promise<boole
   return Date.now() - ts > STALE_THRESHOLD_MS;
 }
 
+// ── Disconnection Tracking ──
+
+const DISCONNECT_GRACE_MS = 60_000;
+
+function disconnectedAtKey(code: string, userId: string): string {
+  return `blokus_lobby_${code}_dc_${sanitizeId(userId)}`;
+}
+
+export async function setPlayerDisconnected(code: string, userId: string): Promise<void> {
+  const key = disconnectedAtKey(code, userId);
+  await redis.set(key, String(Date.now()));
+  await redis.expire(key, 120);
+}
+
+export async function getPlayerDisconnectedAt(code: string, userId: string): Promise<number | null> {
+  const raw = await redis.get(disconnectedAtKey(code, userId));
+  if (!raw) return null;
+  return parseInt(raw, 10);
+}
+
+export async function clearPlayerDisconnected(code: string, userId: string): Promise<void> {
+  await redis.del(disconnectedAtKey(code, userId));
+}
+
+export async function isDisconnectGraceExpired(code: string, userId: string): Promise<boolean> {
+  const ts = await getPlayerDisconnectedAt(code, userId);
+  if (ts === null) return false;
+  return Date.now() - ts > DISCONNECT_GRACE_MS;
+}
+
+// ── Turn Timer ──
+
+function turnStartKey(code: string): string {
+  return `blokus_lobby_${code}_turnstart`;
+}
+
+export async function setTurnStart(code: string): Promise<void> {
+  await setWithTTL(turnStartKey(code), String(Date.now()));
+}
+
+export async function getTurnStart(code: string): Promise<number | null> {
+  const raw = await redis.get(turnStartKey(code));
+  if (!raw) return null;
+  return parseInt(raw, 10);
+}
+
+// ── Game Config ──
+
+export async function getLobbyGameConfig(code: string): Promise<MultiplayerGameConfig | null> {
+  const raw = await redis.get(lobbyConfigKey(code));
+  if (!raw) return null;
+  return JSON.parse(raw) as MultiplayerGameConfig;
+}
+
 // ── Game Move History ──
 
 export async function getGameMoves(code: string): Promise<string | null> {

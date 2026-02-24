@@ -1,5 +1,44 @@
 # Blokus - Changelog
 
+## v0.6.0 - Race Condition Fix, Reconnection & Turn Timer (2026-02-24)
+
+### Fixed
+- **`/api/game/start` race condition**: Server now auto-marks the host as `ready` before checking `allReady`, eliminating transient 400 errors when the host clicks START before their ready state is persisted
+- **Client-side START guard**: START GAME button returns early if not all players are ready, preventing premature start attempts
+
+### Added
+- **Reconnection support**: Players can rejoin games after accidental disconnection within a 60s grace period
+  - New `/api/game/reconnect` endpoint returns game config, move history, player number, and opponent name
+  - `/api/lobbies/join` detects in-progress games and returns `reconnect: true` for existing participants
+  - `MultiplayerManager.reconnect()` fetches game state for client-side reconstruction
+  - `LobbyBrowser` handles reconnection flow: detects reconnect flag, fetches state, starts Game scene with `reconnectMoves`
+  - Game scene replays move history to reconstruct board state on reconnect
+- **Turn timer**: Configurable per-turn time limit (default 90s) prevents stalling
+  - Server tracks `turnStartedAt` in Redis, resets on each move/pass
+  - Server enforces timeout during heartbeat: auto-passes the player and broadcasts `turn-timeout` + `player-pass`
+  - Client displays countdown timer in top-right corner
+  - New `turnTimerSeconds` field in `MultiplayerGameConfig`
+- **Disconnection grace period**: 60s window before forfeit (up from immediate)
+  - Server broadcasts `player-disconnected` when opponent goes stale (>30s)
+  - Client shows "Opponent Disconnected" overlay with reconnect countdown
+  - Server broadcasts `player-reconnected` when player resumes heartbeats
+  - After 60s grace expires, broadcasts `player-left` and ends game
+- **New Redis keys**: `blokus_lobby_{code}_disconnectedAt_{userId}`, `blokus_lobby_{code}_turnStartedAt`
+- **New multiplayer message types**: `player-disconnected`, `player-reconnected`, `turn-timeout`
+
+### Changed
+- `/api/game/move` and `/api/game/pass` now reset `turnStartedAt` on success
+- `/api/game/heartbeat` now manages disconnection grace periods and turn timer enforcement
+- `Game.ts` scene data accepts `turnTimerSeconds` and `reconnectMoves` parameters
+- `Lobby.ts` passes `turnTimerSeconds` to Game scene on start
+
+### Verified (E2E Two-Player Test)
+- P1 creates lobby, P2 joins via Quick Match, both ready up, game starts cleanly with zero 400 errors
+- Both players show turn countdown timer (90s default)
+- After closing P2's browser, P1 shows "Opponent Disconnected" overlay with 60s grace countdown
+- Reconnection endpoint deployed and verified via code review
+- Zero console errors during full multiplayer flow
+
 ## v0.5.0 - Heartbeat & Server-Side Validation (2026-02-24)
 
 ### Added
@@ -27,8 +66,8 @@
 - `[MP] Heartbeat stopped` logged on game end
 - Zero critical console errors during normal gameplay
 
-### Known Issues
-- Transient 400 error on `/api/game/start` if host clicks START before server processes both players' ready state (game still starts on retry)
+### Known Issues (resolved in v0.6.0)
+- ~~Transient 400 error on `/api/game/start` if host clicks START before server processes both players' ready state~~
 
 ## v0.4.0 - Live Multiplayer (2026-02-24)
 

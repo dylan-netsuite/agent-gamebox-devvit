@@ -279,15 +279,58 @@ export class LobbyBrowser extends Scene {
     this.busy = true;
     this.startLoadingDots(`Joining ${this.codeInput}`);
     try {
-      const result = await MultiplayerManager.joinLobbyByCode(this.codeInput);
+      const result = await MultiplayerManager.joinLobbyByCode(this.codeInput) as {
+        lobbyCode: string;
+        players: import('../../../shared/types/multiplayer').LobbyPlayer[];
+        isHost: boolean;
+        reconnect?: boolean;
+      };
       this.stopLoadingDots();
-      this.goToLobby(result.lobbyCode);
+      if (result.reconnect) {
+        this.startLoadingDots('Reconnecting to game');
+        await this.reconnectToGame(result.lobbyCode);
+      } else {
+        this.goToLobby(result.lobbyCode);
+      }
     } catch (err) {
       this.stopLoadingDots();
       this.statusText.setText(`Error: ${err instanceof Error ? err.message : 'Unknown'}`);
     } finally {
       this.busy = false;
     }
+  }
+
+  private async reconnectToGame(lobbyCode: string): Promise<void> {
+    const mp = new MultiplayerManager(
+      this.postId,
+      context.userId ?? '',
+      context.username ?? 'Player',
+      lobbyCode,
+    );
+    await mp.connect();
+    const data = await mp.reconnect();
+    this.stopLoadingDots();
+    if (!data) {
+      this.statusText.setText('Game has ended or reconnect failed');
+      return;
+    }
+    this.cameras.main.fadeOut(300, 0, 0, 0);
+    let reconnectMoves: import('../../../shared/types/multiplayer').BlokusMove[] = [];
+    try {
+      reconnectMoves = JSON.parse(data.movesJson) as import('../../../shared/types/multiplayer').BlokusMove[];
+    } catch {
+      reconnectMoves = [];
+    }
+    this.cameras.main.once('camerafadeoutcomplete', () => {
+      this.scene.start('Game', {
+        multiplayer: true,
+        mp,
+        playerNumber: data.playerNumber,
+        opponentName: data.opponentName,
+        turnTimerSeconds: data.config.turnTimerSeconds ?? 90,
+        reconnectMoves,
+      });
+    });
   }
 
   private goToLobby(lobbyCode: string): void {

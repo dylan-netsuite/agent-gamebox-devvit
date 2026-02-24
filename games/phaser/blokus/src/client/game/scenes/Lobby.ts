@@ -113,6 +113,7 @@ export class Lobby extends Scene {
             mp: this.mp,
             playerNumber: myPlayer?.playerNumber ?? 1,
             opponentName: msg.config.players.find((p) => p.userId !== this.mp.userId)?.username ?? 'Opponent',
+            turnTimerSeconds: msg.config.turnTimerSeconds ?? 90,
           });
         });
       } else if (msg.type === 'player-left') {
@@ -285,6 +286,9 @@ export class Lobby extends Scene {
 
     startZone.on('pointerdown', () => {
       if (!this.isHost) return;
+      const allReady = this.players.length >= 2 &&
+        this.players.every((p) => p.ready || p.userId === this.hostUserId);
+      if (!allReady) return;
       SoundManager.playSelect();
       void this.mp.startGame();
     });

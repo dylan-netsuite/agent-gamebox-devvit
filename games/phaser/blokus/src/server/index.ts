@@ -20,10 +20,17 @@ import {
   setPlayerReady,
   updateLobbyStatus,
   saveLobbyGameConfig,
+  getLobbyGameConfig,
   setHeartbeat,
   isPlayerStale,
   getGameMoves,
   saveGameMoves,
+  setPlayerDisconnected,
+  getPlayerDisconnectedAt,
+  clearPlayerDisconnected,
+  isDisconnectGraceExpired,
+  setTurnStart,
+  getTurnStart,
 } from './core/lobbyState';
 import { BoardValidator } from '../shared/logic/BoardValidator';
 import type { BlokusMove } from '../shared/types/multiplayer';
@@ -242,6 +249,18 @@ router.post('/api/lobbies/join', async (req, res): Promise<void> => {
     res.status(404).json({ status: 'error', message: 'Lobby not found' });
     return;
   }
+
+  if (info.status === 'playing') {
+    const players = await getLobbyPlayers(code);
+    const myPlayer = players.find((p) => p.userId === userId);
+    if (myPlayer) {
+      res.json({ status: 'ok', lobbyCode: code, players, isHost: false, reconnect: true });
+      return;
+    }
+    res.status(400).json({ status: 'error', message: 'Game already in progress' });
+    return;
+  }
+
   if (info.status !== 'waiting') {
     res.status(400).json({ status: 'error', message: 'Lobby is not accepting players' });
     return;
@@ -399,13 +418,18 @@ router.post('/api/game/start', async (req, res): Promise<void> => {
     return;
   }
 
-  const players = await getLobbyPlayers(code);
+  let players = await getLobbyPlayers(code);
   if (players.length < 2) {
     res.status(400).json({ status: 'error', message: 'Need 2 players' });
     return;
   }
 
-  const allReady = players.every((p) => p.ready || p.userId === info.hostUserId);
+  const hostPlayer = players.find((p) => p.userId === info.hostUserId);
+  if (hostPlayer && !hostPlayer.ready) {
+    players = await setPlayerReady(code, info.hostUserId, true);
+  }
+
+  const allReady = players.every((p) => p.ready);
   if (!allReady) {
     res.status(400).json({ status: 'error', message: 'Not all players ready' });
     return;
@@ -413,9 +437,12 @@ router.post('/api/game/start', async (req, res): Promise<void> => {
 
   await updateLobbyStatus(code, 'playing');
 
+  const TURN_TIMER_SECONDS = 90;
+
   const config: MultiplayerGameConfig = {
     lobbyCode: code,
     players,
+    turnTimerSeconds: TURN_TIMER_SECONDS,
   };
 
   await saveLobbyGameConfig(code, config);
@@ -426,6 +453,7 @@ router.post('/api/game/start', async (req, res): Promise<void> => {
   for (const p of players) {
     await setHeartbeat(code, p.userId);
   }
+  await setTurnStart(code);
 
   await broadcast(code, { type: 'game-start', config });
   res.json({ status: 'ok', config });
@@ -479,6 +507,7 @@ router.post('/api/game/move', async (req, res): Promise<void> => {
 
   board.applyMove(move);
   await persistBoard(code, board);
+  await setTurnStart(code);
 
   await broadcast(code, { type: 'player-move', move, userId });
   res.json({ status: 'ok' });
@@ -509,6 +538,7 @@ router.post('/api/game/pass', async (req, res): Promise<void> => {
   }
 
   await persistBoard(code, board);
+  await setTurnStart(code);
 
   await broadcast(code, { type: 'player-pass', player, userId });
   res.json({ status: 'ok' });
@@ -532,6 +562,13 @@ router.post('/api/game/heartbeat', async (req, res): Promise<void> => {
 
   await setHeartbeat(code, userId);
 
+  const wasDisconnected = await getPlayerDisconnectedAt(code, userId);
+  if (wasDisconnected) {
+    await clearPlayerDisconnected(code, userId);
+    console.log(`[Heartbeat] Player ${userId} reconnected in lobby ${code}`);
+    await broadcast(code, { type: 'player-reconnected', userId });
+  }
+
   const info = await getLobbyInfo(code);
   if (info && info.status === 'playing') {
     const players = await getLobbyPlayers(code);
@@ -540,15 +577,84 @@ router.post('/api/game/heartbeat', async (req, res): Promise<void> => {
     if (opponent) {
       const stale = await isPlayerStale(code, opponent.userId);
       if (stale) {
-        console.log(`[Heartbeat] Player ${opponent.userId} is stale in lobby ${code}, broadcasting player-left`);
-        await broadcast(code, { type: 'player-left', userId: opponent.userId });
-        await updateLobbyStatus(code, 'finished');
-        boardCache.delete(code);
+        const alreadyDc = await getPlayerDisconnectedAt(code, opponent.userId);
+        if (!alreadyDc) {
+          await setPlayerDisconnected(code, opponent.userId);
+          console.log(`[Heartbeat] Player ${opponent.userId} stale in ${code}, starting grace period`);
+          await broadcast(code, { type: 'player-disconnected', userId: opponent.userId });
+        } else {
+          const expired = await isDisconnectGraceExpired(code, opponent.userId);
+          if (expired) {
+            console.log(`[Heartbeat] Grace expired for ${opponent.userId} in ${code}, forfeiting`);
+            await broadcast(code, { type: 'player-left', userId: opponent.userId });
+            await updateLobbyStatus(code, 'finished');
+            boardCache.delete(code);
+          }
+        }
       }
+    }
+
+    const gameConfig = await getLobbyGameConfig(code);
+    const turnTimerMs = (gameConfig?.turnTimerSeconds ?? 90) * 1000;
+    const turnStart = await getTurnStart(code);
+    if (turnStart && Date.now() - turnStart > turnTimerMs) {
+      const board = await getOrCreateBoard(code);
+      const currentTurnPlayer = board.turn;
+      console.log(`[TurnTimer] Turn timeout for player ${currentTurnPlayer} in ${code}`);
+      board.applyPass(currentTurnPlayer);
+      await persistBoard(code, board);
+      await setTurnStart(code);
+      await broadcast(code, { type: 'turn-timeout', player: currentTurnPlayer });
+      await broadcast(code, { type: 'player-pass', player: currentTurnPlayer, userId: '' });
     }
   }
 
   res.json({ status: 'ok' });
+});
+
+// ── Reconnect ──
+
+router.post('/api/game/reconnect', async (req, res): Promise<void> => {
+  const { userId } = context;
+  if (!userId) {
+    res.status(400).json({ status: 'error', message: 'Missing userId' });
+    return;
+  }
+
+  const body = req.body as { lobbyCode?: string } | undefined;
+  const code = body?.lobbyCode?.toUpperCase();
+  if (!code) {
+    res.status(400).json({ status: 'error', message: 'Missing lobbyCode' });
+    return;
+  }
+
+  const info = await getLobbyInfo(code);
+  if (!info || info.status !== 'playing') {
+    res.status(400).json({ status: 'error', message: 'Game not in progress' });
+    return;
+  }
+
+  const players = await getLobbyPlayers(code);
+  const myPlayer = players.find((p) => p.userId === userId);
+  if (!myPlayer) {
+    res.status(403).json({ status: 'error', message: 'Not a player in this game' });
+    return;
+  }
+
+  const config = await getLobbyGameConfig(code);
+  const movesJson = await getGameMoves(code);
+
+  await setHeartbeat(code, userId);
+  await clearPlayerDisconnected(code, userId);
+  await broadcast(code, { type: 'player-reconnected', userId });
+
+  res.json({
+    status: 'ok',
+    config,
+    movesJson: movesJson ?? '[]',
+    playerNumber: myPlayer.playerNumber,
+    opponentName: players.find((p) => p.userId !== userId)?.username ?? 'Opponent',
+  });
 });
 
 router.post('/api/game/game-over', async (req, res): Promise<void> => {

@@ -75,14 +75,18 @@ games/phaser/blokus/
 4. **Ready + Start**: Players toggle ready via `/api/game/ready`. Host starts via `/api/game/start` -> server broadcasts `game-start` message.
 5. **Game moves**: Active player places piece -> POST `/api/game/move` -> server validates via `BoardValidator` -> if valid, broadcasts `player-move` via `realtime.send()` -> opponent applies via `BoardLogic`. If invalid, server responds 400 and broadcasts `move-rejected`.
 6. **Turn management**: After each move, active player switches. Server maintains authoritative game state via `BoardValidator`; clients derive display state from broadcast messages.
-7. **Heartbeat**: Both clients send periodic heartbeat POSTs to `/api/game/heartbeat` (every 10s). Server checks opponent's last heartbeat timestamp. If >30s stale, broadcasts `player-left` and ends the game.
+7. **Heartbeat**: Both clients send periodic heartbeat POSTs to `/api/game/heartbeat` (every 10s). Server checks opponent's last heartbeat timestamp. If >30s stale, marks opponent as disconnected and broadcasts `player-disconnected`. After 60s grace period, broadcasts `player-left` and ends the game.
+8. **Turn timer**: Server tracks `turnStartedAt` timestamp in Redis. During heartbeat processing, if the current turn exceeds `turnTimerSeconds` (default 90s), server auto-passes the player and broadcasts `turn-timeout` + `player-pass`.
+9. **Reconnection**: If a disconnected player rejoins (lobby in `playing` state), `/api/lobbies/join` returns `reconnect: true`. Client calls `/api/game/reconnect` to retrieve game config, move history, and player info. Game scene replays moves to reconstruct board state.
 
 ## Key Design Decisions
 
 - **Server-side move validation**: `BoardValidator` in `shared/logic/` reconstructs game state from move history and validates each incoming move against Blokus placement rules before broadcasting. Prevents cheating.
-- **Heartbeat disconnection detection**: Client-side 10s heartbeat interval with server-side 30s staleness threshold. On disconnect, remaining player wins automatically.
+- **Disconnection grace period**: 60-second window before a stale player is forfeited. During this time, the opponent sees a "Waiting for reconnect" overlay with countdown. The player can rejoin via lobby code.
+- **Turn timer enforcement**: Server-authoritative turn timer prevents stalling. Configurable via `MultiplayerGameConfig.turnTimerSeconds`. Client displays countdown but server enforces the timeout via heartbeat checks.
+- **Race condition fix**: Server auto-marks the host as `ready` before checking `allReady` on game start, preventing transient 400 errors when the host clicks START before their own ready state is persisted.
 - **Shared logic layer**: Piece definitions and board validation logic live in `src/shared/logic/` so both client and server can use the same code.
 - **Procedural graphics**: No external image assets. All pieces, board, and UI drawn with Phaser Graphics API.
 - **Responsive layout**: Board and tray scale dynamically using `Phaser.Scale.RESIZE` mode.
 - **Blokus Duo variant**: 14x14 board, 2 players, center starting positions. Simpler than full 4-player Blokus.
-- **Redis lobby storage**: Lobbies stored with 2-hour TTL. Keys: `blokus_lobby_{code}_state`, `blokus_lobby_{code}_players`, `blokus_lobby_{code}_heartbeat_{userId}`, `blokus_lobby_{code}_moves`.
+- **Redis lobby storage**: Lobbies stored with 2-hour TTL. Keys: `blokus_lobby_{code}_state`, `blokus_lobby_{code}_players`, `blokus_lobby_{code}_heartbeat_{userId}`, `blokus_lobby_{code}_moves`, `blokus_lobby_{code}_disconnectedAt_{userId}`, `blokus_lobby_{code}_turnStartedAt`.

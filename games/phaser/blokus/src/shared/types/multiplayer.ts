@@ -21,6 +21,7 @@ export interface LobbyPlayer {
 export interface MultiplayerGameConfig {
   lobbyCode: string;
   players: LobbyPlayer[];
+  turnTimerSeconds: number;
 }
 
 export interface BlokusMove {
@@ -36,5 +37,8 @@ export type MultiplayerMessage =
   | { type: 'player-pass'; player: 1 | 2; userId: string }
   | { type: 'game-over'; winnerPlayer: 1 | 2 | null; p1Score: number; p2Score: number }
   | { type: 'player-left'; userId: string }
+  | { type: 'player-disconnected'; userId: string }
+  | { type: 'player-reconnected'; userId: string }
+  | { type: 'turn-timeout'; player: 1 | 2 }
   | { type: 'rematch'; lobbyCode: string }
   | { type: 'move-rejected'; reason: string; userId: string };

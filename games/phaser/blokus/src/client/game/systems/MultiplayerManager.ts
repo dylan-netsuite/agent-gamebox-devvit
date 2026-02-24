@@ -186,6 +186,26 @@ export class MultiplayerManager {
     });
   }
 
+  async reconnect(): Promise<{
+    config: MultiplayerGameConfig;
+    movesJson: string;
+    playerNumber: 1 | 2;
+    opponentName: string;
+  } | null> {
+    const res = await fetch('/api/game/reconnect', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lobbyCode: this._lobbyCode }),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as {
+      config: MultiplayerGameConfig;
+      movesJson: string;
+      playerNumber: 1 | 2;
+      opponentName: string;
+    };
+  }
+
   async requestRematch(): Promise<string | null> {
     const res = await fetch('/api/game/rematch', {
       method: 'POST',
