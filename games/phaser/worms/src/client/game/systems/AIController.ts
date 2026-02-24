@@ -279,18 +279,20 @@ export class AIController {
       }
 
       if (weapon.firingMode === 'hitscan') {
+        const allWorms = [self, ...enemies, ...friendlies];
         for (const enemy of enemies) {
           const ec = enemy.getCenter();
           const angle = Math.atan2(ec.y - selfCenter.y, ec.x - selfCenter.x);
           const dist = Math.sqrt(
             (ec.x - selfCenter.x) ** 2 + (ec.y - selfCenter.y) ** 2,
           );
-          const hitResult = this.simulateHitscan(selfCenter.x, selfCenter.y, angle);
+          const hitResult = this.simulateHitscan(
+            selfCenter.x, selfCenter.y, angle, allWorms, self,
+          );
           const hitDist = Math.sqrt(
             (hitResult.x - ec.x) ** 2 + (hitResult.y - ec.y) ** 2,
           );
-          // Direct worm hit detection mirrors ProjectileManager logic
-          const directHit = hitDist < 15;
+          const directHit = hitResult.directHit && hitDist < 15;
           if (directHit || hitDist < weapon.blastRadius * 2) {
             let score = directHit ? 90 : 70;
             if (dist < 150) score += 20;
@@ -604,7 +606,9 @@ export class AIController {
     originX: number,
     originY: number,
     angle: number,
-  ): { x: number; y: number } {
+    allWorms?: Worm[],
+    shooter?: Worm,
+  ): { x: number; y: number; directHit: boolean } {
     const maxDist = 3000;
     const step = 2;
     const dx = Math.cos(angle) * step;
@@ -618,9 +622,24 @@ export class AIController {
       hitY += dy;
       if (!this.terrain) continue;
       if (hitX < 0 || hitX >= this.terrain.getWidth() || hitY >= this.terrain.getHeight()) break;
+
+      if (allWorms) {
+        let wormHit = false;
+        for (const worm of allWorms) {
+          if (!worm.alive || worm === shooter) continue;
+          const wx = worm.x;
+          const wy = worm.y;
+          if (hitX >= wx - 10 && hitX <= wx + 10 && hitY >= wy - 2 && hitY <= wy + 22) {
+            wormHit = true;
+            break;
+          }
+        }
+        if (wormHit) return { x: hitX, y: hitY, directHit: true };
+      }
+
       if (this.terrain.isSolid(hitX, hitY)) break;
     }
-    return { x: hitX, y: hitY };
+    return { x: hitX, y: hitY, directHit: false };
   }
 
   private scorePlacedWeapon(

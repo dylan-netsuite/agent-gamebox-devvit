@@ -1,5 +1,23 @@
 # Reddit Royale - Changelog
 
+## AI Hitscan Accuracy + Unit Tests (v0.0.12.2)
+
+### Improved — AI Hitscan Simulation
+- **`simulateHitscan()`** now accepts worm positions and a shooter reference, matching `ProjectileManager.fireHitscan()` logic. The AI can now detect when a hitscan ray would directly hit a worm vs hitting terrain, and correctly excludes the shooter from collision checks.
+- **Scoring accuracy**: The `directHit` flag from the simulation is used in shot scoring, replacing the previous distance-based approximation (`hitDist < 15`). The AI now also detects when a friendly or other worm blocks the line of sight.
+
+### Added — Hitscan Unit Tests (14 tests)
+- **Shared `castHitscanRay()` function** extracted into `src/shared/hitscan.ts` — pure function testable without Phaser dependencies.
+- **Test suite** (`src/shared/hitscan.test.ts`) covering: shooter exclusion (3 tests), direct worm hits (4 tests), terrain collision (2 tests), boundary conditions (3 tests), hitbox geometry (2 tests).
+- **Vitest config** and `test` script added to `package.json`.
+
+### Files Changed
+- `src/client/game/systems/AIController.ts` — Updated `simulateHitscan()` signature and hitscan scoring
+- `src/shared/hitscan.ts` — New shared pure function for hitscan raycasting
+- `src/shared/hitscan.test.ts` — 14 unit tests
+- `vitest.config.ts` — Vitest configuration
+- `package.json` — Added `test` script
+
 ## Hitscan Self-Damage Fix (v0.0.12.1)
 
 ### Fixed — Sniper Rifle & Shotgun No Longer Damage the Shooter

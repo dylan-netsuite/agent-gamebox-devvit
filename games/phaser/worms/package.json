@@ -19,6 +19,7 @@
     "login": "devvit login --copy-paste",
     "launch": "npm run build && npm run deploy && devvit publish",
     "prettier": "prettier-package-json --write ./package.json && prettier --write .",
+    "test": "vitest run",
     "type-check": "tsc --build"
   },
   "dependencies": {
