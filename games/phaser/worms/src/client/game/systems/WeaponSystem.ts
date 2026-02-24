@@ -133,6 +133,7 @@ export class WeaponSystem {
             center.y,
             this.aimAngle + spread,
             weapon,
+            worm,
           );
         }
         // Hitscan resolves immediately

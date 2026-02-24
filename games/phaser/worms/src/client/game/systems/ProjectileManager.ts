@@ -91,6 +91,7 @@ export class ProjectileManager {
     originY: number,
     angle: number,
     weapon: WeaponDef,
+    shooter?: Worm,
   ): void {
     const maxDist = 3000;
     const step = 2;
@@ -106,9 +107,8 @@ export class ProjectileManager {
       hitY += dy;
       if (hitX < 0 || hitX >= this.terrain.getWidth() || hitY >= this.terrain.getHeight()) break;
 
-      // Check worm hit before terrain — a worm standing on terrain should be hit
       for (const worm of this.worms) {
-        if (!worm.alive) continue;
+        if (!worm.alive || worm === shooter) continue;
         const wx = worm.x;
         const wy = worm.y;
         if (hitX >= wx - 10 && hitX <= wx + 10 && hitY >= wy - 2 && hitY <= wy + 22) {

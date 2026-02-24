@@ -1,5 +1,17 @@
 # Reddit Royale - Changelog
 
+## Hitscan Self-Damage Fix (v0.0.12.1)
+
+### Fixed — Sniper Rifle & Shotgun No Longer Damage the Shooter
+- **Root cause**: `ProjectileManager.fireHitscan()` checked all worms (including the shooter) against the hitscan ray. Since the ray starts at the worm's center and the worm's hitbox is 20x24px, the first ray step was always inside the shooter's own hitbox, causing an immediate self-hit.
+- **Fix**: Added an optional `shooter` parameter to `fireHitscan()` that skips the shooter in the worm collision loop. `WeaponSystem.fire()` now passes the firing worm as the shooter for all hitscan weapons.
+- **Affected weapons**: Sniper Rifle (1 shot) and Shotgun (2 shots) — both use the `hitscan` firing mode.
+- **No gameplay side effects**: Splash damage from terrain-hit explosions still works normally. Only direct-hit self-damage is prevented.
+
+### Files Changed
+- `src/client/game/systems/ProjectileManager.ts` — Added `shooter?: Worm` parameter, skip `worm === shooter` in ray loop
+- `src/client/game/systems/WeaponSystem.ts` — Pass firing worm to `fireHitscan()` calls
+
 ## AI Movement Fix (v0.0.9.188)
 
 ### Fixed — AI Bots Now Actively Move During Turns

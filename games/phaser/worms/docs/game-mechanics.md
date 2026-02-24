@@ -21,7 +21,7 @@ Turn-based artillery game where players control worms on destructible terrain, u
 The main projectile bounces once and detonates after a 2s fuse. On detonation, it deals 20 damage (20px radius) and spawns 4 smaller bomblets. Each bomblet flies outward in a random upward arc and detonates on terrain impact, dealing 18 damage (18px radius). Effective for area denial and hitting enemies behind cover.
 
 ### Sniper Rifle Details
-Fires a single hitscan ray — instant, no travel time, not affected by wind. The ray detects direct worm hits (full 60 damage) and also impacts terrain (8px crater with splash damage). Range covers the entire map (3000px). Best used at long range where projectile weapons struggle with wind.
+Fires a single hitscan ray — instant, no travel time, not affected by wind. The ray detects direct worm hits (full 60 damage) and also impacts terrain (8px crater with splash damage). Range covers the entire map (3000px). The shooter is excluded from the hitscan collision check to prevent self-damage. Best used at long range where projectile weapons struggle with wind.
 
 ### Teleport Details
 Utility weapon that teleports the worm to the aimed position. The worm lands at the nearest surface below the target point. Uses a turn but deals no damage. Shows a cyan flash at both the origin and destination. The AI does not use this weapon.
