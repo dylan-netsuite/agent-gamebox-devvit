@@ -32,8 +32,13 @@ Fires a grappling hook in the aimed direction. When the hook hits terrain, it an
 - **Up/Down arrows**: Shorten/lengthen the rope (30px min, 200px max)
 - **Click or Space**: Release the rope — the worm inherits the swing momentum
 - Auto-detaches after 5 seconds
-- Uses a turn but deals no damage. The AI does not use this weapon.
-- Visual: brown rope line between anchor and worm, grey anchor dot on terrain.
+- Uses a turn but deals no damage. AI (medium/hard) uses it for repositioning when blocked or at height disadvantage.
+- **Visual feedback**:
+  - Catenary bezier curve with sag when slack, straight when taut
+  - Rope color shifts from brown (slack) to gold (taut) based on angular velocity
+  - Rope thickness decreases with tension; glow effect at high speeds
+  - Swing arc indicator shows the pendulum path
+  - Momentum arrow shows release velocity (green=safe, red=dangerous fall)
 
 ## Controls
 
@@ -121,6 +126,7 @@ Worms are placed on the terrain floor via `getSurfaceY()`, which scans downward 
 - F key immediately recenters on active worm
 - Scroll wheel zooms in/out (0.3x - 2x range) when not aiming
 - Pinch-to-zoom on touch devices: two-finger spread/pinch controls zoom, with simultaneous two-finger pan
+- All UI elements (HUD, TeamPanel, Minimap, TouchControls) counter-scale with zoom to stay fixed in screen space — they maintain constant pixel size and position regardless of zoom level
 
 ## UI Overlays
 
@@ -236,7 +242,8 @@ Selectable in Game Setup via the "AI LEVEL" row (visible only when VS CPU is ON)
 | Pick pool | Top 10 | Top 5 | Best only |
 | Movement | Yes (30 steps, 25% chance) | Yes (50 steps, 45% chance) | Yes (40 steps, 55% chance) |
 | Approach threshold | 500px | 400px | 350px |
-| Weapons | Bazooka, Grenade, Cluster Bomb | All (except Teleport, Ninja Rope) | All (except Teleport, Ninja Rope) |
+| Rope usage | Never | When blocked or height-disadvantaged (8% random) | When blocked or height-disadvantaged (15% random) |
+| Weapons | Bazooka, Grenade, Cluster Bomb | All (except Teleport) | All (except Teleport) |
 
 ### Miss Chance
 On Easy and Medium difficulties, a percentage of shots receive an additional random offset on top of normal jitter, simulating intentional inaccuracy. This prevents the AI from being too dominant while still making intelligent decisions about weapon choice and positioning.
@@ -272,6 +279,20 @@ Movement behavior:
 - **Re-evaluation**: After moving, the AI recalculates the best shot from its new position.
 
 If no good shot exists even after moving, the AI falls back to firing a rough shot toward the nearest enemy.
+
+### Rope Repositioning (Medium/Hard)
+Before shooting, the AI evaluates whether to use the ninja rope for tactical repositioning. Rope usage triggers when:
+- **Movement blocked**: Walls on both sides of the worm exceed climbable height
+- **Height disadvantage**: Closest enemy is 120+ pixels above the current position
+- **Opportunistic**: Random chance (15% hard, 8% medium) when the best available shot is weak (score < 30)
+
+Rope execution:
+1. `findRopeAngle()` simulates the rope projectile at 12 candidate angles, looking for terrain anchor points above and toward the nearest enemy
+2. Anchors are scored by direction (favors toward enemy), height gain, and valid rope length range
+3. The AI selects the ninja rope, aims at the chosen angle, fires, waits for attachment, swings for 2 seconds, then detaches
+4. After detaching, the turn resolves normally (the rope uses the turn)
+
+Easy AI never uses the ninja rope.
 
 ### Timing
 - Think delay: 800ms before weapon selection

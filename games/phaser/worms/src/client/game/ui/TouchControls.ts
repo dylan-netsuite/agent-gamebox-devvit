@@ -148,6 +148,12 @@ export class TouchControls {
     });
   }
 
+  reposition(cam: Phaser.Cameras.Scene2D.Camera): void {
+    const invZ = 1 / cam.zoom;
+    this.container.setScale(invZ);
+    this.container.setPosition(0, 0);
+  }
+
   destroy(): void {
     if (this.moveLeftInterval) clearInterval(this.moveLeftInterval);
     if (this.moveRightInterval) clearInterval(this.moveRightInterval);

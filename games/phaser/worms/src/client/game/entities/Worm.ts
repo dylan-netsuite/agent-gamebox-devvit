@@ -391,6 +391,8 @@ export class Worm {
 
     if (this._ropeAnchor) {
       this.drawRope(this.x, drawY, this._ropeAnchor.x, this._ropeAnchor.y);
+      this.drawSwingArc(this._ropeAnchor.x, this._ropeAnchor.y);
+      this.drawMomentumArrow(this.x, drawY);
     }
 
     const barWidth = WORM_WIDTH + 10;
@@ -443,14 +445,122 @@ export class Worm {
 
   private drawRope(wormX: number, wormY: number, anchorX: number, anchorY: number): void {
     const g = this.ropeGraphics;
-    g.lineStyle(2, 0x8b6914, 0.9);
+    const speed = Math.abs(this._ropeAngularVel);
+    const tension = Math.min(1, speed / 0.03);
+
+    const thickness = 3 - tension * 1.5;
+    const r = Math.round(0x8b + tension * (0xff - 0x8b));
+    const gVal = Math.round(0x69 + tension * (0xaa - 0x69));
+    const b = Math.round(0x14 + tension * (0x44 - 0x14));
+    const ropeColor = (r << 16) | (gVal << 8) | b;
+
+    const midX = (anchorX + wormX) / 2;
+    const midY = (anchorY + wormY) / 2;
+    const sag = (1 - tension) * this._ropeLength * 0.15;
+    const ctrlX = midX;
+    const ctrlY = midY + sag;
+
+    g.lineStyle(thickness, ropeColor, 0.9);
     g.beginPath();
     g.moveTo(anchorX, anchorY);
-    g.lineTo(wormX, wormY);
+    const steps = 16;
+    for (let i = 1; i <= steps; i++) {
+      const t = i / steps;
+      const inv = 1 - t;
+      const px = inv * inv * anchorX + 2 * inv * t * ctrlX + t * t * wormX;
+      const py = inv * inv * anchorY + 2 * inv * t * ctrlY + t * t * wormY;
+      g.lineTo(px, py);
+    }
     g.strokePath();
 
-    g.fillStyle(0x666666, 1);
-    g.fillCircle(anchorX, anchorY, 3);
+    if (tension > 0.5) {
+      g.lineStyle(thickness + 2, ropeColor, (tension - 0.5) * 0.3);
+      g.beginPath();
+      g.moveTo(anchorX, anchorY);
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const inv = 1 - t;
+        const px = inv * inv * anchorX + 2 * inv * t * ctrlX + t * t * wormX;
+        const py = inv * inv * anchorY + 2 * inv * t * ctrlY + t * t * wormY;
+        g.lineTo(px, py);
+      }
+      g.strokePath();
+    }
+
+    g.fillStyle(0x555555, 1);
+    g.fillCircle(anchorX, anchorY, 4);
+    g.fillStyle(0x888888, 1);
+    g.fillCircle(anchorX, anchorY, 2);
+  }
+
+  private drawSwingArc(anchorX: number, anchorY: number): void {
+    if (!this._ropeAnchor) return;
+    const g = this.ropeGraphics;
+    const arcPoints = 24;
+    const sweepRange = Math.PI * 0.8;
+    const startAngle = this._ropeAngle - sweepRange / 2;
+
+    g.lineStyle(1, 0xffffff, 0.12);
+    g.beginPath();
+    for (let i = 0; i <= arcPoints; i++) {
+      const a = startAngle + (i / arcPoints) * sweepRange;
+      const px = anchorX + Math.sin(a) * this._ropeLength;
+      const py = anchorY + Math.cos(a) * this._ropeLength;
+      if (i === 0) g.moveTo(px, py);
+      else g.lineTo(px, py);
+    }
+    g.strokePath();
+
+    g.fillStyle(0xffffff, 0.25);
+    const dotAngle = this._ropeAngle;
+    g.fillCircle(
+      anchorX + Math.sin(dotAngle) * this._ropeLength,
+      anchorY + Math.cos(dotAngle) * this._ropeLength,
+      3,
+    );
+  }
+
+  private drawMomentumArrow(wormX: number, wormY: number): void {
+    if (!this._ropeAnchor) return;
+    const g = this.ropeGraphics;
+    const tangentialSpeed = this._ropeAngularVel * this._ropeLength;
+    const vx = Math.cos(this._ropeAngle) * tangentialSpeed;
+    const vy = -Math.abs(Math.sin(this._ropeAngle) * tangentialSpeed) - 1;
+    const speed = Math.sqrt(vx * vx + vy * vy);
+
+    if (speed < 0.5) return;
+
+    const scale = Math.min(speed * 8, 50);
+    const nx = vx / speed;
+    const ny = vy / speed;
+    const endX = wormX + nx * scale;
+    const endY = wormY + ny * scale;
+
+    const dangerThreshold = FALL_DAMAGE_THRESHOLD * 0.7;
+    const launchVy = vy;
+    const estimatedFall = launchVy < 0 ? (launchVy * launchVy) / (2 * 0.5) : 0;
+    const danger = Math.min(1, estimatedFall / dangerThreshold);
+    const arrowR = Math.round(danger * 0xff + (1 - danger) * 0x3f);
+    const arrowG = Math.round((1 - danger) * 0xb9 + danger * 0x44);
+    const arrowColor = (arrowR << 16) | (arrowG << 8) | 0x50;
+
+    g.lineStyle(2, arrowColor, 0.7);
+    g.beginPath();
+    g.moveTo(wormX, wormY);
+    g.lineTo(endX, endY);
+    g.strokePath();
+
+    const headLen = 6;
+    const angle = Math.atan2(ny, nx);
+    g.fillStyle(arrowColor, 0.7);
+    g.fillTriangle(
+      endX,
+      endY,
+      endX - Math.cos(angle - 0.4) * headLen,
+      endY - Math.sin(angle - 0.4) * headLen,
+      endX - Math.cos(angle + 0.4) * headLen,
+      endY - Math.sin(angle + 0.4) * headLen,
+    );
   }
 
   takeDamage(amount: number): void {

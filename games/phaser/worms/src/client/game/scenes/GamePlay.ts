@@ -43,6 +43,7 @@ export class GamePlay extends Scene {
   private hud!: HUD;
   private teamPanel!: TeamPanel;
   private minimap!: Minimap;
+  private touchControls!: TouchControls;
   private aiController: AIController | null = null;
 
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -186,7 +187,7 @@ export class GamePlay extends Scene {
       },
     );
 
-    void new TouchControls(this, {
+    this.touchControls = new TouchControls(this, {
       onMoveLeft: () => {
         if (!this.canAct()) return;
         if (this.weaponSystem.currentState === 'idle') {
@@ -549,6 +550,7 @@ export class GamePlay extends Scene {
         () => {
           this.advanceTurn();
         },
+        this.projectileManager,
       );
     }
   }
@@ -638,6 +640,7 @@ export class GamePlay extends Scene {
   private showGameOver(winningTeam: number): void {
     SoundManager.play('gameover');
     const cam = this.cameras.main;
+    cam.setZoom(1);
     this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);
 
     const bg = this.add.graphics();
@@ -1212,9 +1215,18 @@ export class GamePlay extends Scene {
     }
 
     this.followActiveWorm();
+    this.repositionUI();
     this.hud.update();
     this.teamPanel.update();
     this.minimap.update();
+  }
+
+  private repositionUI(): void {
+    const cam = this.cameras.main;
+    this.hud.reposition(cam);
+    this.teamPanel.reposition(cam);
+    this.minimap.reposition(cam);
+    this.touchControls.reposition(cam);
   }
 
   private followActiveWorm(): void {

@@ -1,5 +1,6 @@
 import type { Worm } from '../entities/Worm';
 import type { WeaponSystem } from './WeaponSystem';
+import type { ProjectileManager } from './ProjectileManager';
 import type { TerrainEngine } from '../engine/TerrainEngine';
 import type { WindSystem } from './WindSystem';
 import { WEAPONS, WEAPON_ORDER } from '../../../shared/types/weapons';
@@ -10,6 +11,8 @@ const AI_THINK_DELAY = 800;
 const AI_AIM_DELAY = 500;
 const AI_FIRE_DELAY = 300;
 const AI_MOVE_STEP_DELAY = 30;
+const AI_ROPE_SWING_MS = 2000;
+const AI_ROPE_CHECK_INTERVAL = 100;
 
 const SIM_MAX_STEPS = 600;
 
@@ -118,6 +121,7 @@ export class AIController {
   private terrain: TerrainEngine | null = null;
   private wind: WindSystem | null = null;
   private config: DifficultyConfig;
+  private _projectileManager: ProjectileManager | null = null;
 
   constructor(aiTeams: number[], difficulty: AIDifficulty = 'medium') {
     this.aiTeams = new Set(aiTeams);
@@ -139,6 +143,7 @@ export class AIController {
     allWorms: Worm[],
     weaponSystem: WeaponSystem,
     onComplete: () => void,
+    projectileManager?: ProjectileManager,
   ): void {
     const enemies = allWorms.filter((w) => w.alive && w.team !== activeWorm.team);
     const friendlies = allWorms.filter(
@@ -150,9 +155,21 @@ export class AIController {
       return;
     }
 
+    this._projectileManager = projectileManager ?? null;
+
     const cfg = this.config;
     const best = this.findBestShot(activeWorm, enemies, friendlies);
     const closestDist = this.closestEnemyDist(activeWorm, enemies);
+
+    if (this.shouldUseRope(activeWorm, enemies, best)) {
+      const ropeAngle = this.findRopeAngle(activeWorm, enemies);
+      if (ropeAngle !== null) {
+        this.executeRopeReposition(
+          scene, activeWorm, enemies, friendlies, weaponSystem, ropeAngle,
+        );
+        return;
+      }
+    }
 
     const shouldMoveProactively =
       cfg.canMove &&
@@ -809,6 +826,160 @@ export class AIController {
       } else {
         this.executeFallbackShot(scene, weaponSystem, worm, enemies);
       }
+    });
+  }
+
+  private shouldUseRope(worm: Worm, enemies: Worm[], bestShot: ShotCandidate | null): boolean {
+    if (!this.terrain) return false;
+    const cfg = this.config;
+
+    if (cfg === DIFFICULTY_CONFIGS.easy) return false;
+
+    const closestEnemy = this.closestEnemy(worm, enemies);
+    const heightDiff = worm.y - closestEnemy.y;
+
+    const isBlocked = this.isMovementBlocked(worm);
+    const enemyMuchHigher = heightDiff > 80;
+    const poorShot = !bestShot || bestShot.score < 25;
+
+    if (isBlocked && poorShot) return true;
+    if (enemyMuchHigher && poorShot) return true;
+
+    const ropeChance = cfg === DIFFICULTY_CONFIGS.hard ? 0.15 : 0.08;
+    if (poorShot && Math.random() < ropeChance) return true;
+
+    return false;
+  }
+
+  private isMovementBlocked(worm: Worm): boolean {
+    if (!this.terrain) return false;
+    const checkDist = 30;
+    const rightX = worm.x + checkDist;
+    const leftX = worm.x - checkDist;
+    const footY = worm.y + 20;
+
+    let rightBlocked = false;
+    let leftBlocked = false;
+
+    if (rightX < this.terrain.getWidth()) {
+      const rightSurface = this.terrain.getSurfaceY(rightX);
+      rightBlocked = footY - rightSurface > 12;
+    }
+    if (leftX > 0) {
+      const leftSurface = this.terrain.getSurfaceY(leftX);
+      leftBlocked = footY - leftSurface > 12;
+    }
+
+    return rightBlocked && leftBlocked;
+  }
+
+  private findRopeAngle(worm: Worm, enemies: Worm[]): number | null {
+    if (!this.terrain) return null;
+
+    const target = this.closestEnemy(worm, enemies);
+    const dirToEnemy = target.x > worm.x ? 1 : -1;
+
+    const candidates: { angle: number; score: number }[] = [];
+
+    for (let ai = 0; ai < 12; ai++) {
+      const angle = -Math.PI * 0.9 + (ai / 11) * Math.PI * 0.8;
+
+      const speed = 12;
+      let px = worm.x;
+      let py = worm.y;
+      const vx = Math.cos(angle) * speed;
+      let vy = Math.sin(angle) * speed;
+
+      let hitX = 0;
+      let hitY = 0;
+      let hit = false;
+
+      for (let step = 0; step < 80; step++) {
+        px += vx;
+        py += vy;
+        vy += 0.05;
+
+        if (px < 0 || px >= this.terrain.getWidth() || py >= this.terrain.getHeight()) break;
+        if (py < 0) continue;
+
+        if (this.terrain.isSolid(px, py)) {
+          while (py > 0 && this.terrain.isSolid(px, py)) py -= 1;
+          hitX = px;
+          hitY = py;
+          hit = true;
+          break;
+        }
+      }
+
+      if (!hit) continue;
+      if (hitY > worm.y - 20) continue;
+
+      let score = 10;
+      const dx = hitX - worm.x;
+      if ((dx > 0 && dirToEnemy > 0) || (dx < 0 && dirToEnemy < 0)) {
+        score += 20;
+      }
+      if (hitY < worm.y - 60) score += 10;
+
+      const ropeLen = Math.sqrt((hitX - worm.x) ** 2 + (hitY - worm.y) ** 2);
+      if (ropeLen > 40 && ropeLen < 200) score += 10;
+
+      candidates.push({ angle, score });
+    }
+
+    if (candidates.length === 0) return null;
+    candidates.sort((a, b) => b.score - a.score);
+    return candidates[0]!.angle;
+  }
+
+  private executeRopeReposition(
+    scene: Phaser.Scene,
+    worm: Worm,
+    _enemies: Worm[],
+    _friendlies: Worm[],
+    weaponSystem: WeaponSystem,
+    ropeAngle: number,
+  ): void {
+    const ropeIdx = WEAPON_ORDER.indexOf('ninja-rope');
+    weaponSystem.selectWeapon(ropeIdx);
+
+    scene.time.delayedCall(AI_AIM_DELAY, () => {
+      weaponSystem.startAiming();
+      weaponSystem.setAngleDirect(ropeAngle);
+      weaponSystem.setPowerDirect(100);
+
+      scene.time.delayedCall(AI_FIRE_DELAY, () => {
+        weaponSystem.fire(worm);
+
+        const startTime = scene.time.now;
+        const checkAttach = scene.time.addEvent({
+          delay: AI_ROPE_CHECK_INTERVAL,
+          repeat: -1,
+          callback: () => {
+            if (worm.isOnRope) {
+              checkAttach.destroy();
+
+              scene.time.delayedCall(AI_ROPE_SWING_MS, () => {
+                if (worm.isOnRope) {
+                  worm.detachRope();
+                  this._projectileManager?.cleanupRopes();
+                }
+
+                scene.time.delayedCall(600, () => {
+                  weaponSystem.forceResolve();
+                });
+              });
+              return;
+            }
+
+            if (scene.time.now - startTime > 3000) {
+              checkAttach.destroy();
+              this._projectileManager?.cleanupRopes();
+              weaponSystem.forceResolve();
+            }
+          },
+        });
+      });
     });
   }
 

@@ -112,6 +112,12 @@ export class Minimap {
     );
   }
 
+  reposition(cam: Phaser.Cameras.Scene2D.Camera): void {
+    const invZ = 1 / cam.zoom;
+    this.container.setScale(invZ);
+    this.container.setPosition((cam.width - MAP_W - 8) * invZ, 8 * invZ);
+  }
+
   destroy(): void {
     this.container.destroy();
   }

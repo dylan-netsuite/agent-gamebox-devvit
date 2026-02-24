@@ -1,5 +1,27 @@
 # Reddit Royale - Changelog
 
+## Rope Polish, AI Rope Usage & HUD Viewport Fix (v0.0.12.24)
+
+### Fixed — HUD Viewport Pinning
+- **HUD.ts / TeamPanel.ts / Minimap.ts / TouchControls.ts**: All UI elements now counter-scale and reposition every frame to stay fixed in screen space regardless of camera zoom level. Previously, `setScrollFactor(0)` only prevented scroll — zoom still scaled and displaced UI elements off-screen.
+- **GamePlay.ts**: Added `repositionUI()` called each frame, invoking `reposition(cam)` on HUD, TeamPanel, Minimap, and TouchControls. Game over overlay now resets zoom to 1x.
+- **HUD.ts**: Input hit-testing updated with `pointerToLocal()` to correctly map screen-space pointer coordinates to the counter-scaled container space. Tooltip positioning also zoom-aware.
+
+### Improved — Ninja Rope Visual Feedback
+- **Worm.ts `drawRope()`**: Replaced straight-line rope with a quadratic bezier catenary curve that sags when slack and straightens under tension. Rope color shifts from dark brown (relaxed) to bright gold (high tension). Rope thickness varies inversely with angular velocity. Glow effect added at high tension.
+- **Worm.ts `drawSwingArc()`**: Faint dotted arc drawn along the pendulum path showing where the worm will travel during its swing. Current position marker dot on the arc.
+- **Worm.ts `drawMomentumArrow()`**: Direction arrow shows the velocity vector the worm would inherit on detach. Color-coded green (safe landing) to red (dangerous fall) based on estimated fall height.
+- **Anchor point**: Improved visual with dark/light concentric circles.
+
+### Added — AI Rope Repositioning
+- **AIController.ts**: AI on medium and hard difficulty can now use the ninja rope to reposition when movement is blocked (walls on both sides too high to climb) or when the closest enemy is on significantly higher ground.
+- `shouldUseRope()` evaluates terrain blockage, height disadvantage, and shot quality. Easy AI never uses rope.
+- `findRopeAngle()` simulates rope projectile trajectories at 12 angles, scoring for terrain anchor above the worm in the direction of the enemy.
+- `executeRopeReposition()` selects ninja-rope, aims, fires, waits for attachment, swings for 2 seconds, then detaches.
+- Random rope usage chance: 15% on hard, 8% on medium (only when current shot quality is poor).
+
+---
+
 ## AI Parachute, Ninja Rope, Sounds & Knockback Tuning (v0.0.12.18)
 
 ### Added — Ninja Rope Utility Weapon

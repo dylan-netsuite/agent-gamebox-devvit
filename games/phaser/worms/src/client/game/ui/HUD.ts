@@ -285,33 +285,40 @@ export class HUD {
     this.statusContainer.y = infoY;
   }
 
+  private pointerToLocal(pointer: Phaser.Input.Pointer): { x: number; y: number } {
+    const zoom = this.scene.cameras.main.zoom;
+    return {
+      x: pointer.x / zoom - this.barContainer.x,
+      y: pointer.y / zoom - this.barContainer.y,
+    };
+  }
+
   private setupInput(): void {
     this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      const localX = pointer.x - this.panelX;
-      const localY = pointer.y - this.barContainer.y;
+      const local = this.pointerToLocal(pointer);
 
-      if (localX < 0 || localX > this.panelW || localY < 0) return;
+      if (local.x < 0 || local.x > this.panelW || local.y < 0) return;
 
       const panelH = this.expanded ? this.totalExpandedH : TOGGLE_H + BAR_H;
-      if (localY > panelH) return;
+      if (local.y > panelH) return;
 
       this._clickedThisFrame = true;
 
-      if (localY < TOGGLE_H) {
+      if (local.y < TOGGLE_H) {
         this.toggle();
         return;
       }
 
-      if (this.expanded && localY >= TOGGLE_H && localY < TOGGLE_H + this.weaponRowH) {
+      if (this.expanded && local.y >= TOGGLE_H && local.y < TOGGLE_H + this.weaponRowH) {
         const weaponCount = WEAPON_ORDER.length;
         const totalSlotsW = weaponCount * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP;
         const startX = (this.panelW - totalSlotsW) / 2;
-        const slotLocalY = localY - TOGGLE_H - PAD;
+        const slotLocalY = local.y - TOGGLE_H - PAD;
 
         if (slotLocalY >= 0 && slotLocalY <= SLOT_SIZE) {
           for (let i = 0; i < weaponCount; i++) {
             const sx = startX + i * (SLOT_SIZE + SLOT_GAP);
-            if (localX >= sx && localX <= sx + SLOT_SIZE) {
+            if (local.x >= sx && local.x <= sx + SLOT_SIZE) {
               this.weapons.selectWeapon(i);
               return;
             }
@@ -321,15 +328,14 @@ export class HUD {
     });
 
     this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      const localX = pointer.x - this.panelX;
-      const localY = pointer.y - this.barContainer.y;
+      const local = this.pointerToLocal(pointer);
 
       if (
         !this.expanded ||
-        localX < 0 ||
-        localX > this.panelW ||
-        localY < TOGGLE_H ||
-        localY >= TOGGLE_H + this.weaponRowH
+        local.x < 0 ||
+        local.x > this.panelW ||
+        local.y < TOGGLE_H ||
+        local.y >= TOGGLE_H + this.weaponRowH
       ) {
         if (this.hoveredSlot !== -1) this.hoveredSlot = -1;
         return;
@@ -338,13 +344,13 @@ export class HUD {
       const weaponCount = WEAPON_ORDER.length;
       const totalSlotsW = weaponCount * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP;
       const startX = (this.panelW - totalSlotsW) / 2;
-      const slotLocalY = localY - TOGGLE_H - PAD;
+      const slotLocalY = local.y - TOGGLE_H - PAD;
 
       let found = -1;
       if (slotLocalY >= 0 && slotLocalY <= SLOT_SIZE) {
         for (let i = 0; i < weaponCount; i++) {
           const sx = startX + i * (SLOT_SIZE + SLOT_GAP);
-          if (localX >= sx && localX <= sx + SLOT_SIZE) {
+          if (local.x >= sx && local.x <= sx + SLOT_SIZE) {
             found = i;
             break;
           }
@@ -360,9 +366,10 @@ export class HUD {
     this.expanded = !this.expanded;
 
     const cam = this.scene.cameras.main;
+    const invZ = 1 / cam.zoom;
     const targetY = this.expanded
-      ? cam.height - this.totalExpandedH
-      : cam.height - (TOGGLE_H + BAR_H);
+      ? cam.height * invZ - this.totalExpandedH
+      : cam.height * invZ - (TOGGLE_H + BAR_H);
 
     this.scene.tweens.add({
       targets: this.barContainer,
@@ -598,14 +605,35 @@ export class HUD {
     const startX = (this.panelW - totalSlotsW) / 2;
     const slotX = startX + this.hoveredSlot * (SLOT_SIZE + SLOT_GAP);
 
-    const tooltipX = this.panelX + slotX + SLOT_SIZE / 2 - ttW / 2;
+    const invZ = 1 / this.scene.cameras.main.zoom;
+    const tooltipX = this.barContainer.x + slotX + SLOT_SIZE / 2 - ttW / 2;
     const tooltipY = this.barContainer.y - ttH - 6;
 
     this.tooltipContainer.setPosition(
-      Math.max(4, Math.min(tooltipX, this.scene.cameras.main.width - ttW - 4)),
-      Math.max(4, tooltipY),
+      Math.max(4 * invZ, Math.min(tooltipX, this.scene.cameras.main.width * invZ - ttW - 4 * invZ)),
+      Math.max(4 * invZ, tooltipY),
     );
     this.tooltipContainer.setVisible(true);
+  }
+
+  reposition(cam: Phaser.Cameras.Scene2D.Camera): void {
+    const invZ = 1 / cam.zoom;
+
+    const weaponCount = WEAPON_ORDER.length;
+    const naturalW = INFO_W + PAD + weaponCount * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP + PAD + INFO_W;
+    this.panelW = Math.min(naturalW, cam.width * invZ - 20);
+    this.panelX = (cam.width * invZ - this.panelW) / 2;
+
+    const barY = this.expanded
+      ? cam.height * invZ - this.totalExpandedH
+      : cam.height * invZ - (TOGGLE_H + BAR_H);
+
+    this.barContainer.setScale(invZ);
+    this.barContainer.setPosition(this.panelX, barY);
+
+    if (this.tooltipContainer) {
+      this.tooltipContainer.setScale(invZ);
+    }
   }
 
   destroy(): void {
