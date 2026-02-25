@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.2.169 - Hole 8: Tangled Pipe Visuals + Blue Pipe Rebalance (2026-02-25)
+
+### Changed
+- **Tangled pipe visuals** — replaced single-curve pipe paths with multi-segment Bezier chains (4 cubic segments, 12 waypoints per pipe). Each pipe now takes a wildly different route through the gap, with paths crossing over each other to create a confusing tangle. Three unique path variants (red/blue/green) ensure visual confusion about which pipe goes where.
+- **Blue pipe rebalanced** — moved exit from (130, 90) top-left to (370, 300) bottom-right corner of exit area, and changed exit angle from `π/4` to `π*0.75` (down-left). Now exits far from the hole, requiring multiple shots to reach the cup — no longer possible to easily hole-in-one via blue pipe.
+- **Pipe rendering upgraded** — 4-layer rendering (dark outline, gray mid-tone, colored fill, white highlight) with 30 steps per Bezier segment for smoother curves.
+
 ## v0.0.2.157 - Hole 8: Fixed Exit Directions + Pipe Decoration (2026-02-25)
 
 ### Fixed

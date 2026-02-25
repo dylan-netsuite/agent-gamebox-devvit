@@ -148,9 +148,9 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 |----------|-------|
 | Entry Zone | Rectangular overlap trigger (28x28 screen pixels, from 14 design unit radius) |
 | Behavior | When ball center enters the entry rectangle, ball position is instantly set to the exit coordinates. If `exitAngle` is defined, ball exits at that fixed angle with preserved speed (minimum 1.5). Otherwise, velocity (vx, vy) is preserved exactly. |
-| Exit Angles | Red: `π` (left), Blue: `π/4` (down-right), Green: `-π/2` (straight up toward hole) |
+| Exit Angles | Red: `π` (left into sand trap), Blue: `π*0.75` (down-left, far from hole), Green: `-π/2` (straight up toward hole) |
 | Cooldown | 30 frames (~0.5s at 60fps) — prevents immediate re-triggering after teleport |
-| Visual | Colored circle endpoints with dark outer ring, colored fill, dark center hole, specular highlight, white stroke ring. Cubic Bezier pipe curves connect entry to exit with three layers (outline, color, highlight). |
+| Visual | Colored circle endpoints with dark outer ring, colored fill, dark center hole, specular highlight, white stroke ring. Multi-segment cubic Bezier pipe chains (12 waypoints, 4 segments per pipe) connect entry to exit with four rendering layers (dark outline, gray mid-tone, colored fill, white highlight). Each pipe takes a unique route that crosses over other pipes, creating a visually confusing tangle. |
 | Colors | Red (0xff3333), Blue (0x3399ff), Green (0x33cc33) |
 
 ## Hole Capture

@@ -332,6 +332,70 @@ export class Obstacles {
     this.zoneGraphics.fillRect(tl.x, tl.y, w, h);
   }
 
+  private generateTangledPath(
+    entry: { x: number; y: number },
+    exit: { x: number; y: number },
+    colorSeed: number,
+  ): { x: number; y: number }[] {
+    const s = (v: number) => scaleValue(this.scene, v);
+    const midX = (entry.x + exit.x) / 2;
+    const midY = (entry.y + exit.y) / 2;
+    const gapH = Math.abs(exit.y - entry.y);
+
+    const band = colorSeed & 0xff;
+    const variant = band < 85 ? 0 : band < 170 ? 1 : 2;
+
+    if (variant === 0) {
+      // Red: hard right, swing far left, loop back right, curl left to exit
+      return [
+        { x: entry.x, y: entry.y },
+        { x: entry.x + s(90), y: entry.y - s(10) },
+        { x: midX + s(110), y: midY + gapH * 0.3 },
+        { x: midX - s(20), y: midY + gapH * 0.15 },
+        { x: midX - s(110), y: midY },
+        { x: midX - s(80), y: midY - gapH * 0.1 },
+        { x: midX + s(90), y: midY - gapH * 0.15 },
+        { x: midX + s(40), y: midY - gapH * 0.25 },
+        { x: midX - s(60), y: midY - gapH * 0.3 },
+        { x: exit.x - s(30), y: exit.y + s(20) },
+        { x: exit.x + s(10), y: exit.y + s(5) },
+        { x: exit.x, y: exit.y },
+      ];
+    } else if (variant === 1) {
+      // Blue: hard left, sweep far right, cross center twice, spiral to exit
+      return [
+        { x: entry.x, y: entry.y },
+        { x: entry.x - s(80), y: entry.y - s(15) },
+        { x: midX - s(100), y: midY + gapH * 0.25 },
+        { x: midX + s(30), y: midY + gapH * 0.1 },
+        { x: midX + s(110), y: midY },
+        { x: midX + s(70), y: midY - gapH * 0.1 },
+        { x: midX - s(80), y: midY - gapH * 0.12 },
+        { x: midX - s(50), y: midY - gapH * 0.2 },
+        { x: midX + s(60), y: midY - gapH * 0.28 },
+        { x: exit.x + s(40), y: exit.y + s(25) },
+        { x: exit.x - s(15), y: exit.y + s(8) },
+        { x: exit.x, y: exit.y },
+      ];
+    } else {
+      // Green: S-curve right, cross left, double back right, cross left again to exit
+      return [
+        { x: entry.x, y: entry.y },
+        { x: entry.x + s(50), y: entry.y - s(20) },
+        { x: midX + s(80), y: midY + gapH * 0.28 },
+        { x: midX + s(20), y: midY + gapH * 0.12 },
+        { x: midX - s(90), y: midY + gapH * 0.05 },
+        { x: midX - s(60), y: midY - gapH * 0.05 },
+        { x: midX + s(100), y: midY - gapH * 0.1 },
+        { x: midX + s(30), y: midY - gapH * 0.2 },
+        { x: midX - s(70), y: midY - gapH * 0.28 },
+        { x: exit.x - s(20), y: exit.y + s(20) },
+        { x: exit.x + s(15), y: exit.y + s(5) },
+        { x: exit.x, y: exit.y },
+      ];
+    }
+  }
+
   addTeleporter(def: TeleporterDef): void {
     const entry = toScreen(this.scene, def.entryX, def.entryY);
     const exit = toScreen(this.scene, def.exitX, def.exitY);
@@ -349,40 +413,52 @@ export class Obstacles {
     const color = def.color ?? 0x9370db;
     const g = this.graphics;
 
-    const midY = (entry.y + exit.y) / 2;
-    const pipeW = scaleValue(this.scene, 6);
-    const offsetX = (entry.x - exit.x) * 0.6;
+    const pipeW = scaleValue(this.scene, 5);
+    const s = scaleValue(this.scene, 1);
 
-    const cp1x = entry.x + offsetX;
-    const cp1y = midY - scaleValue(this.scene, 30);
-    const cp2x = exit.x - offsetX;
-    const cp2y = midY + scaleValue(this.scene, 30);
+    const bezierPoint = (t: number, p0: number, p1: number, p2: number, p3: number) => {
+      const u = 1 - t;
+      return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
+    };
 
-    const drawBezier = (gfx: Phaser.GameObjects.Graphics, x0: number, y0: number,
-      cx1: number, cy1: number, cx2: number, cy2: number, x3: number, y3: number) => {
-      const steps = 20;
+    const drawChainedBeziers = (
+      gfx: Phaser.GameObjects.Graphics,
+      waypoints: { x: number; y: number }[],
+      offsetXPx = 0,
+    ) => {
+      if (waypoints.length < 2) return;
+      const segs = 30;
       gfx.beginPath();
-      gfx.moveTo(x0, y0);
-      for (let i = 1; i <= steps; i++) {
-        const t = i / steps;
-        const u = 1 - t;
-        const px = u * u * u * x0 + 3 * u * u * t * cx1 + 3 * u * t * t * cx2 + t * t * t * x3;
-        const py = u * u * u * y0 + 3 * u * u * t * cy1 + 3 * u * t * t * cy2 + t * t * t * y3;
-        gfx.lineTo(px, py);
+      gfx.moveTo(waypoints[0].x + offsetXPx, waypoints[0].y);
+
+      for (let w = 0; w < waypoints.length - 1; w += 3) {
+        const p0 = waypoints[w];
+        const p1 = waypoints[Math.min(w + 1, waypoints.length - 1)];
+        const p2 = waypoints[Math.min(w + 2, waypoints.length - 1)];
+        const p3 = waypoints[Math.min(w + 3, waypoints.length - 1)];
+        for (let i = 1; i <= segs; i++) {
+          const t = i / segs;
+          const px = bezierPoint(t, p0.x, p1.x, p2.x, p3.x) + offsetXPx;
+          const py = bezierPoint(t, p0.y, p1.y, p2.y, p3.y);
+          gfx.lineTo(px, py);
+        }
       }
       gfx.strokePath();
     };
 
-    g.lineStyle(pipeW + 2, 0x222222, 0.5);
-    drawBezier(g, entry.x, entry.y, cp1x, cp1y, cp2x, cp2y, exit.x, exit.y);
+    const wp = this.generateTangledPath(entry, exit, def.color ?? 0);
 
-    g.lineStyle(pipeW, color, 0.7);
-    drawBezier(g, entry.x, entry.y, cp1x, cp1y, cp2x, cp2y, exit.x, exit.y);
+    g.lineStyle(pipeW + 3 * s, 0x111111, 0.6);
+    drawChainedBeziers(g, wp);
 
-    g.lineStyle(pipeW * 0.4, 0xffffff, 0.2);
-    drawBezier(g, entry.x - pipeW * 0.2, entry.y,
-      cp1x - pipeW * 0.2, cp1y, cp2x - pipeW * 0.2, cp2y,
-      exit.x - pipeW * 0.2, exit.y);
+    g.lineStyle(pipeW + 1 * s, 0x333333, 0.5);
+    drawChainedBeziers(g, wp);
+
+    g.lineStyle(pipeW, color, 0.8);
+    drawChainedBeziers(g, wp);
+
+    g.lineStyle(pipeW * 0.35, 0xffffff, 0.15);
+    drawChainedBeziers(g, wp, -pipeW * 0.25);
 
     for (const pos of [entry, exit]) {
       g.fillStyle(0x000000, 0.3);

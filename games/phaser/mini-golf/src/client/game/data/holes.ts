@@ -360,13 +360,13 @@ export const HOLES: HoleDefinition[] = [
         exitAngle: Math.PI,
         color: 0xff3333,
       },
-      // Blue pipe — exits pointing down-right into corner for chaotic bounce
+      // Blue pipe — exits into far bottom-right corner, pointing away from hole
       {
         entryX: 310,
         entryY: 590,
-        exitX: 130,
-        exitY: 90,
-        exitAngle: Math.PI / 4,
+        exitX: 370,
+        exitY: 300,
+        exitAngle: Math.PI * 0.75,
         color: 0x3399ff,
       },
       // Green pipe — exits pointing straight up at the hole
