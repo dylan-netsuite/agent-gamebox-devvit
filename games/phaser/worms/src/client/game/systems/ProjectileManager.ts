@@ -105,16 +105,35 @@ export class ProjectileManager {
     weapon: WeaponDef,
     shooter?: Worm,
   ): void {
-    const maxDist = 3000;
+    const maxDist = 1500;
     const step = 2;
-    const dx = Math.cos(angle) * step;
-    const dy = Math.sin(angle) * step;
+    const baseDx = Math.cos(angle) * step;
+    const baseDy = Math.sin(angle) * step;
+
+    const driftStart = 400;
+    const windForce = this.wind.getWindForce();
+    const perpX = -Math.sin(angle);
+    const perpY = Math.cos(angle);
+    const spreadSeed = Math.abs(Math.sin(angle * 12345.6789)) * 10000;
 
     let hitX = originX;
     let hitY = originY;
     let directHitWorm: Worm | null = null;
 
     for (let d = 0; d < maxDist; d += step) {
+      let dx = baseDx;
+      let dy = baseDy;
+
+      if (d > driftStart) {
+        const t = (d - driftStart) / (maxDist - driftStart);
+        dx += windForce * t * 3 * step;
+
+        const spreadAmount = t * 0.4;
+        const noise = Math.sin(spreadSeed + d * 0.1) * spreadAmount;
+        dx += perpX * noise;
+        dy += perpY * noise;
+      }
+
       hitX += dx;
       hitY += dy;
       if (hitX < 0 || hitX >= this.terrain.getWidth() || hitY >= this.terrain.getHeight()) break;

@@ -14,7 +14,7 @@ Turn-based artillery game where players control worms on destructible terrain, u
 | 4 | Dynamite | Projectile | 70px | 75 | No | 4s fuse, high arc |
 | 5 | Airstrike | Targeted | 25px×5 | 30×5 | Yes | 5 missiles from above |
 | 6 | Cluster Bomb | Projectile | 20px + 18px×4 | 20 + 18×4 | Yes | Splits into 4 bomblets on detonation |
-| 7 | Sniper Rifle | Hitscan | 8px | 60 | No | Single precise long-range shot with direct hit detection |
+| 7 | Sniper Rifle | Hitscan | 8px | 50 | Wind drift at range | Accurate up close, drifts with wind and variance beyond 400px |
 | 8 | Teleport | Teleport | — | — | No | Instantly moves worm to aimed location |
 | 9 | Ninja Rope | Rope | — | — | No | Grappling hook for swing traversal |
 
@@ -22,7 +22,13 @@ Turn-based artillery game where players control worms on destructible terrain, u
 The main projectile bounces once and detonates after a 2s fuse. On detonation, it deals 20 damage (20px radius) and spawns 4 smaller bomblets. Each bomblet flies outward in a random upward arc and detonates on terrain impact, dealing 18 damage (18px radius). Effective for area denial and hitting enemies behind cover.
 
 ### Sniper Rifle Details
-Fires a single hitscan ray — instant, no travel time, not affected by wind. The ray detects direct worm hits (full 60 damage) and also impacts terrain (8px crater with splash damage). Range covers the entire map (3000px). The shooter is excluded from the hitscan collision check to prevent self-damage. Best used at long range where projectile weapons struggle with wind.
+Fires a single hitscan ray — instant, no travel time. The ray detects direct worm hits (full 50 damage) and also impacts terrain (8px crater with splash damage). Maximum range is 1500px (previously 3000px). The shooter is excluded from the hitscan collision check to prevent self-damage.
+
+**Distance-based accuracy falloff** (beyond 400px):
+- **Wind drift**: The bullet path curves horizontally with the wind, scaling from zero at 400px to full effect at 1500px. The formula applies `windForce × t × 3` per step, where `t` is the distance fraction past 400px.
+- **Bullet spread**: A deterministic sine-based noise offsets the ray perpendicular to the aim direction, growing with distance. At max range, spread can shift the hit point by up to ~20px — enough to occasionally miss a 20px-wide worm hitbox.
+- **Close range (< 400px)**: Perfectly accurate with no drift or spread, rewarding positioning.
+- **Aim indicator**: Laser-sight dots fade from full alpha to near-transparent past 400px, visually communicating the accuracy falloff.
 
 ### Teleport Details
 Utility weapon that teleports the worm to the aimed position. The worm lands at the nearest surface below the target point. Uses a turn but deals no damage. Shows a cyan flash at both the origin and destination. The AI does not use this weapon.

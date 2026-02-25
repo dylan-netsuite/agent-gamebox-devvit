@@ -25,7 +25,7 @@ export function castHitscanRay(
   targets: HitscanTarget[],
   shooterId?: string,
 ): HitscanResult {
-  const maxDist = 3000;
+  const maxDist = 1500;
   const step = 2;
   const dx = Math.cos(angle) * step;
   const dy = Math.sin(angle) * step;

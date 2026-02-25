@@ -88,23 +88,25 @@ export class AimIndicator {
     if (!this.visible) return;
     this.graphics.clear();
 
-    const maxLen = 3000;
+    const maxLen = 1500;
+    const driftStart = 400;
+
     const endX = originX + Math.cos(angle) * maxLen;
     const endY = originY + Math.sin(angle) * maxLen;
 
-    // Dashed laser-sight style line
     this.graphics.lineStyle(1, 0xff4444, 0.3);
     this.graphics.beginPath();
     this.graphics.moveTo(originX, originY);
     this.graphics.lineTo(endX, endY);
     this.graphics.strokePath();
 
-    // Bright dot every 80px for visibility at distance
-    this.graphics.fillStyle(0xff4444, 0.5);
     for (let d = 80; d < maxLen; d += 80) {
       const dx = originX + Math.cos(angle) * d;
       const dy = originY + Math.sin(angle) * d;
       if (dx < -50 || dx > 2500 || dy < -50 || dy > 1300) break;
+
+      const alpha = d < driftStart ? 0.5 : 0.5 * (1 - (d - driftStart) / (maxLen - driftStart));
+      this.graphics.fillStyle(0xff4444, Math.max(0.1, alpha));
       this.graphics.fillCircle(dx, dy, 1.5);
     }
   }

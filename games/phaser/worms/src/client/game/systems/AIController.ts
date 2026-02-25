@@ -532,7 +532,10 @@ export class AIController {
     if (weapon.id === 'grenade' && distToEnemy < 200) score += 5;
     if (weapon.id === 'bazooka' && distToEnemy > 150) score += 5;
     if (weapon.id === 'cluster-bomb' && distToEnemy < 250) score += 8;
-    if (weapon.id === 'sniper' && distToEnemy > 200) score += 10;
+    if (weapon.id === 'sniper') {
+      if (distToEnemy > 200 && distToEnemy < 800) score += 10;
+      if (distToEnemy > 1000) score -= 15;
+    }
 
     return score;
   }
@@ -625,15 +628,23 @@ export class AIController {
     allWorms?: Worm[],
     shooter?: Worm,
   ): { x: number; y: number; directHit: boolean } {
-    const maxDist = 3000;
+    const maxDist = 1500;
     const step = 2;
-    const dx = Math.cos(angle) * step;
-    const dy = Math.sin(angle) * step;
+    const baseDx = Math.cos(angle) * step;
+    const baseDy = Math.sin(angle) * step;
+    const driftStart = 400;
+    const windForce = this.wind ? this.wind.getWindForce() : 0;
 
     let hitX = originX;
     let hitY = originY;
 
     for (let d = 0; d < maxDist; d += step) {
+      let dx = baseDx;
+      let dy = baseDy;
+      if (d > driftStart) {
+        const t = (d - driftStart) / (maxDist - driftStart);
+        dx += windForce * t * 3 * step;
+      }
       hitX += dx;
       hitY += dy;
       if (!this.terrain) continue;

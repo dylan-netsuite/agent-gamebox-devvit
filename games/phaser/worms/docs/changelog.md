@@ -1,5 +1,39 @@
 # Reddit Royale - Changelog
 
+## [2026-02-25] Sniper Rifle Balance Pass (v0.0.12.36)
+
+**Workflow:** wf-1771982147
+
+### Changed — Sniper Rifle nerfed for better balance
+
+The Sniper Rifle was overpowered: perfectly accurate at any range, unaffected by wind, with 60 damage. This made it a dominant weapon with no counterplay at distance.
+
+### Balance Changes
+
+| Property | Before | After |
+|----------|--------|-------|
+| Damage | 60 | 50 |
+| Max range | 3000px (full map diagonal) | 1500px |
+| Wind influence | None | Drift scales from 0 at 400px to full at 1500px |
+| Accuracy | Perfect at all ranges | Spread noise grows past 400px (~20px max deviation) |
+| AI long-range bonus | +10 score for shots > 200px | +10 for 200-800px, -15 penalty for > 1000px |
+
+### Design Intent
+
+- **Close range (< 400px)**: Unchanged — perfectly accurate, rewarding positioning
+- **Mid range (400-800px)**: Slight wind drift and spread begin; still effective with good aim
+- **Long range (800-1500px)**: Significant accuracy degradation; hitting a 20px worm target becomes unreliable
+- **Beyond 1500px**: Out of range entirely
+
+### Files Changed
+- `src/shared/types/weapons.ts` — Damage 60→50, updated description
+- `src/client/game/systems/ProjectileManager.ts` — Range 3000→1500, wind drift and spread noise in `fireHitscan()`
+- `src/shared/hitscan.ts` — Range 3000→1500 in `castHitscanRay()`
+- `src/client/game/systems/AIController.ts` — Range 3000→1500, wind drift in `simulateHitscan()`, scoring adjusted
+- `src/client/game/ui/AimIndicator.ts` — Range 3000→1500, dots fade past 400px in `drawHitscanAim()`
+
+---
+
 ## [2026-02-24] HUD Viewport Pinning Fix v3 — Dedicated UI Camera (v0.0.12.29)
 
 **Workflow:** wf-1771976780
