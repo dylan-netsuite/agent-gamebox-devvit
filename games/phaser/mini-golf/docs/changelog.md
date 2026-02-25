@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.2.181 - Hole 8: Pipe depth + source fix (2026-02-25)
+
+### Fixed
+- **Pipe paths render under fairway** — moved pipe Bezier paths to a separate `pipeGraphics` layer at depth 1 (below fairway at depth 2). Pipe endpoint circles remain at depth 5 above the fairway. Pipes now appear to go "underground" beneath the green.
+- **Pipe path-to-color mapping** — fixed variant selector from `colorSeed & 0xff` to `(colorSeed >> 8) & 0xff`, using the green channel instead of blue. Previously Red and Green both mapped to variant 0 (same path shape) while Blue got variant 2 (Green's intended path). Now each color gets a unique path that sources from its matching colored endpoint.
+- **Blue pipe exit relocated** — moved from (370,300) near red exit to (130,100) top-left corner, well separated from red at (350,270).
+
 ## v0.0.2.169 - Hole 8: Tangled Pipe Visuals + Blue Pipe Rebalance (2026-02-25)
 
 ### Changed

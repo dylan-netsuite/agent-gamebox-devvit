@@ -360,13 +360,13 @@ export const HOLES: HoleDefinition[] = [
         exitAngle: Math.PI,
         color: 0xff3333,
       },
-      // Blue pipe — exits into far bottom-right corner, pointing away from hole
+      // Blue pipe — exits top-left corner, pointing straight down away from hole
       {
         entryX: 310,
         entryY: 590,
-        exitX: 370,
-        exitY: 300,
-        exitAngle: Math.PI * 0.75,
+        exitX: 130,
+        exitY: 100,
+        exitAngle: Math.PI / 2,
         color: 0x3399ff,
       },
       // Green pipe — exits pointing straight up at the hole

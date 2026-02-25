@@ -108,6 +108,7 @@ export class Obstacles {
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
   private zoneGraphics: Phaser.GameObjects.Graphics;
+  private pipeGraphics: Phaser.GameObjects.Graphics;
   private windmillGraphics: Phaser.GameObjects.Graphics[] = [];
 
   constructor(scene: Phaser.Scene) {
@@ -116,6 +117,8 @@ export class Obstacles {
     this.graphics.setDepth(5);
     this.zoneGraphics = scene.add.graphics();
     this.zoneGraphics.setDepth(1);
+    this.pipeGraphics = scene.add.graphics();
+    this.pipeGraphics.setDepth(1);
   }
 
   addBumper(def: ObstacleDef): void {
@@ -340,57 +343,69 @@ export class Obstacles {
     const s = (v: number) => scaleValue(this.scene, v);
     const midX = (entry.x + exit.x) / 2;
     const midY = (entry.y + exit.y) / 2;
-    const gapH = Math.abs(exit.y - entry.y);
+    const g = Math.abs(exit.y - entry.y);
 
-    const band = colorSeed & 0xff;
+    const band = (colorSeed >> 8) & 0xff;
     const variant = band < 85 ? 0 : band < 170 ? 1 : 2;
 
     if (variant === 0) {
-      // Red: hard right, swing far left, loop back right, curl left to exit
+      // Red: hard right loop, cross far left, tight spiral right, cross left, curl to exit
       return [
         { x: entry.x, y: entry.y },
-        { x: entry.x + s(90), y: entry.y - s(10) },
-        { x: midX + s(110), y: midY + gapH * 0.3 },
-        { x: midX - s(20), y: midY + gapH * 0.15 },
-        { x: midX - s(110), y: midY },
-        { x: midX - s(80), y: midY - gapH * 0.1 },
-        { x: midX + s(90), y: midY - gapH * 0.15 },
-        { x: midX + s(40), y: midY - gapH * 0.25 },
-        { x: midX - s(60), y: midY - gapH * 0.3 },
-        { x: exit.x - s(30), y: exit.y + s(20) },
-        { x: exit.x + s(10), y: exit.y + s(5) },
+        { x: entry.x + s(100), y: entry.y - s(5) },
+        { x: midX + s(140), y: midY + g * 0.35 },
+        { x: midX + s(50), y: midY + g * 0.22 },
+        { x: midX - s(130), y: midY + g * 0.12 },
+        { x: midX - s(100), y: midY },
+        { x: midX + s(120), y: midY - g * 0.05 },
+        { x: midX + s(80), y: midY - g * 0.12 },
+        { x: midX - s(110), y: midY - g * 0.18 },
+        { x: midX - s(70), y: midY - g * 0.24 },
+        { x: midX + s(90), y: midY - g * 0.28 },
+        { x: midX + s(30), y: midY - g * 0.33 },
+        { x: exit.x - s(40), y: exit.y + s(25) },
+        { x: exit.x + s(15), y: exit.y + s(8) },
+        { x: exit.x - s(5), y: exit.y + s(2) },
         { x: exit.x, y: exit.y },
       ];
     } else if (variant === 1) {
-      // Blue: hard left, sweep far right, cross center twice, spiral to exit
+      // Blue: hard left, far right loop, back left, tight right spiral, left hook to exit
       return [
         { x: entry.x, y: entry.y },
-        { x: entry.x - s(80), y: entry.y - s(15) },
-        { x: midX - s(100), y: midY + gapH * 0.25 },
-        { x: midX + s(30), y: midY + gapH * 0.1 },
-        { x: midX + s(110), y: midY },
-        { x: midX + s(70), y: midY - gapH * 0.1 },
-        { x: midX - s(80), y: midY - gapH * 0.12 },
-        { x: midX - s(50), y: midY - gapH * 0.2 },
-        { x: midX + s(60), y: midY - gapH * 0.28 },
-        { x: exit.x + s(40), y: exit.y + s(25) },
-        { x: exit.x - s(15), y: exit.y + s(8) },
+        { x: entry.x - s(90), y: entry.y - s(10) },
+        { x: midX - s(130), y: midY + g * 0.32 },
+        { x: midX - s(40), y: midY + g * 0.2 },
+        { x: midX + s(140), y: midY + g * 0.1 },
+        { x: midX + s(100), y: midY },
+        { x: midX - s(120), y: midY - g * 0.06 },
+        { x: midX - s(60), y: midY - g * 0.14 },
+        { x: midX + s(130), y: midY - g * 0.18 },
+        { x: midX + s(70), y: midY - g * 0.24 },
+        { x: midX - s(100), y: midY - g * 0.27 },
+        { x: midX - s(40), y: midY - g * 0.33 },
+        { x: exit.x + s(50), y: exit.y + s(30) },
+        { x: exit.x - s(20), y: exit.y + s(12) },
+        { x: exit.x + s(8), y: exit.y + s(3) },
         { x: exit.x, y: exit.y },
       ];
     } else {
-      // Green: S-curve right, cross left, double back right, cross left again to exit
+      // Green: right zigzag, far left, right spiral, left cross, right hook to exit
       return [
         { x: entry.x, y: entry.y },
-        { x: entry.x + s(50), y: entry.y - s(20) },
-        { x: midX + s(80), y: midY + gapH * 0.28 },
-        { x: midX + s(20), y: midY + gapH * 0.12 },
-        { x: midX - s(90), y: midY + gapH * 0.05 },
-        { x: midX - s(60), y: midY - gapH * 0.05 },
-        { x: midX + s(100), y: midY - gapH * 0.1 },
-        { x: midX + s(30), y: midY - gapH * 0.2 },
-        { x: midX - s(70), y: midY - gapH * 0.28 },
-        { x: exit.x - s(20), y: exit.y + s(20) },
-        { x: exit.x + s(15), y: exit.y + s(5) },
+        { x: entry.x + s(70), y: entry.y - s(15) },
+        { x: midX + s(120), y: midY + g * 0.33 },
+        { x: midX + s(30), y: midY + g * 0.2 },
+        { x: midX - s(140), y: midY + g * 0.1 },
+        { x: midX - s(80), y: midY + g * 0.02 },
+        { x: midX + s(130), y: midY - g * 0.05 },
+        { x: midX + s(60), y: midY - g * 0.13 },
+        { x: midX - s(120), y: midY - g * 0.17 },
+        { x: midX - s(50), y: midY - g * 0.23 },
+        { x: midX + s(110), y: midY - g * 0.27 },
+        { x: midX + s(20), y: midY - g * 0.33 },
+        { x: exit.x - s(35), y: exit.y + s(22) },
+        { x: exit.x + s(25), y: exit.y + s(10) },
+        { x: exit.x - s(10), y: exit.y + s(3) },
         { x: exit.x, y: exit.y },
       ];
     }
@@ -447,18 +462,22 @@ export class Obstacles {
     };
 
     const wp = this.generateTangledPath(entry, exit, def.color ?? 0);
+    const pg = this.pipeGraphics;
 
-    g.lineStyle(pipeW + 3 * s, 0x111111, 0.6);
-    drawChainedBeziers(g, wp);
+    pg.lineStyle(pipeW * 3, color, 0.1);
+    drawChainedBeziers(pg, wp);
 
-    g.lineStyle(pipeW + 1 * s, 0x333333, 0.5);
-    drawChainedBeziers(g, wp);
+    pg.lineStyle(pipeW + 3 * s, 0x111111, 0.6);
+    drawChainedBeziers(pg, wp);
 
-    g.lineStyle(pipeW, color, 0.8);
-    drawChainedBeziers(g, wp);
+    pg.lineStyle(pipeW + 1 * s, 0x333333, 0.5);
+    drawChainedBeziers(pg, wp);
 
-    g.lineStyle(pipeW * 0.35, 0xffffff, 0.15);
-    drawChainedBeziers(g, wp, -pipeW * 0.25);
+    pg.lineStyle(pipeW, color, 0.85);
+    drawChainedBeziers(pg, wp);
+
+    pg.lineStyle(pipeW * 0.3, 0xffffff, 0.2);
+    drawChainedBeziers(pg, wp, -pipeW * 0.2);
 
     for (const pos of [entry, exit]) {
       g.fillStyle(0x000000, 0.3);
@@ -886,6 +905,7 @@ export class Obstacles {
     this.gameObjects = [];
     this.graphics.destroy();
     this.zoneGraphics.destroy();
+    this.pipeGraphics.destroy();
     for (const g of this.windmillGraphics) {
       g.destroy();
     }
