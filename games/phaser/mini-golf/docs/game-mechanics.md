@@ -24,7 +24,7 @@ Branching-path layout (x:80-420, y:60-740) with a center divider island (x:110-3
 Funnel-shaped fairway (x:150-350 wide bottom at y:420-740, narrowing to x:190-310 at y:320, continuing as a narrow corridor to y:60). A ramp zone (x:190-310, y:300-420) applies a constant downward force (forceY:2.25, multiplied by 0.0001 per frame) simulating uphill gravity. The ball must have ~70-80% power to overcome the ramp force and crest the hill. Too little power and the ball decelerates, stops, and rolls back down. Too much power and the ball overshoots the shallow plateau (only 120px from ramp top to back wall at y:60), strikes the back wall, and bounces back down the ramp. The cup sits at x:250, y:140 on the plateau. Visually, the ramp zone features colorful horizontal jawbreaker candy stripes with glossy per-stripe highlights, sugar crystal sparkle, and rainbow-colored upward-pointing chevrons. Teaches precise power meter modulation — players must abandon the "always hit 100%" strategy.
 
 ### Hole 6: The Taffy River (Par 3)
-Two isolated rectangular islands — bottom island (x:120-380, y:520-700) with the tee at x:250,y:640, and top island (x:120-380, y:60-280) with the cup at x:250,y:140. Island walls are U-shaped (open on the river-facing side) so the ball can exit/enter freely. The entire gap between islands (x:120-380, y:280-520) is a pink taffy river water hazard. If the ball enters the taffy zone (and is not on the bridge), it triggers a sinking animation (shrink + fade), a +1 stroke penalty, and resets the ball to the tee box. A wide, tall moving bridge (160x100 design units) oscillates vertically between y:500 and y:300 using smooth hermite easing at speed 0.8. The bridge is a kinematic Matter.js body that physically supports the ball — the water hazard check is suppressed when the ball overlaps the bridge body. The player must time their shot to hit the bridge as it aligns with their trajectory. This is the player's first encounter with moving obstacles and water hazards, teaching patience and timing alongside power control.
+Two isolated rectangular islands — bottom island (x:120-380, y:520-700) with the tee at x:250,y:640, and top island (x:120-380, y:60-280) with the cup at x:250,y:140. Island walls are U-shaped (open on the river-facing side) so the ball can exit/enter freely. The entire gap between islands (x:120-380, y:280-520) is a pink taffy river water hazard. If the ball enters the taffy zone (and is not on the bridge), it triggers a sinking animation (shrink + fade), a +1 stroke penalty, and resets the ball to the tee box. A wide, tall moving bridge (160x100 design units) oscillates vertically between y:500 and y:300 using smooth hermite easing at speed 0.8. The bridge is a visual-only safe zone (no physics body) — the ball passes through freely, and the water hazard is suppressed when the ball's position overlaps the bridge bounds. The player must time their shot to hit the bridge as it aligns with their trajectory. This is the player's first encounter with moving obstacles and water hazards, teaching patience and timing alongside power control.
 
 ## Play Modes
 
@@ -107,12 +107,10 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 
 | Property | Value |
 |----------|-------|
-| Restitution | 0.3 |
-| Friction | 0.8 |
 | Dimensions | 160x100 design units |
 | Speed | 0.8 (progress units per second) |
 | Easing | Hermite smoothstep: t²(3-2t) |
-| Behavior | Kinematic static body oscillating between startY and endY. Updates every frame in all game states so players can observe and time shots. |
+| Behavior | Visual-only safe zone oscillating between startY and endY. No physics body — ball passes through freely. Water hazard is suppressed when ball position overlaps bridge bounds. Updates every frame in all game states. |
 | Visual | Brown plank bridge with dividing lines, top highlight, bottom shadow, and side rails |
 
 ## Water Hazard (Taffy River) Physics

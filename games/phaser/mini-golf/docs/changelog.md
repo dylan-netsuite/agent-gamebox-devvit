@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.2.120 - Hole 6: Bridge is now a pass-through safe zone (2026-02-25)
+
+### Fixed
+- **Ball no longer bounces off the bridge** — the bridge was a solid Matter.js physics body that acted as a wall, blocking the ball. Converted the bridge to a purely visual element with a zone-based safe area check. The ball now passes through the bridge area freely, and the water hazard is suppressed when the ball overlaps the bridge bounds.
+
+### Changed
+- **Bridge is no longer a physics body** — it's a visual-only oscillating graphic with a rectangular bounds check that protects the ball from the water hazard. This matches the top-down 2D perspective where "on the bridge" means "within the bridge's screen bounds."
+
 ## v0.0.2.116 - Hole 6 Major Fixes + All Holes Tee Spacing (2026-02-25)
 
 ### Fixed

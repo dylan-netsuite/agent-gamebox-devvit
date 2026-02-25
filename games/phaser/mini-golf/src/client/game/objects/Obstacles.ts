@@ -83,10 +83,10 @@ interface WindmillData {
 }
 
 interface MovingBridgeData {
-  body: MatterJS.BodyType;
   graphics: Phaser.GameObjects.Graphics;
   startY: number;
   endY: number;
+  currentY: number;
   width: number;
   height: number;
   cx: number;
@@ -389,22 +389,14 @@ export class Obstacles {
     const w = scaleValue(this.scene, def.width ?? 80);
     const h = scaleValue(this.scene, def.height ?? 20);
 
-    const body = this.scene.matter.add.rectangle(startPos.x, startPos.y, w, h, {
-      isStatic: true,
-      restitution: 0.3,
-      friction: 0.8,
-      label: 'moving_bridge',
-    });
-    this.bodies.push(body);
-
     const g = this.scene.add.graphics();
     g.setDepth(7);
 
     this.bridges.push({
-      body,
       graphics: g,
       startY: startPos.y,
       endY: endPos.y,
+      currentY: startPos.y,
       width: w,
       height: h,
       cx: startPos.x,
@@ -429,8 +421,7 @@ export class Obstacles {
       const t = bridge.progress;
       const eased = t * t * (3 - 2 * t);
       const cy = bridge.startY + (bridge.endY - bridge.startY) * eased;
-
-      this.scene.matter.body.setPosition(bridge.body, { x: bridge.cx, y: cy });
+      bridge.currentY = cy;
 
       const g = bridge.graphics;
       g.clear();
@@ -515,12 +506,11 @@ export class Obstacles {
     for (const bridge of this.bridges) {
       const halfW = bridge.width / 2;
       const halfH = bridge.height / 2;
-      const cy = bridge.body.position.y;
       if (
         bx >= bridge.cx - halfW &&
         bx <= bridge.cx + halfW &&
-        by >= cy - halfH - ball.radius &&
-        by <= cy + halfH + ball.radius
+        by >= bridge.currentY - halfH &&
+        by <= bridge.currentY + halfH
       ) {
         return true;
       }
