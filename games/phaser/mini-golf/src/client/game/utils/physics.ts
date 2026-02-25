@@ -7,7 +7,7 @@ export const BALL_FRICTION_AIR = 0.025;
 export const BALL_FRICTION_STATIC = 0.1;
 export const BALL_DENSITY = 0.002;
 
-export const WALL_RESTITUTION = 0.6;
+export const WALL_RESTITUTION = 0.7;
 
 export const MAX_SHOT_VELOCITY = 18;
 export const WALL_THICKNESS = 14;

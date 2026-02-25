@@ -18,6 +18,14 @@ import { fadeIn, SCENE_COLORS } from '../utils/transitions';
 
 type GameState = 'aiming' | 'power' | 'simulating' | 'sinking' | 'water_reset';
 
+interface Sparkle {
+  x: number;
+  y: number;
+  phase: number;
+  speed: number;
+  size: number;
+}
+
 export class Game extends Scene {
   private ball!: GolfBall;
   private arrow!: AimArrow;
@@ -33,12 +41,12 @@ export class Game extends Scene {
   private lastBallPos: { x: number; y: number } = { x: 0, y: 0 };
 
   private hud!: Phaser.GameObjects.Container;
-  private holeLabel!: Phaser.GameObjects.Text;
   private strokeLabel!: Phaser.GameObjects.Text;
-  private parLabel!: Phaser.GameObjects.Text;
-  private nameLabel!: Phaser.GameObjects.Text;
 
   private bgGraphics!: Phaser.GameObjects.Graphics;
+  private sparkleGraphics!: Phaser.GameObjects.Graphics;
+  private sparkles: Sparkle[] = [];
+  private elapsed: number = 0;
 
   constructor() {
     super('Game');
@@ -53,9 +61,15 @@ export class Game extends Scene {
 
   create() {
     fadeIn(this, SCENE_COLORS.dark);
+    this.elapsed = 0;
+
     this.bgGraphics = this.add.graphics();
     this.bgGraphics.setDepth(0);
 
+    this.sparkleGraphics = this.add.graphics();
+    this.sparkleGraphics.setDepth(1);
+
+    this.initSparkles();
     this.loadHole(HOLES[this.currentHoleIndex]!);
     this.createHUD();
     this.setupInput();
@@ -65,17 +79,34 @@ export class Game extends Scene {
       this.bgGraphics.destroy();
       this.bgGraphics = this.add.graphics();
       this.bgGraphics.setDepth(0);
+      this.sparkleGraphics.destroy();
+      this.sparkleGraphics = this.add.graphics();
+      this.sparkleGraphics.setDepth(1);
+      this.initSparkles();
       this.loadHole(HOLES[this.currentHoleIndex]!);
       this.hud.destroy();
       this.createHUD();
     });
   }
 
+  private initSparkles(): void {
+    const { width, height } = this.scale;
+    this.sparkles = [];
+    for (let i = 0; i < 30; i++) {
+      this.sparkles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.5 + Math.random() * 1.5,
+        size: 1 + Math.random() * 2,
+      });
+    }
+  }
+
   private loadHole(def: HoleDefinition): void {
     this.drawBackground();
 
     this.walls = new Walls(this);
-    // Draw green fill first
     this.walls.drawFill(def.walls, 0x2d8a4e, 0.9);
     this.walls.buildFromPolygons(def.walls, 0xff69b4);
 
@@ -111,24 +142,16 @@ export class Game extends Scene {
     }
 
     if (def.frictionZones) {
-      for (const z of def.frictionZones) {
-        this.obstacles.addZone('sand', z);
-      }
+      for (const z of def.frictionZones) this.obstacles.addZone('sand', z);
     }
     if (def.slickZones) {
-      for (const z of def.slickZones) {
-        this.obstacles.addZone('ice', z);
-      }
+      for (const z of def.slickZones) this.obstacles.addZone('ice', z);
     }
     if (def.waterZones) {
-      for (const z of def.waterZones) {
-        this.obstacles.addZone('water', z);
-      }
+      for (const z of def.waterZones) this.obstacles.addZone('water', z);
     }
     if (def.teleporters) {
-      for (const tp of def.teleporters) {
-        this.obstacles.addTeleporter(tp);
-      }
+      for (const tp of def.teleporters) this.obstacles.addTeleporter(tp);
     }
 
     const cupPos = toScreen(this, def.cup.x, def.cup.y);
@@ -146,67 +169,169 @@ export class Game extends Scene {
 
   private drawBackground(): void {
     const { width, height } = this.scale;
+
+    // Dark grass base
     this.bgGraphics.fillStyle(0x1a472a, 1);
     this.bgGraphics.fillRect(0, 0, width, height);
 
+    // Subtle grass texture dots
+    const dotCount = Math.floor((width * height) / 600);
+    for (let i = 0; i < dotCount; i++) {
+      const dx = Math.random() * width;
+      const dy = Math.random() * height;
+      const shade = Math.random() > 0.5 ? 0x1f5232 : 0x153d23;
+      const alpha = 0.3 + Math.random() * 0.4;
+      this.bgGraphics.fillStyle(shade, alpha);
+      this.bgGraphics.fillCircle(dx, dy, 0.8 + Math.random() * 1.2);
+    }
+
+    // Subtle vignette
     const { s } = getScaleFactor(this);
     const ox = (width - DESIGN_WIDTH * s) / 2;
     const oy = (height - DESIGN_HEIGHT * s) / 2;
-    this.bgGraphics.fillStyle(0x0d3320, 0.5);
+    this.bgGraphics.fillStyle(0x0d3320, 0.3);
     this.bgGraphics.fillRect(ox, oy, DESIGN_WIDTH * s, DESIGN_HEIGHT * s);
   }
 
+  private drawSparkles(): void {
+    this.sparkleGraphics.clear();
+    const t = this.elapsed / 1000;
+
+    for (const sp of this.sparkles) {
+      const alpha = 0.3 + Math.sin(t * sp.speed + sp.phase) * 0.3;
+      if (alpha < 0.1) continue;
+
+      this.sparkleGraphics.fillStyle(0xffffff, alpha);
+
+      // 4-point star shape
+      const s = sp.size;
+      this.sparkleGraphics.fillRect(sp.x - s / 2, sp.y - 0.5, s, 1);
+      this.sparkleGraphics.fillRect(sp.x - 0.5, sp.y - s / 2, 1, s);
+    }
+  }
+
   private createHUD(): void {
-    const { width } = this.scale;
+    const { width, height } = this.scale;
     const def = HOLES[this.currentHoleIndex]!;
 
     this.hud = this.add.container(0, 0);
     this.hud.setDepth(200);
 
+    const hudH = 52;
+    const hudY = height - hudH;
+    const cx = width / 2;
+
+    // HUD background panel
     const hudBg = this.add.graphics();
-    hudBg.fillStyle(0x000000, 0.5);
-    hudBg.fillRoundedRect(10, 8, width - 20, 36, 8);
+    hudBg.fillStyle(0x3d2b1f, 0.95);
+    hudBg.fillRect(0, hudY, width, hudH);
+    // Gold top border
+    hudBg.fillStyle(0xc8a84e, 1);
+    hudBg.fillRect(0, hudY, width, 3);
+    // Inner border
+    hudBg.lineStyle(1, 0x8b6914, 0.6);
+    hudBg.strokeRect(4, hudY + 4, width - 8, hudH - 8);
     this.hud.add(hudBg);
 
-    const fontSize = '14px';
-    const fontFamily = '"Arial Black", sans-serif';
+    // Peppermint swirl left
+    this.drawPeppermintSwirl(cx - 90, hudY + hudH / 2, 10);
+    // Peppermint swirl right
+    this.drawPeppermintSwirl(cx + 90, hudY + hudH / 2, 10);
 
-    this.holeLabel = this.add
-      .text(24, 16, `HOLE ${def.id}`, {
-        fontFamily,
-        fontSize,
-        color: '#ff69b4',
-      })
-      .setOrigin(0, 0);
-    this.hud.add(this.holeLabel);
+    // HOLE label centered
+    const holeBannerW = 160;
+    const holeBannerH = 28;
+    const holeBannerBg = this.add.graphics();
+    holeBannerBg.fillStyle(0x8b6914, 1);
+    holeBannerBg.fillRoundedRect(cx - holeBannerW / 2, hudY + (hudH - holeBannerH) / 2, holeBannerW, holeBannerH, 6);
+    holeBannerBg.fillStyle(0xc8a84e, 0.8);
+    holeBannerBg.fillRoundedRect(cx - holeBannerW / 2 + 2, hudY + (hudH - holeBannerH) / 2 + 2, holeBannerW - 4, holeBannerH - 4, 5);
+    this.hud.add(holeBannerBg);
 
-    this.nameLabel = this.add
-      .text(width / 2, 16, def.name, {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '12px',
-        color: '#8fbfa0',
-        fontStyle: 'italic',
+    const holeText = this.add
+      .text(cx, hudY + hudH / 2, `HOLE ${def.id}`, {
+        fontFamily: '"Arial Black", "Impact", sans-serif',
+        fontSize: '16px',
+        color: '#3d2b1f',
+        stroke: '#c8a84e',
+        strokeThickness: 0.5,
       })
-      .setOrigin(0.5, 0);
-    this.hud.add(this.nameLabel);
+      .setOrigin(0.5);
+    this.hud.add(holeText);
 
-    this.parLabel = this.add
-      .text(width - 120, 16, `PAR ${def.par}`, {
-        fontFamily,
-        fontSize,
-        color: '#ffd700',
-      })
-      .setOrigin(0, 0);
-    this.hud.add(this.parLabel);
+    // SCORE on left with green gumdrop
+    const scoreX = 30;
+    this.drawGumdrop(scoreX, hudY + hudH / 2, 7, 0x32cd32);
 
     this.strokeLabel = this.add
-      .text(width - 30, 16, `${this.strokes}`, {
-        fontFamily,
-        fontSize: '16px',
-        color: '#ffffff',
+      .text(scoreX + 18, hudY + hudH / 2, `SCORE: ${this.strokes}`, {
+        fontFamily: '"Arial Black", sans-serif',
+        fontSize: '12px',
+        color: '#e0d8c0',
       })
-      .setOrigin(1, 0);
+      .setOrigin(0, 0.5);
     this.hud.add(this.strokeLabel);
+
+    // PAR on right with purple gumdrop
+    const parX = width - 30;
+    this.drawGumdrop(parX, hudY + hudH / 2, 7, 0x9370db);
+
+    const parLabel = this.add
+      .text(parX - 18, hudY + hudH / 2, `PAR ${def.par}`, {
+        fontFamily: '"Arial Black", sans-serif',
+        fontSize: '12px',
+        color: '#e0d8c0',
+      })
+      .setOrigin(1, 0.5);
+    this.hud.add(parLabel);
+  }
+
+  private drawPeppermintSwirl(cx: number, cy: number, r: number): void {
+    const g = this.add.graphics();
+    g.setDepth(201);
+
+    // White base circle
+    g.fillStyle(0xffffff, 1);
+    g.fillCircle(cx, cy, r);
+
+    // Red spiral segments
+    const segments = 6;
+    for (let i = 0; i < segments; i++) {
+      const startAngle = (i * Math.PI * 2) / segments;
+      const endAngle = startAngle + Math.PI / segments;
+
+      g.fillStyle(0xcc0000, 0.9);
+      g.beginPath();
+      g.moveTo(cx, cy);
+      g.arc(cx, cy, r, startAngle, endAngle, false);
+      g.closePath();
+      g.fillPath();
+    }
+
+    // Center dot
+    g.fillStyle(0xcc0000, 1);
+    g.fillCircle(cx, cy, r * 0.2);
+
+    // Outer ring
+    g.lineStyle(1, 0xdddddd, 0.6);
+    g.strokeCircle(cx, cy, r);
+
+    this.hud.add(g);
+  }
+
+  private drawGumdrop(cx: number, cy: number, r: number, color: number): void {
+    const g = this.add.graphics();
+    g.setDepth(201);
+
+    // Gumdrop body
+    g.fillStyle(color, 1);
+    g.fillCircle(cx, cy, r);
+
+    // Highlight
+    g.fillStyle(0xffffff, 0.35);
+    g.fillCircle(cx - r * 0.25, cy - r * 0.3, r * 0.35);
+
+    this.hud.add(g);
   }
 
   private setupInput(): void {
@@ -233,7 +358,7 @@ export class Game extends Scene {
 
   private executeShot(power: number): void {
     this.strokes++;
-    this.strokeLabel.setText(`${this.strokes}`);
+    this.strokeLabel.setText(`SCORE: ${this.strokes}`);
 
     this.lastBallPos = {
       x: this.ball.body.position.x,
@@ -249,6 +374,9 @@ export class Game extends Scene {
 
   override update(_time: number, delta: number): void {
     if (this.state === 'sinking') return;
+
+    this.elapsed += delta;
+    this.drawSparkles();
 
     this.ball.update();
     this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);
@@ -296,7 +424,7 @@ export class Game extends Scene {
 
   private handleWaterHazard(): void {
     this.strokes++;
-    this.strokeLabel.setText(`${this.strokes}`);
+    this.strokeLabel.setText(`SCORE: ${this.strokes}`);
     this.state = 'water_reset';
 
     this.showPenaltyText();
