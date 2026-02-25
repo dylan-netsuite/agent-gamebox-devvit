@@ -255,13 +255,13 @@ export const HOLES: HoleDefinition[] = [
       ],
     ],
     obstacles: [
-      // Moving bridge — wide kinematic body oscillating between the two islands
+      // Moving bridge — tall kinematic body oscillating between the two islands
       {
         type: 'moving_bridge',
         x: 170,
         y: 500,
         width: 160,
-        height: 20,
+        height: 50,
         targetY: 300,
         speed: 0.8,
       },

@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.2.112 - Hole 6: Taller Bridge (2026-02-25)
+
+### Changed
+- **Bridge height increased from 20 to 50 design units** — gives a much larger vertical landing zone as the bridge oscillates, making timing more forgiving.
+
 ## v0.0.2.108 - Hole 6 Fix: Open Walls + Wider Bridge (2026-02-25)
 
 ### Fixed
