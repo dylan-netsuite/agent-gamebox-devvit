@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.2.116 - Hole 6 Major Fixes + All Holes Tee Spacing (2026-02-25)
+
+### Fixed
+- **Ball can now land on the bridge** — water zone check now skips if ball overlaps a bridge body, preventing false hazard triggers.
+- **Water hazard no longer freezes the game** — state machine race condition fixed; uses `sinking` state to block updates during the tween animation, then cleanly transitions back to `aiming`.
+- **Water hazard resets to tee box** instead of last stroke position.
+
+### Changed
+- **Bridge height doubled from 50 to 100 design units** — much larger vertical landing target.
+- **All holes: tee positions moved up ~40 design units** (y:690→650, etc.) and bottom walls shortened to y:700, adding visible breathing room between the ball and the HUD panel.
+
 ## v0.0.2.112 - Hole 6: Taller Bridge (2026-02-25)
 
 ### Changed

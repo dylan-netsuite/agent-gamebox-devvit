@@ -509,12 +509,33 @@ export class Obstacles {
     }
   }
 
+  private isBallOnBridge(ball: GolfBall): boolean {
+    const bx = ball.body.position.x;
+    const by = ball.body.position.y;
+    for (const bridge of this.bridges) {
+      const halfW = bridge.width / 2;
+      const halfH = bridge.height / 2;
+      const cy = bridge.body.position.y;
+      if (
+        bx >= bridge.cx - halfW &&
+        bx <= bridge.cx + halfW &&
+        by >= cy - halfH - ball.radius &&
+        by <= cy + halfH + ball.radius
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   applyZoneEffects(ball: GolfBall): { inWater: boolean } {
     let inWater = false;
     let inSpecialZone = false;
 
     const bx = ball.body.position.x;
     const by = ball.body.position.y;
+
+    const onBridge = this.isBallOnBridge(ball);
 
     for (const zone of this.zones) {
       if (!zone.rect.contains(bx, by)) continue;
@@ -529,7 +550,9 @@ export class Obstacles {
           inSpecialZone = true;
           break;
         case 'water':
-          inWater = true;
+          if (!onBridge) {
+            inWater = true;
+          }
           break;
         case 'ramp':
           if (zone.forceX !== undefined && zone.forceY !== undefined) {

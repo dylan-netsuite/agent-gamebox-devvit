@@ -407,13 +407,12 @@ export class Game extends Scene {
   private handleWaterHazard(): void {
     this.strokes++;
     this.strokeLabel.setText(`SCORE: ${this.strokes}`);
-    this.state = 'water_reset';
+    this.state = 'sinking';
 
     this.showPenaltyText();
 
-    // Sinking animation before reset
-    this.scene.matter.body.setVelocity(this.ball.body, { x: 0, y: 0 });
-    this.scene.matter.body.setStatic(this.ball.body, true);
+    this.matter.body.setVelocity(this.ball.body, { x: 0, y: 0 });
+    this.matter.body.setStatic(this.ball.body, true);
 
     this.tweens.add({
       targets: this.ball.graphics,
@@ -423,13 +422,17 @@ export class Game extends Scene {
       duration: 500,
       ease: 'Power2',
       onComplete: () => {
-        this.scene.matter.body.setStatic(this.ball.body, false);
+        this.matter.body.setStatic(this.ball.body, false);
         this.ball.graphics.setScale(1);
         this.ball.graphics.setAlpha(1);
-        this.ball.setPosition(this.lastBallPos.x, this.lastBallPos.y);
+
+        const def = HOLES[this.currentHoleIndex]!;
+        const teePos = toScreen(this, def.tee.x, def.tee.y);
+        this.ball.setPosition(teePos.x, teePos.y);
+
         this.state = 'aiming';
         this.arrow.setVisible(true);
-        this.arrow.updatePosition(this.lastBallPos.x, this.lastBallPos.y);
+        this.arrow.updatePosition(teePos.x, teePos.y);
       },
     });
   }

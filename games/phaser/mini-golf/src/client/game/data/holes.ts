@@ -24,14 +24,14 @@ export const HOLES: HoleDefinition[] = [
     id: 1,
     name: 'The Vanilla Straightaway',
     par: 2,
-    tee: { x: 250, y: 690 },
+    tee: { x: 250, y: 650 },
     cup: { x: 250, y: 110 },
     walls: [
       [
         { x: 150, y: 60 },
         { x: 350, y: 60 },
-        { x: 350, y: 740 },
-        { x: 150, y: 740 },
+        { x: 350, y: 700 },
+        { x: 150, y: 700 },
         { x: 150, y: 60 },
       ],
     ],
@@ -46,7 +46,7 @@ export const HOLES: HoleDefinition[] = [
     id: 2,
     name: 'The Licorice Dogleg',
     par: 2,
-    tee: { x: 200, y: 700 },
+    tee: { x: 200, y: 660 },
     cup: { x: 360, y: 130 },
     walls: [
       [
@@ -55,8 +55,8 @@ export const HOLES: HoleDefinition[] = [
         { x: 420, y: 80 },
         { x: 420, y: 250 },
         { x: 280, y: 250 },
-        { x: 280, y: 750 },
-        { x: 120, y: 750 },
+        { x: 280, y: 710 },
+        { x: 120, y: 710 },
         { x: 120, y: 80 },
       ],
     ],
@@ -91,14 +91,14 @@ export const HOLES: HoleDefinition[] = [
     id: 3,
     name: 'The Gumdrop Bumper Pinball',
     par: 3,
-    tee: { x: 250, y: 690 },
+    tee: { x: 250, y: 650 },
     cup: { x: 250, y: 140 },
     walls: [
       [
         { x: 80, y: 60 },
         { x: 420, y: 60 },
-        { x: 420, y: 740 },
-        { x: 80, y: 740 },
+        { x: 420, y: 700 },
+        { x: 80, y: 700 },
         { x: 80, y: 60 },
       ],
     ],
@@ -139,15 +139,15 @@ export const HOLES: HoleDefinition[] = [
     id: 4,
     name: 'The Graham Cracker Divide',
     par: 3,
-    tee: { x: 95, y: 700 },
+    tee: { x: 95, y: 660 },
     cup: { x: 95, y: 110 },
     walls: [
       // Outer boundary
       [
         { x: 80, y: 60 },
         { x: 420, y: 60 },
-        { x: 420, y: 740 },
-        { x: 80, y: 740 },
+        { x: 420, y: 700 },
+        { x: 80, y: 700 },
         { x: 80, y: 60 },
       ],
       // Island — needle channel on left (x:80-110, 30px) and wide path on right (x:310-420)
@@ -197,20 +197,20 @@ export const HOLES: HoleDefinition[] = [
     id: 5,
     name: 'The Jawbreaker Wedge',
     par: 3,
-    tee: { x: 250, y: 690 },
+    tee: { x: 250, y: 650 },
     cup: { x: 250, y: 140 },
     walls: [
       // Hourglass/funnel shape: wide bottom → narrow ramp → narrow plateau
       [
-        { x: 150, y: 740 },
-        { x: 350, y: 740 },
+        { x: 150, y: 700 },
+        { x: 350, y: 700 },
         { x: 350, y: 420 },
         { x: 310, y: 320 },
         { x: 310, y: 60 },
         { x: 190, y: 60 },
         { x: 190, y: 320 },
         { x: 150, y: 420 },
-        { x: 150, y: 740 },
+        { x: 150, y: 700 },
       ],
     ],
     obstacles: [
@@ -236,14 +236,14 @@ export const HOLES: HoleDefinition[] = [
     id: 6,
     name: 'The Taffy River',
     par: 3,
-    tee: { x: 250, y: 680 },
+    tee: { x: 250, y: 640 },
     cup: { x: 250, y: 140 },
     walls: [
       // Bottom island (tee side) — U-shape open at top (river side)
       [
         { x: 120, y: 520 },
-        { x: 120, y: 740 },
-        { x: 380, y: 740 },
+        { x: 120, y: 700 },
+        { x: 380, y: 700 },
         { x: 380, y: 520 },
       ],
       // Top island (cup side) — U-shape open at bottom (river side)
@@ -261,7 +261,7 @@ export const HOLES: HoleDefinition[] = [
         x: 170,
         y: 500,
         width: 160,
-        height: 50,
+        height: 100,
         targetY: 300,
         speed: 0.8,
       },
