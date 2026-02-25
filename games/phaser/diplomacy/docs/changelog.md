@@ -1,3 +1,20 @@
+## v0.0.10 — Tutorial Accessibility Fix (2026-02-25)
+
+### Fix
+- **Tutorial button accessible from GamePlay**: Added a "Tutorial" button to the GamePlay scene (alongside "My Games" and "History") so players can start the tutorial even when an active game exists. Previously, the tutorial was only accessible from the MainMenu lobby, which is bypassed when a game is in progress.
+
+### Technical Details
+- Added `createTutorialButton()` as a `protected` method on `GamePlay`, overridden in `Tutorial` to prevent nested tutorial buttons.
+- Added `destroyTutorialButton()` cleanup in all scene transition paths.
+- Added `#tutorial-btn` CSS styling (green accent to differentiate from other nav buttons).
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts` — Added tutorial button creation/destruction
+- `src/client/game/scenes/Tutorial.ts` — Override to suppress button during tutorial
+- `src/client/game/game.css` — Added `#tutorial-btn` styles
+
+---
+
 ## v0.0.9.1 — Tutorial Mode (2026-02-25)
 
 ### New Feature

@@ -718,6 +718,31 @@ html, body {
   border-color: #f0d020;
 }
 
+/* ── Tutorial button (GamePlay scene) ─────────── */
+#tutorial-btn {
+  position: absolute;
+  left: 16px;
+  top: 80px;
+  background: rgba(20, 20, 20, 0.88);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 6px;
+  padding: 6px 14px;
+  color: #2ecc71;
+  font-family: Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+#tutorial-btn:hover {
+  background: rgba(20, 30, 20, 0.95);
+  color: #3ddc84;
+  border-color: #3ddc84;
+}
+
 /* ── Tutorial overlay ─────────────────────────── */
 #tutorial-overlay {
   position: absolute;

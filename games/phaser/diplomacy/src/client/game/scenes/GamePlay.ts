@@ -88,6 +88,7 @@ export class GamePlay extends Scene {
   private pendingCoastOrder: { unitType: 'Army' | 'Fleet'; from: string; to: string } | null = null;
   private myGamesBtn: HTMLButtonElement | null = null;
   private historyBtn: HTMLButtonElement | null = null;
+  private tutorialBtn: HTMLButtonElement | null = null;
   protected historyMode = false;
 
   private isDragging = false;
@@ -161,6 +162,7 @@ export class GamePlay extends Scene {
     SoundManager.init(this);
     this.createMyGamesButton();
     this.createHistoryButton();
+    this.createTutorialButton();
 
     this.updatePanelState();
     this.startPollingIfNeeded();
@@ -1037,6 +1039,7 @@ export class GamePlay extends Scene {
       SoundManager.destroy();
       this.destroyMyGamesButton();
       this.destroyHistoryButton();
+      this.destroyTutorialButton();
       this.scene.start('MyGames');
     };
     const app = document.getElementById('app') ?? document.body;
@@ -1065,6 +1068,36 @@ export class GamePlay extends Scene {
   private destroyHistoryButton(): void {
     this.historyBtn?.remove();
     this.historyBtn = null;
+  }
+
+  // ── Tutorial button ──────────────────────────────
+
+  protected createTutorialButton(): void {
+    if (this.tutorialBtn) return;
+    const btn = document.createElement('button');
+    btn.id = 'tutorial-btn';
+    btn.textContent = 'Tutorial';
+    btn.onclick = () => {
+      this.stopPolling();
+      OrdersPanelDOM.destroy();
+      ChatPanelDOM.destroy();
+      HistoryPanelDOM.destroy();
+      this.hideCoastPicker();
+      this.hideTooltip();
+      SoundManager.destroy();
+      this.destroyMyGamesButton();
+      this.destroyHistoryButton();
+      this.destroyTutorialButton();
+      this.scene.start('Tutorial');
+    };
+    const app = document.getElementById('app') ?? document.body;
+    app.appendChild(btn);
+    this.tutorialBtn = btn;
+  }
+
+  private destroyTutorialButton(): void {
+    this.tutorialBtn?.remove();
+    this.tutorialBtn = null;
   }
 
   private async toggleHistoryMode(): Promise<void> {
@@ -1373,6 +1406,7 @@ export class GamePlay extends Scene {
         this.hideCoastPicker();
         this.destroyMyGamesButton();
         this.destroyHistoryButton();
+        this.destroyTutorialButton();
         SoundManager.destroy();
         if (this.tooltipEl) { this.tooltipEl.remove(); this.tooltipEl = null; }
         this.scene.start('GameOver', { gameState: data.gameState });
@@ -1517,6 +1551,7 @@ export class GamePlay extends Scene {
           this.hideCoastPicker();
           this.destroyMyGamesButton();
           this.destroyHistoryButton();
+          this.destroyTutorialButton();
           SoundManager.destroy();
           if (this.tooltipEl) { this.tooltipEl.remove(); this.tooltipEl = null; }
           this.scene.start('GameOver', { gameState: state });
@@ -1539,6 +1574,7 @@ export class GamePlay extends Scene {
     this.hideCoastPicker();
     this.destroyMyGamesButton();
     this.destroyHistoryButton();
+    this.destroyTutorialButton();
     if (this.tooltipEl) { this.tooltipEl.remove(); this.tooltipEl = null; }
     this.scene.restart({ gameState: this.gameState, currentPlayer: this.currentPlayer, previousUnits });
   }
@@ -1551,6 +1587,7 @@ export class GamePlay extends Scene {
     this.hideCoastPicker();
     this.destroyMyGamesButton();
     this.destroyHistoryButton();
+    this.destroyTutorialButton();
     if (this.tooltipEl) { this.tooltipEl.remove(); this.tooltipEl = null; }
   }
 }

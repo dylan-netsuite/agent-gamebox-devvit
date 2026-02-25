@@ -58,6 +58,10 @@ export class Tutorial extends GamePlay {
 
   // ── Disable network operations ──────────────────
 
+  protected override createTutorialButton(): void {
+    // Already in tutorial — don't show the button
+  }
+
   protected override startPollingIfNeeded(): void {
     // No polling in tutorial
   }
@@ -368,6 +372,8 @@ export class Tutorial extends GamePlay {
     if (myGamesBtn) myGamesBtn.remove();
     const historyBtn = document.getElementById('history-btn');
     if (historyBtn) historyBtn.remove();
+    const tutorialBtn = document.getElementById('tutorial-btn');
+    if (tutorialBtn) tutorialBtn.remove();
 
     this.scene.restart({
       gameState: this.gameState,
@@ -443,6 +449,8 @@ export class Tutorial extends GamePlay {
     if (myGamesBtn) myGamesBtn.remove();
     const historyBtn = document.getElementById('history-btn');
     if (historyBtn) historyBtn.remove();
+    const tutorialBtn = document.getElementById('tutorial-btn');
+    if (tutorialBtn) tutorialBtn.remove();
 
     this.scene.start('MainMenu');
   }
