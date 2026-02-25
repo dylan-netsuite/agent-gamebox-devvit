@@ -239,23 +239,28 @@ export class Obstacles {
     const rect = new Phaser.Geom.Rectangle(tl.x, tl.y, w, h);
     this.zones.push({ type: 'ramp', rect, forceX, forceY });
 
-    this.zoneGraphics.fillStyle(0x8b4513, 0.4);
-    this.zoneGraphics.fillRect(tl.x, tl.y, w, h);
+    if (this.scene.textures.exists('jawbreaker')) {
+      const tile = this.scene.add.tileSprite(tl.x + w / 2, tl.y + h / 2, w, h, 'jawbreaker');
+      tile.setDepth(2);
+      tile.setAlpha(0.7);
+      this.gameObjects.push(tile);
+    } else {
+      this.zoneGraphics.fillStyle(0x8b4513, 0.4);
+      this.zoneGraphics.fillRect(tl.x, tl.y, w, h);
+    }
 
-    const arrowSpacing = scaleValue(this.scene, 20);
-    const arrowSize = scaleValue(this.scene, 6);
-    this.zoneGraphics.fillStyle(0xffffff, 0.2);
-    const angle = Math.atan2(forceY, forceX);
-    for (let ax = tl.x + arrowSpacing; ax < tl.x + w; ax += arrowSpacing) {
-      for (let ay = tl.y + arrowSpacing; ay < tl.y + h; ay += arrowSpacing) {
-        const ex = ax + Math.cos(angle) * arrowSize;
-        const ey = ay + Math.sin(angle) * arrowSize;
-        this.zoneGraphics.lineStyle(1, 0xffffff, 0.2);
-        this.zoneGraphics.beginPath();
-        this.zoneGraphics.moveTo(ax, ay);
-        this.zoneGraphics.lineTo(ex, ey);
-        this.zoneGraphics.strokePath();
-      }
+    const chevronSpacing = scaleValue(this.scene, 30);
+    const chevronW = scaleValue(this.scene, 14);
+    const chevronH = scaleValue(this.scene, 8);
+    const centerX = tl.x + w / 2;
+
+    for (let cy = tl.y + chevronSpacing; cy < tl.y + h; cy += chevronSpacing) {
+      this.zoneGraphics.lineStyle(scaleValue(this.scene, 2.5), 0xffffff, 0.5);
+      this.zoneGraphics.beginPath();
+      this.zoneGraphics.moveTo(centerX - chevronW, cy + chevronH);
+      this.zoneGraphics.lineTo(centerX, cy);
+      this.zoneGraphics.lineTo(centerX + chevronW, cy + chevronH);
+      this.zoneGraphics.strokePath();
     }
   }
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.2.89 - Hole 5: The Jawbreaker Wedge (2026-02-25)
+
+### Added
+- **Hole 5: The Jawbreaker Wedge** — Par 3. Funnel-shaped fairway (wide bottom → narrow ramp → narrow plateau). Ramp zone applies constant downward force simulating uphill gravity. Ball must have ~75-85% power to crest; too much overshoots into back wall. Teaches precise power meter control.
+- **Jawbreaker texture**: 128x128 concentric colored rings (red, orange, yellow, green, cyan, purple, pink) with glossy dome highlight. Used for ramp zone overlay.
+- **Enhanced ramp zone visuals**: Upward-pointing white chevrons replace generic directional arrows. Jawbreaker texture used as tileSprite background when available.
+
 ## v0.0.2.86 - Hole 4 v4: 30px Needle + Bouncier Bumpers (2026-02-25)
 
 ### Changed

@@ -6,7 +6,7 @@ All hole coordinates are defined in a 500x800 portrait design space, optimized f
 
 ## Course Structure
 
-Currently 4 holes. Holes are added iteratively with high visual and gameplay quality.
+Currently 5 holes. Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
 Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
@@ -19,6 +19,9 @@ Wide rectangular arena (x:80-420, y:60-740). Three gumdrop bumpers arranged in a
 
 ### Hole 4: The Graham Cracker Divide (Par 3)
 Branching-path layout (x:80-420, y:60-740) with a center divider island (x:110-310, y:150-620) creating two routes. The tee (x:95), needle channel (x:80-110, 30px design / ~12px effective physics gap), and cup (x:95) are all on the same vertical line — a perfect straight shot threads the needle for a hole-in-one, but with only ~6px clearance per side, any angular error clips the wall and bounces into the graham cracker sand trap. The right path is 110px wide (x:310-420) with two 45-degree chocolate block corner bumpers (70x30, same style as Hole 2) tucked into the top-right and bottom-right wall corners that ricochet the ball at 90 degrees, making it a safe two- or three-putt route. The center divider is a graham cracker sand trap — entering it dramatically increases friction air (0.15, 6x normal), stopping the ball dead.
+
+### Hole 5: The Jawbreaker Wedge (Par 3)
+Funnel-shaped fairway (x:150-350 wide bottom at y:420-740, narrowing to x:190-310 at y:320, continuing as a narrow corridor to y:60). A ramp zone (x:190-310, y:300-420) applies a constant downward force (forceY:15, multiplied by 0.0001 per frame) simulating uphill gravity. The ball must have ~75-85% power to overcome the ramp force and crest the hill. Too little power and the ball decelerates, stops, and rolls back down. Too much power and the ball overshoots the shallow plateau (only 120px from ramp top to back wall at y:60), strikes the back wall, and bounces back down the ramp. The cup sits at x:250, y:140 on the plateau. Visually, the ramp zone features a jawbreaker texture (concentric colored rings) with upward-pointing white chevrons indicating the slope direction. Teaches precise power meter modulation — players must abandon the "always hit 100%" strategy.
 
 ## Play Modes
 
@@ -86,6 +89,16 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 | Visual | Graham cracker tileable texture (128x128, sandy tan with crumb fragments and crack lines) |
 | Behavior | Overlap trigger zone — dramatically slows the ball when it enters |
 | Strategy | Avoid at all costs; escaping requires near-full power |
+
+## Ramp (Jawbreaker) Physics
+
+| Property | Value |
+|----------|-------|
+| Force multiplier | 0.0001 per frame |
+| Typical forceY | 15 (= 0.0015 effective downward force) |
+| Visual | Jawbreaker tileable texture (128x128, concentric colored rings) with upward-pointing chevrons |
+| Behavior | Overlap trigger zone — applies constant force opposing ball movement, simulating uphill gravity |
+| Strategy | Hit with ~75-85% power to crest; too much overshoots into back wall |
 
 ## Hole Capture
 

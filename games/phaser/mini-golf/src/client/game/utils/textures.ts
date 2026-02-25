@@ -11,6 +11,7 @@ export class TextureFactory {
     this.generateLicorice(scene);
     this.generateGumdrop(scene);
     this.generateGrahamCracker(scene);
+    this.generateJawbreaker(scene);
   }
 
   private static generateCandyCane(scene: Phaser.Scene): void {
@@ -430,5 +431,40 @@ export class TextureFactory {
 
     ctx.globalAlpha = 1;
     scene.textures.addCanvas('graham-cracker', canvas);
+  }
+
+  private static generateJawbreaker(scene: Phaser.Scene): void {
+    const size = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+
+    const cx = size / 2;
+    const cy = size / 2;
+    const maxR = size / 2;
+    const rings = [
+      '#e03030', '#ff8c00', '#ffd700', '#32cd32',
+      '#00ced1', '#6a5acd', '#ff69b4', '#e03030',
+    ];
+
+    for (let i = 0; i < rings.length; i++) {
+      const r = maxR * (1 - i / rings.length);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = rings[i]!;
+      ctx.fill();
+    }
+
+    const gloss = ctx.createRadialGradient(cx - maxR * 0.25, cy - maxR * 0.25, 0, cx, cy, maxR);
+    gloss.addColorStop(0, 'rgba(255,255,255,0.35)');
+    gloss.addColorStop(0.4, 'rgba(255,255,255,0.08)');
+    gloss.addColorStop(1, 'rgba(0,0,0,0.15)');
+    ctx.beginPath();
+    ctx.arc(cx, cy, maxR, 0, Math.PI * 2);
+    ctx.fillStyle = gloss;
+    ctx.fill();
+
+    scene.textures.addCanvas('jawbreaker', canvas);
   }
 }

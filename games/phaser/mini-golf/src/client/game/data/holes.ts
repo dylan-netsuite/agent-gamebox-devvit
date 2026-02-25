@@ -187,4 +187,43 @@ export const HOLES: HoleDefinition[] = [
       { x: 112, y: 152, width: 196, height: 466 },
     ],
   },
+
+  // ---- HOLE 5: The Jawbreaker Wedge ----
+  // Long straight fairway that funnels into a narrow ramp at the midpoint.
+  // Ramp zone applies constant downward force (simulates uphill gravity).
+  // Ball must have ~75-85% power to crest; too much overshoots into back wall.
+  // Cup sits on a shallow plateau just past the ramp.
+  {
+    id: 5,
+    name: 'The Jawbreaker Wedge',
+    par: 3,
+    tee: { x: 250, y: 690 },
+    cup: { x: 250, y: 140 },
+    walls: [
+      // Hourglass/funnel shape: wide bottom → narrow ramp → narrow plateau
+      [
+        { x: 150, y: 740 },
+        { x: 350, y: 740 },
+        { x: 350, y: 420 },
+        { x: 310, y: 320 },
+        { x: 310, y: 60 },
+        { x: 190, y: 60 },
+        { x: 190, y: 320 },
+        { x: 150, y: 420 },
+        { x: 150, y: 740 },
+      ],
+    ],
+    obstacles: [
+      // Ramp zone — constant downward force simulates uphill slope
+      {
+        type: 'ramp',
+        x: 190,
+        y: 300,
+        width: 120,
+        height: 120,
+        forceX: 0,
+        forceY: 15,
+      },
+    ],
+  },
 ];
