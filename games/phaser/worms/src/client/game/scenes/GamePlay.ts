@@ -14,6 +14,7 @@ import { Minimap } from '../ui/Minimap';
 import { TouchControls } from '../ui/TouchControls';
 import { SoundManager } from '../systems/SoundManager';
 import { BackgroundRenderer } from '../systems/BackgroundRenderer';
+import { TutorialManager } from '../systems/TutorialManager';
 import { WORM_NAMES, TEAM_COLORS } from '../../../shared/types/game';
 import type { GameConfig, AIDifficulty } from './GameSetup';
 import { MultiplayerManager } from '../systems/MultiplayerManager';
@@ -27,6 +28,7 @@ interface OnlineGameConfig extends GameConfig {
   multiplayerManager?: MultiplayerManager;
   terrainSeed?: number;
   onlinePlayers?: LobbyPlayer[];
+  tutorial?: boolean;
 }
 
 export class GamePlay extends Scene {
@@ -79,6 +81,7 @@ export class GamePlay extends Scene {
   private mpHandler: ((msg: MultiplayerMessage) => void) | null = null;
   private pendingMoveThrottle = 0;
   private turnStartClickConsumed = false;
+  private tutorial: TutorialManager | null = null;
 
   constructor() {
     super('GamePlay');
@@ -198,6 +201,7 @@ export class GamePlay extends Scene {
           if (w?.isGrounded) w.moveLeft(); else w?.airMoveLeft();
           this.userPanning = false;
           this.broadcastMove();
+          this.tutorial?.notifyMove();
         }
       },
       onMoveRight: () => {
@@ -207,6 +211,7 @@ export class GamePlay extends Scene {
           if (w?.isGrounded) w.moveRight(); else w?.airMoveRight();
           this.userPanning = false;
           this.broadcastMove();
+          this.tutorial?.notifyMove();
         }
       },
       onJump: () => {
@@ -214,6 +219,7 @@ export class GamePlay extends Scene {
         if (this.weaponSystem.currentState === 'idle') {
           this.activeWorm?.jump();
           this.broadcastJump();
+          this.tutorial?.notifyJump();
         }
       },
       onAimFire: () => {
@@ -257,6 +263,13 @@ export class GamePlay extends Scene {
     this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);
     this.gameOverOverlay.setVisible(false);
 
+    if (data?.tutorial) {
+      this.tutorial = new TutorialManager(this, this.weaponSystem, () => {
+        this.scene.start('ModeSelect');
+      });
+      this.tutorial.setInitialWeaponIndex(this.weaponSystem.weaponIndex);
+    }
+
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.setupUICamera();
     this.centerCameraOnWorm();
@@ -287,6 +300,7 @@ export class GamePlay extends Scene {
     if (this.gameOver) return false;
     if (this.isAITurn) return false;
     if (this.isRemoteTurn) return false;
+    if (this.tutorial?.isBlocking()) return false;
     return true;
   }
 
@@ -794,6 +808,7 @@ export class GamePlay extends Scene {
     if (this.gameOver) return;
 
     SoundManager.play('turn');
+    this.tutorial?.notifyTurnAdvanced();
 
     const next = this.findNextAliveIndex();
     this.turnOrderIndex = next;
@@ -820,15 +835,24 @@ export class GamePlay extends Scene {
     for (let i = 0; i < NUMBER_KEYS.length; i++) {
       const idx = i;
       this.input.keyboard.on(`keydown-${NUMBER_KEYS[i]}`, () => {
-        if (this.canAct()) this.weaponSystem.selectWeapon(idx);
+        if (this.canAct()) {
+          this.weaponSystem.selectWeapon(idx);
+          this.tutorial?.notifyWeaponSwitch(idx);
+        }
       });
     }
 
     this.input.keyboard.on('keydown-Q', () => {
-      if (this.canAct()) this.weaponSystem.prevWeapon();
+      if (this.canAct()) {
+        this.weaponSystem.prevWeapon();
+        this.tutorial?.notifyWeaponSwitch(this.weaponSystem.weaponIndex);
+      }
     });
     this.input.keyboard.on('keydown-E', () => {
-      if (this.canAct()) this.weaponSystem.nextWeapon();
+      if (this.canAct()) {
+        this.weaponSystem.nextWeapon();
+        this.tutorial?.notifyWeaponSwitch(this.weaponSystem.weaponIndex);
+      }
     });
 
     this.input.keyboard.on('keydown-ENTER', () => {
@@ -880,6 +904,7 @@ export class GamePlay extends Scene {
         if (worm) {
           worm.jump();
           this.broadcastJump();
+          this.tutorial?.notifyJump();
         }
       }
     });
@@ -1194,6 +1219,7 @@ export class GamePlay extends Scene {
           }
           this.userPanning = false;
           this.broadcastMove();
+          this.tutorial?.notifyMove();
         } else if (this.cursors.right.isDown) {
           if (worm.isGrounded) {
             worm.moveRight();
@@ -1202,6 +1228,7 @@ export class GamePlay extends Scene {
           }
           this.userPanning = false;
           this.broadcastMove();
+          this.tutorial?.notifyMove();
         }
 
         if (this.cursors.up.isDown) {
@@ -1251,6 +1278,7 @@ export class GamePlay extends Scene {
     this.hud.update();
     this.teamPanel.update();
     this.minimap.update();
+    this.tutorial?.update();
   }
 
   private setupUICamera(): void {
@@ -1266,6 +1294,9 @@ export class GamePlay extends Scene {
     this.uiContainers.add(this.touchControls.getContainer());
     if (this.gameOverOverlay) {
       this.uiContainers.add(this.gameOverOverlay);
+    }
+    if (this.tutorial) {
+      this.uiContainers.add(this.tutorial.getContainer());
     }
 
     for (const obj of this.uiContainers) {

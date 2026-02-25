@@ -1,5 +1,23 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.93] - 2026-02-25 — Tutorial Mode (wf-1772047639)
+
+### Added
+- **Tutorial mode**: New "TUTORIAL" button on the ModeSelect screen that launches a guided, interactive tutorial.
+- **TutorialManager system**: 8-step guided walkthrough that teaches movement, jumping, weapon switching, aiming, firing, and turn flow.
+- Steps use a mix of click-to-continue prompts (with dark backdrop) and condition-based progression (waits for the player to perform the action).
+- Tutorial uses a simplified game setup: 1v1 against easy AI, infinite turn timer, hills map.
+- Tutorial completion returns the player to the main menu.
+
+### Files Added
+- `src/client/game/systems/TutorialManager.ts` — Tutorial step management, overlay UI, and condition tracking.
+
+### Files Changed
+- `src/client/game/scenes/ModeSelect.ts` — Added TUTORIAL button (📖 icon).
+- `src/client/game/scenes/GamePlay.ts` — Accepts `tutorial` flag, instantiates TutorialManager, hooks notifications for move/jump/weapon-switch/turn-advance, blocks input during modal steps.
+
+---
+
 ## [v0.0.12.90] - 2026-02-25 — Explosion Performance Deep Fix (wf-1772046749)
 
 ### Fixed

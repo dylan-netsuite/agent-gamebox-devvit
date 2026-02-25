@@ -40,6 +40,23 @@ export class ModeSelect extends Scene {
 
     const modes: ModeButton[] = [
       {
+        icon: '📖',
+        title: 'TUTORIAL',
+        desc: 'Learn the basics step by step',
+        action: () => {
+          SoundManager.play('select');
+          this.scene.start('GamePlay', {
+            numTeams: 2,
+            wormsPerTeam: 1,
+            aiTeams: [1],
+            aiDifficulty: 'easy',
+            mapId: 'hills',
+            turnTimer: 0,
+            tutorial: true,
+          });
+        },
+      },
+      {
         icon: '🤖',
         title: 'SINGLE PLAYER',
         desc: 'Battle against CPU opponents',
