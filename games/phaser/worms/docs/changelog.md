@@ -1,5 +1,27 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.102] - 2026-02-25 — Tutorial Polish: Interactive Steps, Skip, Progress (wf-1772053086)
+
+### Fixed
+- **Movement/jumping highlights**: Removed broken highlight rects for movement and jumping steps that were pointing at touch control coordinates (bottom-left corner) instead of anything meaningful on desktop.
+
+### Changed
+- **Parachute step now interactive**: Players must jump and press P to deploy a parachute to advance. Previously was click-to-continue.
+- **Ninja Rope step now interactive**: Players must aim and fire to attach the rope. Weapon auto-selects to Ninja Rope when step starts.
+- **Teleport step now interactive**: Players must aim and fire to teleport. Weapon auto-selects to Teleport when step starts.
+- **Step onEnter hooks**: Each interactive utility step resets weapon state and selects the appropriate weapon automatically.
+
+### Added
+- **Skip button**: "SKIP >" text button in the top-right corner of every tutorial step. Dismisses the tutorial immediately.
+- **Progress indicator**: "Step X / 11" text shown below the tutorial box on every step.
+- **Tutorial event notifications**: `notifyParachute()`, `notifyRopeAttached()`, `notifyTeleportUsed()` methods for GamePlay to signal tutorial completion conditions.
+
+### Files Changed
+- `src/client/game/systems/TutorialManager.ts` — Removed broken highlight helpers, made parachute/rope/teleport interactive with conditions and onEnter hooks, added skip button and progress text.
+- `src/client/game/scenes/GamePlay.ts` — Added `notifyTutorialFire()` helper, parachute/rope/teleport notifications to tutorial.
+
+---
+
 ## [v0.0.12.101] - 2026-02-25 — Touch Power Buttons + Tutorial Highlights (wf-1772050958)
 
 ### Added

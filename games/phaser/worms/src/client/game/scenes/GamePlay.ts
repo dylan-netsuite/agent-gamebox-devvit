@@ -233,6 +233,7 @@ export class GamePlay extends Scene {
           const worm = this.activeWorm;
           if (worm) {
             this.broadcastFire(worm);
+            this.notifyTutorialFire();
             this.weaponSystem.fire(worm);
           }
         }
@@ -256,6 +257,7 @@ export class GamePlay extends Scene {
             worm.closeParachute();
           } else {
             worm.openParachute();
+            this.tutorial?.notifyParachute();
           }
         }
       },
@@ -436,6 +438,14 @@ export class GamePlay extends Scene {
     this.isAITurn = false;
 
     this.startTurn();
+  }
+
+  private notifyTutorialFire(): void {
+    if (!this.tutorial) return;
+    const weapon = this.weaponSystem.currentWeapon;
+    if (weapon.firingMode === 'teleport') {
+      this.tutorial.notifyTeleportUsed();
+    }
   }
 
   private broadcastMove(): void {
@@ -906,6 +916,7 @@ export class GamePlay extends Scene {
       } else if (state === 'aiming') {
         if (worm) {
           this.broadcastFire(worm);
+          this.notifyTutorialFire();
           this.weaponSystem.fire(worm);
         }
       }
@@ -942,6 +953,7 @@ export class GamePlay extends Scene {
           worm.closeParachute();
         } else {
           worm.openParachute();
+          this.tutorial?.notifyParachute();
         }
       }
     });
@@ -974,6 +986,7 @@ export class GamePlay extends Scene {
       } else if (state === 'aiming') {
         if (worm) {
           this.broadcastFire(worm);
+          this.notifyTutorialFire();
           this.weaponSystem.fire(worm);
         }
       }
@@ -1265,6 +1278,7 @@ export class GamePlay extends Scene {
     }
 
     if (worm.isOnRope) {
+      this.tutorial?.notifyRopeAttached();
       if (this.ropeAttachTime === 0) {
         this.ropeAttachTime = this.time.now;
       } else if (this.time.now - this.ropeAttachTime > 5000) {

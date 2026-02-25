@@ -17,6 +17,7 @@ interface TutorialStep {
   clickToContinue?: boolean;
   condition?: () => boolean;
   getHighlight?: () => HighlightRect | null;
+  onEnter?: () => void;
 }
 
 const OVERLAY_ALPHA = 0.55;
@@ -37,6 +38,8 @@ export class TutorialManager {
   private titleText!: Phaser.GameObjects.Text;
   private bodyText!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
+  private progressText!: Phaser.GameObjects.Text;
+  private skipText!: Phaser.GameObjects.Text;
   private steps: TutorialStep[];
   private stepIndex = 0;
   private active = true;
@@ -46,6 +49,9 @@ export class TutorialManager {
   private playerSwitchedWeapon = false;
   private initialWeaponIndex = 0;
   private turnAdvanced = false;
+  private parachuteUsed = false;
+  private ropeUsed = false;
+  private teleportUsed = false;
   private onComplete: () => void;
 
   constructor(
@@ -78,7 +84,6 @@ export class TutorialManager {
         body: 'Use the ← → arrow keys to move your worm.\nOn mobile, use the on-screen D-pad.',
         hint: 'Move left or right to continue',
         condition: () => this.playerMoved,
-        getHighlight: () => this.getDpadBounds(),
       },
       {
         id: 'jumping',
@@ -86,7 +91,6 @@ export class TutorialManager {
         body: 'Press W to jump over obstacles.\nYou can move in the air too!',
         hint: 'Press W to jump',
         condition: () => this.playerJumped,
-        getHighlight: () => this.getJumpButtonBounds(),
       },
       {
         id: 'weapon-switch',
@@ -102,7 +106,6 @@ export class TutorialManager {
         body: 'Click on the battlefield (or press SPACE) to enter aiming mode. Move your mouse to aim — a trajectory preview will appear.',
         hint: 'Click or press SPACE to aim',
         condition: () => this.weapons.currentState === 'aiming',
-        getHighlight: () => this.getAimButtonBounds(),
       },
       {
         id: 'fire',
@@ -117,20 +120,34 @@ export class TutorialManager {
       {
         id: 'parachute',
         title: '🪂 Parachute',
-        body: 'Press P to deploy a parachute while falling.\nThis slows your descent and prevents fall damage. Press P again to close it.',
-        clickToContinue: true,
+        body: 'Press P to deploy a parachute while in the air.\nThis slows your descent and prevents fall damage. Press P again to close it.',
+        hint: 'Jump (W) then press P to open a parachute',
+        condition: () => this.parachuteUsed,
+        onEnter: () => {
+          this.weapons.reset();
+        },
       },
       {
         id: 'ninja-rope',
         title: '🪝 Ninja Rope',
-        body: 'Select the Ninja Rope (weapon 9) and fire it at terrain to attach.\nUse ↑/↓ to shorten or lengthen the rope.\nPress SPACE or click to detach and launch yourself!',
-        clickToContinue: true,
+        body: 'The Ninja Rope lets you swing across the map!\nAim and fire to attach. Use ↑/↓ to adjust length.\nPress SPACE or click to detach.',
+        hint: 'Aim and fire to attach the rope',
+        condition: () => this.ropeUsed,
+        onEnter: () => {
+          this.weapons.reset();
+          this.weapons.selectWeaponById('ninja-rope');
+        },
       },
       {
         id: 'teleport',
         title: '⚡ Teleport',
-        body: 'Select Teleport (weapon 8) and aim where you want to go.\nAdjust power to control distance, then fire to instantly warp there. Great for escaping danger!',
-        clickToContinue: true,
+        body: 'Teleport lets you instantly warp to any location!\nAim where you want to go, adjust power, then fire.',
+        hint: 'Aim and fire to teleport',
+        condition: () => this.teleportUsed,
+        onEnter: () => {
+          this.weapons.reset();
+          this.weapons.selectWeaponById('teleport');
+        },
       },
       {
         id: 'turn-flow',
@@ -210,6 +227,32 @@ export class TutorialManager {
       duration: 900,
     });
 
+    this.progressText = this.scene.add
+      .text(cam.width / 2, 0, '', {
+        fontFamily: 'monospace',
+        fontSize: '10px',
+        color: '#6e7681',
+        align: 'center',
+      })
+      .setOrigin(0.5, 0);
+    this.container.add(this.progressText);
+
+    this.skipText = this.scene.add
+      .text(0, 0, 'SKIP ▸', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '12px',
+        fontStyle: 'bold',
+        color: '#6e7681',
+        padding: { x: 8, y: 4 },
+      })
+      .setOrigin(1, 0)
+      .setInteractive({ useHandCursor: true });
+    this.container.add(this.skipText);
+
+    this.skipText.on('pointerover', () => this.skipText.setColor('#00e5ff'));
+    this.skipText.on('pointerout', () => this.skipText.setColor('#6e7681'));
+    this.skipText.on('pointerdown', () => this.complete());
+
     this.scene.input.on('pointerdown', () => {
       if (this.waitingForClick && this.active) {
         this.advanceStep();
@@ -288,6 +331,14 @@ export class TutorialManager {
       this.waitingForClick = false;
     }
 
+    const progressY = boxY + boxH + 8;
+    this.progressText.setText(`Step ${index + 1} / ${this.steps.length}`);
+    this.progressText.setPosition(cam.width / 2, progressY);
+
+    this.skipText.setPosition(boxX + boxW - 4, boxY + 4);
+
+    step.onEnter?.();
+
     this.container.setVisible(true);
   }
 
@@ -322,6 +373,18 @@ export class TutorialManager {
 
   notifyTurnAdvanced(): void {
     this.turnAdvanced = true;
+  }
+
+  notifyParachute(): void {
+    this.parachuteUsed = true;
+  }
+
+  notifyRopeAttached(): void {
+    this.ropeUsed = true;
+  }
+
+  notifyTeleportUsed(): void {
+    this.teleportUsed = true;
   }
 
   setInitialWeaponIndex(idx: number): void {
@@ -376,22 +439,6 @@ export class TutorialManager {
       duration: 600,
       ease: 'Sine.easeInOut',
     });
-  }
-
-  private getDpadBounds(): HighlightRect {
-    const cam = this.scene.cameras.main;
-    return { x: 16, y: cam.height - 60 - 44 - 6, w: 44 * 2 + 6, h: 44 * 2 + 6 };
-  }
-
-  private getJumpButtonBounds(): HighlightRect {
-    const cam = this.scene.cameras.main;
-    return { x: 16 + (44 + 6) / 2, y: cam.height - 60 - 44 - 6, w: 44, h: 44 };
-  }
-
-  private getAimButtonBounds(): HighlightRect {
-    const cam = this.scene.cameras.main;
-    const rightX = cam.width - 44 - 16;
-    return { x: rightX, y: cam.height - 60, w: 44, h: 44 };
   }
 
   getContainer(): Phaser.GameObjects.Container {
