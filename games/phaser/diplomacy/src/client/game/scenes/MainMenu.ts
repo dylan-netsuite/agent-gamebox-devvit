@@ -49,6 +49,7 @@ export class MainMenu extends Scene {
       })
       .setOrigin(0.5);
 
+    this.createTutorialButton();
     void this.loadGameState();
   }
 
@@ -349,6 +350,30 @@ export class MainMenu extends Scene {
         label.setColor('#e6c200');
       }
     } catch { /* ignore */ }
+  }
+
+  private createTutorialButton(): void {
+    const { width, height } = this.scale;
+    const y = height - 195;
+    const bg = this.add.rectangle(width / 2, y, 200, 32, 0x1a2a3a);
+    bg.setStrokeStyle(1, 0xe6c200);
+    bg.setInteractive({ useHandCursor: true });
+
+    const label = this.add
+      .text(width / 2, y, 'TUTORIAL', {
+        fontFamily: 'Georgia, serif',
+        fontSize: '12px',
+        color: '#e6c200',
+        letterSpacing: 2,
+      })
+      .setOrigin(0.5);
+
+    bg.on('pointerover', () => { bg.setStrokeStyle(2, 0xf0d020); label.setColor('#f0d020'); });
+    bg.on('pointerout', () => { bg.setStrokeStyle(1, 0xe6c200); label.setColor('#e6c200'); });
+    bg.on('pointerdown', () => {
+      this.stopPolling();
+      this.scene.start('Tutorial');
+    });
   }
 
   private createStartButton(): void {

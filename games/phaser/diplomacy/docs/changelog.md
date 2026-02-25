@@ -1,3 +1,34 @@
+## v0.0.9.1 — Tutorial Mode (2026-02-25)
+
+### New Feature
+- **Interactive tutorial**: Client-side guided tutorial that teaches all core Diplomacy mechanics through a scripted introductory game as Italy, lasting ~3 game years (Spring 1901 through Fall 1903).
+- **Tutorial scene**: New `Tutorial` scene extending `GamePlay` with local order resolution (no server communication). Uses the shared `orderResolver` directly on the client.
+- **Tutorial overlay**: DOM-based guidance system with step-by-step instructions, province highlights, UI element pointing, step counter, skip button, and completion screen.
+- **Scripted bot orders**: Pre-computed orders for 6 bot nations across 8 tutorial turns, crafted to create pedagogically interesting scenarios (supported attacks, dislodgements, convoy opportunities).
+- **Mechanics covered**: Movement, holds, supply center capture, support orders, convoy orders, retreats, and builds/disbands.
+- **MainMenu integration**: Gold-styled "TUTORIAL" button on the lobby screen.
+
+### Technical Details
+- `Tutorial` extends `GamePlay` (key methods changed from `private` to `protected` for extensibility).
+- `GamePlay` constructor updated to accept optional config parameter for subclass scene keys.
+- `tutorialScript.ts` defines `TutorialStep` and `TutorialTurn` types with step advancement conditions (`waitForNext`, `waitForOrderFrom`, `waitForSubmit`, `waitForRetreat`, `waitForBuild`).
+- `TutorialOverlayDOM` singleton manages the tutorial guidance DOM overlay.
+- Order resolution uses `resolveOrders()` and `applyResults()` imported from `server/core/orderResolver.ts` (pure logic, no server dependencies).
+- Tutorial state (turn index, step index) persists across scene restarts via `_tutorialState` data parameter.
+
+### Files Added
+- `src/client/game/scenes/Tutorial.ts`
+- `src/client/game/tutorial/tutorialScript.ts`
+- `src/client/game/tutorial/TutorialOverlayDOM.ts`
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts` — Changed key methods/properties from `private` to `protected`
+- `src/client/game/scenes/MainMenu.ts` — Added TUTORIAL button
+- `src/client/game/game.ts` — Registered Tutorial scene
+- `src/client/game/game.css` — Added tutorial overlay styles
+
+---
+
 ## v0.0.2.127 — Game History / Replay (2026-02-23)
 
 ### New Feature

@@ -718,6 +718,116 @@ html, body {
   border-color: #f0d020;
 }
 
+/* ── Tutorial overlay ─────────────────────────── */
+#tutorial-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.tutorial-message {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 32px));
+  background: rgba(15, 15, 26, 0.96);
+  border: 2px solid rgba(230, 194, 0, 0.7);
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+
+.tutorial-step-counter {
+  font-size: 10px;
+  color: rgba(230, 194, 0, 0.6);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.tutorial-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e6c200;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.tutorial-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 12px;
+}
+
+.tutorial-body b {
+  color: #e6c200;
+  font-weight: 700;
+}
+
+.tutorial-next-btn {
+  display: block;
+  width: 100%;
+  background: rgba(46, 204, 113, 0.2);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 6px;
+  color: #2ecc71;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tutorial-next-btn:hover {
+  background: rgba(46, 204, 113, 0.35);
+}
+
+.tutorial-skip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 26;
+}
+
+.tutorial-skip:hover {
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tutorial-highlight {
+  position: absolute;
+  border: 3px solid rgba(230, 194, 0, 0.8);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: tutorial-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes tutorial-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(230, 194, 0, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(230, 194, 0, 0.7); }
+}
+
+.tutorial-pointed {
+  box-shadow: 0 0 12px rgba(230, 194, 0, 0.6);
+  border-color: rgba(230, 194, 0, 0.8) !important;
+}
+
 /* Chat country colors */
 :root {
   --chat-austria: #C87EC8;

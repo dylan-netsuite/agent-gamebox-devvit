@@ -4,8 +4,9 @@
 
 ```
 Boot → Preloader → MainMenu → GamePlay ↔ (poll/refresh)
-                      ↕            ↕ ↓
-                   MyGames       GameOver
+                      ↕  ↕        ↕ ↓
+                   MyGames  ↕   GameOver
+                         Tutorial
 ```
 
 ## Boot
@@ -77,6 +78,47 @@ Displays a "DIPLOMACY" title and "Loading..." message, then transitions to MainM
 - Compact single-row layout (38px desktop, 32px mobile) to maximize map space
 - Current turn display (Season Year) and game phase indicator on the left
 - Per-country supply center and unit counts on the right with adaptive spacing
+
+## Tutorial
+**File**: `src/client/game/scenes/Tutorial.ts`
+
+### Responsibilities
+- Provides a guided, client-side tutorial experience teaching all core Diplomacy mechanics
+- Extends GamePlay to reuse the full map, unit rendering, order panel, and arrow system
+- Overrides network methods (no server communication) — all game state is managed in-memory
+- Resolves orders locally using the shared `orderResolver` (pure logic, no server dependencies)
+- Drives gameplay through a scripted sequence of 8 tutorial turns
+
+### Tutorial Flow
+The player controls Italy through a scripted introductory game (~3 years):
+
+1. **Spring 1901** — Basic movement: move Army, Fleet to adjacent provinces
+2. **Fall 1901** — Capturing supply centers, hold orders
+3. **Fall 1901 Builds** — Building new units in home supply centers
+4. **Spring 1902** — Support orders: supported attacks with strength > 1
+5. **Fall 1902** — Convoy orders: transporting armies across water
+6. **Spring 1903** — Orders phase leading to a dislodgement
+7. **Spring 1903 Retreats** — Retreat/disband dislodged units
+8. **Fall 1903** — Final turn with full mechanics
+
+### Key Components
+
+#### TutorialOverlayDOM (`src/client/game/tutorial/TutorialOverlayDOM.ts`)
+- Semi-transparent overlay with message box, title, body text, and "Next" button
+- Step counter showing progress within each turn
+- "Skip Tutorial" button in the top-right corner
+- Province highlight rings (pulsing golden borders)
+- UI element pointing (glowing border on orders panel elements)
+- Completion screen with mechanics summary and "Return to Lobby" button
+
+#### Tutorial Script (`src/client/game/tutorial/tutorialScript.ts`)
+- Defines `TutorialStep` and `TutorialTurn` types
+- Contains pre-computed bot orders for all 6 non-player nations per turn
+- Each step has conditions for advancement: `waitForNext`, `waitForOrderFrom`, `waitForSubmit`, `waitForRetreat`, `waitForBuild`
+- Bot orders are crafted to create interesting scenarios (e.g., Germany attacks Venice with support to trigger a retreat)
+
+### Access Points
+- "TUTORIAL" button on the MainMenu lobby screen (gold-styled, positioned above action buttons)
 
 ## MyGames
 **File**: `src/client/game/scenes/MyGames.ts`

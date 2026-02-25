@@ -254,6 +254,19 @@ When the game ends, players are shown a full statistics screen:
 - **Return to Lobby** button to go back to the main menu
 - Victory fanfare sound effect plays on screen entry
 
+## Tutorial Mode
+
+A guided, client-side tutorial that teaches all core mechanics through a scripted introductory game. The player controls Italy and plays through ~3 game years (Spring 1901 to Fall 1903), learning:
+
+- **Movement** — Moving armies and fleets to adjacent provinces
+- **Hold** — Defending a position
+- **Support** — Adding strength to attacks and defenses
+- **Convoy** — Transporting armies across water via fleets
+- **Retreats** — Repositioning dislodged units
+- **Builds** — Creating new units after gaining supply centers
+
+The tutorial runs entirely on the client with no server communication. Bot orders are pre-scripted to create pedagogically interesting scenarios (e.g., a supported attack dislodges the player's unit to teach retreats). Accessible from the "TUTORIAL" button on the main menu.
+
 ## Phases
 
 | Phase | Description |

@@ -20,7 +20,8 @@ games/phaser/diplomacy/
 │   │   ├── game.html     # Expanded Phaser game
 │   │   └── game/         # Phaser scenes, UI components
     │   │       ├── game.ts   # Phaser config & entry (RESIZE mode, 100% sizing)
-    │   │       ├── scenes/   # Boot, Preloader, MainMenu, GamePlay, GameOver
+    │   │       ├── scenes/   # Boot, Preloader, MainMenu, GamePlay, GameOver, Tutorial
+    │   │       ├── tutorial/ # Tutorial script, overlay DOM (client-only guided tutorial)
     │   │       ├── ui/       # MapRenderer, provinceGeometry, coastlines (w/ decorative islands & Switzerland), mapBackground (SVG gen, unused), ProvinceTooltip, OrderPanel, StatusBar
     │   │       └── data/     # (uses shared/data)
 │   ├── server/           # Devvit serverless backend

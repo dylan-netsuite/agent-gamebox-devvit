@@ -53,24 +53,24 @@ type ProvinceMeta = {
 };
 
 export class GamePlay extends Scene {
-  private gameState!: GameState;
-  private currentPlayer: PlayerInfo | null = null;
+  protected gameState!: GameState;
+  protected currentPlayer: PlayerInfo | null = null;
   private previousUnits: Unit[] | null = null;
 
   private worldWidth = 2000;
   private worldHeight = 1400;
   private readonly CAM_PAD = 200;
 
-  private provinces: ProvinceMeta[] = [];
+  protected provinces: ProvinceMeta[] = [];
   private provincePolys: Record<string, Phaser.GameObjects.Polygon> = {};
-  private provinceLabels: Record<string, Phaser.GameObjects.Text> = {};
+  protected provinceLabels: Record<string, Phaser.GameObjects.Text> = {};
   private unitTokens: Record<string, Phaser.GameObjects.GameObject[]> = {};
 
   private selectedProvinceId: string | null = null;
   private selectedUnitProvince: string | null = null;
   private legalTargets: Set<string> = new Set();
-  private stagedOrders: StagedOrder[] = [];
-  private orderedProvinces: Set<string> = new Set();
+  protected stagedOrders: StagedOrder[] = [];
+  protected orderedProvinces: Set<string> = new Set();
 
   private orderMode: OrderMode = 'move';
   private supportStep: 'select-supporter' | 'select-supported' | 'select-destination' | null = null;
@@ -82,27 +82,27 @@ export class GamePlay extends Scene {
   private convoyArmyProvince: string | null = null;
 
   private hoverArrowGraphics!: Phaser.GameObjects.Graphics;
-  private orderArrowGraphics!: Phaser.GameObjects.Graphics;
+  protected orderArrowGraphics!: Phaser.GameObjects.Graphics;
   private tooltipEl: HTMLDivElement | null = null;
   private coastPickerEl: HTMLDivElement | null = null;
   private pendingCoastOrder: { unitType: 'Army' | 'Fleet'; from: string; to: string } | null = null;
   private myGamesBtn: HTMLButtonElement | null = null;
   private historyBtn: HTMLButtonElement | null = null;
-  private historyMode = false;
+  protected historyMode = false;
 
   private isDragging = false;
-  private dragMoved = false;
+  protected dragMoved = false;
   private dragStartX = 0;
   private dragStartY = 0;
   private cameraStartX = 0;
   private cameraStartY = 0;
 
-  private pollTimer: ReturnType<typeof setInterval> | null = null;
+  protected pollTimer: ReturnType<typeof setInterval> | null = null;
   private chatMessages: ChatMessage[] = [];
   private lastChatTimestamp = 0;
 
-  constructor() {
-    super('GamePlay');
+  constructor(config?: string | Phaser.Types.Scenes.SettingsConfig) {
+    super(config ?? 'GamePlay');
   }
 
   private autoOpenHistory = false;
@@ -830,7 +830,7 @@ export class GamePlay extends Scene {
 
   // ── Order staging (with duplicate prevention) ─
 
-  private stageOrder(order: StagedOrder) {
+  protected stageOrder(order: StagedOrder) {
     if (this.orderedProvinces.has(order.from)) {
       this.stagedOrders = this.stagedOrders.filter((o) => o.from !== order.from);
     }
@@ -843,7 +843,7 @@ export class GamePlay extends Scene {
 
   // ── Persistent order arrows ───────────────────
 
-  private redrawOrderArrows() {
+  protected redrawOrderArrows() {
     this.orderArrowGraphics.clear();
     for (const order of this.stagedOrders) {
       const color = ARROW_COLORS[order.orderType] ?? 0xffffff;
@@ -1250,7 +1250,7 @@ export class GamePlay extends Scene {
 
   // ── Server communication ───────────────────────
 
-  private updatePanelState() {
+  protected updatePanelState() {
     OrdersPanelDOM.setTurnInfo(this.gameState.turn, this.gameState.phase);
     OrdersPanelDOM.setDeadline(this.gameState.turnDeadline ?? null);
     OrdersPanelDOM.setTurnLog(this.gameState.turnLog);
@@ -1309,7 +1309,7 @@ export class GamePlay extends Scene {
     }
   }
 
-  private async submitOrders(staged: StagedOrder[]): Promise<void> {
+  protected async submitOrders(staged: StagedOrder[]): Promise<void> {
     if (!this.currentPlayer) { OrdersPanelDOM.setStatus('Not assigned to a power'); return; }
     if (this.gameState.ordersSubmitted.includes(this.currentPlayer.country)) { OrdersPanelDOM.setStatus('Orders already submitted this turn'); return; }
 
@@ -1389,7 +1389,7 @@ export class GamePlay extends Scene {
     }
   }
 
-  private async submitRetreats(staged: StagedRetreat[]): Promise<void> {
+  protected async submitRetreats(staged: StagedRetreat[]): Promise<void> {
     OrdersPanelDOM.setStatus('Submitting retreats...');
     OrdersPanelDOM.setSubmitEnabled(false);
     const retreats = staged.map((s) => ({ type: (s.destination ? 'retreat' : 'disband') as 'retreat' | 'disband', country: this.currentPlayer!.country, unitType: 'Army' as const, province: s.from, destination: s.destination ?? undefined }));
@@ -1402,7 +1402,7 @@ export class GamePlay extends Scene {
     } catch { OrdersPanelDOM.setStatus('Network error. Try again.'); OrdersPanelDOM.setSubmitEnabled(true); }
   }
 
-  private async submitBuilds(staged: StagedBuild[]): Promise<void> {
+  protected async submitBuilds(staged: StagedBuild[]): Promise<void> {
     OrdersPanelDOM.setStatus('Submitting builds...');
     OrdersPanelDOM.setSubmitEnabled(false);
     const builds = staged.map((s) => ({ type: s.type, country: this.currentPlayer!.country, unitType: s.unitType, province: s.province }));
@@ -1415,7 +1415,7 @@ export class GamePlay extends Scene {
     } catch { OrdersPanelDOM.setStatus('Network error. Try again.'); OrdersPanelDOM.setSubmitEnabled(true); }
   }
 
-  private async refreshGameState(): Promise<void> {
+  protected async refreshGameState(): Promise<void> {
     OrdersPanelDOM.setStatus('Refreshing...');
     try {
       const res = await fetch('/api/game/state');
@@ -1429,7 +1429,7 @@ export class GamePlay extends Scene {
 
   // ── Chat ──────────────────────────────────────
 
-  private async sendChat(text: string, channel?: string): Promise<void> {
+  protected async sendChat(text: string, channel?: string): Promise<void> {
     try {
       await fetch('/api/game/chat', {
         method: 'POST',
@@ -1473,7 +1473,7 @@ export class GamePlay extends Scene {
 
   // ── Polling ───────────────────────────────────
 
-  private startPollingIfNeeded() {
+  protected startPollingIfNeeded() {
     this.stopPolling();
     if (!this.currentPlayer) return;
 
@@ -1491,11 +1491,11 @@ export class GamePlay extends Scene {
     }
   }
 
-  private stopPolling() {
+  protected stopPolling() {
     if (this.pollTimer) { clearInterval(this.pollTimer); this.pollTimer = null; }
   }
 
-  private async pollState(): Promise<void> {
+  protected async pollState(): Promise<void> {
     try {
       const res = await fetch('/api/game/state');
       if (!res.ok) return;
@@ -1531,7 +1531,7 @@ export class GamePlay extends Scene {
 
   // ── Scene lifecycle ───────────────────────────
 
-  private reloadScene(previousUnits?: Unit[]) {
+  protected reloadScene(previousUnits?: Unit[]) {
     this.stopPolling();
     OrdersPanelDOM.destroy();
     ChatPanelDOM.destroy();
