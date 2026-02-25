@@ -686,6 +686,27 @@ export class HUD {
     this.tooltipContainer.setVisible(true);
   }
 
+  getWeaponGridBounds(): { x: number; y: number; w: number; h: number } {
+    const panelY = this.barContainer.y;
+    return {
+      x: this.contentX + PAD,
+      y: panelY + this.stateH,
+      w: GRID_COLS * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP,
+      h: this.weaponGridH,
+    };
+  }
+
+  getPowerBarBounds(): { x: number; y: number; w: number; h: number } {
+    const panelY = this.barContainer.y;
+    const sectionW = this.panelW - TOGGLE_W - PAD * 2;
+    return {
+      x: this.contentX + PAD,
+      y: panelY + this.stateH + this.weaponGridH,
+      w: sectionW,
+      h: INFO_H,
+    };
+  }
+
   getContainers(): Phaser.GameObjects.GameObject[] {
     return [this.barContainer, this.tooltipContainer];
   }

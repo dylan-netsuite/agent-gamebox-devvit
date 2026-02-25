@@ -1,15 +1,22 @@
 import * as Phaser from 'phaser';
 import type { WeaponSystem } from './WeaponSystem';
+import type { HUD } from '../ui/HUD';
+
+interface HighlightRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
 
 interface TutorialStep {
   id: string;
   title: string;
   body: string;
   hint?: string;
-  /** If true, step advances on click/tap. Otherwise waits for condition. */
   clickToContinue?: boolean;
-  /** Called each frame; return true when step is satisfied. */
   condition?: () => boolean;
+  getHighlight?: () => HighlightRect | null;
 }
 
 const OVERLAY_ALPHA = 0.55;
@@ -21,9 +28,12 @@ const BOX_BG = 0x0f1923;
 export class TutorialManager {
   private scene: Phaser.Scene;
   private weapons: WeaponSystem;
+  private hud: HUD | null;
   private container!: Phaser.GameObjects.Container;
   private backdropGfx!: Phaser.GameObjects.Graphics;
   private boxGfx!: Phaser.GameObjects.Graphics;
+  private highlightGfx!: Phaser.GameObjects.Graphics;
+  private highlightTween: Phaser.Tweens.Tween | null = null;
   private titleText!: Phaser.GameObjects.Text;
   private bodyText!: Phaser.GameObjects.Text;
   private hintText!: Phaser.GameObjects.Text;
@@ -42,10 +52,12 @@ export class TutorialManager {
     scene: Phaser.Scene,
     weapons: WeaponSystem,
     onComplete: () => void,
+    hud?: HUD,
   ) {
     this.scene = scene;
     this.weapons = weapons;
     this.onComplete = onComplete;
+    this.hud = hud ?? null;
 
     this.steps = this.buildSteps();
     this.buildUI();
@@ -66,6 +78,7 @@ export class TutorialManager {
         body: 'Use the ← → arrow keys to move your worm.\nOn mobile, use the on-screen D-pad.',
         hint: 'Move left or right to continue',
         condition: () => this.playerMoved,
+        getHighlight: () => this.getDpadBounds(),
       },
       {
         id: 'jumping',
@@ -73,6 +86,7 @@ export class TutorialManager {
         body: 'Press W to jump over obstacles.\nYou can move in the air too!',
         hint: 'Press W to jump',
         condition: () => this.playerJumped,
+        getHighlight: () => this.getJumpButtonBounds(),
       },
       {
         id: 'weapon-switch',
@@ -80,6 +94,7 @@ export class TutorialManager {
         body: 'You have 9 weapons! Press Q/E to cycle through them, use number keys 1-9, or click the weapon grid on the left panel.',
         hint: 'Switch to a different weapon',
         condition: () => this.playerSwitchedWeapon,
+        getHighlight: () => this.hud?.getWeaponGridBounds() ?? null,
       },
       {
         id: 'aiming',
@@ -87,6 +102,7 @@ export class TutorialManager {
         body: 'Click on the battlefield (or press SPACE) to enter aiming mode. Move your mouse to aim — a trajectory preview will appear.',
         hint: 'Click or press SPACE to aim',
         condition: () => this.weapons.currentState === 'aiming',
+        getHighlight: () => this.getAimButtonBounds(),
       },
       {
         id: 'fire',
@@ -96,6 +112,7 @@ export class TutorialManager {
         condition: () =>
           this.weapons.currentState === 'firing' ||
           this.weapons.currentState === 'resolved',
+        getHighlight: () => this.hud?.getPowerBarBounds() ?? null,
       },
       {
         id: 'parachute',
@@ -140,6 +157,9 @@ export class TutorialManager {
 
     this.backdropGfx = this.scene.add.graphics();
     this.container.add(this.backdropGfx);
+
+    this.highlightGfx = this.scene.add.graphics();
+    this.container.add(this.highlightGfx);
 
     this.boxGfx = this.scene.add.graphics();
     this.container.add(this.boxGfx);
@@ -229,10 +249,20 @@ export class TutorialManager {
 
     this.backdropGfx.clear();
     this.boxGfx.clear();
+    this.highlightGfx.clear();
+    if (this.highlightTween) {
+      this.highlightTween.stop();
+      this.highlightTween = null;
+    }
 
     if (step.clickToContinue) {
       this.backdropGfx.fillStyle(0x000000, OVERLAY_ALPHA);
       this.backdropGfx.fillRect(0, 0, cam.width, cam.height);
+    }
+
+    const hl = step.getHighlight?.();
+    if (hl) {
+      this.drawHighlight(hl);
     }
 
     this.boxGfx.fillStyle(BOX_BG, 0.92);
@@ -326,11 +356,50 @@ export class TutorialManager {
     }
   }
 
+  private drawHighlight(rect: HighlightRect): void {
+    const pad = 4;
+    this.highlightGfx.lineStyle(3, ACCENT, 0.9);
+    this.highlightGfx.strokeRoundedRect(
+      rect.x - pad,
+      rect.y - pad,
+      rect.w + pad * 2,
+      rect.h + pad * 2,
+      8,
+    );
+    this.highlightGfx.setAlpha(1);
+
+    this.highlightTween = this.scene.tweens.add({
+      targets: this.highlightGfx,
+      alpha: 0.2,
+      yoyo: true,
+      repeat: -1,
+      duration: 600,
+      ease: 'Sine.easeInOut',
+    });
+  }
+
+  private getDpadBounds(): HighlightRect {
+    const cam = this.scene.cameras.main;
+    return { x: 16, y: cam.height - 60 - 44 - 6, w: 44 * 2 + 6, h: 44 * 2 + 6 };
+  }
+
+  private getJumpButtonBounds(): HighlightRect {
+    const cam = this.scene.cameras.main;
+    return { x: 16 + (44 + 6) / 2, y: cam.height - 60 - 44 - 6, w: 44, h: 44 };
+  }
+
+  private getAimButtonBounds(): HighlightRect {
+    const cam = this.scene.cameras.main;
+    const rightX = cam.width - 44 - 16;
+    return { x: rightX, y: cam.height - 60, w: 44, h: 44 };
+  }
+
   getContainer(): Phaser.GameObjects.Container {
     return this.container;
   }
 
   destroy(): void {
+    if (this.highlightTween) this.highlightTween.stop();
     this.container?.destroy();
   }
 }

@@ -259,6 +259,16 @@ export class GamePlay extends Scene {
           }
         }
       },
+      onPowerUp: () => {
+        if (this.canAct() && this.weaponSystem.currentState === 'aiming') {
+          this.weaponSystem.adjustPower(2);
+        }
+      },
+      onPowerDown: () => {
+        if (this.canAct() && this.weaponSystem.currentState === 'aiming') {
+          this.weaponSystem.adjustPower(-2);
+        }
+      },
       getState: () => this.weaponSystem.currentState,
     });
 
@@ -267,8 +277,8 @@ export class GamePlay extends Scene {
 
     if (data?.tutorial) {
       this.tutorial = new TutorialManager(this, this.weaponSystem, () => {
-        this.scene.start('ModeSelect');
-      });
+        this.tutorial = null;
+      }, this.hud);
       this.tutorial.setInitialWeaponIndex(this.weaponSystem.weaponIndex);
     }
 
@@ -1293,6 +1303,7 @@ export class GamePlay extends Scene {
     this.hud.update();
     this.teamPanel.update();
     this.minimap.update();
+    this.touchControls.update();
     this.tutorial?.update();
   }
 

@@ -1,5 +1,23 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.101] - 2026-02-25 — Touch Power Buttons + Tutorial Highlights (wf-1772050958)
+
+### Added
+- **Touch power buttons**: + and − buttons appear on the right side of the screen during aiming on touch devices, providing a mobile-friendly alternative to scroll wheel for power adjustment. Buttons use repeating intervals for continuous adjustment.
+- **Tutorial visual highlights**: Interactive tutorial steps now show a pulsing cyan border around the relevant UI element (D-pad for movement, jump button for jumping, weapon grid for weapon switching, aim button for aiming, power bar for firing).
+- **HUD bounds API**: `getWeaponGridBounds()` and `getPowerBarBounds()` methods on HUD for tutorial system to query element positions.
+
+### Changed
+- **Tutorial completion flow**: Tutorial no longer returns to the ModeSelect screen on completion. Instead, the tutorial overlay is dismissed and the game continues as a normal single-player match, letting the player keep practicing.
+
+### Files Changed
+- `src/client/game/ui/TouchControls.ts` — Added `onPowerUp`/`onPowerDown` callbacks, power button creation, `update()` method for state-based visibility.
+- `src/client/game/systems/TutorialManager.ts` — Added highlight graphics, per-step `getHighlight` regions, HUD reference, pulse tween.
+- `src/client/game/scenes/GamePlay.ts` — Pass power callbacks to TouchControls, pass HUD to TutorialManager, call `touchControls.update()`, change tutorial onComplete to continue game.
+- `src/client/game/ui/HUD.ts` — Added `getWeaponGridBounds()` and `getPowerBarBounds()` methods.
+
+---
+
 ## [v0.0.12.97] - 2026-02-25 — Tutorial Expansion + Power Hotkeys (wf-1772049179)
 
 ### Added
