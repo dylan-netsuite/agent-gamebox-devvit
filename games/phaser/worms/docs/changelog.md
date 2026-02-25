@@ -1254,3 +1254,9 @@ Redesigned all character draw functions to use organic shapes and curved paths i
 - `statsKey`, `leaderboardKey`, `recordGameResult`, `getUserStats`, `getLeaderboard` in `gameState.ts`
 - `requestRematch()` in `MultiplayerManager`
 - Leaderboard scene registered in `game.ts`
+
+## [v0.0.12.68] - 2026-02-25 — HUD Collapse Fix (wf-1771994096)
+
+### Fixed
+- **HUD collapse toggle**: Collapsing the left-side HUD no longer slides the entire container off-screen. The toggle strip (◀/▶) now stays pinned at x=0 and remains visible and clickable at all times.
+- **Toggle mechanism**: Replaced the sliding animation with instant show/hide of content containers (weapon grid, status row, info section). The background redraws to match the collapsed/expanded width.

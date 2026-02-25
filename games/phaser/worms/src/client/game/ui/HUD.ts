@@ -63,6 +63,8 @@ export class HUD {
   private tooltipTexts: Phaser.GameObjects.Text[] = [];
   private lastTooltipSlot = -1;
 
+  private infoContainer!: Phaser.GameObjects.Container;
+
   private panelW = 0;
   private panelH = 0;
   private weaponGridH = 0;
@@ -231,9 +233,8 @@ export class HUD {
 
   private buildInfoSection(): void {
     const infoY = this.stateH + this.weaponGridH;
-    const infoContainer = this.scene.add.container(this.contentX + PAD, infoY);
-    this.barContainer.add(infoContainer);
-    infoContainer.setData('__infoBar', true);
+    this.infoContainer = this.scene.add.container(this.contentX + PAD, infoY);
+    this.barContainer.add(this.infoContainer);
 
     const sectionW = this.panelW - TOGGLE_W - PAD * 2;
 
@@ -244,7 +245,7 @@ export class HUD {
       fontStyle: 'bold',
       letterSpacing: 1,
     });
-    infoContainer.add(pwrLabel);
+    this.infoContainer.add(pwrLabel);
 
     this.powerText = this.scene.add
       .text(sectionW, 0, '50%', {
@@ -254,10 +255,10 @@ export class HUD {
         fontStyle: 'bold',
       })
       .setOrigin(1, 0);
-    infoContainer.add(this.powerText);
+    this.infoContainer.add(this.powerText);
 
     this.powerBarFill = this.scene.add.graphics();
-    infoContainer.add(this.powerBarFill);
+    this.infoContainer.add(this.powerBarFill);
 
     const windLabel = this.scene.add.text(0, 28, 'WIND', {
       fontSize: '7px',
@@ -266,7 +267,7 @@ export class HUD {
       fontStyle: 'bold',
       letterSpacing: 1,
     });
-    infoContainer.add(windLabel);
+    this.infoContainer.add(windLabel);
 
     this.windValueText = this.scene.add
       .text(sectionW, 28, '', {
@@ -276,12 +277,10 @@ export class HUD {
         fontStyle: 'bold',
       })
       .setOrigin(1, 0);
-    infoContainer.add(this.windValueText);
+    this.infoContainer.add(this.windValueText);
 
     this.windArrow = this.scene.add.graphics();
-    infoContainer.add(this.windArrow);
-
-    this.statusContainer.setData('infoContainer', infoContainer);
+    this.infoContainer.add(this.windArrow);
   }
 
   private setupInput(): void {
@@ -359,26 +358,15 @@ export class HUD {
 
   private toggle(): void {
     if (this.animating) return;
-    this.animating = true;
     this.expanded = !this.expanded;
 
-    const targetX = this.expanded ? 0 : -(this.panelW - TOGGLE_W);
+    const contentVisible = this.expanded;
+    this.weaponContainer.setVisible(contentVisible);
+    this.statusContainer.setVisible(contentVisible);
+    this.infoContainer.setVisible(contentVisible);
 
-    this.scene.tweens.add({
-      targets: this.barContainer,
-      x: targetX,
-      duration: 200,
-      ease: 'Cubic.easeOut',
-      onUpdate: () => {
-        this.drawBarBg();
-      },
-      onComplete: () => {
-        this.animating = false;
-        this.weaponContainer.setVisible(this.expanded);
-        this.toggleArrow.setText(this.expanded ? '◀' : '▶');
-        this.drawBarBg();
-      },
-    });
+    this.toggleArrow.setText(this.expanded ? '◀' : '▶');
+    this.drawBarBg();
   }
 
   update(): void {
