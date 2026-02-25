@@ -13,7 +13,9 @@ type SoundId =
   | 'parachute-land'
   | 'rope-fire'
   | 'rope-attach'
-  | 'rope-release';
+  | 'rope-release'
+  | 'banana-fire'
+  | 'dart-fire';
 
 let audioCtx: AudioContext | null = null;
 let muted = false;
@@ -96,6 +98,12 @@ export const SoundManager = {
           break;
         case 'rope-release':
           this._ropeRelease();
+          break;
+        case 'banana-fire':
+          this._bananaFire();
+          break;
+        case 'dart-fire':
+          this._dartFire();
           break;
       }
     } catch {
@@ -346,5 +354,52 @@ export const SoundManager = {
     osc.connect(g).connect(ac.destination);
     osc.start(t);
     osc.stop(t + 0.12);
+  },
+
+  _bananaFire() {
+    const ac = ctx();
+    const t = ac.currentTime;
+    // Squelchy pop: low sine burst + filtered noise
+    const osc = ac.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, t);
+    osc.frequency.exponentialRampToValueAtTime(60, t + 0.12);
+    const og = ac.createGain();
+    og.gain.setValueAtTime(0.35, t);
+    og.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+    osc.connect(og).connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 0.15);
+
+    const n = noise(ac, 0.08);
+    const f = ac.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.setValueAtTime(1500, t);
+    f.Q.setValueAtTime(3, t);
+    const ng = ac.createGain();
+    ng.gain.setValueAtTime(0.15, t);
+    ng.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+    n.connect(f).connect(ng).connect(ac.destination);
+    n.start(t);
+    n.stop(t + 0.08);
+  },
+
+  _dartFire() {
+    const ac = ctx();
+    const t = ac.currentTime;
+    // Breathy whoosh: high-pass noise sweep
+    const n = noise(ac, 0.2);
+    const f = ac.createBiquadFilter();
+    f.type = 'highpass';
+    f.frequency.setValueAtTime(2000, t);
+    f.frequency.exponentialRampToValueAtTime(4000, t + 0.1);
+    f.frequency.exponentialRampToValueAtTime(1500, t + 0.2);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0, t);
+    g.gain.linearRampToValueAtTime(0.2, t + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+    n.connect(f).connect(g).connect(ac.destination);
+    n.start(t);
+    n.stop(t + 0.2);
   },
 };

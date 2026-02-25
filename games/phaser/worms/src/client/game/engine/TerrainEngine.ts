@@ -21,6 +21,7 @@ export class TerrainEngine {
   private mapPreset: MapPreset;
   private recentCraters: Crater[] = [];
   private seed: number;
+  private redrawScheduled = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -133,6 +134,15 @@ export class TerrainEngine {
       }
     }
     this.dirty = true;
+  }
+
+  scheduleRedraw(): void {
+    if (this.redrawScheduled) return;
+    this.redrawScheduled = true;
+    requestAnimationFrame(() => {
+      this.redrawScheduled = false;
+      this.redraw();
+    });
   }
 
   applyCraters(craters: Crater[]): void {

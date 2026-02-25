@@ -102,6 +102,16 @@ export class HUD {
     this.buildInfoSection();
     this.buildTooltip();
     this.setupInput();
+
+    if (cam.width < 500) {
+      this.expanded = false;
+      this.weaponContainer.setVisible(false);
+      this.statusContainer.setVisible(false);
+      this.infoContainer.setVisible(false);
+      this.miniContainer.setVisible(true);
+      this.toggleArrow.setText('▶');
+      this.drawBarBg();
+    }
   }
 
   setActiveWormNameGetter(fn: () => string): void {

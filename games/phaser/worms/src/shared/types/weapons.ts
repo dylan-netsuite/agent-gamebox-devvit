@@ -2,9 +2,9 @@ export type WeaponType =
   | 'bazooka'
   | 'grenade'
   | 'banana-cannon'
-  | 'dynamite'
-  | 'airstrike'
-  | 'cluster-bomb'
+  | 'firecracker'
+  | 'pigeon-strike'
+  | 'confetti-bomb'
   | 'blow-dart'
   | 'teleport'
   | 'ninja-rope';
@@ -89,53 +89,53 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
     hitscanWindMul: 2,
     hitscanSpreadMax: 1.2,
   },
-  dynamite: {
-    id: 'dynamite',
-    name: 'Dynamite',
+  firecracker: {
+    id: 'firecracker',
+    name: 'Firecracker',
     blastRadius: 70,
     damage: 75,
     affectedByWind: false,
     fuse: 4,
     bounces: false,
-    description: 'Throw a stick of dynamite — big boom after 4 seconds',
+    description: 'Toss a firecracker — big sparkly boom after 4 seconds',
     firingMode: 'projectile',
     projectileSpeed: 5,
     projectileGravity: 0.18,
     shotCount: 1,
     bounceFriction: 0,
-    icon: '🧨',
+    icon: '🎆',
   },
-  airstrike: {
-    id: 'airstrike',
-    name: 'Airstrike',
+  'pigeon-strike': {
+    id: 'pigeon-strike',
+    name: 'Pigeon Strike',
     blastRadius: 25,
     damage: 30,
     affectedByWind: true,
     fuse: 0,
     bounces: false,
-    description: '5 missiles rain from the sky',
+    description: '5 pigeons dive-bomb from the sky',
     firingMode: 'targeted',
     projectileSpeed: 5,
     projectileGravity: 0.08,
     shotCount: 5,
     bounceFriction: 0,
-    icon: '✈️',
+    icon: '🐦',
   },
-  'cluster-bomb': {
-    id: 'cluster-bomb',
-    name: 'Cluster Bomb',
+  'confetti-bomb': {
+    id: 'confetti-bomb',
+    name: 'Confetti Bomb',
     blastRadius: 20,
     damage: 20,
     affectedByWind: true,
     fuse: 2,
     bounces: true,
-    description: 'Splits into 4 bomblets on detonation',
+    description: 'Splits into 4 party poppers on detonation',
     firingMode: 'projectile',
     projectileSpeed: 7,
     projectileGravity: 0.14,
     shotCount: 1,
     bounceFriction: 0.4,
-    icon: '💥',
+    icon: '🎊',
     cluster: true,
     clusterCount: 4,
     clusterDamage: 18,
@@ -199,9 +199,9 @@ export const WEAPON_ORDER: WeaponType[] = [
   'bazooka',
   'grenade',
   'banana-cannon',
-  'dynamite',
-  'airstrike',
-  'cluster-bomb',
+  'firecracker',
+  'pigeon-strike',
+  'confetti-bomb',
   'blow-dart',
   'teleport',
   'ninja-rope',

@@ -11,15 +11,15 @@ Turn-based artillery game where players control worms on destructible terrain, u
 | 1 | Bazooka | Projectile | 40px | 45 | Yes | Arcs with gravity |
 | 2 | Grenade | Projectile | 35px | 40 | Yes | Bounces 3x, 3s fuse |
 | 3 | Banana Cannon | Hitscan | 20px | 25×2 | Wind drift at range | Close-range banana blasts — 175px range, scatter past 70px |
-| 4 | Dynamite | Projectile | 70px | 75 | No | 4s fuse, high arc |
-| 5 | Airstrike | Targeted | 25px×5 | 30×5 | Yes | 5 missiles from above |
-| 6 | Cluster Bomb | Projectile | 20px + 18px×4 | 20 + 18×4 | Yes | Splits into 4 bomblets on detonation |
+| 4 | Firecracker | Projectile | 70px | 75 | No | 4s fuse, high arc |
+| 5 | Pigeon Strike | Targeted | 25px×5 | 30×5 | Yes | 5 pigeons dive-bomb from above |
+| 6 | Confetti Bomb | Projectile | 20px + 18px×4 | 20 + 18×4 | Yes | Splits into 4 party poppers on detonation |
 | 7 | Blow Dart | Hitscan | 8px | 50 | Wind drift at range | 350px range, accurate up close, heavy drift beyond 150px |
 | 8 | Teleport | Teleport | — | — | No | Instantly moves worm to aimed location |
 | 9 | Ninja Rope | Rope | — | — | No | Grappling hook for swing traversal |
 
-### Cluster Bomb Details
-The main projectile bounces once and detonates after a 2s fuse. On detonation, it deals 20 damage (20px radius) and spawns 4 smaller bomblets. Each bomblet flies outward in a random upward arc and detonates on terrain impact, dealing 18 damage (18px radius). Effective for area denial and hitting enemies behind cover.
+### Confetti Bomb Details
+The main projectile bounces once and detonates after a 2s fuse. On detonation, it deals 20 damage (20px radius) and spawns 4 smaller party poppers. Each popper flies outward in a random upward arc and detonates on terrain impact, dealing 18 damage (18px radius). Effective for area denial and hitting enemies behind cover.
 
 ### Banana Cannon Details
 Fires two hitscan rays with ±0.05 radian spread. Each ray detects direct worm hits (25 damage per hit) and impacts terrain (20px crater with splash). The banana cannon is a close-range weapon:
@@ -195,7 +195,7 @@ Worms are placed on the terrain floor via `getSurfaceY()`, which scans downward 
 ## Wind
 
 - Random value from -10 to +10 each turn
-- Affects projectile weapons (bazooka, grenade, airstrike)
+- Affects projectile weapons (bazooka, grenade, pigeon strike)
 - Displayed as directional arrow on HUD
 - Force factor: `wind × 0.02` applied per frame
 
@@ -280,7 +280,7 @@ Selectable in Game Setup via the "AI LEVEL" row (visible only when VS CPU is ON)
 | Movement | Yes (30 steps, 25% chance) | Yes (50 steps, 45% chance) | Yes (40 steps, 55% chance) |
 | Approach threshold | 500px | 400px | 350px |
 | Rope usage | Never | When blocked or height-disadvantaged (8% random) | When blocked or height-disadvantaged (15% random) |
-| Weapons | Bazooka, Grenade, Cluster Bomb | All (except Teleport) | All (except Teleport) |
+| Weapons | Bazooka, Grenade, Confetti Bomb | All (except Teleport) | All (except Teleport) |
 
 ### Miss Chance
 On Easy and Medium difficulties, a percentage of shots receive an additional random offset on top of normal jitter, simulating intentional inaccuracy. This prevents the AI from being too dominant while still making intelligent decisions about weapon choice and positioning.
@@ -298,10 +298,10 @@ On Easy and Medium difficulties, a percentage of shots receive an additional ran
 ### Weapon Selection
 The AI selects weapons based on the tactical situation:
 - **Banana Cannon/Blow Dart**: Used when enemies have clear line of sight (hitscan with direct hit detection)
-- **Dynamite**: Used when very close to an enemy (< 80px) and no allies nearby
+- **Firecracker**: Used when very close to an enemy (< 80px) and no allies nearby
 - **Grenade**: Preferred for short-range lobbing behind cover (bounce simulation)
 - **Bazooka**: Default medium-to-long range projectile with wind compensation
-- **Airstrike**: Used when enemies are far away or behind terrain walls
+- **Pigeon Strike**: Used when enemies are far away or behind terrain walls
 
 ### Movement
 The AI proactively moves before shooting on a configurable percentage of turns. Movement triggers when:

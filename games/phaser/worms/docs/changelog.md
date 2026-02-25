@@ -1,5 +1,23 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.86] - 2026-02-25 — Visuals, Sounds, Renames & Performance (wf-1772044227)
+
+### Added
+- **Custom hitscan visuals**: Banana Cannon fires a thick yellow tracer with a banana-splat impact effect. Blow Dart fires a thin green tracer with a puff impact.
+- **Weapon-specific sounds**: Banana Cannon plays a squelchy pop on fire. Blow Dart plays a breathy whoosh.
+- **HUD auto-collapse**: On narrow viewports (< 500px width), the HUD starts collapsed automatically.
+
+### Changed
+- **Dynamite → Firecracker**: Renamed to 🎆 Firecracker with sparkling visual.
+- **Airstrike → Pigeon Strike**: Renamed to 🐦 Pigeon Strike — 5 pigeons dive-bomb from the sky.
+- **Cluster Bomb → Confetti Bomb**: Renamed to 🎊 Confetti Bomb — splits into 4 colorful party poppers.
+- **Pigeon/Confetti projectile visuals**: Pigeon Strike missiles render as small grey birds with orange beaks. Confetti Bomb renders as a pink/yellow/cyan ball that splits into multi-colored particles.
+
+### Fixed
+- **Explosion performance**: Terrain redraws are now deferred via `requestAnimationFrame` batching. Multiple explosions (e.g., Pigeon Strike's 5 missiles, Confetti Bomb's 4 bomblets) now only trigger a single terrain redraw per frame instead of one per explosion, eliminating the frame drops.
+
+---
+
 ## [2026-02-25] Left-Side Vertical HUD (v0.0.15.5)
 
 **Workflow:** wf-1771992356

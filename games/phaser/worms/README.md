@@ -13,8 +13,9 @@ A moderator creates a Worms post from the subreddit menu. Players join the lobby
 | Bazooka | 45 | 40 | Affected by wind |
 | Grenade | 40 | 35 | Bounces, 3s fuse |
 | Banana Cannon | 25 | 15 | Two hitscan shots, no wind |
-| Dynamite | 75 | 70 | Place at your feet, 5s fuse |
-| Airstrike | 30 | 25 | 5 missiles from the sky |
+| Firecracker | 75 | 70 | Place at your feet, 4s fuse |
+| Pigeon Strike | 30 | 25 | 5 pigeons dive-bomb from the sky |
+| Confetti Bomb | 20 | 20 | Splits into 4 party poppers |
 
 ## Features
 

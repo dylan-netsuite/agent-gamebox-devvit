@@ -53,7 +53,7 @@ const DIFFICULTY_CONFIGS: Record<AIDifficulty, DifficultyConfig> = {
     moveChance: 0.25,
     moveSteps: 30,
     moveApproachThreshold: 500,
-    weaponFilter: new Set(['bazooka', 'grenade', 'cluster-bomb']),
+    weaponFilter: new Set(['bazooka', 'grenade', 'confetti-bomb']),
     missChance: 0.30,
     missExtraAngle: 0.25,
     missExtraPower: 20,
@@ -531,7 +531,7 @@ export class AIController {
 
     if (weapon.id === 'grenade' && distToEnemy < 200) score += 5;
     if (weapon.id === 'bazooka' && distToEnemy > 150) score += 5;
-    if (weapon.id === 'cluster-bomb' && distToEnemy < 250) score += 8;
+    if (weapon.id === 'confetti-bomb' && distToEnemy < 250) score += 8;
     if (weapon.id === 'blow-dart') {
       if (distToEnemy > 100 && distToEnemy < 250) score += 10;
       if (distToEnemy > 300) score -= 30;

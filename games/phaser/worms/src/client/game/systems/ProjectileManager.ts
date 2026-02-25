@@ -161,7 +161,13 @@ export class ProjectileManager {
       if (this.terrain.isSolid(hitX, hitY)) break;
     }
 
-    this.drawHitscanTracer(originX, originY, hitX, hitY);
+    this.drawHitscanTracer(originX, originY, hitX, hitY, weapon);
+
+    if (weapon.id === 'banana-cannon') {
+      SoundManager.play('banana-fire');
+    } else if (weapon.id === 'blow-dart') {
+      SoundManager.play('dart-fire');
+    }
 
     if (directHitWorm) {
       directHitWorm.takeDamage(weapon.damage);
@@ -433,29 +439,36 @@ export class ProjectileManager {
   private drawProjectile(p: Projectile): void {
     p.graphics.clear();
 
-    if (p.weapon.id === 'dynamite') {
-      p.graphics.fillStyle(0xcc0000, 1);
-      p.graphics.fillRect(p.x - 4, p.y - 8, 8, 16);
-      p.graphics.fillStyle(0xffcc00, 1);
-      p.graphics.fillCircle(p.x, p.y - 10, 3);
+    if (p.weapon.id === 'firecracker') {
+      p.graphics.fillStyle(0xff3300, 1);
+      p.graphics.fillRect(p.x - 3, p.y - 7, 6, 14);
+      p.graphics.fillStyle(0xffdd44, 1);
+      p.graphics.fillCircle(p.x, p.y - 9, 3);
+      p.graphics.fillStyle(0xffffff, 0.7);
+      p.graphics.fillCircle(p.x, p.y - 9, 1.5);
     } else if (p.weapon.id === 'grenade') {
       p.graphics.fillStyle(0x2d5016, 1);
       p.graphics.fillCircle(p.x, p.y, 5);
       p.graphics.fillStyle(0x888888, 1);
       p.graphics.fillRect(p.x - 1, p.y - 7, 2, 3);
-    } else if (p.weapon.id === 'cluster-bomb') {
+    } else if (p.weapon.id === 'confetti-bomb') {
       if (p.weapon.cluster) {
-        // Main cluster bomb — larger orange sphere
-        p.graphics.fillStyle(0xff6600, 1);
+        p.graphics.fillStyle(0xff44cc, 1);
         p.graphics.fillCircle(p.x, p.y, 6);
-        p.graphics.fillStyle(0xffcc00, 1);
+        p.graphics.fillStyle(0xffee00, 1);
         p.graphics.fillCircle(p.x - 2, p.y - 2, 2);
+        p.graphics.fillStyle(0x44ddff, 1);
         p.graphics.fillCircle(p.x + 2, p.y + 2, 2);
       } else {
-        // Sub-bomblet — small orange dot
-        p.graphics.fillStyle(0xff8800, 1);
+        const colors = [0xff44cc, 0xffee00, 0x44ddff, 0x66ff66];
+        p.graphics.fillStyle(colors[Math.floor(Math.random() * colors.length)]!, 1);
         p.graphics.fillCircle(p.x, p.y, 3);
       }
+    } else if (p.weapon.id === 'pigeon-strike') {
+      p.graphics.fillStyle(0xcccccc, 1);
+      p.graphics.fillCircle(p.x, p.y, 4);
+      p.graphics.fillStyle(0xff8800, 1);
+      p.graphics.fillTriangle(p.x + 4, p.y, p.x + 7, p.y - 1, p.x + 4, p.y + 2);
     } else {
       // Default rocket shape
       const angle = Math.atan2(p.vy, p.vx);
@@ -478,13 +491,57 @@ export class ProjectileManager {
     y1: number,
     x2: number,
     y2: number,
+    weapon?: WeaponDef,
   ): void {
     const gfx = this.scene.add.graphics().setDepth(45);
-    gfx.lineStyle(2, 0xffff00, 0.8);
-    gfx.beginPath();
-    gfx.moveTo(x1, y1);
-    gfx.lineTo(x2, y2);
-    gfx.strokePath();
+
+    if (weapon?.id === 'banana-cannon') {
+      gfx.lineStyle(3, 0xffe135, 0.9);
+      gfx.beginPath();
+      gfx.moveTo(x1, y1);
+      gfx.lineTo(x2, y2);
+      gfx.strokePath();
+      // Yellow splat at impact
+      const splat = this.scene.add.graphics().setDepth(46);
+      splat.fillStyle(0xffe135, 0.8);
+      splat.fillCircle(x2, y2, 8);
+      splat.fillStyle(0xccb300, 0.6);
+      for (let i = 0; i < 5; i++) {
+        const a = (Math.PI * 2 * i) / 5 + Math.random() * 0.5;
+        const r = 6 + Math.random() * 6;
+        splat.fillCircle(x2 + Math.cos(a) * r, y2 + Math.sin(a) * r, 3);
+      }
+      this.scene.tweens.add({
+        targets: splat,
+        alpha: 0,
+        duration: 500,
+        onComplete: () => splat.destroy(),
+      });
+    } else if (weapon?.id === 'blow-dart') {
+      gfx.lineStyle(1.5, 0x44cc66, 0.9);
+      gfx.beginPath();
+      gfx.moveTo(x1, y1);
+      gfx.lineTo(x2, y2);
+      gfx.strokePath();
+      // Small green puff at impact
+      const puff = this.scene.add.graphics().setDepth(46);
+      puff.fillStyle(0x44cc66, 0.6);
+      puff.fillCircle(x2, y2, 5);
+      this.scene.tweens.add({
+        targets: puff,
+        alpha: 0,
+        scaleX: 2,
+        scaleY: 2,
+        duration: 350,
+        onComplete: () => puff.destroy(),
+      });
+    } else {
+      gfx.lineStyle(2, 0xffff00, 0.8);
+      gfx.beginPath();
+      gfx.moveTo(x1, y1);
+      gfx.lineTo(x2, y2);
+      gfx.strokePath();
+    }
 
     this.scene.tweens.add({
       targets: gfx,

@@ -28,7 +28,7 @@ export class ExplosionEffect {
     worms: Worm[],
   ): ExplosionResult {
     this.terrain.addCrater(x, y, radius);
-    this.terrain.redraw();
+    this.terrain.scheduleRedraw();
 
     SoundManager.play('explosion');
     this.playVisual(x, y, radius);
