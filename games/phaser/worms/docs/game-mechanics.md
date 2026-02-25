@@ -61,6 +61,7 @@ Fires a grappling hook in the aimed direction. When the hook hits terrain, it an
 - **Up/Down arrows**: Shorten/lengthen the rope (30px min, 200px max)
 - **Click or Space**: Release the rope — the worm inherits the swing momentum
 - Auto-detaches after 5 seconds
+- If the rope flies out of bounds without attaching, the turn resolves immediately (no hang)
 - Uses a turn but deals no damage. AI (medium/hard) uses it for repositioning when blocked or at height disadvantage.
 - **Visual feedback**:
   - Catenary bezier curve with sag when slack, straight when taut

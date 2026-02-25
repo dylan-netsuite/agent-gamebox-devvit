@@ -1273,3 +1273,9 @@ Redesigned all character draw functions to use organic shapes and curved paths i
 
 ### Added
 - **Wind indicator in collapsed HUD**: The collapsed mini-display now shows a compact wind readout (←4 or →3) with direction-colored text (blue for rightward, red for leftward) below the timer.
+
+## [v0.0.12.77] - 2026-02-25 — Fix End-Game Hang (wf-1771998198)
+
+### Fixed
+- **Rope shots hanging the game**: Ninja rope shots that missed all terrain and flew out of bounds would leave the game stuck in `firing` state indefinitely. The `ProjectileManager` resolution logic now uses a `hasFired` flag instead of checking `projectiles.length`, so rope-only shots correctly trigger turn resolution when the rope goes out of bounds.
+- **Added firing safety timeout**: A 10-second safety timer in the game loop force-resolves the weapon state if it gets stuck in `firing` with no active projectiles or ropes, preventing any future edge-case hangs.

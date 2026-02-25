@@ -43,6 +43,7 @@ export class ProjectileManager {
   private projectiles: Projectile[] = [];
   private ropeProjectiles: RopeProjectile[] = [];
   private onAllResolved: (() => void) | null = null;
+  private _hasFired = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -70,6 +71,10 @@ export class ProjectileManager {
     this.onAllResolved = cb;
   }
 
+  resetFiredFlag(): void {
+    this._hasFired = false;
+  }
+
   fireProjectile(
     x: number,
     y: number,
@@ -77,6 +82,7 @@ export class ProjectileManager {
     power: number,
     weapon: WeaponDef,
   ): void {
+    this._hasFired = true;
     const speed = weapon.projectileSpeed * (power / 100);
     const vx = Math.cos(angle) * speed;
     const vy = Math.sin(angle) * speed;
@@ -105,6 +111,7 @@ export class ProjectileManager {
     weapon: WeaponDef,
     shooter?: Worm,
   ): void {
+    this._hasFired = true;
     const maxDist = weapon.hitscanRange ?? 350;
     const driftStart = weapon.hitscanDriftStart ?? 150;
     const windMul = weapon.hitscanWindMul ?? 3;
@@ -216,6 +223,7 @@ export class ProjectileManager {
   }
 
   fireAirstrike(targetX: number, weapon: WeaponDef): void {
+    this._hasFired = true;
     const spacing = 35;
     const startX = targetX - ((weapon.shotCount - 1) * spacing) / 2;
 
@@ -242,6 +250,7 @@ export class ProjectileManager {
   }
 
   fireRope(x: number, y: number, angle: number, worm: Worm): void {
+    this._hasFired = true;
     const speed = 12;
     const gfx = this.scene.add.graphics().setDepth(42);
     SoundManager.play('rope-fire');
@@ -359,9 +368,10 @@ export class ProjectileManager {
     }
 
     const activeRopeFlying = this.ropeProjectiles.some((r) => r.active && !r.attached);
-    if (!anyActive && this.projectiles.length > 0) {
+    const hasAttachedRope = this.ropeProjectiles.some((r) => r.attached);
+    if (!anyActive && this._hasFired) {
       this.projectiles = this.projectiles.filter((p) => p.active);
-      if (this.projectiles.length === 0 && !activeRopeFlying && this.onAllResolved) {
+      if (this.projectiles.length === 0 && !activeRopeFlying && !hasAttachedRope && this.onAllResolved) {
         this.onAllResolved();
       }
     }

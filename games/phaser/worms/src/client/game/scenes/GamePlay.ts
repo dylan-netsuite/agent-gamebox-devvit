@@ -69,6 +69,7 @@ export class GamePlay extends Scene {
   private panReturnTimer: Phaser.Time.TimerEvent | null = null;
   private wasDragging = false;
   private ropeAttachTime = 0;
+  private firingStartTime = 0;
 
   // Multiplayer state
   private mp: MultiplayerManager | null = null;
@@ -800,6 +801,7 @@ export class GamePlay extends Scene {
     this.userPanning = false;
     this.windSystem.randomize();
     this.weaponSystem.reset();
+    this.projectileManager.resetFiredFlag();
     this.centerCameraOnWorm();
     this.startTurn();
   }
@@ -1221,6 +1223,18 @@ export class GamePlay extends Scene {
       }
     } else {
       this.ropeAttachTime = 0;
+    }
+
+    if (this.weaponSystem.currentState === 'firing') {
+      if (this.firingStartTime === 0) {
+        this.firingStartTime = this.time.now;
+      } else if (this.time.now - this.firingStartTime > 10_000) {
+        this.projectileManager.cleanupRopes();
+        this.weaponSystem.forceResolve();
+        this.firingStartTime = 0;
+      }
+    } else {
+      this.firingStartTime = 0;
     }
 
     if (this.weaponSystem.currentState === 'aiming' && worm) {
