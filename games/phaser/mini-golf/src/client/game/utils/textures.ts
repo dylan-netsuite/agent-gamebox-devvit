@@ -7,6 +7,8 @@ export class TextureFactory {
     this.generateGrassBackground(scene);
     this.generateSparkle(scene);
     this.generateVignette(scene);
+    this.generateChocolateBlock(scene);
+    this.generateLicorice(scene);
   }
 
   private static generateCandyCane(scene: Phaser.Scene): void {
@@ -215,5 +217,96 @@ export class TextureFactory {
     ctx.fillRect(0, 0, w, h);
 
     scene.textures.addCanvas('vignette', canvas);
+  }
+
+  private static generateChocolateBlock(scene: Phaser.Scene): void {
+    const w = 80;
+    const h = 40;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d')!;
+
+    // Base chocolate brown
+    ctx.fillStyle = '#5c3317';
+    ctx.fillRect(0, 0, w, h);
+
+    // Top face highlight gradient
+    const topGrad = ctx.createLinearGradient(0, 0, 0, h);
+    topGrad.addColorStop(0, 'rgba(180,120,60,0.4)');
+    topGrad.addColorStop(0.3, 'rgba(120,70,30,0.1)');
+    topGrad.addColorStop(0.7, 'rgba(0,0,0,0)');
+    topGrad.addColorStop(1, 'rgba(0,0,0,0.2)');
+    ctx.fillStyle = topGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle horizontal score lines (chocolate bar segments)
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, h * 0.5);
+    ctx.lineTo(w, h * 0.5);
+    ctx.stroke();
+
+    // Vertical score line
+    ctx.beginPath();
+    ctx.moveTo(w * 0.5, 0);
+    ctx.lineTo(w * 0.5, h);
+    ctx.stroke();
+
+    // Top-left specular highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(2, 2, w * 0.4, h * 0.3);
+
+    // Border
+    ctx.strokeStyle = 'rgba(60,20,5,0.6)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, w - 2, h - 2);
+
+    scene.textures.addCanvas('chocolate-block', canvas);
+  }
+
+  private static generateLicorice(scene: Phaser.Scene): void {
+    const w = 64;
+    const h = 24;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d')!;
+
+    // Black licorice base
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, w, h);
+
+    // Twisted rope effect — diagonal highlight stripes
+    ctx.strokeStyle = 'rgba(60,60,60,0.5)';
+    ctx.lineWidth = 3;
+    for (let i = -4; i < 12; i++) {
+      const x0 = i * 10;
+      ctx.beginPath();
+      ctx.moveTo(x0, h);
+      ctx.lineTo(x0 + h, 0);
+      ctx.stroke();
+    }
+
+    // Cylindrical shading
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, 'rgba(80,80,80,0.3)');
+    grad.addColorStop(0.3, 'rgba(0,0,0,0)');
+    grad.addColorStop(0.5, 'rgba(60,60,60,0.15)');
+    grad.addColorStop(0.7, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.4)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Top edge highlight
+    ctx.strokeStyle = 'rgba(100,100,100,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, 0.5);
+    ctx.lineTo(w, 0.5);
+    ctx.stroke();
+
+    scene.textures.addCanvas('licorice', canvas);
   }
 }

@@ -158,6 +158,12 @@ export class Game extends Scene {
             );
           }
           break;
+        case 'block':
+          this.obstacles.addBlock(obs);
+          break;
+        case 'licorice_wall':
+          this.obstacles.addLicoriceWall(obs);
+          break;
       }
     }
 

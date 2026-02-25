@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.2.51 - Hole 2: The Licorice Dogleg (2026-02-25)
+
+### Added
+- **Hole 2**: L-shaped course bending 90 degrees right. Introduces bank-shot gameplay with a 45-degree chocolate block reflector and a licorice wall barrier. Par 2.
+- **Chocolate block obstacle**: Static angled rectangle with brown textured sprite (`chocolate-block`), high restitution for clean reflections
+- **Licorice wall obstacle**: Static barrier with dark twisted-rope texture (`licorice`) using TileSprite rendering
+- **TextureFactory**: Added `chocolate-block` (80x40, brown with score lines and 3D gradient) and `licorice` (64x24, black with diagonal rope stripes and cylindrical shading) texture generation
+
+### Changed
+- **Obstacles.ts**: Added `addBlock()` and `addLicoriceWall()` methods with sprite-based rendering and `gameObjects` tracking for proper cleanup
+- **Game.ts**: Added `block` and `licorice_wall` cases to obstacle loading switch
+
 ## v0.0.2.47 - Menu & Scene Texture Upgrade (2026-02-25)
 
 ### Changed

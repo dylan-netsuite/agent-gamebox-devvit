@@ -19,7 +19,9 @@ export type ObstacleType =
   | 'conveyor'
   | 'thrusting_barrier'
   | 'gravity_well'
-  | 'moving_bridge';
+  | 'moving_bridge'
+  | 'block'
+  | 'licorice_wall';
 
 export interface ObstacleDef {
   type: ObstacleType;
@@ -84,6 +86,7 @@ export class Obstacles {
   private teleporters: ActiveTeleporter[] = [];
   private windmills: WindmillData[] = [];
   private bodies: MatterJS.BodyType[] = [];
+  private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
   private zoneGraphics: Phaser.GameObjects.Graphics;
   private windmillGraphics: Phaser.GameObjects.Graphics[] = [];
@@ -114,6 +117,49 @@ export class Obstacles {
     this.graphics.strokeCircle(pos.x, pos.y, r);
     this.graphics.fillStyle(0xffffff, 0.3);
     this.graphics.fillCircle(pos.x - r * 0.25, pos.y - r * 0.25, r * 0.35);
+  }
+
+  addBlock(def: ObstacleDef): void {
+    const pos = toScreen(this.scene, def.x, def.y);
+    const w = scaleValue(this.scene, def.width ?? 60);
+    const h = scaleValue(this.scene, def.height ?? 30);
+    const angle = def.angle ?? Math.PI / 4;
+
+    const body = this.scene.matter.add.rectangle(pos.x, pos.y, w, h, {
+      isStatic: true,
+      angle,
+      restitution: 0.85,
+      friction: 0.05,
+      label: 'block',
+    });
+    this.bodies.push(body);
+
+    const img = this.scene.add.image(pos.x, pos.y, 'chocolate-block');
+    img.setDisplaySize(w, h);
+    img.setRotation(angle);
+    img.setDepth(6);
+    this.gameObjects.push(img);
+  }
+
+  addLicoriceWall(def: ObstacleDef): void {
+    const pos = toScreen(this.scene, def.x, def.y);
+    const w = scaleValue(this.scene, def.width ?? 100);
+    const h = scaleValue(this.scene, def.height ?? 20);
+    const angle = def.angle ?? 0;
+
+    const body = this.scene.matter.add.rectangle(pos.x, pos.y, w, h, {
+      isStatic: true,
+      angle,
+      restitution: 0.7,
+      friction: 0.1,
+      label: 'licorice_wall',
+    });
+    this.bodies.push(body);
+
+    const tile = this.scene.add.tileSprite(pos.x, pos.y, w, h, 'licorice');
+    tile.setRotation(angle);
+    tile.setDepth(6);
+    this.gameObjects.push(tile);
   }
 
   addZone(type: 'sand' | 'ice' | 'water', zone: ZoneDef): void {
@@ -374,6 +420,10 @@ export class Obstacles {
     this.zones = [];
     this.teleporters = [];
     this.windmills = [];
+    for (const obj of this.gameObjects) {
+      obj.destroy();
+    }
+    this.gameObjects = [];
     this.graphics.destroy();
     this.zoneGraphics.destroy();
     for (const g of this.windmillGraphics) {
