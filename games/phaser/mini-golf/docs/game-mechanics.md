@@ -6,13 +6,16 @@ All hole coordinates are defined in a 500x800 portrait design space, optimized f
 
 ## Course Structure
 
-Currently 2 holes. Holes are added iteratively with high visual and gameplay quality.
+Currently 3 holes. Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
 Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
 
 ### Hole 2: The Licorice Dogleg (Par 2)
 L-shaped course with a vertical corridor (x:120-280, y:250-750) bending 90 degrees right into a horizontal corridor (x:120-420, y:80-250). A licorice wall partially blocks the inner bend. A 45-degree chocolate block in the upper-left corner reflects the ball toward the cup. Aim at the block with ~75% power for a bank-shot approach. Introduces calculated bank shots and geometric physics.
+
+### Hole 3: The Gumdrop Bumper Pinball (Par 3)
+Wide rectangular arena (x:80-420, y:60-740). Three gumdrop bumpers arranged in a semi-circle arc guard the cup at the top. Bumpers have restitution 1.5 (hyper-elastic) — hitting them sends the ball ricocheting away faster than it arrived, like pinball bumpers. Strategy: thread the microscopic gaps between bumpers with minimal power, or bank multi-angle shots around the perimeter walls. Full-power direct hits result in chaotic rebounds back to the tee. Teaches players that distinct obstacle textures signal different physics behaviors.
 
 ## Controls
 
@@ -51,6 +54,15 @@ L-shaped course with a vertical corridor (x:120-280, y:250-750) bending 90 degre
 | Friction | 0.1 |
 | Thickness | 18 design units |
 | Visual style | Candy cane peppermint stripes with corner swirls |
+
+## Gumdrop Bumper Physics
+
+| Property | Value |
+|----------|-------|
+| Restitution | 1.5 (hyper-elastic) |
+| Shape | Circle, radius 22 design units |
+| Behavior | Static body, pinball-style bounce |
+| Visual | `gumdrop` texture with per-bumper color tinting |
 
 ## Hole Capture
 

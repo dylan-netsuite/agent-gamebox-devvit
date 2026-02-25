@@ -164,6 +164,9 @@ export class Game extends Scene {
         case 'licorice_wall':
           this.obstacles.addLicoriceWall(obs);
           break;
+        case 'gumdrop_bumper':
+          this.obstacles.addGumdropBumper(obs);
+          break;
       }
     }
 

@@ -22,6 +22,7 @@ export const SAND_FRICTION_AIR = 0.15;
 export const ICE_FRICTION_AIR = 0.002;
 
 export const BUMPER_RESTITUTION = 1.3;
+export const GUMDROP_RESTITUTION = 1.5;
 
 export const DESIGN_WIDTH = 500;
 export const DESIGN_HEIGHT = 800;

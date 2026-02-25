@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.0.2.65 - Hole 3: The Gumdrop Bumper Pinball (2026-02-25)
+
+### Added
+- **Hole 3**: Wide rectangular arena (x:80-420, y:60-740) with 3 gumdrop bumpers in a semi-circle guarding the cup. Par 3.
+- **Gumdrop bumper obstacle**: Static circular physics body with restitution 1.5 (hyper-elastic pinball effect). Rendered as Image with `gumdrop` texture tinted per-bumper color.
+- **Gumdrop texture**: 48x48 circular texture with 3D dome gradient, sugar crystal speckles, specular highlight, and outer ring. Color-tinted at runtime via Phaser's `setTint()`.
+- **GUMDROP_RESTITUTION constant** (1.5): Higher than standard bumper restitution (1.3) for aggressive pinball-style bounces.
+
+### Changed
+- **ObstacleType**: Added `gumdrop_bumper` type
+- **Obstacles.ts**: Added `addGumdropBumper()` method with image-based rendering and color tinting
+- **Game.ts**: Added `gumdrop_bumper` case to obstacle loading switch
+- **TextureFactory**: Added `generateGumdrop()` method
+
 ## v0.0.2.58 - Portrait Zoom Fix & Hole 2 Playability (2026-02-25)
 
 ### Changed

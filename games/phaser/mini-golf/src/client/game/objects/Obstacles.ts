@@ -1,6 +1,7 @@
 import * as Phaser from 'phaser';
 import {
   BUMPER_RESTITUTION,
+  GUMDROP_RESTITUTION,
   SAND_FRICTION_AIR,
   ICE_FRICTION_AIR,
   toScreen,
@@ -21,7 +22,8 @@ export type ObstacleType =
   | 'gravity_well'
   | 'moving_bridge'
   | 'block'
-  | 'licorice_wall';
+  | 'licorice_wall'
+  | 'gumdrop_bumper';
 
 export interface ObstacleDef {
   type: ObstacleType;
@@ -160,6 +162,25 @@ export class Obstacles {
     tile.setRotation(angle);
     tile.setDepth(6);
     this.gameObjects.push(tile);
+  }
+
+  addGumdropBumper(def: ObstacleDef): void {
+    const pos = toScreen(this.scene, def.x, def.y);
+    const r = scaleValue(this.scene, def.radius ?? 22);
+
+    const body = this.scene.matter.add.circle(pos.x, pos.y, r, {
+      isStatic: true,
+      restitution: GUMDROP_RESTITUTION,
+      label: 'gumdrop_bumper',
+    });
+    this.bodies.push(body);
+
+    const img = this.scene.add.image(pos.x, pos.y, 'gumdrop');
+    const scale = (r * 2) / img.width;
+    img.setScale(scale);
+    img.setTint(def.color ?? 0xff6347);
+    img.setDepth(6);
+    this.gameObjects.push(img);
   }
 
   addZone(type: 'sand' | 'ice' | 'water', zone: ZoneDef): void {

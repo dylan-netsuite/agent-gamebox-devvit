@@ -9,6 +9,7 @@ export class TextureFactory {
     this.generateVignette(scene);
     this.generateChocolateBlock(scene);
     this.generateLicorice(scene);
+    this.generateGumdrop(scene);
   }
 
   private static generateCandyCane(scene: Phaser.Scene): void {
@@ -308,5 +309,67 @@ export class TextureFactory {
     ctx.stroke();
 
     scene.textures.addCanvas('licorice', canvas);
+  }
+
+  private static generateGumdrop(scene: Phaser.Scene): void {
+    const size = 48;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+    const cx = size / 2;
+    const cy = size / 2;
+    const r = size / 2 - 2;
+
+    // White base (will be tinted by Phaser at render time)
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    // Sugar crystal speckles
+    for (let i = 0; i < 30; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * r * 0.8;
+      const sx = cx + Math.cos(angle) * dist;
+      const sy = cy + Math.sin(angle) * dist;
+      ctx.globalAlpha = 0.15 + Math.random() * 0.2;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(sx, sy, 1 + Math.random(), 1 + Math.random());
+    }
+    ctx.globalAlpha = 1;
+
+    // 3D dome gradient (highlight top-left, shadow bottom-right)
+    const domeGrad = ctx.createRadialGradient(
+      cx - r * 0.3,
+      cy - r * 0.3,
+      0,
+      cx,
+      cy,
+      r
+    );
+    domeGrad.addColorStop(0, 'rgba(255,255,255,0.5)');
+    domeGrad.addColorStop(0.4, 'rgba(255,255,255,0.1)');
+    domeGrad.addColorStop(0.7, 'rgba(0,0,0,0)');
+    domeGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = domeGrad;
+    ctx.fill();
+
+    // Specular highlight dot
+    ctx.beginPath();
+    ctx.arc(cx - r * 0.3, cy - r * 0.3, r * 0.18, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fill();
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    scene.textures.addCanvas('gumdrop', canvas);
   }
 }

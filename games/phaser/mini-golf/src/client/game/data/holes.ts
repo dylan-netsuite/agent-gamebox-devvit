@@ -82,4 +82,51 @@ export const HOLES: HoleDefinition[] = [
       },
     ],
   },
+
+  // ---- HOLE 3: The Gumdrop Bumper Pinball ----
+  // Wide rectangular arena. 3 gumdrop bumpers in semi-circle guard the cup.
+  // Bumpers have restitution 1.5 (hyper-elastic pinball effect).
+  // Thread the gaps with low power, or bank around the perimeter.
+  {
+    id: 3,
+    name: 'The Gumdrop Bumper Pinball',
+    par: 3,
+    tee: { x: 250, y: 690 },
+    cup: { x: 250, y: 140 },
+    walls: [
+      [
+        { x: 80, y: 60 },
+        { x: 420, y: 60 },
+        { x: 420, y: 740 },
+        { x: 80, y: 740 },
+        { x: 80, y: 60 },
+      ],
+    ],
+    obstacles: [
+      // Left gumdrop (red) — semi-circle arc, left position
+      {
+        type: 'gumdrop_bumper',
+        x: 185,
+        y: 260,
+        radius: 22,
+        color: 0xff3333,
+      },
+      // Center gumdrop (green) — semi-circle arc, center-top
+      {
+        type: 'gumdrop_bumper',
+        x: 250,
+        y: 220,
+        radius: 22,
+        color: 0x33cc33,
+      },
+      // Right gumdrop (blue) — semi-circle arc, right position
+      {
+        type: 'gumdrop_bumper',
+        x: 315,
+        y: 260,
+        radius: 22,
+        color: 0x3399ff,
+      },
+    ],
+  },
 ];
