@@ -113,9 +113,10 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 | Blade Count | 4 (90° apart) |
 | Blade Length | 180 design units (wall-to-wall) |
 | Blade Width | 10 design units |
-| Restitution | 1.5 (violent deflection) |
 | Rotation Speed | 1.2 rad/s (~5.2 seconds per full rotation) |
-| Behavior | Kinematic static bodies rotating around a center point. Each blade is repositioned and re-angled every frame using Matter.js setPosition/setAngle. Rotates in all game states so players can observe and time shots. |
+| Collision | Sensor bodies (no Matter.js collision). Manual overlap detection computes tangential + perpendicular knock velocity. Tangential speed: `min(ω × dist × 0.12, 6)`. Perpendicular knock force: 4 units. Ball is pushed clear of blade bounds on hit. |
+| Hit Cooldown | 400ms per windmill — prevents repeated hits from the same windmill |
+| Behavior | Sensor static bodies rotating around a center point. Each blade is repositioned and re-angled every frame using Matter.js setPosition/setAngle. Rotates in all game states so players can observe and time shots. Ball collision handled manually to avoid sticking. |
 | Visual | Wafer cookie theme — tan/golden blades with grid pattern, light/dark edges, blade shadows, chocolate center hub with highlight |
 
 ## Moving Bridge Physics

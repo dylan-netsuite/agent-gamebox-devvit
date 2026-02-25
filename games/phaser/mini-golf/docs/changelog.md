@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.2.142 - Fix Windmill Ball Sticking (2026-02-25)
+
+### Fixed
+- **Ball no longer sticks to windmill blades** — converted blade bodies from solid static rectangles to sensors (`isSensor: true`), eliminating Matter.js collision resolution that trapped the ball. Replaced with manual overlap detection that computes tangential + perpendicular knock velocity and applies it as an impulse.
+- **Removed duplicate `updateWindmills()` call** — was being called both unconditionally in `Game.update()` and again inside `obstacles.update()` during simulation, causing double rotation speed.
+
+### Changed
+- **Windmill collision is now fully manual** — blade bodies are sensors (no physics collision). On overlap, the ball receives a velocity based on the blade's tangential speed at the contact point plus a perpendicular knock force, then gets pushed clear of the blade bounds.
+- **400ms hit cooldown per windmill** — prevents the ball from being hit multiple times by the same windmill in rapid succession, ensuring a clean single deflection.
+- **Tuned deflection force** — tangential speed multiplier 0.12 (capped at 6), perpendicular knock force of 4 units. Ball gets knocked firmly but stays within the play area.
+
 ## v0.0.2.128 - Hole 7: The Wafer Windmill (2026-02-25)
 
 ### Added

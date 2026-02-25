@@ -359,7 +359,7 @@ export class Game extends Scene {
     if (this.state === 'sinking') return;
 
     this.obstacles.updateBridges(delta);
-    this.obstacles.updateWindmills(delta);
+    this.obstacles.updateWindmills(delta, this.state === 'simulating' ? this.ball : undefined);
 
     this.ball.update();
     this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);

@@ -80,6 +80,7 @@ interface WindmillData {
   cy: number;
   speed: number;
   currentAngle: number;
+  hitCooldown: number;
 }
 
 interface MovingBridgeData {
@@ -364,8 +365,8 @@ export class Obstacles {
 
       const body = this.scene.matter.add.rectangle(bx, by, bladeLen, bladeW, {
         isStatic: true,
+        isSensor: true,
         angle,
-        restitution: 1.5,
         label: 'windmill_blade',
       });
       bladeBodies.push(body);
@@ -379,6 +380,7 @@ export class Obstacles {
       cy: pos.y,
       speed,
       currentAngle: 0,
+      hitCooldown: 0,
     });
     this.windmillGraphics.push(g);
   }
@@ -462,9 +464,10 @@ export class Obstacles {
     }
   }
 
-  updateWindmills(delta: number): void {
+  updateWindmills(delta: number, ball?: GolfBall): void {
     for (const wm of this.windmills) {
       wm.currentAngle += (wm.speed * delta) / 1000;
+      if (wm.hitCooldown > 0) wm.hitCooldown -= delta;
       const bladeCount = wm.body.length;
 
       wm.graphics.clear();
@@ -484,6 +487,55 @@ export class Obstacles {
 
         this.scene.matter.body.setPosition(body, { x: bx, y: by });
         this.scene.matter.body.setAngle(body, angle);
+
+        if (ball && wm.hitCooldown <= 0) {
+          const ballX = ball.body.position.x;
+          const ballY = ball.body.position.y;
+          const dx = ballX - wm.cx;
+          const dy = ballY - wm.cy;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < halfLen + ball.radius && dist > 0) {
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const perpX = -sin;
+            const perpY = cos;
+
+            const proj = dx * cos + dy * sin;
+            const perpDist = Math.abs(dx * perpX + dy * perpY);
+            const bladeW = scaleValue(this.scene, 10);
+
+            if (
+              Math.abs(proj) < halfLen + ball.radius &&
+              perpDist < bladeW / 2 + ball.radius
+            ) {
+              const tangentX = -dy;
+              const tangentY = dx;
+              const tangentLen = Math.sqrt(tangentX * tangentX + tangentY * tangentY);
+              const bladeSpeed = Math.min(wm.speed * dist * 0.12, 6);
+              const knockForce = 4;
+
+              const perpSign = Math.sign(dx * perpX + dy * perpY) || 1;
+              const knockX = perpX * perpSign;
+              const knockY = perpY * perpSign;
+
+              const vx =
+                (tangentX / tangentLen) * bladeSpeed + knockX * knockForce;
+              const vy =
+                (tangentY / tangentLen) * bladeSpeed + knockY * knockForce;
+
+              this.scene.matter.body.setVelocity(ball.body, { x: vx, y: vy });
+
+              const pushDist = bladeW + ball.radius * 2 + 4;
+              this.scene.matter.body.setPosition(ball.body, {
+                x: ballX + knockX * (pushDist - perpDist),
+                y: ballY + knockY * (pushDist - perpDist),
+              });
+
+              wm.hitCooldown = 400;
+            }
+          }
+        }
 
         const bladeW = scaleValue(this.scene, 10);
         const cos = Math.cos(angle);
@@ -665,8 +717,6 @@ export class Obstacles {
   }
 
   update(delta: number, ball: GolfBall): { inWater: boolean; teleported: boolean } {
-    this.updateWindmills(delta);
-    this.updateBridges(delta);
     const { inWater } = this.applyZoneEffects(ball);
     const teleported = this.checkTeleporters(ball);
     return { inWater, teleported };
