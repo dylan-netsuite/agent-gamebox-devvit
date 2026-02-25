@@ -54,11 +54,13 @@ Ball is captured when:
 
 ## Visual Theme
 
-- **Background**: Dark textured grass (0x14381f) with dense fiber-like elongated rectangles, scattered lighter highlights, directional edge vignette
-- **Sparkles**: Mix of large diamond 4-point stars (5-13px with inner glow) and small cross sparkles
-- **Fairway**: Rich green (0x2d8a4e) with visible inner border glow and secondary edge highlight
-- **Walls**: Candy cane peppermint sticks — cream base with tight diagonal red parallelogram stripes, cylindrical center sheen, rounded peppermint swirl corner joints
-- **HUD**: Bottom-anchored candy panel with red outer border, gold border line, inner gold + red accent, ornate gold banner with highlight gradient, peppermint swirl decorations, gumdrop icons, text stroke
+All visual textures are generated programmatically at boot time using `TextureFactory` (HTML5 Canvas 2D API) and rendered via Phaser's sprite/image/tileSprite system.
+
+- **Background**: Tileable 256x256 grass texture (`grass-bg`) with layered noise and organic variation, overlaid with a radial gradient vignette (`vignette`)
+- **Sparkles**: 4 pre-rendered sparkle sprites (`sparkle` — 4-point star with center glow) animated via tweens (scale + alpha pulse), positioned in dark background areas
+- **Fairway**: Clean solid green fill (0x2d8a4e) with single lighter-green stroke border (0x3aad5c)
+- **Walls**: Tileable candy cane texture (`candy-cane` — 64x32, smooth diagonal red/white stripes with cylindrical shading) rendered as `TileSprite` per segment. Corner joints use peppermint swirl sprites (`candy-cane-corner` — 36x36, alternating red/white wedges with radial highlight)
+- **HUD**: Bottom-anchored candy panel with red/gold/brown layers, peppermint swirl corner sprites, ornate gold banner, gumdrop icons, text stroke
 - **Hole**: Black circle with darker depth ring, rim highlight, white rectangular flag with pole shadow and cap
 - **Ball**: White with drop shadow, outer ring, bright top-left highlight, subtle bottom-right surface shadow, trail effect
 

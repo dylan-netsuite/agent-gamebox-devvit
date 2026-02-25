@@ -10,21 +10,11 @@ import { HOLES, type HoleDefinition } from '../data/holes';
 import {
   MAX_SHOT_VELOCITY,
   toScreen,
-  DESIGN_WIDTH,
-  DESIGN_HEIGHT,
   getScaleFactor,
 } from '../utils/physics';
 import { fadeIn, SCENE_COLORS } from '../utils/transitions';
 
 type GameState = 'aiming' | 'power' | 'simulating' | 'sinking' | 'water_reset';
-
-interface Sparkle {
-  x: number;
-  y: number;
-  phase: number;
-  speed: number;
-  size: number;
-}
 
 export class Game extends Scene {
   private ball!: GolfBall;
@@ -43,10 +33,9 @@ export class Game extends Scene {
   private hud!: Phaser.GameObjects.Container;
   private strokeLabel!: Phaser.GameObjects.Text;
 
-  private bgGraphics!: Phaser.GameObjects.Graphics;
-  private sparkleGraphics!: Phaser.GameObjects.Graphics;
-  private sparkles: Sparkle[] = [];
-  private elapsed: number = 0;
+  private bgTile!: Phaser.GameObjects.TileSprite;
+  private vignetteImg!: Phaser.GameObjects.Image;
+  private sparkleSprites: Phaser.GameObjects.Image[] = [];
 
   constructor() {
     super('Game');
@@ -61,64 +50,85 @@ export class Game extends Scene {
 
   create() {
     fadeIn(this, SCENE_COLORS.dark);
-    this.elapsed = 0;
 
-    this.bgGraphics = this.add.graphics();
-    this.bgGraphics.setDepth(0);
-
-    this.sparkleGraphics = this.add.graphics();
-    this.sparkleGraphics.setDepth(1);
-
-    this.initSparkles();
+    this.createBackground();
+    this.createSparkles();
     this.loadHole(HOLES[this.currentHoleIndex]!);
     this.createHUD();
     this.setupInput();
 
     this.scale.on('resize', () => {
       this.cleanupHole();
-      this.bgGraphics.destroy();
-      this.bgGraphics = this.add.graphics();
-      this.bgGraphics.setDepth(0);
-      this.sparkleGraphics.destroy();
-      this.sparkleGraphics = this.add.graphics();
-      this.sparkleGraphics.setDepth(1);
-      this.initSparkles();
+      this.destroyBackground();
+      this.createBackground();
+      this.destroySparkles();
+      this.createSparkles();
       this.loadHole(HOLES[this.currentHoleIndex]!);
       this.hud.destroy();
       this.createHUD();
     });
   }
 
-  private initSparkles(): void {
+  private createBackground(): void {
     const { width, height } = this.scale;
-    this.sparkles = [];
-    // Mix of large prominent sparkles and small subtle ones
-    for (let i = 0; i < 15; i++) {
-      this.sparkles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.3 + Math.random() * 0.8,
-        size: 5 + Math.random() * 8,
+
+    this.bgTile = this.add.tileSprite(width / 2, height / 2, width, height, 'grass-bg');
+    this.bgTile.setDepth(0);
+
+    this.vignetteImg = this.add.image(width / 2, height / 2, 'vignette');
+    this.vignetteImg.setDisplaySize(width, height);
+    this.vignetteImg.setDepth(1);
+  }
+
+  private destroyBackground(): void {
+    this.bgTile?.destroy();
+    this.vignetteImg?.destroy();
+  }
+
+  private createSparkles(): void {
+    const { width, height } = this.scale;
+    this.sparkleSprites = [];
+
+    const positions = [
+      { x: width * 0.08, y: height * 0.12 },
+      { x: width * 0.92, y: height * 0.85 },
+      { x: width * 0.15, y: height * 0.75 },
+      { x: width * 0.88, y: height * 0.2 },
+    ];
+
+    for (const pos of positions) {
+      const sp = this.add.image(pos.x, pos.y, 'sparkle');
+      sp.setDepth(1);
+      sp.setScale(0.3 + Math.random() * 0.3);
+      sp.setAlpha(0);
+
+      this.tweens.add({
+        targets: sp,
+        alpha: { from: 0, to: 0.6 + Math.random() * 0.3 },
+        scaleX: { from: sp.scaleX * 0.5, to: sp.scaleX },
+        scaleY: { from: sp.scaleY * 0.5, to: sp.scaleY },
+        duration: 1500 + Math.random() * 1500,
+        yoyo: true,
+        repeat: -1,
+        delay: Math.random() * 2000,
+        ease: 'Sine.easeInOut',
       });
-    }
-    for (let i = 0; i < 25; i++) {
-      this.sparkles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.5 + Math.random() * 1.5,
-        size: 1.5 + Math.random() * 3,
-      });
+
+      this.sparkleSprites.push(sp);
     }
   }
 
-  private loadHole(def: HoleDefinition): void {
-    this.drawBackground();
+  private destroySparkles(): void {
+    for (const sp of this.sparkleSprites) {
+      sp.destroy();
+    }
+    this.sparkleSprites = [];
+  }
 
+  private loadHole(def: HoleDefinition): void {
     this.walls = new Walls(this);
-    this.walls.drawFill(def.walls, 0x2d8a4e, 0.9);
-    this.walls.buildFromPolygons(def.walls, 0xff69b4);
+    this.walls.drawFill(def.walls);
+    this.walls.buildFromPolygons(def.walls);
 
     this.obstacles = new Obstacles(this);
 
@@ -177,91 +187,6 @@ export class Game extends Scene {
     this.powerMeter = new PowerMeter(this);
   }
 
-  private drawBackground(): void {
-    const { width, height } = this.scale;
-
-    // Rich dark grass base
-    this.bgGraphics.fillStyle(0x14381f, 1);
-    this.bgGraphics.fillRect(0, 0, width, height);
-
-    // Dense grass fiber texture — many small strokes for realistic look
-    const fiberCount = Math.floor((width * height) / 120);
-    for (let i = 0; i < fiberCount; i++) {
-      const fx = Math.random() * width;
-      const fy = Math.random() * height;
-      const shade = [0x1a4a2a, 0x164020, 0x1e5530, 0x123518, 0x0f2d14][
-        Math.floor(Math.random() * 5)
-      ]!;
-      const a = 0.2 + Math.random() * 0.5;
-      this.bgGraphics.fillStyle(shade, a);
-      // Tiny elongated dots to simulate grass blades
-      const bw = 0.5 + Math.random() * 1.5;
-      const bh = 1.5 + Math.random() * 3;
-      this.bgGraphics.fillRect(fx, fy, bw, bh);
-    }
-
-    // Scattered lighter highlights
-    const highlightCount = Math.floor(fiberCount * 0.15);
-    for (let i = 0; i < highlightCount; i++) {
-      const fx = Math.random() * width;
-      const fy = Math.random() * height;
-      this.bgGraphics.fillStyle(0x2a6b3a, 0.15 + Math.random() * 0.2);
-      this.bgGraphics.fillCircle(fx, fy, 0.5 + Math.random() * 1);
-    }
-
-    // Darker vignette around edges
-    const vignetteSize = Math.max(width, height) * 0.15;
-    // Top
-    this.bgGraphics.fillStyle(0x0a1f10, 0.25);
-    this.bgGraphics.fillRect(0, 0, width, vignetteSize);
-    // Bottom
-    this.bgGraphics.fillStyle(0x0a1f10, 0.25);
-    this.bgGraphics.fillRect(0, height - vignetteSize, width, vignetteSize);
-    // Left
-    this.bgGraphics.fillStyle(0x0a1f10, 0.2);
-    this.bgGraphics.fillRect(0, 0, vignetteSize, height);
-    // Right
-    this.bgGraphics.fillStyle(0x0a1f10, 0.2);
-    this.bgGraphics.fillRect(width - vignetteSize, 0, vignetteSize, height);
-  }
-
-  private drawSparkles(): void {
-    this.sparkleGraphics.clear();
-    const t = this.elapsed / 1000;
-
-    for (const sp of this.sparkles) {
-      const alpha = 0.3 + Math.sin(t * sp.speed + sp.phase) * 0.4;
-      if (alpha < 0.08) continue;
-
-      const s = sp.size;
-
-      if (s > 5) {
-        // Large sparkles — proper diamond 4-point star
-        this.sparkleGraphics.fillStyle(0xffffff, alpha);
-        this.sparkleGraphics.beginPath();
-        this.sparkleGraphics.moveTo(sp.x, sp.y - s);
-        this.sparkleGraphics.lineTo(sp.x + s * 0.18, sp.y - s * 0.18);
-        this.sparkleGraphics.lineTo(sp.x + s, sp.y);
-        this.sparkleGraphics.lineTo(sp.x + s * 0.18, sp.y + s * 0.18);
-        this.sparkleGraphics.lineTo(sp.x, sp.y + s);
-        this.sparkleGraphics.lineTo(sp.x - s * 0.18, sp.y + s * 0.18);
-        this.sparkleGraphics.lineTo(sp.x - s, sp.y);
-        this.sparkleGraphics.lineTo(sp.x - s * 0.18, sp.y - s * 0.18);
-        this.sparkleGraphics.closePath();
-        this.sparkleGraphics.fillPath();
-
-        // Inner glow
-        this.sparkleGraphics.fillStyle(0xffffff, alpha * 0.6);
-        this.sparkleGraphics.fillCircle(sp.x, sp.y, s * 0.2);
-      } else {
-        // Small sparkles — simple cross
-        this.sparkleGraphics.fillStyle(0xffffff, alpha);
-        this.sparkleGraphics.fillRect(sp.x - s / 2, sp.y - 0.5, s, 1);
-        this.sparkleGraphics.fillRect(sp.x - 0.5, sp.y - s / 2, 1, s);
-      }
-    }
-  }
-
   private createHUD(): void {
     const { width, height } = this.scale;
     const def = HOLES[this.currentHoleIndex]!;
@@ -275,42 +200,41 @@ export class Game extends Scene {
 
     const hudBg = this.add.graphics();
 
-    // Red outer border frame
     hudBg.fillStyle(0xcc2200, 1);
     hudBg.fillRect(0, hudY - 3, width, hudH + 3);
 
-    // Gold border line
     hudBg.fillStyle(0xd4a843, 1);
     hudBg.fillRect(2, hudY - 1, width - 4, hudH - 1);
 
-    // Dark brown main panel
     hudBg.fillStyle(0x3d2b1f, 0.97);
     hudBg.fillRect(4, hudY + 2, width - 8, hudH - 6);
 
-    // Inner gold border
     hudBg.lineStyle(1.5, 0xc8a84e, 0.7);
     hudBg.strokeRect(7, hudY + 5, width - 14, hudH - 12);
 
-    // Red inner accent line
     hudBg.lineStyle(1, 0xcc2200, 0.4);
     hudBg.strokeRect(5, hudY + 3, width - 10, hudH - 8);
 
     this.hud.add(hudBg);
 
-    // Peppermint swirls flanking the hole label
-    this.drawPeppermintSwirl(cx - 95, hudY + hudH / 2, 11);
-    this.drawPeppermintSwirl(cx + 95, hudY + hudH / 2, 11);
+    // Peppermint swirls from corner texture
+    const swirlL = this.add.image(cx - 95, hudY + hudH / 2, 'candy-cane-corner');
+    swirlL.setScale(22 / swirlL.width);
+    swirlL.setDepth(201);
+    this.hud.add(swirlL);
 
-    // HOLE label — larger, more ornate banner
+    const swirlR = this.add.image(cx + 95, hudY + hudH / 2, 'candy-cane-corner');
+    swirlR.setScale(22 / swirlR.width);
+    swirlR.setDepth(201);
+    this.hud.add(swirlR);
+
     const holeBannerW = 170;
     const holeBannerH = 32;
     const bannerY = hudY + (hudH - holeBannerH) / 2;
     const holeBannerBg = this.add.graphics();
 
-    // Outer banner border (dark gold)
     holeBannerBg.fillStyle(0x8b6914, 1);
     holeBannerBg.fillRoundedRect(cx - holeBannerW / 2, bannerY, holeBannerW, holeBannerH, 7);
-    // Inner banner fill (warm gold)
     holeBannerBg.fillStyle(0xc8a84e, 0.9);
     holeBannerBg.fillRoundedRect(
       cx - holeBannerW / 2 + 2,
@@ -319,7 +243,6 @@ export class Game extends Scene {
       holeBannerH - 4,
       6
     );
-    // Highlight on top half
     holeBannerBg.fillStyle(0xddc060, 0.4);
     holeBannerBg.fillRoundedRect(
       cx - holeBannerW / 2 + 3,
@@ -341,7 +264,6 @@ export class Game extends Scene {
       .setOrigin(0.5);
     this.hud.add(holeText);
 
-    // SCORE on left with green gumdrop
     const scoreX = 28;
     this.drawGumdrop(scoreX, hudY + hudH / 2, 8, 0x32cd32);
 
@@ -356,7 +278,6 @@ export class Game extends Scene {
       .setOrigin(0, 0.5);
     this.hud.add(this.strokeLabel);
 
-    // PAR on right with purple gumdrop
     const parX = width - 28;
     this.drawGumdrop(parX, hudY + hudH / 2, 8, 0x9370db);
 
@@ -372,51 +293,13 @@ export class Game extends Scene {
     this.hud.add(parLabel);
   }
 
-  private drawPeppermintSwirl(cx: number, cy: number, r: number): void {
-    const g = this.add.graphics();
-    g.setDepth(201);
-
-    // White base circle
-    g.fillStyle(0xffffff, 1);
-    g.fillCircle(cx, cy, r);
-
-    // Red spiral segments
-    const segments = 6;
-    for (let i = 0; i < segments; i++) {
-      const startAngle = (i * Math.PI * 2) / segments;
-      const endAngle = startAngle + Math.PI / segments;
-
-      g.fillStyle(0xcc0000, 0.9);
-      g.beginPath();
-      g.moveTo(cx, cy);
-      g.arc(cx, cy, r, startAngle, endAngle, false);
-      g.closePath();
-      g.fillPath();
-    }
-
-    // Center dot
-    g.fillStyle(0xcc0000, 1);
-    g.fillCircle(cx, cy, r * 0.2);
-
-    // Outer ring
-    g.lineStyle(1, 0xdddddd, 0.6);
-    g.strokeCircle(cx, cy, r);
-
-    this.hud.add(g);
-  }
-
   private drawGumdrop(cx: number, cy: number, r: number, color: number): void {
     const g = this.add.graphics();
     g.setDepth(201);
-
-    // Gumdrop body
     g.fillStyle(color, 1);
     g.fillCircle(cx, cy, r);
-
-    // Highlight
     g.fillStyle(0xffffff, 0.35);
     g.fillCircle(cx - r * 0.25, cy - r * 0.3, r * 0.35);
-
     this.hud.add(g);
   }
 
@@ -460,9 +343,6 @@ export class Game extends Scene {
 
   override update(_time: number, delta: number): void {
     if (this.state === 'sinking') return;
-
-    this.elapsed += delta;
-    this.drawSparkles();
 
     this.ball.update();
     this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);

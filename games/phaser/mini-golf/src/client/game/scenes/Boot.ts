@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { TextureFactory } from '../utils/textures';
 
 export class Boot extends Scene {
   constructor() {
@@ -6,7 +7,7 @@ export class Boot extends Scene {
   }
 
   preload() {
-    // No external assets to preload for graphics-only MVP
+    TextureFactory.generateAll(this);
   }
 
   create() {
