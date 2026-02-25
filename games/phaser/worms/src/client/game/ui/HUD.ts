@@ -14,7 +14,7 @@ const TEXT_PRIMARY = '#e6edf3';
 const TEXT_DIM = '#6e7681';
 const TOGGLE_BG = 0x1a2a3a;
 
-const SLOT_SIZE = 36;
+const SLOT_SIZE = 42;
 const SLOT_GAP = 3;
 const PAD = 6;
 const GRID_COLS = 3;
@@ -69,6 +69,7 @@ export class HUD {
   private miniTeamText!: Phaser.GameObjects.Text;
   private miniWeaponText!: Phaser.GameObjects.Text;
   private miniTimerText!: Phaser.GameObjects.Text;
+  private miniWindText!: Phaser.GameObjects.Text;
 
   private panelW = 0;
   private panelH = 0;
@@ -172,17 +173,17 @@ export class HUD {
     this.miniContainer.setVisible(false);
 
     this.miniTeamText = this.scene.add
-      .text(cx, midY - 28, '', { fontSize: '12px', fontFamily: 'monospace' })
+      .text(cx, midY - 36, '', { fontSize: '12px', fontFamily: 'monospace' })
       .setOrigin(0.5);
     this.miniContainer.add(this.miniTeamText);
 
     this.miniWeaponText = this.scene.add
-      .text(cx, midY - 6, '', { fontSize: '16px' })
+      .text(cx, midY - 14, '', { fontSize: '16px' })
       .setOrigin(0.5);
     this.miniContainer.add(this.miniWeaponText);
 
     this.miniTimerText = this.scene.add
-      .text(cx, midY + 18, '', {
+      .text(cx, midY + 10, '', {
         fontSize: '9px',
         color: '#ffcc00',
         fontFamily: 'monospace',
@@ -190,6 +191,16 @@ export class HUD {
       })
       .setOrigin(0.5);
     this.miniContainer.add(this.miniTimerText);
+
+    this.miniWindText = this.scene.add
+      .text(cx, midY + 28, '', {
+        fontSize: '9px',
+        color: '#58a6ff',
+        fontFamily: 'monospace',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5);
+    this.miniContainer.add(this.miniWindText);
   }
 
   private buildStateRow(): void {
@@ -501,6 +512,15 @@ export class HUD {
 
     const dirLabel = windVal > 0.5 ? '→' : windVal < -0.5 ? '←' : '·';
     this.windValueText.setText(`${dirLabel} ${Math.abs(windVal).toFixed(1)}`);
+
+    if (Math.abs(windVal) > 0.5) {
+      const windColor = windVal > 0 ? '#58a6ff' : '#f85149';
+      this.miniWindText.setColor(windColor);
+      this.miniWindText.setText(`${dirLabel}${Math.abs(windVal).toFixed(0)}`);
+    } else {
+      this.miniWindText.setColor('#6e7681');
+      this.miniWindText.setText('·0');
+    }
   }
 
   private updateStateDisplay(): void {

@@ -1265,3 +1265,11 @@ Redesigned all character draw functions to use organic shapes and curved paths i
 
 ### Added
 - **Mini-display in collapsed HUD**: When the left panel is collapsed, the narrow toggle strip now shows three key pieces of information stacked vertically: team emoji, selected weapon icon, and turn timer countdown. This gives players essential turn info at a glance without needing to expand the panel.
+
+## [v0.0.12.73] - 2026-02-25 — Weapon Slot Fix + Collapsed Wind (wf-1771995626)
+
+### Fixed
+- **Weapon icon clipping**: Increased weapon grid slot size from 36px to 42px so multi-codepoint emoji (✈️ airstrike, 🪝 ninja rope) are no longer partially cut off.
+
+### Added
+- **Wind indicator in collapsed HUD**: The collapsed mini-display now shows a compact wind readout (←4 or →3) with direction-colored text (blue for rightward, red for leftward) below the timer.
