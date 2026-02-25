@@ -51,6 +51,8 @@ export class GamePlay extends Scene {
   private aiController: AIController | null = null;
 
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+  private keyR!: Phaser.Input.Keyboard.Key;
+  private keyT!: Phaser.Input.Keyboard.Key;
   private skyGradient!: Phaser.GameObjects.Graphics;
 
   private turnDuration = DEFAULT_TURN_DURATION;
@@ -830,6 +832,8 @@ export class GamePlay extends Scene {
   private setupInput(): void {
     if (!this.input.keyboard) return;
     this.cursors = this.input.keyboard.createCursorKeys();
+    this.keyR = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    this.keyT = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T);
 
     const NUMBER_KEYS = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT'];
     for (let i = 0; i < NUMBER_KEYS.length; i++) {
@@ -1235,6 +1239,17 @@ export class GamePlay extends Scene {
           this.weaponSystem.adjustAngle(-0.03);
         } else if (this.cursors.down.isDown) {
           this.weaponSystem.adjustAngle(0.03);
+        }
+      } else if (this.weaponSystem.currentState === 'aiming') {
+        if (this.cursors.up.isDown) {
+          this.weaponSystem.adjustAngle(-0.03);
+        } else if (this.cursors.down.isDown) {
+          this.weaponSystem.adjustAngle(0.03);
+        }
+        if (this.keyR?.isDown) {
+          this.weaponSystem.adjustPower(1);
+        } else if (this.keyT?.isDown) {
+          this.weaponSystem.adjustPower(-1);
         }
       }
     }

@@ -91,11 +91,29 @@ export class TutorialManager {
       {
         id: 'fire',
         title: '💥 Fire!',
-        body: 'Scroll to adjust power, then click (or press SPACE again) to fire! Watch your projectile fly.',
+        body: 'Scroll (or press R/T) to adjust power, then click (or press SPACE again) to fire! Watch your projectile fly.',
         hint: 'Click or press SPACE to fire',
         condition: () =>
           this.weapons.currentState === 'firing' ||
           this.weapons.currentState === 'resolved',
+      },
+      {
+        id: 'parachute',
+        title: '🪂 Parachute',
+        body: 'Press P to deploy a parachute while falling.\nThis slows your descent and prevents fall damage. Press P again to close it.',
+        clickToContinue: true,
+      },
+      {
+        id: 'ninja-rope',
+        title: '🪝 Ninja Rope',
+        body: 'Select the Ninja Rope (weapon 9) and fire it at terrain to attach.\nUse ↑/↓ to shorten or lengthen the rope.\nPress SPACE or click to detach and launch yourself!',
+        clickToContinue: true,
+      },
+      {
+        id: 'teleport',
+        title: '⚡ Teleport',
+        body: 'Select Teleport (weapon 8) and aim where you want to go.\nAdjust power to control distance, then fire to instantly warp there. Great for escaping danger!',
+        clickToContinue: true,
       },
       {
         id: 'turn-flow',

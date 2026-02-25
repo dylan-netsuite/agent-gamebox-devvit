@@ -1,5 +1,21 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.97] - 2026-02-25 — Tutorial Expansion + Power Hotkeys (wf-1772049179)
+
+### Added
+- **Parachute tutorial step**: New click-to-continue step explaining P key to deploy/close parachute while falling.
+- **Ninja Rope tutorial step**: New click-to-continue step explaining rope weapon mechanics (fire to attach, ↑/↓ to adjust length, SPACE to detach).
+- **Teleport tutorial step**: New click-to-continue step explaining teleport weapon (aim, adjust power, fire to warp).
+- **Power hotkeys (R/T)**: R increases power, T decreases power while aiming — alternative to scroll wheel for users without a mouse.
+- Tutorial now has 11 steps (was 8): welcome → movement → jumping → weapon-switch → aiming → fire → parachute → rope → teleport → turn-flow → complete.
+
+### Files Changed
+- `src/client/game/systems/TutorialManager.ts` — Added 3 new tutorial steps; updated fire step text to mention R/T.
+- `src/client/game/scenes/GamePlay.ts` — Added R/T key bindings for power adjustment during aiming; added keyR/keyT as Phaser Key objects.
+- `src/client/game/ui/HUD.ts` — Updated aiming instruction text to show "R/T or Scroll:Power".
+
+---
+
 ## [v0.0.12.93] - 2026-02-25 — Tutorial Mode (wf-1772047639)
 
 ### Added

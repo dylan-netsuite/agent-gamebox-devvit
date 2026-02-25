@@ -565,7 +565,7 @@ export class HUD {
         break;
       case 'aiming':
         this.stateText.setText(`${teamLabel} Aiming ${weapon.icon}`);
-        this.instructionText.setText('Scroll:Power · Click:Fire');
+        this.instructionText.setText('R/T or Scroll:Power · Click:Fire');
         break;
       case 'firing':
         this.stateText.setText(`${teamLabel} 💥 Firing...`);
