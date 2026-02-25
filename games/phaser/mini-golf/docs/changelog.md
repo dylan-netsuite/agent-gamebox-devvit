@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.2.108 - Hole 6 Fix: Open Walls + Wider Bridge (2026-02-25)
+
+### Fixed
+- **Island walls no longer block the ball** — changed from closed rectangles to U-shaped open polygons so the river-facing sides have no wall. Ball can now freely exit the tee island and enter the cup island.
+
+### Changed
+- **Bridge widened from 80 to 160 design units** — doubles the landing surface for much more forgiving timing.
+
 ## v0.0.2.103 - Hole 6: The Taffy River (2026-02-25)
 
 ### Added
