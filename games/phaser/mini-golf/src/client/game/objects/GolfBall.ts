@@ -107,6 +107,17 @@ export class GolfBall {
     (this.body as unknown as { frictionAir: number }).frictionAir = this.defaultFrictionAir;
   }
 
+  clampSpeed(maxSpeed: number): void {
+    const speed = getBallSpeed(this.body);
+    if (speed > maxSpeed) {
+      const scale = maxSpeed / speed;
+      this.scene.matter.body.setVelocity(this.body, {
+        x: this.body.velocity.x * scale,
+        y: this.body.velocity.y * scale,
+      });
+    }
+  }
+
   isStopped(): boolean {
     return getBallSpeed(this.body) < BALL_STOP_VELOCITY;
   }

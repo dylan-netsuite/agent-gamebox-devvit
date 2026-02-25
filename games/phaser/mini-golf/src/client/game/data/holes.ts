@@ -25,11 +25,25 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 400, y: 520 },
     cup: { x: 400, y: 80 },
     walls: [
+      // Left wall
+      [
+        { x: 350, y: 40 },
+        { x: 350, y: 560 },
+      ],
+      // Right wall
+      [
+        { x: 450, y: 40 },
+        { x: 450, y: 560 },
+      ],
+      // Top wall (with gap for cup area)
       [
         { x: 350, y: 40 },
         { x: 450, y: 40 },
-        { x: 450, y: 560 },
+      ],
+      // Bottom wall
+      [
         { x: 350, y: 560 },
+        { x: 450, y: 560 },
       ],
     ],
     obstacles: [],
@@ -43,7 +57,7 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 200, y: 500 },
     cup: { x: 600, y: 150 },
     walls: [
-      // L-shaped outer boundary
+      // L-shaped outer boundary (closed)
       [
         { x: 150, y: 100 },
         { x: 650, y: 100 },
@@ -51,17 +65,18 @@ export const HOLES: HoleDefinition[] = [
         { x: 300, y: 200 },
         { x: 300, y: 550 },
         { x: 150, y: 550 },
+        { x: 150, y: 100 },
       ],
-      // Inner corner block
+      // Inner corner block (closed)
       [
         { x: 250, y: 100 },
         { x: 250, y: 440 },
         { x: 550, y: 440 },
         { x: 550, y: 100 },
+        { x: 250, y: 100 },
       ],
     ],
     obstacles: [
-      // 45-degree angled chocolate block in the corner
       {
         type: 'bumper',
         x: 275,
@@ -80,14 +95,15 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 400, y: 530 },
     cup: { x: 400, y: 70 },
     walls: [
-      // Outer boundary
+      // Outer boundary (closed)
       [
         { x: 200, y: 30 },
         { x: 600, y: 30 },
         { x: 600, y: 570 },
         { x: 200, y: 570 },
+        { x: 200, y: 30 },
       ],
-      // Left divider (narrow left path)
+      // Left divider
       [
         { x: 370, y: 120 },
         { x: 370, y: 460 },
@@ -100,7 +116,6 @@ export const HOLES: HoleDefinition[] = [
     ],
     obstacles: [],
     frictionZones: [
-      // Graham cracker sand trap in the center
       { x: 375, y: 140, width: 50, height: 300, color: 0xd2b48c },
     ],
   },
@@ -118,6 +133,7 @@ export const HOLES: HoleDefinition[] = [
         { x: 600, y: 50 },
         { x: 600, y: 560 },
         { x: 200, y: 560 },
+        { x: 200, y: 50 },
       ],
     ],
     obstacles: [
@@ -135,7 +151,7 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 400, y: 530 },
     cup: { x: 400, y: 80 },
     walls: [
-      // Outer boundary with narrowing at midpoint
+      // Outer boundary with narrowing at midpoint (closed)
       [
         { x: 300, y: 40 },
         { x: 500, y: 40 },
@@ -147,6 +163,7 @@ export const HOLES: HoleDefinition[] = [
         { x: 300, y: 340 },
         { x: 350, y: 280 },
         { x: 300, y: 220 },
+        { x: 300, y: 40 },
       ],
     ],
     obstacles: [
@@ -170,19 +187,21 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 400, y: 500 },
     cup: { x: 400, y: 100 },
     walls: [
-      // Bottom island
+      // Bottom island (closed)
       [
         { x: 300, y: 400 },
         { x: 500, y: 400 },
         { x: 500, y: 560 },
         { x: 300, y: 560 },
+        { x: 300, y: 400 },
       ],
-      // Top island
+      // Top island (closed)
       [
         { x: 300, y: 40 },
         { x: 500, y: 40 },
         { x: 500, y: 200 },
         { x: 300, y: 200 },
+        { x: 300, y: 40 },
       ],
     ],
     obstacles: [],
@@ -206,6 +225,7 @@ export const HOLES: HoleDefinition[] = [
         { x: 480, y: 40 },
         { x: 480, y: 560 },
         { x: 320, y: 560 },
+        { x: 320, y: 40 },
       ],
     ],
     obstacles: [
@@ -229,19 +249,21 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 200, y: 500 },
     cup: { x: 600, y: 100 },
     walls: [
-      // Starting box
+      // Starting box (closed)
       [
         { x: 100, y: 400 },
         { x: 300, y: 400 },
         { x: 300, y: 560 },
         { x: 100, y: 560 },
+        { x: 100, y: 400 },
       ],
-      // Destination box
+      // Destination box (closed)
       [
         { x: 500, y: 40 },
         { x: 700, y: 40 },
         { x: 700, y: 200 },
         { x: 500, y: 200 },
+        { x: 500, y: 40 },
       ],
     ],
     obstacles: [],
@@ -265,6 +287,7 @@ export const HOLES: HoleDefinition[] = [
         { x: 750, y: 30 },
         { x: 750, y: 570 },
         { x: 50, y: 570 },
+        { x: 50, y: 30 },
       ],
       // Zig-zag internal walls
       [
@@ -299,6 +322,7 @@ export const HOLES: HoleDefinition[] = [
         { x: 450, y: 30 },
         { x: 450, y: 570 },
         { x: 350, y: 570 },
+        { x: 350, y: 30 },
       ],
     ],
     obstacles: [
@@ -347,6 +371,7 @@ export const HOLES: HoleDefinition[] = [
         { x: 480, y: 40 },
         { x: 480, y: 570 },
         { x: 320, y: 570 },
+        { x: 320, y: 40 },
       ],
     ],
     obstacles: [
@@ -379,6 +404,7 @@ export const HOLES: HoleDefinition[] = [
         { x: 720, y: 40 },
         { x: 720, y: 560 },
         { x: 80, y: 560 },
+        { x: 80, y: 40 },
       ],
     ],
     obstacles: [
@@ -402,6 +428,7 @@ export const HOLES: HoleDefinition[] = [
         { x: 650, y: 150 },
         { x: 650, y: 550 },
         { x: 150, y: 550 },
+        { x: 150, y: 150 },
       ],
     ],
     obstacles: [],
@@ -426,6 +453,7 @@ export const HOLES: HoleDefinition[] = [
         { x: 720, y: 40 },
         { x: 720, y: 560 },
         { x: 80, y: 560 },
+        { x: 80, y: 40 },
       ],
     ],
     obstacles: [
@@ -447,6 +475,7 @@ export const HOLES: HoleDefinition[] = [
         { x: 550, y: 20 },
         { x: 550, y: 580 },
         { x: 250, y: 580 },
+        { x: 250, y: 20 },
       ],
     ],
     obstacles: [
@@ -481,12 +510,13 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 150, y: 500 },
     cup: { x: 650, y: 100 },
     walls: [
-      // Outer boundary
+      // Outer boundary (closed)
       [
         { x: 80, y: 40 },
         { x: 720, y: 40 },
         { x: 720, y: 560 },
         { x: 80, y: 560 },
+        { x: 80, y: 40 },
       ],
       // Invisible internal walls (rendered transparent, flash on hit)
       [
@@ -517,19 +547,21 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 400, y: 530 },
     cup: { x: 400, y: 70 },
     walls: [
-      // Start platform
+      // Start platform (closed)
       [
         { x: 300, y: 480 },
         { x: 500, y: 480 },
         { x: 500, y: 570 },
         { x: 300, y: 570 },
+        { x: 300, y: 480 },
       ],
-      // End platform
+      // End platform (closed)
       [
         { x: 300, y: 30 },
         { x: 500, y: 30 },
         { x: 500, y: 120 },
         { x: 300, y: 120 },
+        { x: 300, y: 30 },
       ],
     ],
     obstacles: [],
@@ -555,12 +587,13 @@ export const HOLES: HoleDefinition[] = [
         { x: 430, y: 300 },
         { x: 430, y: 570 },
       ],
-      // Skull arena
+      // Skull arena (closed)
       [
         { x: 250, y: 50 },
         { x: 550, y: 50 },
         { x: 550, y: 300 },
         { x: 250, y: 300 },
+        { x: 250, y: 50 },
       ],
     ],
     obstacles: [

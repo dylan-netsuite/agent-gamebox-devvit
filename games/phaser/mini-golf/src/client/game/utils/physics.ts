@@ -1,23 +1,27 @@
 import * as Phaser from 'phaser';
 
 export const BALL_RADIUS = 8;
-export const BALL_RESTITUTION = 0.7;
-export const BALL_FRICTION = 0.02;
-export const BALL_FRICTION_AIR = 0.025;
+export const BALL_RESTITUTION = 0.6;
+export const BALL_FRICTION = 0.03;
+export const BALL_FRICTION_AIR = 0.035;
 export const BALL_FRICTION_STATIC = 0.1;
 export const BALL_DENSITY = 0.002;
 
-export const WALL_RESTITUTION = 0.7;
+export const WALL_RESTITUTION = 0.6;
 
-export const MAX_SHOT_FORCE = 0.06;
+export const MAX_SHOT_VELOCITY = 18;
+export const WALL_THICKNESS = 14;
 export const POWER_OSCILLATION_HZ = 1.8;
-export const CAPTURE_VELOCITY_THRESHOLD = 1.8;
-export const BALL_STOP_VELOCITY = 0.15;
+export const CAPTURE_VELOCITY_THRESHOLD = 5.0;
+export const CAPTURE_RADIUS = 20;
+export const ATTRACTION_RADIUS = 40;
+export const ATTRACTION_STRENGTH = 0.0004;
+export const BALL_STOP_VELOCITY = 0.08;
 
 export const SAND_FRICTION_AIR = 0.15;
-export const ICE_FRICTION_AIR = 0.001;
+export const ICE_FRICTION_AIR = 0.002;
 
-export const BUMPER_RESTITUTION = 1.5;
+export const BUMPER_RESTITUTION = 1.3;
 
 export const DESIGN_WIDTH = 800;
 export const DESIGN_HEIGHT = 600;

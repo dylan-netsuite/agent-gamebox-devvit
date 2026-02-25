@@ -8,7 +8,7 @@ import { Walls } from '../objects/Walls';
 import { Obstacles } from '../objects/Obstacles';
 import { HOLES, type HoleDefinition } from '../data/holes';
 import {
-  MAX_SHOT_FORCE,
+  MAX_SHOT_VELOCITY,
   toScreen,
   DESIGN_WIDTH,
   DESIGN_HEIGHT,
@@ -240,8 +240,8 @@ export class Game extends Scene {
       y: this.ball.body.position.y,
     };
 
-    const force = power * MAX_SHOT_FORCE * getScaleFactor(this).s;
-    this.ball.applyShot(this.arrow.angle, force * 200);
+    const velocity = power * MAX_SHOT_VELOCITY * getScaleFactor(this).s;
+    this.ball.applyShot(this.arrow.angle, velocity);
 
     this.state = 'simulating';
     this.arrow.setVisible(false);
@@ -251,6 +251,7 @@ export class Game extends Scene {
     if (this.state === 'sinking') return;
 
     this.ball.update();
+    this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.2);
     this.powerMeter.update(delta);
 
     if (this.state === 'aiming') {
@@ -270,13 +271,9 @@ export class Game extends Scene {
         return;
       }
 
-      if (
-        this.hole.canCapture(
-          this.ball.body.position.x,
-          this.ball.body.position.y,
-          this.ball.getSpeed()
-        )
-      ) {
+      this.hole.applyAttraction(this.ball);
+
+      if (this.hole.canCapture(this.ball)) {
         this.sinkBall();
         return;
       }
