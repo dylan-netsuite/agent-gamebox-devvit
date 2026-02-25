@@ -835,19 +835,6 @@ html, body {
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-.tutorial-highlight {
-  position: absolute;
-  border: 3px solid rgba(230, 194, 0, 0.8);
-  border-radius: 50%;
-  pointer-events: none;
-  animation: tutorial-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes tutorial-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(230, 194, 0, 0.4); }
-  50% { box-shadow: 0 0 20px rgba(230, 194, 0, 0.7); }
-}
-
 .tutorial-pointed {
   box-shadow: 0 0 12px rgba(230, 194, 0, 0.6);
   border-color: rgba(230, 194, 0, 0.8) !important;

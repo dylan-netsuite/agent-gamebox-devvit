@@ -1,3 +1,4 @@
+import * as Phaser from 'phaser';
 import { GamePlay } from './GamePlay';
 import type { GameState, Country, PlayerInfo, Unit, BuildOption } from '../../../shared/types/game';
 import { ALL_COUNTRIES, COUNTRY_NAMES } from '../../../shared/types/game';
@@ -47,10 +48,16 @@ function createTutorialGameState(): GameState {
   };
 }
 
+const DEPTH_TUTORIAL_HIGHLIGHT = 20;
+const HIGHLIGHT_COLOR = 0xe6c200;
+
 export class Tutorial extends GamePlay {
   private turnIndex = 0;
   private stepIndex = 0;
   private tutorialComplete = false;
+  private highlightGraphics: Phaser.GameObjects.Graphics | null = null;
+  private highlightTween: Phaser.Tweens.Tween | null = null;
+  private highlightAlpha = { value: 1 };
 
   constructor() {
     super({ key: 'Tutorial' });
@@ -96,6 +103,8 @@ export class Tutorial extends GamePlay {
     const step = this.getCurrentStep();
     if (!step) return;
     TutorialOverlayDOM.showStep(step, this.stepIndex, this.getTotalStepsInTurn());
+    this.applyTutorialHighlights(step.highlightProvinces);
+    this.panCameraToProvinces(step.highlightProvinces);
   }
 
   private advanceStep() {
@@ -105,6 +114,85 @@ export class Tutorial extends GamePlay {
       return;
     }
     this.showCurrentStep();
+  }
+
+  // ── Phaser-based province highlights ───────────
+
+  private applyTutorialHighlights(provinceIds?: string[]) {
+    this.clearTutorialHighlights();
+    if (!provinceIds || provinceIds.length === 0) return;
+
+    this.highlightGraphics = this.add.graphics().setDepth(DEPTH_TUTORIAL_HIGHLIGHT);
+    this.highlightAlpha = { value: 1 };
+
+    for (const pid of provinceIds) {
+      const poly = this.provincePolys[pid];
+      if (!poly) continue;
+      const province = this.provinces.find((p) => p.id === pid);
+      if (!province) continue;
+
+      const points = province.polygon;
+      this.highlightGraphics.lineStyle(4, HIGHLIGHT_COLOR, 1);
+      this.highlightGraphics.beginPath();
+      this.highlightGraphics.moveTo(points[0]!.x, points[0]!.y);
+      for (let i = 1; i < points.length; i++) {
+        this.highlightGraphics.lineTo(points[i]!.x, points[i]!.y);
+      }
+      this.highlightGraphics.closePath();
+      this.highlightGraphics.strokePath();
+    }
+
+    this.highlightTween = this.tweens.add({
+      targets: this.highlightAlpha,
+      value: 0.3,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+      onUpdate: () => {
+        this.highlightGraphics?.setAlpha(this.highlightAlpha.value);
+      },
+    });
+  }
+
+  private clearTutorialHighlights() {
+    this.highlightTween?.destroy();
+    this.highlightTween = null;
+    this.highlightGraphics?.destroy();
+    this.highlightGraphics = null;
+  }
+
+  private panCameraToProvinces(provinceIds?: string[]) {
+    if (!provinceIds || provinceIds.length === 0) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const pid of provinceIds) {
+      const province = this.provinces.find((p) => p.id === pid);
+      if (!province) continue;
+      for (const pt of province.polygon) {
+        if (pt.x < minX) minX = pt.x;
+        if (pt.y < minY) minY = pt.y;
+        if (pt.x > maxX) maxX = pt.x;
+        if (pt.y > maxY) maxY = pt.y;
+      }
+    }
+
+    if (!isFinite(minX)) return;
+
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    const cam = this.cameras.main;
+    const pad = 200;
+    const viewW = cam.width / cam.zoom;
+    const viewH = cam.height / cam.zoom;
+
+    this.tweens.add({
+      targets: cam,
+      scrollX: Phaser.Math.Clamp(cx - viewW / 2, -pad, Math.max(-pad, 2000 + pad - viewW)),
+      scrollY: Phaser.Math.Clamp(cy - viewH / 2, -pad, Math.max(-pad, 1400 + pad - viewH)),
+      duration: 600,
+      ease: 'Sine.easeInOut',
+    });
   }
 
   protected override stageOrder(order: StagedOrder) {
@@ -359,6 +447,7 @@ export class Tutorial extends GamePlay {
   }
 
   private reloadTutorialScene(previousUnits?: Unit[]) {
+    this.clearTutorialHighlights();
     this.stopPolling();
     OrdersPanelDOM.destroy();
     ChatPanelDOM.destroy();
@@ -436,6 +525,7 @@ export class Tutorial extends GamePlay {
   }
 
   private exitTutorial() {
+    this.clearTutorialHighlights();
     this.stopPolling();
     OrdersPanelDOM.destroy();
     ChatPanelDOM.destroy();
@@ -456,6 +546,7 @@ export class Tutorial extends GamePlay {
   }
 
   override shutdown(): void {
+    this.clearTutorialHighlights();
     TutorialOverlayDOM.destroy();
     super.shutdown();
   }

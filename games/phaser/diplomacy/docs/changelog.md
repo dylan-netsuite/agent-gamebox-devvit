@@ -1,3 +1,25 @@
+## v0.0.11 — Phaser-Based Tutorial Highlights & Camera Pan (2026-02-25)
+
+### Fix
+- **Province highlighting now works**: Replaced broken DOM-based highlights (`[data-province-id]` selectors that matched nothing) with Phaser Graphics objects that draw pulsing gold borders directly on the canvas polygons.
+- **Camera auto-pans to relevant provinces**: When a tutorial step specifies `highlightProvinces`, the camera smoothly tweens to center on those provinces. Previously the camera started at (0,0) showing the North Atlantic, requiring manual scrolling to find Italy.
+
+### Technical Details
+- Added `applyTutorialHighlights()` in `Tutorial.ts` using `Phaser.GameObjects.Graphics` to draw province polygon outlines at `DEPTH_TUTORIAL_HIGHLIGHT = 20`.
+- Added `panCameraToProvinces()` to compute bounding box of highlighted provinces and tween the camera to center on them.
+- Added `clearTutorialHighlights()` with cleanup calls in `reloadTutorialScene()`, `exitTutorial()`, and `shutdown()`.
+- Changed `provincePolys` from `private` to `protected` in `GamePlay.ts` for subclass access.
+- Removed `addProvinceHighlight()` from `TutorialOverlayDOM.ts` (broken DOM approach).
+- Removed `.tutorial-highlight` CSS class and `@keyframes tutorial-pulse` (no longer used).
+
+### Files Changed
+- `src/client/game/scenes/Tutorial.ts` — Added Phaser highlight graphics + camera pan logic
+- `src/client/game/scenes/GamePlay.ts` — Changed `provincePolys` to `protected`
+- `src/client/game/tutorial/TutorialOverlayDOM.ts` — Removed broken DOM highlight code
+- `src/client/game/game.css` — Removed unused `.tutorial-highlight` styles
+
+---
+
 ## v0.0.10 — Tutorial Accessibility Fix (2026-02-25)
 
 ### Fix

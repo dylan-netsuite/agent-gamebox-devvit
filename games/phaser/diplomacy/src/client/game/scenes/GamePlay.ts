@@ -62,7 +62,7 @@ export class GamePlay extends Scene {
   private readonly CAM_PAD = 200;
 
   protected provinces: ProvinceMeta[] = [];
-  private provincePolys: Record<string, Phaser.GameObjects.Polygon> = {};
+  protected provincePolys: Record<string, Phaser.GameObjects.Polygon> = {};
   protected provinceLabels: Record<string, Phaser.GameObjects.Text> = {};
   private unitTokens: Record<string, Phaser.GameObjects.GameObject[]> = {};
 

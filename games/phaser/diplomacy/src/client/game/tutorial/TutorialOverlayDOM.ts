@@ -72,29 +72,9 @@ class TutorialOverlayImpl {
     }
 
     this.clearHighlights();
-    if (step.highlightProvinces) {
-      for (const pid of step.highlightProvinces) {
-        this.addProvinceHighlight(pid);
-      }
-    }
 
     if (step.pointTo) {
       this.pointToElement(step.pointTo);
-    }
-  }
-
-  private addProvinceHighlight(provinceId: string) {
-    const label = document.querySelector(`[data-province-id="${provinceId}"]`);
-    if (label) {
-      const el = document.createElement('div');
-      el.className = 'tutorial-highlight';
-      const rect = label.getBoundingClientRect();
-      el.style.left = `${rect.left - 8}px`;
-      el.style.top = `${rect.top - 8}px`;
-      el.style.width = `${rect.width + 16}px`;
-      el.style.height = `${rect.height + 16}px`;
-      this.container?.appendChild(el);
-      this.highlightEls.push(el);
     }
   }
 
