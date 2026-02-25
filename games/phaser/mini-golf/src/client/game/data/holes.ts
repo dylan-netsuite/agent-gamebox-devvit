@@ -351,28 +351,31 @@ export const HOLES: HoleDefinition[] = [
       { x: 300, y: 220, width: 95, height: 95 },
     ],
     teleporters: [
-      // Red pipe — exits pointing right/down, away from hole, into sand trap
+      // Red pipe — exits pointing left, away from hole, into sand trap
       {
         entryX: 190,
         entryY: 590,
         exitX: 350,
         exitY: 270,
+        exitAngle: Math.PI,
         color: 0xff3333,
       },
-      // Blue pipe — exits in top-left corner for chaotic bounce
+      // Blue pipe — exits pointing down-right into corner for chaotic bounce
       {
         entryX: 310,
         entryY: 590,
         exitX: 130,
         exitY: 90,
+        exitAngle: Math.PI / 4,
         color: 0x3399ff,
       },
-      // Green pipe — exits pointing straight at the hole
+      // Green pipe — exits pointing straight up at the hole
       {
         entryX: 250,
         entryY: 590,
         exitX: 250,
         exitY: 240,
+        exitAngle: -Math.PI / 2,
         color: 0x33cc33,
       },
     ],

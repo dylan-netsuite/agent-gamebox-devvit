@@ -56,6 +56,7 @@ export interface TeleporterDef {
   entryY: number;
   exitX: number;
   exitY: number;
+  exitAngle?: number;
   color?: number;
 }
 
@@ -70,6 +71,7 @@ interface ActiveTeleporter {
   entryRect: Phaser.Geom.Rectangle;
   exitX: number;
   exitY: number;
+  exitAngle?: number;
   cooldown: number;
 }
 
@@ -336,10 +338,51 @@ export class Obstacles {
     const r = scaleValue(this.scene, 14);
 
     const entryRect = new Phaser.Geom.Rectangle(entry.x - r, entry.y - r, r * 2, r * 2);
-    this.teleporters.push({ entryRect, exitX: exit.x, exitY: exit.y, cooldown: 0 });
+    this.teleporters.push({
+      entryRect,
+      exitX: exit.x,
+      exitY: exit.y,
+      exitAngle: def.exitAngle,
+      cooldown: 0,
+    });
 
     const color = def.color ?? 0x9370db;
     const g = this.graphics;
+
+    const midY = (entry.y + exit.y) / 2;
+    const pipeW = scaleValue(this.scene, 6);
+    const offsetX = (entry.x - exit.x) * 0.6;
+
+    const cp1x = entry.x + offsetX;
+    const cp1y = midY - scaleValue(this.scene, 30);
+    const cp2x = exit.x - offsetX;
+    const cp2y = midY + scaleValue(this.scene, 30);
+
+    const drawBezier = (gfx: Phaser.GameObjects.Graphics, x0: number, y0: number,
+      cx1: number, cy1: number, cx2: number, cy2: number, x3: number, y3: number) => {
+      const steps = 20;
+      gfx.beginPath();
+      gfx.moveTo(x0, y0);
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        const u = 1 - t;
+        const px = u * u * u * x0 + 3 * u * u * t * cx1 + 3 * u * t * t * cx2 + t * t * t * x3;
+        const py = u * u * u * y0 + 3 * u * u * t * cy1 + 3 * u * t * t * cy2 + t * t * t * y3;
+        gfx.lineTo(px, py);
+      }
+      gfx.strokePath();
+    };
+
+    g.lineStyle(pipeW + 2, 0x222222, 0.5);
+    drawBezier(g, entry.x, entry.y, cp1x, cp1y, cp2x, cp2y, exit.x, exit.y);
+
+    g.lineStyle(pipeW, color, 0.7);
+    drawBezier(g, entry.x, entry.y, cp1x, cp1y, cp2x, cp2y, exit.x, exit.y);
+
+    g.lineStyle(pipeW * 0.4, 0xffffff, 0.2);
+    drawBezier(g, entry.x - pipeW * 0.2, entry.y,
+      cp1x - pipeW * 0.2, cp1y, cp2x - pipeW * 0.2, cp2y,
+      exit.x - pipeW * 0.2, exit.y);
 
     for (const pos of [entry, exit]) {
       g.fillStyle(0x000000, 0.3);
@@ -722,8 +765,20 @@ export class Obstacles {
       if (tp.entryRect.contains(bx, by)) {
         const vx = ball.body.velocity.x;
         const vy = ball.body.velocity.y;
+        const speed = Math.sqrt(vx * vx + vy * vy);
+
         ball.setPosition(tp.exitX, tp.exitY);
-        this.scene.matter.body.setVelocity(ball.body, { x: vx, y: vy });
+
+        if (tp.exitAngle !== undefined) {
+          const exitSpeed = Math.max(speed, 1.5);
+          this.scene.matter.body.setVelocity(ball.body, {
+            x: Math.cos(tp.exitAngle) * exitSpeed,
+            y: Math.sin(tp.exitAngle) * exitSpeed,
+          });
+        } else {
+          this.scene.matter.body.setVelocity(ball.body, { x: vx, y: vy });
+        }
+
         tp.cooldown = 30;
         return true;
       }

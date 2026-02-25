@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.2.157 - Hole 8: Fixed Exit Directions + Pipe Decoration (2026-02-25)
+
+### Fixed
+- **Teleporter exit directions** — each pipe now has a fixed exit angle instead of preserving the ball's incoming velocity direction. Green pipe exits straight up toward the hole (`-π/2`), Red pipe exits left into the sand trap (`π`), Blue pipe exits down-right into a corner (`π/4`). Minimum exit speed of 1.5 ensures consistent behavior.
+
+### Added
+- **Bezier pipe decoration** — curved pipe visuals drawn between entry and exit points using a custom cubic Bezier approximation (20-segment `lineTo` path). Three layers per pipe: dark outline, colored fill, white highlight. Creates a tangled pipe aesthetic between the two separated areas.
+- **`exitAngle` property on `TeleporterDef`** — optional angle (radians) that overrides velocity preservation. When set, ball exits at the specified angle with preserved speed.
+
+### Fixed
+- **`bezierCurveTo` TypeError** — replaced unavailable `Phaser.GameObjects.Graphics.bezierCurveTo` with manual cubic Bezier curve approximation using `lineTo` segments.
+
 ## v0.0.2.153 - Hole 8: The Teleportation Tunnels (2026-02-25)
 
 ### Added
