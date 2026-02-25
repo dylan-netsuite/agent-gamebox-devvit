@@ -130,7 +130,7 @@ export class Obstacles {
     const body = this.scene.matter.add.rectangle(pos.x, pos.y, w, h, {
       isStatic: true,
       angle,
-      restitution: 0.85,
+      restitution: 1.1,
       friction: 0.05,
       label: 'block',
     });

@@ -15,10 +15,10 @@ Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-pow
 L-shaped course with a vertical corridor (x:120-280, y:250-750) bending 90 degrees right into a horizontal corridor (x:120-420, y:80-250). A licorice wall partially blocks the inner bend. A 45-degree chocolate block in the upper-left corner reflects the ball toward the cup. Aim at the block with ~75% power for a bank-shot approach. Introduces calculated bank shots and geometric physics.
 
 ### Hole 3: The Gumdrop Bumper Pinball (Par 3)
-Wide rectangular arena (x:80-420, y:60-740). Three gumdrop bumpers arranged in a semi-circle arc guard the cup at the top. Bumpers have restitution 1.5 (hyper-elastic) — hitting them sends the ball ricocheting away faster than it arrived, like pinball bumpers. Strategy: thread the microscopic gaps between bumpers with minimal power, or bank multi-angle shots around the perimeter walls. Full-power direct hits result in chaotic rebounds back to the tee. Teaches players that distinct obstacle textures signal different physics behaviors.
+Wide rectangular arena (x:80-420, y:60-740). Three gumdrop bumpers arranged in a semi-circle arc guard the cup at the top. Bumpers have restitution 1.8 (hyper-elastic) — hitting them sends the ball ricocheting away faster than it arrived, like pinball bumpers. Strategy: thread the microscopic gaps between bumpers with minimal power, or bank multi-angle shots around the perimeter walls. Full-power direct hits result in chaotic rebounds back to the tee. Teaches players that distinct obstacle textures signal different physics behaviors.
 
 ### Hole 4: The Graham Cracker Divide (Par 3)
-Branching-path layout (x:80-420, y:60-740) with a center divider island (x:120-310, y:150-620) creating two routes. The tee (x:100), needle channel (x:80-120, 40px design / ~22px effective physics gap), and cup (x:100) are all on the same vertical line — a perfect straight shot threads the needle for a hole-in-one, but with only ~3px clearance per side, any angular error clips the wall and bounces into the graham cracker sand trap. The right path is 110px wide (x:310-420) with two 45-degree chocolate block corner bumpers (70x30, same style as Hole 2) tucked into the top-right and bottom-right wall corners that ricochet the ball at 90 degrees, making it a safe two- or three-putt route. The center divider is a graham cracker sand trap — entering it dramatically increases friction air (0.15, 6x normal), stopping the ball dead.
+Branching-path layout (x:80-420, y:60-740) with a center divider island (x:110-310, y:150-620) creating two routes. The tee (x:95), needle channel (x:80-110, 30px design / ~12px effective physics gap), and cup (x:95) are all on the same vertical line — a perfect straight shot threads the needle for a hole-in-one, but with only ~6px clearance per side, any angular error clips the wall and bounces into the graham cracker sand trap. The right path is 110px wide (x:310-420) with two 45-degree chocolate block corner bumpers (70x30, same style as Hole 2) tucked into the top-right and bottom-right wall corners that ricochet the ball at 90 degrees, making it a safe two- or three-putt route. The center divider is a graham cracker sand trap — entering it dramatically increases friction air (0.15, 6x normal), stopping the ball dead.
 
 ## Play Modes
 
@@ -73,7 +73,7 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 
 | Property | Value |
 |----------|-------|
-| Restitution | 1.5 (hyper-elastic) |
+| Restitution | 1.8 (hyper-elastic) |
 | Shape | Circle, radius 22 design units |
 | Behavior | Static body, pinball-style bounce |
 | Visual | `gumdrop` texture with per-bumper color tinting |

@@ -131,16 +131,16 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 4: The Graham Cracker Divide ----
-  // Tee, needle channel, and cup all at x:100 — straight vertical line.
-  // Needle channel: x:80-120 (40px design, ~22px effective after 9px wall inset).
+  // Tee, needle channel, and cup all at x:95 — straight vertical line.
+  // Needle channel: x:80-110 (30px design, ~12px effective after 9px wall inset).
   // Right: wide safe path with 45° corner bumper blocks (Hole 2 style).
   // Center island is a graham cracker sand trap.
   {
     id: 4,
     name: 'The Graham Cracker Divide',
     par: 3,
-    tee: { x: 100, y: 700 },
-    cup: { x: 100, y: 110 },
+    tee: { x: 95, y: 700 },
+    cup: { x: 95, y: 110 },
     walls: [
       // Outer boundary
       [
@@ -150,13 +150,13 @@ export const HOLES: HoleDefinition[] = [
         { x: 80, y: 740 },
         { x: 80, y: 60 },
       ],
-      // Island — needle channel on left (x:80-120, 40px) and wide path on right (x:310-420)
+      // Island — needle channel on left (x:80-110, 30px) and wide path on right (x:310-420)
       [
-        { x: 120, y: 150 },
+        { x: 110, y: 150 },
         { x: 310, y: 150 },
         { x: 310, y: 620 },
-        { x: 120, y: 620 },
-        { x: 120, y: 150 },
+        { x: 110, y: 620 },
+        { x: 110, y: 150 },
       ],
     ],
     obstacles: [
@@ -184,7 +184,7 @@ export const HOLES: HoleDefinition[] = [
     ],
     frictionZones: [
       // Graham cracker sand trap covering the center island
-      { x: 122, y: 152, width: 186, height: 466 },
+      { x: 112, y: 152, width: 196, height: 466 },
     ],
   },
 ];

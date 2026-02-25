@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.2.86 - Hole 4 v4: 30px Needle + Bouncier Bumpers (2026-02-25)
+
+### Changed
+- **Needle channel narrowed to 30px** (x:80-110, ~12px effective physics gap). Tee and cup at x:95.
+- **All bumpers made bouncier**: BUMPER_RESTITUTION 1.3→1.5, GUMDROP_RESTITUTION 1.5→1.8, block restitution 0.85→1.1.
+
 ## v0.0.2.83 - Hole 4 v3: Tighter Needle + Hole 2-Style Corner Bumpers (2026-02-25)
 
 ### Changed
