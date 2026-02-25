@@ -131,14 +131,15 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 4: The Graham Cracker Divide ----
-  // Left: needle-thin channel (26px) aligned with cup for hole-in-one.
-  // Right: wide safe path with gumdrop bumpers at corners to redirect ball.
-  // Center island is a graham cracker sand trap that kills momentum.
+  // Tee, needle channel, and cup are all at x:93 — straight vertical line.
+  // Left: needle-thin channel (26px) for hole-in-one.
+  // Right: wide safe path with 45-degree corner bumper blocks to ricochet ball.
+  // Center island is a graham cracker sand trap.
   {
     id: 4,
     name: 'The Graham Cracker Divide',
     par: 3,
-    tee: { x: 250, y: 700 },
+    tee: { x: 93, y: 700 },
     cup: { x: 93, y: 110 },
     walls: [
       // Outer boundary
@@ -149,38 +150,41 @@ export const HOLES: HoleDefinition[] = [
         { x: 80, y: 740 },
         { x: 80, y: 60 },
       ],
-      // Center island — right edge of needle channel at x:106, right path starts x:300
-      // Top opens at y:150 so the needle connects to the cup zone
-      // Bottom opens at y:620 so both paths merge at the tee area
+      // Island — creates needle channel on left (x:80-106) and wide path on right (x:310-420)
+      // Opens at y:150 (top) and y:620 (bottom) so both paths merge
       [
         { x: 106, y: 150 },
-        { x: 300, y: 150 },
-        { x: 300, y: 620 },
+        { x: 310, y: 150 },
+        { x: 310, y: 620 },
         { x: 106, y: 620 },
         { x: 106, y: 150 },
       ],
     ],
     obstacles: [
-      // Corner bumper: top-right — redirects rightward shots toward the cup
+      // Corner bumper block: top-right — 45° angled wall that redirects
+      // upward-traveling ball leftward toward the cup
       {
-        type: 'gumdrop_bumper',
-        x: 365,
-        y: 195,
-        radius: 24,
-        color: 0xff69b4,
+        type: 'block',
+        x: 395,
+        y: 155,
+        width: 70,
+        height: 18,
+        angle: -0.785,
       },
-      // Corner bumper: bottom-right — guides entry into the right path
+      // Corner bumper block: bottom-right — 45° angled wall that redirects
+      // rightward-traveling ball upward into the right path
       {
-        type: 'gumdrop_bumper',
-        x: 365,
-        y: 575,
-        radius: 24,
-        color: 0x33cc33,
+        type: 'block',
+        x: 395,
+        y: 615,
+        width: 70,
+        height: 18,
+        angle: 0.785,
       },
     ],
     frictionZones: [
       // Graham cracker sand trap covering the center island
-      { x: 108, y: 152, width: 190, height: 466 },
+      { x: 108, y: 152, width: 200, height: 466 },
     ],
   },
 ];

@@ -1,11 +1,11 @@
 # Changelog
 
-## v0.0.2.74 - Hole 4 Redesign: Needle Channel + Corner Bumpers (2026-02-25)
+## v0.0.2.77 - Hole 4 Redesign v2: Straight-Line Needle + Angled Corner Bumpers (2026-02-25)
 
 ### Changed
-- **Hole 4 layout**: Cup moved to x:93 (aligned with narrow left channel) for a true hole-in-one opportunity. Narrow channel is 26px wide (~5px clearance per side with ball diameter 16px).
-- **Right path**: Widened to 120px with two gumdrop bumpers at corners (top-right pink, bottom-right green) to redirect shots safely toward the cup.
-- **Center island**: Adjusted to x:106-300, y:150-620 to create proper channel widths. Graham cracker sand trap still covers the island.
+- **Hole 4 tee moved to x:93** — now directly below the needle channel and cup, forming a perfect straight vertical line for hole-in-one shots.
+- **Corner bumpers**: Replaced circular gumdrop bumpers with 45-degree angled chocolate block walls (like Candystand mini golf). Ball ricochets off at 90 degrees when hit directly.
+- **Island adjusted to x:106-310** — right path is 110px wide with corner bumper blocks at top-right (x:395, y:155) and bottom-right (x:395, y:615).
 
 ## v0.0.2.70 - Power Boost, Hole Select Menu, Hole 4: Graham Cracker Divide (2026-02-25)
 
