@@ -191,8 +191,8 @@ export const HOLES: HoleDefinition[] = [
   // ---- HOLE 5: The Jawbreaker Wedge ----
   // Long straight fairway that funnels into a narrow ramp at the midpoint.
   // Ramp zone applies constant downward force (simulates uphill gravity).
-  // Ball must have ~75-85% power to crest; too much overshoots into back wall.
-  // Cup sits on a shallow plateau just past the ramp.
+  // Ball must have ~80% power to crest; too much overshoots into back wall.
+  // Cup sits on a raised plateau past the ramp.
   {
     id: 5,
     name: 'The Jawbreaker Wedge',
@@ -214,7 +214,7 @@ export const HOLES: HoleDefinition[] = [
       ],
     ],
     obstacles: [
-      // Ramp zone — constant downward force simulates uphill slope
+      // Ramp zone — gentle downward force simulates uphill slope
       {
         type: 'ramp',
         x: 190,
@@ -222,7 +222,7 @@ export const HOLES: HoleDefinition[] = [
         width: 120,
         height: 120,
         forceX: 0,
-        forceY: 15,
+        forceY: 3,
       },
     ],
   },

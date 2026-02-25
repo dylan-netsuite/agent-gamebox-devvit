@@ -12,6 +12,7 @@ export class TextureFactory {
     this.generateGumdrop(scene);
     this.generateGrahamCracker(scene);
     this.generateJawbreaker(scene);
+    this.generateRampPlateau(scene);
   }
 
   private static generateCandyCane(scene: Phaser.Scene): void {
@@ -434,37 +435,90 @@ export class TextureFactory {
   }
 
   private static generateJawbreaker(scene: Phaser.Scene): void {
+    const w = 128;
+    const h = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d')!;
+
+    // Vertical gradient: dark at bottom (base) → bright at top (crest)
+    const grad = ctx.createLinearGradient(0, h, 0, 0);
+    grad.addColorStop(0, '#1a3d20');
+    grad.addColorStop(0.3, '#2a6b3a');
+    grad.addColorStop(0.6, '#3a9a50');
+    grad.addColorStop(0.85, '#5cc070');
+    grad.addColorStop(1, '#80e090');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Horizontal contour lines suggesting elevation
+    ctx.globalAlpha = 0.2;
+    for (let y = 0; y < h; y += 16) {
+      const brightness = Math.floor(80 + (1 - y / h) * 120);
+      ctx.strokeStyle = `rgb(${brightness},${brightness + 40},${brightness})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+
+    // Side shadow edges for 3D depth
+    ctx.globalAlpha = 1;
+    const leftShadow = ctx.createLinearGradient(0, 0, w * 0.25, 0);
+    leftShadow.addColorStop(0, 'rgba(0,0,0,0.35)');
+    leftShadow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = leftShadow;
+    ctx.fillRect(0, 0, w * 0.25, h);
+
+    const rightShadow = ctx.createLinearGradient(w * 0.75, 0, w, 0);
+    rightShadow.addColorStop(0, 'rgba(0,0,0,0)');
+    rightShadow.addColorStop(1, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = rightShadow;
+    ctx.fillRect(w * 0.75, 0, w * 0.25, h);
+
+    // Noise grain for texture
+    for (let i = 0; i < 300; i++) {
+      const nx = Math.random() * w;
+      const ny = Math.random() * h;
+      ctx.globalAlpha = 0.06 + Math.random() * 0.08;
+      ctx.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#000000';
+      ctx.fillRect(nx, ny, 1, 1);
+    }
+
+    ctx.globalAlpha = 1;
+    scene.textures.addCanvas('jawbreaker', canvas);
+  }
+
+  static generateRampPlateau(scene: Phaser.Scene): void {
     const size = 128;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d')!;
 
-    const cx = size / 2;
-    const cy = size / 2;
-    const maxR = size / 2;
-    const rings = [
-      '#e03030', '#ff8c00', '#ffd700', '#32cd32',
-      '#00ced1', '#6a5acd', '#ff69b4', '#e03030',
-    ];
+    // Bright elevated green
+    ctx.fillStyle = '#5cc070';
+    ctx.fillRect(0, 0, size, size);
 
-    for (let i = 0; i < rings.length; i++) {
-      const r = maxR * (1 - i / rings.length);
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = rings[i]!;
-      ctx.fill();
+    // Subtle grass-like noise
+    const shades = ['#6ad080', '#50b868', '#70d890', '#48a858'];
+    for (let i = 0; i < 200; i++) {
+      const x = Math.random() * size;
+      const y = Math.random() * size;
+      const shade = shades[Math.floor(Math.random() * shades.length)]!;
+      ctx.globalAlpha = 0.2 + Math.random() * 0.2;
+      ctx.fillStyle = shade;
+      ctx.fillRect(x, y, 1 + Math.random() * 2, 2 + Math.random() * 3);
     }
 
-    const gloss = ctx.createRadialGradient(cx - maxR * 0.25, cy - maxR * 0.25, 0, cx, cy, maxR);
-    gloss.addColorStop(0, 'rgba(255,255,255,0.35)');
-    gloss.addColorStop(0.4, 'rgba(255,255,255,0.08)');
-    gloss.addColorStop(1, 'rgba(0,0,0,0.15)');
-    ctx.beginPath();
-    ctx.arc(cx, cy, maxR, 0, Math.PI * 2);
-    ctx.fillStyle = gloss;
-    ctx.fill();
+    // Edge highlight at top to suggest "crest"
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#a0f0b0';
+    ctx.fillRect(0, 0, size, 4);
 
-    scene.textures.addCanvas('jawbreaker', canvas);
+    ctx.globalAlpha = 1;
+    scene.textures.addCanvas('ramp-plateau', canvas);
   }
 }

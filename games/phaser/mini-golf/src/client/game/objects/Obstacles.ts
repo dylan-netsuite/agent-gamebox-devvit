@@ -239,28 +239,72 @@ export class Obstacles {
     const rect = new Phaser.Geom.Rectangle(tl.x, tl.y, w, h);
     this.zones.push({ type: 'ramp', rect, forceX, forceY });
 
+    // Ramp gradient texture (dark bottom → bright top)
     if (this.scene.textures.exists('jawbreaker')) {
       const tile = this.scene.add.tileSprite(tl.x + w / 2, tl.y + h / 2, w, h, 'jawbreaker');
       tile.setDepth(2);
-      tile.setAlpha(0.7);
       this.gameObjects.push(tile);
-    } else {
-      this.zoneGraphics.fillStyle(0x8b4513, 0.4);
-      this.zoneGraphics.fillRect(tl.x, tl.y, w, h);
     }
 
-    const chevronSpacing = scaleValue(this.scene, 30);
-    const chevronW = scaleValue(this.scene, 14);
-    const chevronH = scaleValue(this.scene, 8);
-    const centerX = tl.x + w / 2;
+    // Bottom edge: dark lip suggesting the base of the incline
+    const g = this.zoneGraphics;
+    g.fillStyle(0x0a1f10, 0.5);
+    g.fillRect(tl.x, tl.y + h - scaleValue(this.scene, 6), w, scaleValue(this.scene, 6));
 
-    for (let cy = tl.y + chevronSpacing; cy < tl.y + h; cy += chevronSpacing) {
-      this.zoneGraphics.lineStyle(scaleValue(this.scene, 2.5), 0xffffff, 0.5);
-      this.zoneGraphics.beginPath();
-      this.zoneGraphics.moveTo(centerX - chevronW, cy + chevronH);
-      this.zoneGraphics.lineTo(centerX, cy);
-      this.zoneGraphics.lineTo(centerX + chevronW, cy + chevronH);
-      this.zoneGraphics.strokePath();
+    // Top edge: bright highlight suggesting the crest
+    g.fillStyle(0xa0f0b0, 0.4);
+    g.fillRect(tl.x, tl.y, w, scaleValue(this.scene, 4));
+
+    // Bold upward-pointing chevrons — full width, candy-striped
+    const chevronSpacing = scaleValue(this.scene, 22);
+    const chevronW = w * 0.4;
+    const chevronH = scaleValue(this.scene, 10);
+    const centerX = tl.x + w / 2;
+    const lineW = scaleValue(this.scene, 3.5);
+
+    let rowIdx = 0;
+    for (let cy = tl.y + h - chevronSpacing * 0.5; cy > tl.y + chevronH; cy -= chevronSpacing) {
+      const alpha = 0.35 + (1 - (cy - tl.y) / h) * 0.45;
+      const color = rowIdx % 2 === 0 ? 0xffffff : 0xffd700;
+
+      g.lineStyle(lineW, color, alpha);
+      g.beginPath();
+      g.moveTo(centerX - chevronW, cy + chevronH);
+      g.lineTo(centerX, cy);
+      g.lineTo(centerX + chevronW, cy + chevronH);
+      g.strokePath();
+
+      rowIdx++;
+    }
+
+    // "UPHILL" label at center of ramp
+    const labelY = tl.y + h * 0.5;
+    const label = this.scene.add.text(centerX, labelY, '▲ HILL ▲', {
+      fontFamily: '"Arial Black", "Impact", sans-serif',
+      fontSize: `${Math.round(scaleValue(this.scene, 14))}px`,
+      color: '#ffffff',
+      stroke: '#1a3d20',
+      strokeThickness: 3,
+      align: 'center',
+    });
+    label.setOrigin(0.5);
+    label.setDepth(8);
+    label.setAlpha(0.7);
+    this.gameObjects.push(label);
+
+    // Plateau zone above the ramp (lighter elevated green)
+    if (this.scene.textures.exists('ramp-plateau')) {
+      const plateauTl = toScreen(this.scene, zone.x, zone.y - (zone.height * 2));
+      const plateauBr = toScreen(this.scene, zone.x + zone.width, zone.y);
+      const pw = plateauBr.x - plateauTl.x;
+      const ph = plateauBr.y - plateauTl.y;
+
+      const pTile = this.scene.add.tileSprite(
+        plateauTl.x + pw / 2, plateauTl.y + ph / 2, pw, ph, 'ramp-plateau'
+      );
+      pTile.setDepth(2);
+      pTile.setAlpha(0.6);
+      this.gameObjects.push(pTile);
     }
   }
 

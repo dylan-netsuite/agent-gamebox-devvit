@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.2.92 - Hole 5 v2: Ramp Physics Fix + Major Visual Polish (2026-02-25)
+
+### Fixed
+- **Ramp force reduced from 15 to 3** — was impossible to crest the hill. Now beatable at ~80% power.
+
+### Changed
+- **Ramp texture overhauled**: Replaced jawbreaker circles with a vertical gradient (dark base → bright crest) with horizontal contour lines, side shadow edges, and noise grain. Reads clearly as "uphill."
+- **New plateau texture**: Lighter elevated green with grass noise, rendered above the ramp zone to show raised ground.
+- **Bold chevrons**: Full-width alternating white/gold chevrons with progressive alpha (brighter toward crest). "▲ HILL ▲" label at ramp center.
+- **3D depth cues**: Dark bottom lip, bright top crest highlight, left/right shadow edges on ramp texture.
+
 ## v0.0.2.89 - Hole 5: The Jawbreaker Wedge (2026-02-25)
 
 ### Added
