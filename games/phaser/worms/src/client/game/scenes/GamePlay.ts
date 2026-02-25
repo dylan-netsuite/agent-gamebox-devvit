@@ -193,7 +193,8 @@ export class GamePlay extends Scene {
       onMoveLeft: () => {
         if (!this.canAct()) return;
         if (this.weaponSystem.currentState === 'idle') {
-          this.activeWorm?.moveLeft();
+          const w = this.activeWorm;
+          if (w?.isGrounded) w.moveLeft(); else w?.airMoveLeft();
           this.userPanning = false;
           this.broadcastMove();
         }
@@ -201,7 +202,8 @@ export class GamePlay extends Scene {
       onMoveRight: () => {
         if (!this.canAct()) return;
         if (this.weaponSystem.currentState === 'idle') {
-          this.activeWorm?.moveRight();
+          const w = this.activeWorm;
+          if (w?.isGrounded) w.moveRight(); else w?.airMoveRight();
           this.userPanning = false;
           this.broadcastMove();
         }
@@ -1183,11 +1185,19 @@ export class GamePlay extends Scene {
         }
       } else if (this.weaponSystem.currentState === 'idle') {
         if (this.cursors.left.isDown) {
-          worm.moveLeft();
+          if (worm.isGrounded) {
+            worm.moveLeft();
+          } else {
+            worm.airMoveLeft();
+          }
           this.userPanning = false;
           this.broadcastMove();
         } else if (this.cursors.right.isDown) {
-          worm.moveRight();
+          if (worm.isGrounded) {
+            worm.moveRight();
+          } else {
+            worm.airMoveRight();
+          }
           this.userPanning = false;
           this.broadcastMove();
         }

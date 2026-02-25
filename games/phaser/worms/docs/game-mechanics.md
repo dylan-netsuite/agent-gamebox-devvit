@@ -73,8 +73,8 @@ Fires a grappling hook in the aimed direction. When the hook hits terrain, it an
 
 | Input | Action |
 |-------|--------|
-| ← → | Move worm left/right |
-| W | Jump |
+| ← → | Move worm left/right (also works mid-air for air control) |
+| W | Jump (can hold ← → simultaneously for directional jumps) |
 | B | Backflip (higher jump, moves backward) |
 | P | Toggle parachute (while airborne) |
 | Click / Space | Start aiming / Fire |

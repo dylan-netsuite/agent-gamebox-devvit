@@ -1,5 +1,13 @@
 # Reddit Royale - Changelog
 
+## [2026-02-25] Air Control — Jump + Move (v0.0.15.1)
+
+**Workflow:** wf-1771991806
+
+Added air control so players can steer worms mid-jump using left/right arrows. Air movement is slightly slower than ground movement (1.5 vs 2 px/frame) with gradual acceleration and a speed cap. Works with both keyboard and touch controls.
+
+---
+
 ## [2026-02-25] Sniper Drift Intensity Increase (v0.0.12.61)
 
 **Workflow:** wf-1771990408

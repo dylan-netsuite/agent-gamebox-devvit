@@ -13,6 +13,7 @@ const JUMP_VELOCITY = -6;
 const BACKFLIP_VY = -8;
 const BACKFLIP_VX = 4;
 const FALL_DAMAGE_THRESHOLD = 60;
+const AIR_CONTROL_SPEED = 1.5;
 const FALL_DAMAGE_PER_PIXEL = 0.5;
 const PARACHUTE_MAX_FALL_SPEED = 1.0;
 const PARACHUTE_DRAG = 0.9;
@@ -123,6 +124,18 @@ export class Worm {
     if (!this.alive || !this.grounded) return;
     this.facingRight = true;
     this.tryMove(MOVE_SPEED);
+  }
+
+  airMoveLeft(): void {
+    if (!this.alive || this.grounded) return;
+    this.facingRight = false;
+    this.horizontalVelocity = Math.max(this.horizontalVelocity - AIR_CONTROL_SPEED * 0.3, -AIR_CONTROL_SPEED);
+  }
+
+  airMoveRight(): void {
+    if (!this.alive || this.grounded) return;
+    this.facingRight = true;
+    this.horizontalVelocity = Math.min(this.horizontalVelocity + AIR_CONTROL_SPEED * 0.3, AIR_CONTROL_SPEED);
   }
 
   jump(): void {
