@@ -90,7 +90,48 @@ export class GamePlay extends Scene {
     super('GamePlay');
   }
 
+  private resetState(): void {
+    this.stopTurnTimer();
+    this.tutorial?.destroy();
+
+    this.worms = [];
+    this.turnOrder = [];
+    this.turnOrderIndex = 0;
+    this.gameOver = false;
+    this.gameOverOverlay = null;
+    this.isAITurn = false;
+    this.isRemoteTurn = false;
+    this.aiController = null;
+    this.userPanning = false;
+    this.wasDragging = false;
+    this.ropeAttachTime = 0;
+    this.firingStartTime = 0;
+    this.turnStartClickConsumed = false;
+    this.tutorial = null;
+    this.mp = null;
+    this.onlinePlayers = [];
+    this.localTeamIndex = -1;
+    this.mpHandler = null;
+    this.pendingMoveThrottle = 0;
+    this.turnTimer = DEFAULT_TURN_DURATION;
+    this.turnTimerEvent = null;
+    this.numTeams = 2;
+    this.wormsPerTeam = 2;
+    this.teamCharacters = [];
+    this.aiTeams = [];
+    this.aiDifficulty = 'medium';
+    this.mapId = 'hills';
+    this.turnDuration = DEFAULT_TURN_DURATION;
+    this.uiContainers = new Set();
+    if (this.panReturnTimer) {
+      this.panReturnTimer.destroy();
+      this.panReturnTimer = null;
+    }
+  }
+
   create(data?: OnlineGameConfig) {
+    this.resetState();
+
     if (data?.numTeams) this.numTeams = data.numTeams;
     if (data?.wormsPerTeam) this.wormsPerTeam = data.wormsPerTeam;
     this.teamCharacters = data?.teamCharacters ?? [];
@@ -1332,8 +1373,14 @@ export class GamePlay extends Scene {
 
     this.projectileManager.update();
 
+    const aliveCountBefore = this.worms.filter((w) => w.alive).length;
     for (const w of this.worms) {
       w.update();
+    }
+    const aliveCountAfter = this.worms.filter((w) => w.alive).length;
+
+    if (aliveCountAfter < aliveCountBefore && !this.gameOver) {
+      this.checkWinCondition();
     }
 
     this.followActiveWorm();

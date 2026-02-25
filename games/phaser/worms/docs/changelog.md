@@ -1,5 +1,16 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.111] - 2026-02-25 — Fix Game-Over & Restart Bug (wf-1772061756)
+
+### Fixed
+- **Game-over screen never appearing**: Added a win condition check in the `update()` loop so worms dying outside the weapon resolution flow (e.g., falling off the map during movement) properly trigger game-over.
+- **Broken game initialization on restart**: Added `resetState()` method to `GamePlay.create()` that resets all instance state (`gameOver`, `worms`, `turnOrder`, timers, etc.) before each game. Phaser reuses Scene instances, so the previous game's stale state (dead worms still in the array, `gameOver` stuck at `true`) was corrupting new games.
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts` — Added `resetState()` method and per-frame `checkWinCondition()` when alive count changes.
+
+---
+
 ## [v0.0.12.107] - 2026-02-25 — Local Stats + Map Variety (wf-1772059886)
 
 ### Added
