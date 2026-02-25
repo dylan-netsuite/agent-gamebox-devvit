@@ -43,12 +43,12 @@ Fires a single hitscan ray — instant, no travel time. The ray detects direct w
 |-----------|-------|
 | Max range | 350px |
 | Drift start | 150px |
-| Wind multiplier | 5× |
-| Spread max | 0.8 |
+| Wind multiplier | 10× |
+| Spread max | 1.8 |
 
 - **Close range (< 150px)**: Perfectly accurate with no drift or spread, rewarding positioning
-- **Mid range (150-250px)**: Wind drift and spread begin; still usable with good aim
-- **Long range (250-350px)**: Significant accuracy degradation
+- **Mid range (150-250px)**: Heavy wind drift and spread kick in; much harder to land hits
+- **Long range (250-350px)**: Extreme accuracy degradation — effectively unreliable
 - **Beyond 350px**: Out of range entirely
 - **AI scoring**: +10 bonus for 100-250px, -30 penalty beyond 300px
 - **Aim indicator**: Laser-sight dots fade from full alpha to near-transparent past 150px

@@ -158,8 +158,8 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
     icon: '🎯',
     hitscanRange: 350,
     hitscanDriftStart: 150,
-    hitscanWindMul: 5,
-    hitscanSpreadMax: 0.8,
+    hitscanWindMul: 10,
+    hitscanSpreadMax: 1.8,
   },
   teleport: {
     id: 'teleport',

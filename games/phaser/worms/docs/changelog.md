@@ -1,5 +1,13 @@
 # Reddit Royale - Changelog
 
+## [2026-02-25] Sniper Drift Intensity Increase (v0.0.12.61)
+
+**Workflow:** wf-1771990408
+
+Doubled sniper wind multiplier (5 -> 10) and more than doubled spread max (0.8 -> 1.8). The sniper is now significantly less accurate past 150px, making long-range shots unreliable.
+
+---
+
 ## [2026-02-25] Sniper Range Reduction (v0.0.12.58)
 
 **Workflow:** wf-1771989548
