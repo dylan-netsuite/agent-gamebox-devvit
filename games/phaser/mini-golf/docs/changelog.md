@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.0.2.22 - Physics Tuning & Course Playability (2026-02-25)
+
+### Changed
+- Slowed power meter oscillation from 1.8 Hz to 0.9 Hz for easier timing
+- Reduced max shot velocity from 18 to 12 for more controllable shots
+- Increased air friction from 0.035 to 0.04 for slower ball roll
+
+### Fixed
+- **Hole 2**: Redesigned from closed polygons trapping tee/cup to open L-shaped corridor
+- **Hole 6**: Opened island walls and added bridge rails for water crossing
+- **Hole 10**: Removed unimplemented thrusting_barrier obstacles, replaced with bumpers; fixed out-of-bounds friction zones
+- **Hole 11**: Fixed ramp direction (was pushing ball away from cup, now pushes toward it)
+- **Hole 15**: Fixed ramp direction (was pushing ball away from cup, now assists descent)
+- **Hole 17**: Opened closed platforms and added bridge with rails through water zone
+
+### Workflow
+- Workflow ID: wf-1771986766
+
 ## v0.0.2 - Initial Release (2026-02-25)
 
 ### Added

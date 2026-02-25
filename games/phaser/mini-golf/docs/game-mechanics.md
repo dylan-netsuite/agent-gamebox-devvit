@@ -9,7 +9,7 @@
 
 ### Power Phase
 - Player clicks/taps and holds to start power meter
-- Power bar oscillates using sine wave at ~1.8 Hz
+- Power bar oscillates using sine wave at ~0.9 Hz (full cycle ~1.1s)
 - Arrow color shifts from blue (low power) to red (max power)
 
 ### Shot Execution
@@ -22,16 +22,18 @@
 | Property | Value |
 |----------|-------|
 | Radius | 8 (design units) |
-| Restitution | 0.7 |
-| Friction | 0.02 |
-| FrictionAir | 0.025 |
-| Stop threshold | 0.15 velocity |
+| Restitution | 0.6 |
+| Friction | 0.03 |
+| FrictionAir | 0.04 |
+| Stop threshold | 0.08 velocity |
+| Max shot velocity | 12 |
 
 ## Hole Capture
 
 Ball is captured when:
-- Ball center overlaps hole trigger area (12 unit radius)
-- Ball speed < 1.8 (capture velocity threshold)
+- Ball center within capture radius (20 design units) AND speed < 5.0
+- Swept-path detection checks interpolated positions to prevent tunneling past the hole
+- Attraction force gently pulls slow balls within 40 units toward the hole center
 
 Sink animation: ball scales to 0, particle burst, score text display.
 
@@ -57,25 +59,25 @@ Sink animation: ball scales to 0, particle burst, score text display.
 ## 18-Hole Course
 
 ### Front 6 (Fundamentals)
-1. The Vanilla Straightaway (Par 2)
-2. The Licorice Dogleg (Par 2)
-3. The Graham Cracker Divide (Par 3)
-4. The Gumdrop Bumper Pinball (Par 3)
-5. The Jawbreaker Wedge (Par 3)
-6. The Taffy River (Par 3)
+1. The Vanilla Straightaway (Par 2) - Simple straight channel
+2. The Licorice Dogleg (Par 3) - L-shaped corridor with bumper at turn
+3. The Graham Cracker Divide (Par 3) - Central dividers create left/right paths with sand trap
+4. The Gumdrop Bumper Pinball (Par 3) - Open rectangle with 3 bumpers
+5. The Jawbreaker Wedge (Par 3) - Hourglass-shaped channel with ramp
+6. The Taffy River (Par 3) - Two island platforms connected by narrow bridge over water
 
 ### Middle 6 (Challenge)
-7. The Wafer Windmill (Par 3)
-8. The Teleportation Tunnels (Par 3)
-9. The Ice Cream Glide (Par 4)
-10. The Sour Tongues (Par 4)
-11. The Loop-de-Loop (Par 3)
-12. The Conveyor Belt Matrix (Par 4)
+7. The Wafer Windmill (Par 3) - Straight channel with rotating windmill blades
+8. The Teleportation Tunnels (Par 3) - Two boxes connected by 3 colored teleporters
+9. The Ice Cream Glide (Par 4) - Wide zig-zag maze entirely covered in ice
+10. The Sour Tongues (Par 3) - Narrow channel with alternating bumpers and sand
+11. The Loop-de-Loop (Par 3) - Straight channel with upward ramp boost and water edges
+12. The Conveyor Belt Matrix (Par 4) - Open area with 4 directional conveyor belts
 
 ### Back 6 (Mastery)
-13. The Flavour Grabber (Par 4)
-14. Gravity Wells (Par 4)
-15. The Cascading Plinko (Par 4)
-16. The Invisible Maze (Par 4)
-17. The Moving Islands (Par 5)
-18. The Skull of Doom (Par 3)
+13. The Flavour Grabber (Par 4) - Central arena surrounded by water moats
+14. Gravity Wells (Par 4) - Open field with gravity well obstacles
+15. The Cascading Plinko (Par 4) - Top-to-bottom plinko board with pegs and downward ramp
+16. The Invisible Maze (Par 4) - Open area with hidden internal wall segments
+17. The Moving Islands (Par 4) - Two platforms connected by narrow bridge through water
+18. The Skull of Doom (Par 3) - Narrow bridge into arena with windmill and flanking water

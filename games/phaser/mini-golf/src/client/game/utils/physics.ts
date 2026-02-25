@@ -3,15 +3,15 @@ import * as Phaser from 'phaser';
 export const BALL_RADIUS = 8;
 export const BALL_RESTITUTION = 0.6;
 export const BALL_FRICTION = 0.03;
-export const BALL_FRICTION_AIR = 0.035;
+export const BALL_FRICTION_AIR = 0.04;
 export const BALL_FRICTION_STATIC = 0.1;
 export const BALL_DENSITY = 0.002;
 
 export const WALL_RESTITUTION = 0.6;
 
-export const MAX_SHOT_VELOCITY = 18;
+export const MAX_SHOT_VELOCITY = 12;
 export const WALL_THICKNESS = 14;
-export const POWER_OSCILLATION_HZ = 1.8;
+export const POWER_OSCILLATION_HZ = 0.9;
 export const CAPTURE_VELOCITY_THRESHOLD = 5.0;
 export const CAPTURE_RADIUS = 20;
 export const ATTRACTION_RADIUS = 40;
