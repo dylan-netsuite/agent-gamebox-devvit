@@ -1,5 +1,13 @@
 # Reddit Royale - Changelog
 
+## [2026-02-25] Left-Side Vertical HUD (v0.0.15.5)
+
+**Workflow:** wf-1771992356
+
+Moved the entire HUD from the bottom of the screen to a vertical panel pinned to the left edge. Weapon slots are now in a 3×3 grid instead of a horizontal row. Power bar, wind indicator, turn state, and timer are stacked vertically below the weapon grid. The toggle collapses/expands horizontally. Touch controls repositioned lower since the bottom viewport is now free. This frees up valuable bottom screen real estate for gameplay visibility.
+
+---
+
 ## [2026-02-25] Air Control — Jump + Move (v0.0.15.1)
 
 **Workflow:** wf-1771991806

@@ -42,7 +42,7 @@ export class TouchControls {
   private buildDPad(): void {
     const cam = this.scene.cameras.main;
     const baseX = 16;
-    const baseY = cam.height - 90;
+    const baseY = cam.height - 60;
 
     this.makeButton(baseX, baseY, '←', () => {
       this.moveLeftInterval = setInterval(() => this.callbacks.onMoveLeft(), 50);
@@ -76,7 +76,7 @@ export class TouchControls {
   private buildActionButtons(): void {
     const cam = this.scene.cameras.main;
     const rightX = cam.width - BTN_SIZE - 16;
-    const baseY = cam.height - 90;
+    const baseY = cam.height - 60;
 
     this.makeButton(rightX, baseY, '🎯', () => this.callbacks.onAimFire(), undefined, FIRE_COLOR);
 

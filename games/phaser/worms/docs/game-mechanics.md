@@ -159,6 +159,13 @@ Worms are placed on the terrain floor via `getSurfaceY()`, which scans downward 
 
 ## UI Overlays
 
+### Left-Side HUD Panel
+- Pinned to the left edge, vertically centered
+- Structure (top to bottom): turn state/weapon info → 3×3 weapon grid → power bar → wind indicator
+- Collapsible: click the toggle strip (◀/▶) to slide panel in/out
+- Weapon tooltips appear to the right of hovered slots
+- Frees up the entire bottom of the viewport for gameplay
+
 ### Team Health Panel
 - Top-left corner, always visible
 - Shows per-team aggregate HP with colored bars and numeric totals
@@ -166,9 +173,9 @@ Worms are placed on the terrain floor via `getSurfaceY()`, which scans downward 
 - HP bars color-coded (green/yellow/red) matching individual worm bars
 
 ### Weapon Tooltip
-- Appears when hovering over any weapon slot in the HUD
+- Appears when hovering over any weapon slot in the left HUD panel
 - Shows weapon name+icon, damage, blast radius, and description
-- Disappears when mouse leaves the weapon row
+- Disappears when mouse leaves the weapon grid
 
 ### Minimap
 - Top-right corner, 150×75px
