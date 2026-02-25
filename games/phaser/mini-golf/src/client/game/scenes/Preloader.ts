@@ -8,15 +8,14 @@ export class Preloader extends Scene {
   create() {
     const { width, height } = this.scale;
 
-    this.cameras.main.setBackgroundColor(0x1a472a);
+    this.cameras.main.setBackgroundColor(0x14381f);
 
-    const g = this.add.graphics();
-    g.fillGradientStyle(0x1a472a, 0x1a472a, 0x0d3320, 0x0d3320, 1, 1, 1, 1);
-    g.fillRect(0, 0, width, height);
+    const bg = this.add.tileSprite(width / 2, height / 2, width, height, 'grass-bg');
+    bg.setDepth(0);
 
-    const glow = this.add.graphics();
-    glow.fillStyle(0xff69b4, 0.08);
-    glow.fillEllipse(width / 2, height * 0.4, width * 0.6, height * 0.3);
+    const vig = this.add.image(width / 2, height / 2, 'vignette');
+    vig.setDisplaySize(width, height);
+    vig.setDepth(1);
 
     const titleY = height / 2 - 40;
     const title = this.add
@@ -29,7 +28,8 @@ export class Preloader extends Scene {
         shadow: { offsetX: 0, offsetY: 0, color: '#ff1493', blur: 20, fill: false, stroke: true },
       })
       .setOrigin(0.5)
-      .setAlpha(0);
+      .setAlpha(0)
+      .setDepth(2);
 
     this.tweens.add({
       targets: title,
@@ -48,8 +48,10 @@ export class Preloader extends Scene {
     const barBg = this.add.graphics();
     barBg.fillStyle(0x0d3320, 1);
     barBg.fillRoundedRect(barX, barY, barW, barH, 3);
+    barBg.setDepth(2);
 
     const barFill = this.add.graphics();
+    barFill.setDepth(2);
     const fillProgress = { value: 0 };
 
     this.tweens.add({

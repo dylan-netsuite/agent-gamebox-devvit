@@ -17,7 +17,7 @@ export class MainMenu extends Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor(0x1a472a);
+    this.cameras.main.setBackgroundColor(0x14381f);
     fadeIn(this, SCENE_COLORS.dark);
     this.allObjects = [];
     this.elapsed = 0;
@@ -47,61 +47,66 @@ export class MainMenu extends Scene {
     const sf = this.sf;
 
     this.drawBackground(width, height);
-    this.drawCandyPieces(width, height);
-    this.drawVignette(width, height);
+    this.drawDecorations(width, height);
     this.drawTitle(cx, height, sf);
     this.drawButtons(cx, width, height, sf);
   }
 
   private drawBackground(w: number, h: number): void {
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1a472a, 0x1a472a, 0x0d3320, 0x0d3320, 1, 1, 1, 1);
-    bg.fillRect(0, 0, w, h);
-
-    bg.fillStyle(0xff69b4, 0.05);
-    bg.fillEllipse(w * 0.5, h * 0.25, w * 0.8, h * 0.5);
-    bg.fillStyle(0xffd700, 0.03);
-    bg.fillEllipse(w * 0.3, h * 0.7, w * 0.5, h * 0.35);
-
+    const bg = this.add.tileSprite(w / 2, h / 2, w, h, 'grass-bg');
+    bg.setDepth(0);
     this.allObjects.push(bg);
+
+    const vig = this.add.image(w / 2, h / 2, 'vignette');
+    vig.setDisplaySize(w, h);
+    vig.setDepth(1);
+    this.allObjects.push(vig);
   }
 
-  private drawCandyPieces(w: number, h: number): void {
-    const colors = [0xff69b4, 0xffd700, 0x32cd32, 0x00ced1, 0xff6347, 0x9370db];
-    const positions = [
-      { x: 0.08, y: 0.1 },
-      { x: 0.85, y: 0.08 },
-      { x: 0.92, y: 0.4 },
-      { x: 0.05, y: 0.6 },
-      { x: 0.88, y: 0.7 },
-      { x: 0.15, y: 0.85 },
-      { x: 0.7, y: 0.9 },
-      { x: 0.4, y: 0.05 },
+  private drawDecorations(w: number, h: number): void {
+    const swirlPositions = [
+      { x: 0.08, y: 0.12 },
+      { x: 0.92, y: 0.15 },
+      { x: 0.05, y: 0.65 },
+      { x: 0.88, y: 0.72 },
+      { x: 0.4, y: 0.06 },
     ];
 
-    for (let i = 0; i < positions.length; i++) {
-      const p = positions[i]!;
-      const color = colors[i % colors.length]!;
-      const g = this.add.graphics();
-      g.fillStyle(color, 0.15 + Math.random() * 0.1);
-      const r = 8 + Math.random() * 12;
-      g.fillCircle(p.x * w, p.y * h, r);
-      this.allObjects.push(g);
+    for (const pos of swirlPositions) {
+      const img = this.add.image(pos.x * w, pos.y * h, 'candy-cane-corner');
+      const scale = (18 + Math.random() * 14) / img.width;
+      img.setScale(scale);
+      img.setDepth(2);
+      img.setAlpha(0.5 + Math.random() * 0.3);
+      this.allObjects.push(img);
     }
-  }
 
-  private drawVignette(w: number, h: number): void {
-    const edgeSize = Math.max(w, h) * 0.4;
+    const sparklePositions = [
+      { x: 0.85, y: 0.08 },
+      { x: 0.15, y: 0.85 },
+      { x: 0.7, y: 0.9 },
+      { x: 0.92, y: 0.4 },
+    ];
 
-    const top = this.add.graphics();
-    top.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.35, 0.35, 0, 0);
-    top.fillRect(0, 0, w, edgeSize);
-    this.allObjects.push(top);
+    for (const pos of sparklePositions) {
+      const sp = this.add.image(pos.x * w, pos.y * h, 'sparkle');
+      sp.setDepth(2);
+      sp.setScale(0.3 + Math.random() * 0.3);
+      sp.setAlpha(0);
+      this.allObjects.push(sp);
 
-    const bottom = this.add.graphics();
-    bottom.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0, 0, 0.4, 0.4);
-    bottom.fillRect(0, h - edgeSize, w, edgeSize);
-    this.allObjects.push(bottom);
+      this.tweens.add({
+        targets: sp,
+        alpha: { from: 0, to: 0.5 + Math.random() * 0.4 },
+        scaleX: { from: sp.scaleX * 0.5, to: sp.scaleX },
+        scaleY: { from: sp.scaleY * 0.5, to: sp.scaleY },
+        duration: 1500 + Math.random() * 1500,
+        yoyo: true,
+        repeat: -1,
+        delay: Math.random() * 2000,
+        ease: 'Sine.easeInOut',
+      });
+    }
   }
 
   private updateTitleFloat(): void {
@@ -122,6 +127,7 @@ export class MainMenu extends Scene {
     const glow = this.add.graphics();
     glow.fillStyle(0xff69b4, 0.25);
     glow.fillEllipse(cx, titleY, 320 * sf, 90 * sf);
+    glow.setDepth(3);
     this.titleGlow = glow;
     this.allObjects.push(glow);
 
@@ -142,7 +148,8 @@ export class MainMenu extends Scene {
           stroke: true,
         },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(4);
     title.setData('baseY', titleY);
     this.titleText = title;
     this.allObjects.push(title);
@@ -156,7 +163,8 @@ export class MainMenu extends Scene {
         align: 'center',
       })
       .setOrigin(0.5)
-      .setAlpha(0);
+      .setAlpha(0)
+      .setDepth(4);
     this.allObjects.push(subtitle);
 
     this.tweens.add({
@@ -187,6 +195,7 @@ export class MainMenu extends Scene {
 
       const container = this.add.container(cx, y + btnH / 2);
       container.setAlpha(0);
+      container.setDepth(10);
       this.allObjects.push(container);
 
       const cardBg = this.add.graphics();

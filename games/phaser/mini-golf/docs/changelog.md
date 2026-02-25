@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.0.2.47 - Menu & Scene Texture Upgrade (2026-02-25)
+
+### Changed
+- **MainMenu**: Replaced procedural gradient background + colored circle decorations with `grass-bg` TileSprite, `vignette` Image overlay, `candy-cane-corner` peppermint swirl sprites, and `sparkle` tween-animated sprites
+- **Preloader**: Replaced gradient background with `grass-bg` TileSprite + `vignette` Image
+- **HoleComplete**: Replaced gradient background with `grass-bg` TileSprite + `vignette` Image
+- **Scorecard**: Replaced gradient background with `grass-bg` TileSprite + `vignette` Image
+- All scenes now share a consistent visual theme using the TextureFactory texture system
+
 ## v0.0.2.43 - Texture-Based Visual Overhaul (2026-02-25)
 
 ### Changed

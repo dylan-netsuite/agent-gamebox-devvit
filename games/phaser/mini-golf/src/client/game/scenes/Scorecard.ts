@@ -18,11 +18,14 @@ export class Scorecard extends Scene {
     const { width, height } = this.scale;
     const cx = width / 2;
 
-    this.cameras.main.setBackgroundColor(0x1a472a);
+    this.cameras.main.setBackgroundColor(0x14381f);
 
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1a472a, 0x1a472a, 0x0d3320, 0x0d3320, 1, 1, 1, 1);
-    bg.fillRect(0, 0, width, height);
+    const bg = this.add.tileSprite(width / 2, height / 2, width, height, 'grass-bg');
+    bg.setDepth(0);
+
+    const vig = this.add.image(width / 2, height / 2, 'vignette');
+    vig.setDisplaySize(width, height);
+    vig.setDepth(1);
 
     this.add
       .text(cx, 30, 'SCORECARD', {
@@ -30,7 +33,8 @@ export class Scorecard extends Scene {
         fontSize: '24px',
         color: '#ff69b4',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(2);
 
     this.add
       .text(cx, 55, 'Sugar Rush Retro Invitational', {
@@ -39,7 +43,8 @@ export class Scorecard extends Scene {
         color: '#8fbfa0',
         fontStyle: 'italic',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(2);
 
     const startY = 80;
     const rowH = 22;
@@ -51,28 +56,32 @@ export class Scorecard extends Scene {
         fontSize: '11px',
         color: '#ffd700',
       })
-      .setOrigin(0, 0.5);
+      .setOrigin(0, 0.5)
+      .setDepth(2);
     this.add
       .text(colX[1]!, startY, 'PAR', {
         fontFamily: '"Arial Black", sans-serif',
         fontSize: '11px',
         color: '#ffd700',
       })
-      .setOrigin(0.5, 0.5);
+      .setOrigin(0.5, 0.5)
+      .setDepth(2);
     this.add
       .text(colX[2]!, startY, 'SCORE', {
         fontFamily: '"Arial Black", sans-serif',
         fontSize: '11px',
         color: '#ffd700',
       })
-      .setOrigin(0.5, 0.5);
+      .setOrigin(0.5, 0.5)
+      .setDepth(2);
     this.add
       .text(colX[3]!, startY, '+/-', {
         fontFamily: '"Arial Black", sans-serif',
         fontSize: '11px',
         color: '#ffd700',
       })
-      .setOrigin(0.5, 0.5);
+      .setOrigin(0.5, 0.5)
+      .setDepth(2);
 
     let totalStrokes = 0;
     let totalPar = 0;
@@ -87,6 +96,7 @@ export class Scorecard extends Scene {
         const rowBg = this.add.graphics();
         rowBg.fillStyle(0xffffff, 0.03);
         rowBg.fillRect(colX[0]! - 10, y - rowH / 2, 300, rowH);
+        rowBg.setDepth(2);
       }
 
       this.add
@@ -95,7 +105,8 @@ export class Scorecard extends Scene {
           fontSize: '10px',
           color: '#cccccc',
         })
-        .setOrigin(0, 0.5);
+        .setOrigin(0, 0.5)
+        .setDepth(2);
 
       this.add
         .text(colX[1]!, y, `${hole.par}`, {
@@ -103,7 +114,8 @@ export class Scorecard extends Scene {
           fontSize: '11px',
           color: '#aaaaaa',
         })
-        .setOrigin(0.5, 0.5);
+        .setOrigin(0.5, 0.5)
+        .setDepth(2);
 
       if (hasScore) {
         totalStrokes += score;
@@ -122,7 +134,8 @@ export class Scorecard extends Scene {
             fontSize: '11px',
             color: scoreColor,
           })
-          .setOrigin(0.5, 0.5);
+          .setOrigin(0.5, 0.5)
+          .setDepth(2);
 
         const diffStr = diff === 0 ? 'E' : diff > 0 ? `+${diff}` : `${diff}`;
         this.add
@@ -131,7 +144,8 @@ export class Scorecard extends Scene {
             fontSize: '11px',
             color: scoreColor,
           })
-          .setOrigin(0.5, 0.5);
+          .setOrigin(0.5, 0.5)
+          .setDepth(2);
       } else {
         this.add
           .text(colX[2]!, y, '-', {
@@ -139,7 +153,8 @@ export class Scorecard extends Scene {
             fontSize: '11px',
             color: '#555555',
           })
-          .setOrigin(0.5, 0.5);
+          .setOrigin(0.5, 0.5)
+          .setDepth(2);
       }
     }
 
@@ -147,6 +162,7 @@ export class Scorecard extends Scene {
     const totalBg = this.add.graphics();
     totalBg.fillStyle(0xff69b4, 0.15);
     totalBg.fillRoundedRect(colX[0]! - 10, totalY - 14, 300, 28, 6);
+    totalBg.setDepth(2);
 
     if (this.scores.length > 0) {
       const totalDiff = totalStrokes - totalPar;
@@ -159,7 +175,8 @@ export class Scorecard extends Scene {
           fontSize: '12px',
           color: '#ff69b4',
         })
-        .setOrigin(0, 0.5);
+        .setOrigin(0, 0.5)
+        .setDepth(2);
 
       this.add
         .text(colX[1]!, totalY, `${totalPar}`, {
@@ -167,7 +184,8 @@ export class Scorecard extends Scene {
           fontSize: '12px',
           color: '#aaaaaa',
         })
-        .setOrigin(0.5, 0.5);
+        .setOrigin(0.5, 0.5)
+        .setDepth(2);
 
       this.add
         .text(colX[2]!, totalY, `${totalStrokes}`, {
@@ -175,7 +193,8 @@ export class Scorecard extends Scene {
           fontSize: '12px',
           color: '#ffffff',
         })
-        .setOrigin(0.5, 0.5);
+        .setOrigin(0.5, 0.5)
+        .setDepth(2);
 
       this.add
         .text(colX[3]!, totalY, totalLabel, {
@@ -183,16 +202,17 @@ export class Scorecard extends Scene {
           fontSize: '12px',
           color: totalDiff <= 0 ? '#32cd32' : '#ff4444',
         })
-        .setOrigin(0.5, 0.5);
+        .setOrigin(0.5, 0.5)
+        .setDepth(2);
     }
 
-    // Submit score if completed
     if (this.scores.length === HOLES.length) {
       void this.submitScore(totalStrokes, totalPar);
     }
 
     const btnY = Math.min(totalY + 50, height - 50);
     const btnContainer = this.add.container(cx, btnY);
+    btnContainer.setDepth(10);
 
     const btnBg = this.add.graphics();
     btnBg.fillStyle(0xff69b4, 1);

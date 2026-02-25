@@ -24,11 +24,14 @@ export class HoleComplete extends Scene {
     const { width, height } = this.scale;
     const cx = width / 2;
 
-    this.cameras.main.setBackgroundColor(0x1a472a);
+    this.cameras.main.setBackgroundColor(0x14381f);
 
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1a472a, 0x1a472a, 0x0d3320, 0x0d3320, 1, 1, 1, 1);
-    bg.fillRect(0, 0, width, height);
+    const bg = this.add.tileSprite(width / 2, height / 2, width, height, 'grass-bg');
+    bg.setDepth(0);
+
+    const vig = this.add.image(width / 2, height / 2, 'vignette');
+    vig.setDisplaySize(width, height);
+    vig.setDepth(1);
 
     const holeDef = HOLES[this.holeIndex]!;
     const diff = this.strokes - this.par;
@@ -39,7 +42,8 @@ export class HoleComplete extends Scene {
         fontSize: '20px',
         color: '#ff69b4',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(2);
 
     this.add
       .text(cx, height * 0.22, holeDef.name, {
@@ -48,7 +52,8 @@ export class HoleComplete extends Scene {
         color: '#8fbfa0',
         fontStyle: 'italic',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(2);
 
     let scoreColor: string;
     let scoreLabel: string;
@@ -82,7 +87,8 @@ export class HoleComplete extends Scene {
       })
       .setOrigin(0.5)
       .setAlpha(0)
-      .setScale(0.5);
+      .setScale(0.5)
+      .setDepth(2);
 
     this.tweens.add({
       targets: scoreText,
@@ -99,7 +105,8 @@ export class HoleComplete extends Scene {
         fontSize: '16px',
         color: '#cccccc',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(2);
 
     const totalStrokes = this.scores.reduce((a, b) => a + b, 0);
     const totalPar = this.scores.reduce((sum, _s, idx) => sum + HOLES[idx]!.par, 0);
@@ -112,7 +119,8 @@ export class HoleComplete extends Scene {
         fontSize: '14px',
         color: '#8fbfa0',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(2);
 
     const isLastHole = this.holeIndex >= HOLES.length - 1;
     const btnLabel = isLastHole ? 'VIEW SCORECARD' : 'NEXT HOLE';
@@ -121,6 +129,7 @@ export class HoleComplete extends Scene {
     const btnH = 48;
 
     const btnContainer = this.add.container(cx, btnY);
+    btnContainer.setDepth(10);
 
     const btnBg = this.add.graphics();
     btnBg.fillStyle(0xff69b4, 1);
