@@ -226,4 +226,50 @@ export const HOLES: HoleDefinition[] = [
       },
     ],
   },
+
+  // ---- HOLE 6: The Taffy River ----
+  // Two isolated islands connected by a narrow moving bridge.
+  // The taffy river between them is a fatal water hazard — ball sinks, +1 penalty, reset.
+  // Bridge oscillates vertically, requiring timing and patience.
+  {
+    id: 6,
+    name: 'The Taffy River',
+    par: 3,
+    tee: { x: 250, y: 680 },
+    cup: { x: 250, y: 140 },
+    walls: [
+      // Bottom island (tee side)
+      [
+        { x: 120, y: 740 },
+        { x: 380, y: 740 },
+        { x: 380, y: 520 },
+        { x: 120, y: 520 },
+        { x: 120, y: 740 },
+      ],
+      // Top island (cup side)
+      [
+        { x: 120, y: 280 },
+        { x: 380, y: 280 },
+        { x: 380, y: 60 },
+        { x: 120, y: 60 },
+        { x: 120, y: 280 },
+      ],
+    ],
+    obstacles: [
+      // Moving bridge — kinematic body oscillating between the two islands
+      {
+        type: 'moving_bridge',
+        x: 210,
+        y: 500,
+        width: 80,
+        height: 20,
+        targetY: 300,
+        speed: 0.8,
+      },
+    ],
+    waterZones: [
+      // Taffy river — the entire gap between the two islands
+      { x: 120, y: 280, width: 260, height: 240, color: 0xff69b4 },
+    ],
+  },
 ];

@@ -82,11 +82,25 @@ interface WindmillData {
   currentAngle: number;
 }
 
+interface MovingBridgeData {
+  body: MatterJS.BodyType;
+  graphics: Phaser.GameObjects.Graphics;
+  startY: number;
+  endY: number;
+  width: number;
+  height: number;
+  cx: number;
+  speed: number;
+  progress: number;
+  direction: 1 | -1;
+}
+
 export class Obstacles {
   scene: Phaser.Scene;
   private zones: ActiveZone[] = [];
   private teleporters: ActiveTeleporter[] = [];
   private windmills: WindmillData[] = [];
+  private bridges: MovingBridgeData[] = [];
   private bodies: MatterJS.BodyType[] = [];
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
@@ -228,6 +242,13 @@ export class Obstacles {
         }
       }
     }
+
+    if (type === 'water' && this.scene.textures.exists('taffy')) {
+      const tile = this.scene.add.tileSprite(tl.x + w / 2, tl.y + h / 2, w, h, 'taffy');
+      tile.setDepth(2);
+      tile.setAlpha(0.85);
+      this.gameObjects.push(tile);
+    }
   }
 
   addRampZone(zone: ZoneDef, forceX: number, forceY: number): void {
@@ -362,6 +383,94 @@ export class Obstacles {
     this.windmillGraphics.push(g);
   }
 
+  addMovingBridge(def: ObstacleDef): void {
+    const startPos = toScreen(this.scene, def.x + (def.width ?? 80) / 2, def.y);
+    const endPos = toScreen(this.scene, def.x + (def.width ?? 80) / 2, def.targetY ?? def.y);
+    const w = scaleValue(this.scene, def.width ?? 80);
+    const h = scaleValue(this.scene, def.height ?? 20);
+
+    const body = this.scene.matter.add.rectangle(startPos.x, startPos.y, w, h, {
+      isStatic: true,
+      restitution: 0.3,
+      friction: 0.8,
+      label: 'moving_bridge',
+    });
+    this.bodies.push(body);
+
+    const g = this.scene.add.graphics();
+    g.setDepth(7);
+
+    this.bridges.push({
+      body,
+      graphics: g,
+      startY: startPos.y,
+      endY: endPos.y,
+      width: w,
+      height: h,
+      cx: startPos.x,
+      speed: def.speed ?? 0.8,
+      progress: 0,
+      direction: -1,
+    });
+  }
+
+  updateBridges(delta: number): void {
+    for (const bridge of this.bridges) {
+      bridge.progress += (bridge.speed * bridge.direction * delta) / 1000;
+
+      if (bridge.progress >= 1) {
+        bridge.progress = 1;
+        bridge.direction = -1;
+      } else if (bridge.progress <= 0) {
+        bridge.progress = 0;
+        bridge.direction = 1;
+      }
+
+      const t = bridge.progress;
+      const eased = t * t * (3 - 2 * t);
+      const cy = bridge.startY + (bridge.endY - bridge.startY) * eased;
+
+      this.scene.matter.body.setPosition(bridge.body, { x: bridge.cx, y: cy });
+
+      const g = bridge.graphics;
+      g.clear();
+
+      const halfW = bridge.width / 2;
+      const halfH = bridge.height / 2;
+      const x = bridge.cx - halfW;
+      const y = cy - halfH;
+
+      // Bridge planks
+      g.fillStyle(0xd2691e, 1);
+      g.fillRect(x, y, bridge.width, bridge.height);
+
+      // Plank lines
+      const plankCount = 5;
+      const plankW = bridge.width / plankCount;
+      g.lineStyle(1, 0x8b4513, 0.6);
+      for (let i = 1; i < plankCount; i++) {
+        g.beginPath();
+        g.moveTo(x + i * plankW, y);
+        g.lineTo(x + i * plankW, y + bridge.height);
+        g.strokePath();
+      }
+
+      // Top highlight
+      g.fillStyle(0xdeb887, 0.4);
+      g.fillRect(x, y, bridge.width, halfH * 0.4);
+
+      // Bottom shadow
+      g.fillStyle(0x000000, 0.15);
+      g.fillRect(x, y + bridge.height - halfH * 0.3, bridge.width, halfH * 0.3);
+
+      // Side rails
+      const railH = scaleValue(this.scene, 3);
+      g.fillStyle(0xa0522d, 1);
+      g.fillRect(x, y - railH, bridge.width, railH);
+      g.fillRect(x, y + bridge.height, bridge.width, railH);
+    }
+  }
+
   updateWindmills(delta: number): void {
     for (const wm of this.windmills) {
       wm.currentAngle += (wm.speed * delta) / 1000;
@@ -471,6 +580,7 @@ export class Obstacles {
 
   update(delta: number, ball: GolfBall): { inWater: boolean; teleported: boolean } {
     this.updateWindmills(delta);
+    this.updateBridges(delta);
     const { inWater } = this.applyZoneEffects(ball);
     const teleported = this.checkTeleporters(ball);
     return { inWater, teleported };
@@ -484,6 +594,10 @@ export class Obstacles {
     this.zones = [];
     this.teleporters = [];
     this.windmills = [];
+    for (const b of this.bridges) {
+      b.graphics.destroy();
+    }
+    this.bridges = [];
     for (const obj of this.gameObjects) {
       obj.destroy();
     }

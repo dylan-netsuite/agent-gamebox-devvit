@@ -6,7 +6,7 @@ All hole coordinates are defined in a 500x800 portrait design space, optimized f
 
 ## Course Structure
 
-Currently 5 holes. Holes are added iteratively with high visual and gameplay quality.
+Currently 6 holes. Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
 Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
@@ -21,7 +21,10 @@ Wide rectangular arena (x:80-420, y:60-740). Three gumdrop bumpers arranged in a
 Branching-path layout (x:80-420, y:60-740) with a center divider island (x:110-310, y:150-620) creating two routes. The tee (x:95), needle channel (x:80-110, 30px design / ~12px effective physics gap), and cup (x:95) are all on the same vertical line — a perfect straight shot threads the needle for a hole-in-one, but with only ~6px clearance per side, any angular error clips the wall and bounces into the graham cracker sand trap. The right path is 110px wide (x:310-420) with two 45-degree chocolate block corner bumpers (70x30, same style as Hole 2) tucked into the top-right and bottom-right wall corners that ricochet the ball at 90 degrees, making it a safe two- or three-putt route. The center divider is a graham cracker sand trap — entering it dramatically increases friction air (0.15, 6x normal), stopping the ball dead.
 
 ### Hole 5: The Jawbreaker Wedge (Par 3)
-Funnel-shaped fairway (x:150-350 wide bottom at y:420-740, narrowing to x:190-310 at y:320, continuing as a narrow corridor to y:60). A ramp zone (x:190-310, y:300-420) applies a constant downward force (forceY:2.25, multiplied by 0.0001 per frame) simulating uphill gravity. The ball must have ~70-80% power to overcome the ramp force and crest the hill. Too little power and the ball decelerates, stops, and rolls back down. Too much power and the ball overshoots the shallow plateau (only 120px from ramp top to back wall at y:60), strikes the back wall, and bounces back down the ramp. The cup sits at x:250, y:140 on the plateau. Visually, the ramp zone features a jawbreaker texture (concentric colored rings) with upward-pointing white chevrons indicating the slope direction. Teaches precise power meter modulation — players must abandon the "always hit 100%" strategy.
+Funnel-shaped fairway (x:150-350 wide bottom at y:420-740, narrowing to x:190-310 at y:320, continuing as a narrow corridor to y:60). A ramp zone (x:190-310, y:300-420) applies a constant downward force (forceY:2.25, multiplied by 0.0001 per frame) simulating uphill gravity. The ball must have ~70-80% power to overcome the ramp force and crest the hill. Too little power and the ball decelerates, stops, and rolls back down. Too much power and the ball overshoots the shallow plateau (only 120px from ramp top to back wall at y:60), strikes the back wall, and bounces back down the ramp. The cup sits at x:250, y:140 on the plateau. Visually, the ramp zone features colorful horizontal jawbreaker candy stripes with glossy per-stripe highlights, sugar crystal sparkle, and rainbow-colored upward-pointing chevrons. Teaches precise power meter modulation — players must abandon the "always hit 100%" strategy.
+
+### Hole 6: The Taffy River (Par 3)
+Two isolated rectangular islands — bottom island (x:120-380, y:520-740) with the tee at x:250,y:680, and top island (x:120-380, y:60-280) with the cup at x:250,y:140. The entire gap between islands (x:120-380, y:280-520) is a pink taffy river water hazard. If the ball enters the taffy zone, it triggers a sinking animation (shrink + fade), a +1 stroke penalty, and resets the ball to the last stroke position. A narrow moving bridge (80x20 design units) oscillates vertically between y:500 and y:300 using smooth hermite easing at speed 0.8. The bridge is a kinematic Matter.js body that physically supports the ball — the player must time their shot to hit the bridge as it aligns with their trajectory. This is the player's first encounter with moving obstacles and water hazards, teaching patience and timing alongside power control.
 
 ## Play Modes
 
@@ -99,6 +102,28 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 | Visual | Jawbreaker tileable texture (128x128, concentric colored rings) with upward-pointing chevrons |
 | Behavior | Overlap trigger zone — applies constant force opposing ball movement, simulating uphill gravity |
 | Strategy | Hit with ~75-85% power to crest; too much overshoots into back wall |
+
+## Moving Bridge Physics
+
+| Property | Value |
+|----------|-------|
+| Restitution | 0.3 |
+| Friction | 0.8 |
+| Dimensions | 80x20 design units |
+| Speed | 0.8 (progress units per second) |
+| Easing | Hermite smoothstep: t²(3-2t) |
+| Behavior | Kinematic static body oscillating between startY and endY. Updates every frame in all game states so players can observe and time shots. |
+| Visual | Brown plank bridge with dividing lines, top highlight, bottom shadow, and side rails |
+
+## Water Hazard (Taffy River) Physics
+
+| Property | Value |
+|----------|-------|
+| Penalty | +1 stroke |
+| Reset | Ball returns to last stroke position |
+| Animation | Ball shrinks to 30% scale and fades to 0 alpha over 500ms before reset |
+| Visual | Tileable 256x256 pink taffy texture with flowing sine-wave patterns, glossy sheen, and sugar crystal sparkle |
+| Behavior | Overlap trigger zone — any ball contact triggers immediate penalty and reset |
 
 ## Hole Capture
 

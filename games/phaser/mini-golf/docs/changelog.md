@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.0.2.103 - Hole 6: The Taffy River (2026-02-25)
+
+### Added
+- **Hole 6: The Taffy River** — two isolated islands connected by a moving bridge over a pink taffy water hazard.
+- **Moving bridge obstacle**: Kinematic body oscillating vertically between the two islands with smooth easing. First moving obstacle in the game.
+- **Taffy texture**: Procedural 256x256 pink taffy texture with flowing wave patterns, glossy sheen, and sugar sparkle.
+- **Water hazard sinking animation**: Ball shrinks and fades before resetting to last position (replaces instant teleport).
+- **Bridge always animates**: Bridge oscillation runs in all game states (aiming, power, simulating) so players can time their shots.
+
 ## v0.0.2.98 - Hole 5 v4: Ramp Force Tuned to 2.25 (2026-02-25)
 
 ### Changed

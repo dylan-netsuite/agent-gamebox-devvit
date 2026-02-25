@@ -169,6 +169,9 @@ export class Game extends Scene {
         case 'gumdrop_bumper':
           this.obstacles.addGumdropBumper(obs);
           break;
+        case 'moving_bridge':
+          this.obstacles.addMovingBridge(obs);
+          break;
       }
     }
 
@@ -355,6 +358,8 @@ export class Game extends Scene {
   override update(_time: number, delta: number): void {
     if (this.state === 'sinking') return;
 
+    this.obstacles.updateBridges(delta);
+
     this.ball.update();
     this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);
     this.powerMeter.update(delta);
@@ -406,10 +411,27 @@ export class Game extends Scene {
 
     this.showPenaltyText();
 
-    this.ball.setPosition(this.lastBallPos.x, this.lastBallPos.y);
-    this.state = 'aiming';
-    this.arrow.setVisible(true);
-    this.arrow.updatePosition(this.lastBallPos.x, this.lastBallPos.y);
+    // Sinking animation before reset
+    this.scene.matter.body.setVelocity(this.ball.body, { x: 0, y: 0 });
+    this.scene.matter.body.setStatic(this.ball.body, true);
+
+    this.tweens.add({
+      targets: this.ball.graphics,
+      scaleX: 0.3,
+      scaleY: 0.3,
+      alpha: 0,
+      duration: 500,
+      ease: 'Power2',
+      onComplete: () => {
+        this.scene.matter.body.setStatic(this.ball.body, false);
+        this.ball.graphics.setScale(1);
+        this.ball.graphics.setAlpha(1);
+        this.ball.setPosition(this.lastBallPos.x, this.lastBallPos.y);
+        this.state = 'aiming';
+        this.arrow.setVisible(true);
+        this.arrow.updatePosition(this.lastBallPos.x, this.lastBallPos.y);
+      },
+    });
   }
 
   private showPenaltyText(): void {

@@ -13,6 +13,7 @@ export class TextureFactory {
     this.generateGrahamCracker(scene);
     this.generateJawbreaker(scene);
     this.generateRampPlateau(scene);
+    this.generateTaffy(scene);
   }
 
   private static generateCandyCane(scene: Phaser.Scene): void {
@@ -537,5 +538,57 @@ export class TextureFactory {
     ctx.fillRect(0, 0, size, size);
 
     scene.textures.addCanvas('ramp-plateau', canvas);
+  }
+
+  private static generateTaffy(scene: Phaser.Scene): void {
+    const w = 256;
+    const h = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d')!;
+
+    ctx.fillStyle = '#ff69b4';
+    ctx.fillRect(0, 0, w, h);
+
+    const taffyColors = ['#ff85c8', '#ff4da6', '#ff9ed2', '#e0559e', '#ffb3dd'];
+    for (let i = 0; i < 40; i++) {
+      const y0 = Math.random() * h;
+      const amplitude = 8 + Math.random() * 20;
+      const freq = 0.02 + Math.random() * 0.04;
+      const color = taffyColors[Math.floor(Math.random() * taffyColors.length)]!;
+      ctx.globalAlpha = 0.2 + Math.random() * 0.2;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3 + Math.random() * 6;
+      ctx.beginPath();
+      for (let x = 0; x <= w; x += 2) {
+        const y = y0 + Math.sin(x * freq + i) * amplitude;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    // Glossy surface sheen
+    const sheen = ctx.createLinearGradient(0, 0, 0, h);
+    sheen.addColorStop(0, 'rgba(255,255,255,0.15)');
+    sheen.addColorStop(0.3, 'rgba(255,255,255,0.02)');
+    sheen.addColorStop(0.7, 'rgba(0,0,0,0.05)');
+    sheen.addColorStop(1, 'rgba(255,255,255,0.1)');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = sheen;
+    ctx.fillRect(0, 0, w, h);
+
+    // Sugar sparkle
+    for (let i = 0; i < 120; i++) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      ctx.globalAlpha = 0.15 + Math.random() * 0.2;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x, y, 1 + Math.random(), 1 + Math.random());
+    }
+
+    ctx.globalAlpha = 1;
+    scene.textures.addCanvas('taffy', canvas);
   }
 }
