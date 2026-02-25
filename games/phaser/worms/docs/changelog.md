@@ -1,5 +1,13 @@
 # Reddit Royale - Changelog
 
+## [2026-02-25] Shotgun Range Bump (v0.0.12.48)
+
+**Workflow:** wf-1771986960
+
+Shotgun range increased from 100px to 175px (driftStart 40 -> 70px). AI scoring thresholds widened to match. 100px was too restrictive for practical use.
+
+---
+
 ## [2026-02-25] Hitscan Range Nerf v3 (v0.0.12.44)
 
 **Workflow:** wf-1771985540

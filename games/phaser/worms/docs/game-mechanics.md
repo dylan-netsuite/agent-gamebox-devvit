@@ -10,7 +10,7 @@ Turn-based artillery game where players control worms on destructible terrain, u
 |---|--------|------|-------------|--------|-------|---------|
 | 1 | Bazooka | Projectile | 40px | 45 | Yes | Arcs with gravity |
 | 2 | Grenade | Projectile | 35px | 40 | Yes | Bounces 3x, 3s fuse |
-| 3 | Shotgun | Hitscan | 20px | 25×2 | Wind drift at range | Point-blank blasts — 100px range, heavy scatter past 40px |
+| 3 | Shotgun | Hitscan | 20px | 25×2 | Wind drift at range | Close-range blasts — 175px range, scatter past 70px |
 | 4 | Dynamite | Projectile | 70px | 75 | No | 4s fuse, high arc |
 | 5 | Airstrike | Targeted | 25px×5 | 30×5 | Yes | 5 missiles from above |
 | 6 | Cluster Bomb | Projectile | 20px + 18px×4 | 20 + 18×4 | Yes | Splits into 4 bomblets on detonation |
@@ -22,19 +22,19 @@ Turn-based artillery game where players control worms on destructible terrain, u
 The main projectile bounces once and detonates after a 2s fuse. On detonation, it deals 20 damage (20px radius) and spawns 4 smaller bomblets. Each bomblet flies outward in a random upward arc and detonates on terrain impact, dealing 18 damage (18px radius). Effective for area denial and hitting enemies behind cover.
 
 ### Shotgun Details
-Fires two hitscan rays with ±0.05 radian spread. Each ray detects direct worm hits (25 damage per hit) and impacts terrain (20px crater with splash). The shotgun is a point-blank weapon:
+Fires two hitscan rays with ±0.05 radian spread. Each ray detects direct worm hits (25 damage per hit) and impacts terrain (20px crater with splash). The shotgun is a close-range weapon:
 
 | Parameter | Value |
 |-----------|-------|
-| Max range | 100px |
-| Drift start | 40px |
+| Max range | 175px |
+| Drift start | 70px |
 | Wind multiplier | 2× |
 | Spread max | 1.2 |
 
-- **Point-blank (< 40px)**: Perfectly accurate — devastating with 50 total damage on direct hits
-- **Close range (40-100px)**: Increasing spread; still effective but less reliable
-- **Beyond 100px**: Out of range entirely
-- **AI scoring**: +25 bonus within 60px, -30 penalty beyond 80px
+- **Point-blank (< 70px)**: Perfectly accurate — devastating with 50 total damage on direct hits
+- **Close range (70-175px)**: Increasing spread; still effective but less reliable
+- **Beyond 175px**: Out of range entirely
+- **AI scoring**: +25 bonus within 100px, -30 penalty beyond 140px
 
 ### Sniper Rifle Details
 Fires a single hitscan ray — instant, no travel time. The ray detects direct worm hits (full 50 damage) and also impacts terrain (8px crater with splash damage). Uses per-weapon hitscan parameters:

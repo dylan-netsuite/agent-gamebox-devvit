@@ -537,8 +537,8 @@ export class AIController {
       if (distToEnemy > 400) score -= 30;
     }
     if (weapon.id === 'shotgun') {
-      if (distToEnemy < 60) score += 25;
-      if (distToEnemy > 80) score -= 30;
+      if (distToEnemy < 100) score += 25;
+      if (distToEnemy > 140) score -= 30;
     }
 
     return score;
