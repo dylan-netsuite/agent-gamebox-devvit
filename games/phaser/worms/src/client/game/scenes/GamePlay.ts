@@ -587,16 +587,20 @@ export class GamePlay extends Scene {
     this.isRemoteTurn = this.isOnline && worm.team !== this.localTeamIndex;
 
     if (this.isAITurn && this.aiController) {
-      this.aiController.executeTurn(
-        this,
-        worm,
-        this.worms,
-        this.weaponSystem,
-        () => {
-          this.advanceTurn();
-        },
-        this.projectileManager,
-      );
+      if (this.tutorial?.isActive()) {
+        this.time.delayedCall(500, () => this.advanceTurn());
+      } else {
+        this.aiController.executeTurn(
+          this,
+          worm,
+          this.worms,
+          this.weaponSystem,
+          () => {
+            this.advanceTurn();
+          },
+          this.projectileManager,
+        );
+      }
     }
   }
 

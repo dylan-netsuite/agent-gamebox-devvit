@@ -26,10 +26,13 @@ const BOX_PAD = 18;
 const ACCENT = 0x00e5ff;
 const BOX_BG = 0x0f1923;
 
+const STORAGE_KEY = 'worms_tutorial_complete';
+
 export class TutorialManager {
   private scene: Phaser.Scene;
   private weapons: WeaponSystem;
   private hud: HUD | null;
+  private isTouch: boolean;
   private container!: Phaser.GameObjects.Container;
   private backdropGfx!: Phaser.GameObjects.Graphics;
   private boxGfx!: Phaser.GameObjects.Graphics;
@@ -64,13 +67,23 @@ export class TutorialManager {
     this.weapons = weapons;
     this.onComplete = onComplete;
     this.hud = hud ?? null;
+    this.isTouch = !!scene.sys.game.device.input.touch;
 
     this.steps = this.buildSteps();
     this.buildUI();
     this.showStep(0);
   }
 
+  static isComplete(): boolean {
+    try {
+      return localStorage.getItem(STORAGE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
   private buildSteps(): TutorialStep[] {
+    const t = this.isTouch;
     return [
       {
         id: 'welcome',
@@ -81,37 +94,47 @@ export class TutorialManager {
       {
         id: 'movement',
         title: '🏃 Movement',
-        body: 'Use the ← → arrow keys to move your worm.\nOn mobile, use the on-screen D-pad.',
-        hint: 'Move left or right to continue',
+        body: t
+          ? 'Use the on-screen D-pad (← →) to move your worm.'
+          : 'Use the ← → arrow keys to move your worm.\nOn mobile, use the on-screen D-pad.',
+        hint: t ? 'Tap ← or → to move' : 'Move left or right to continue',
         condition: () => this.playerMoved,
       },
       {
         id: 'jumping',
         title: '🦘 Jumping',
-        body: 'Press W to jump over obstacles.\nYou can move in the air too!',
-        hint: 'Press W to jump',
+        body: t
+          ? 'Tap the ↑ button to jump over obstacles.\nYou can move in the air too!'
+          : 'Press W to jump over obstacles.\nYou can move in the air too!',
+        hint: t ? 'Tap ↑ to jump' : 'Press W to jump',
         condition: () => this.playerJumped,
       },
       {
         id: 'weapon-switch',
         title: '🔫 Switching Weapons',
-        body: 'You have 9 weapons! Press Q/E to cycle through them, use number keys 1-9, or click the weapon grid on the left panel.',
-        hint: 'Switch to a different weapon',
+        body: t
+          ? 'You have 9 weapons! Tap the ◀ / ▶ buttons to cycle through them, or tap the weapon grid on the left panel.'
+          : 'You have 9 weapons! Press Q/E to cycle through them, use number keys 1-9, or click the weapon grid on the left panel.',
+        hint: t ? 'Tap ◀ or ▶ to switch' : 'Switch to a different weapon',
         condition: () => this.playerSwitchedWeapon,
         getHighlight: () => this.hud?.getWeaponGridBounds() ?? null,
       },
       {
         id: 'aiming',
         title: '🎯 Aiming',
-        body: 'Click on the battlefield (or press SPACE) to enter aiming mode. Move your mouse to aim — a trajectory preview will appear.',
-        hint: 'Click or press SPACE to aim',
+        body: t
+          ? 'Tap the 🎯 button to enter aiming mode. Drag on the battlefield to aim — a trajectory preview will appear.'
+          : 'Click on the battlefield (or press SPACE) to enter aiming mode. Move your mouse to aim — a trajectory preview will appear.',
+        hint: t ? 'Tap 🎯 to aim' : 'Click or press SPACE to aim',
         condition: () => this.weapons.currentState === 'aiming',
       },
       {
         id: 'fire',
         title: '💥 Fire!',
-        body: 'Scroll (or press R/T) to adjust power, then click (or press SPACE again) to fire! Watch your projectile fly.',
-        hint: 'Click or press SPACE to fire',
+        body: t
+          ? 'Use the +/− buttons to adjust power, then tap 🎯 again to fire! Watch your projectile fly.'
+          : 'Scroll (or press R/T) to adjust power, then click (or press SPACE again) to fire! Watch your projectile fly.',
+        hint: t ? 'Tap 🎯 to fire' : 'Click or press SPACE to fire',
         condition: () =>
           this.weapons.currentState === 'firing' ||
           this.weapons.currentState === 'resolved',
@@ -120,8 +143,10 @@ export class TutorialManager {
       {
         id: 'parachute',
         title: '🪂 Parachute',
-        body: 'Press P to deploy a parachute while in the air.\nThis slows your descent and prevents fall damage. Press P again to close it.',
-        hint: 'Jump (W) then press P to open a parachute',
+        body: t
+          ? 'Tap the 🪂 button to deploy a parachute while in the air.\nThis slows your descent and prevents fall damage. Tap again to close it.'
+          : 'Press P to deploy a parachute while in the air.\nThis slows your descent and prevents fall damage. Press P again to close it.',
+        hint: t ? 'Jump (↑) then tap 🪂' : 'Jump (W) then press P to open a parachute',
         condition: () => this.parachuteUsed,
         onEnter: () => {
           this.weapons.reset();
@@ -130,8 +155,10 @@ export class TutorialManager {
       {
         id: 'ninja-rope',
         title: '🪝 Ninja Rope',
-        body: 'The Ninja Rope lets you swing across the map!\nAim and fire to attach. Use ↑/↓ to adjust length.\nPress SPACE or click to detach.',
-        hint: 'Aim and fire to attach the rope',
+        body: t
+          ? 'The Ninja Rope lets you swing across the map!\nTap 🎯 to aim and fire to attach. Use ↑/↓ to adjust length.\nTap 🎯 to detach.'
+          : 'The Ninja Rope lets you swing across the map!\nAim and fire to attach. Use ↑/↓ to adjust length.\nPress SPACE or click to detach.',
+        hint: t ? 'Aim and tap 🎯 to attach' : 'Aim and fire to attach the rope',
         condition: () => this.ropeUsed,
         onEnter: () => {
           this.weapons.reset();
@@ -141,8 +168,10 @@ export class TutorialManager {
       {
         id: 'teleport',
         title: '⚡ Teleport',
-        body: 'Teleport lets you instantly warp to any location!\nAim where you want to go, adjust power, then fire.',
-        hint: 'Aim and fire to teleport',
+        body: t
+          ? 'Teleport lets you instantly warp to any location!\nAim where you want to go, adjust power with +/−, then tap 🎯 to fire.'
+          : 'Teleport lets you instantly warp to any location!\nAim where you want to go, adjust power, then fire.',
+        hint: t ? 'Aim and tap 🎯 to teleport' : 'Aim and fire to teleport',
         condition: () => this.teleportUsed,
         onEnter: () => {
           this.weapons.reset();
@@ -152,8 +181,10 @@ export class TutorialManager {
       {
         id: 'turn-flow',
         title: '🔄 Turn Flow',
-        body: "After your shot resolves, press ENTER (or tap ⏭) to end your turn. Then it's the opponent's turn!",
-        hint: 'Press ENTER to end your turn',
+        body: t
+          ? "After your shot resolves, tap the ⏭ button to end your turn. Then it's the opponent's turn!"
+          : "After your shot resolves, press ENTER (or tap ⏭) to end your turn. Then it's the opponent's turn!",
+        hint: t ? 'Tap ⏭ to end turn' : 'Press ENTER to end your turn',
         condition: () => this.turnAdvanced,
       },
       {
@@ -317,7 +348,9 @@ export class TutorialManager {
     this.bodyText.setPosition(cam.width / 2, boxY + BOX_PAD + titleH + 8);
 
     if (step.clickToContinue) {
-      this.hintText.setText('Click or press ENTER to continue');
+      this.hintText.setText(
+        this.isTouch ? 'Tap to continue' : 'Click or press ENTER to continue',
+      );
       this.hintText.setPosition(cam.width / 2, boxY + boxH - BOX_PAD - 6);
       this.hintText.setVisible(true);
       this.waitingForClick = true;
@@ -354,6 +387,11 @@ export class TutorialManager {
   private complete(): void {
     this.active = false;
     this.container.setVisible(false);
+    try {
+      localStorage.setItem(STORAGE_KEY, '1');
+    } catch {
+      // localStorage may be unavailable in some contexts
+    }
     this.onComplete();
   }
 

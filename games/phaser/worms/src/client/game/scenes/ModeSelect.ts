@@ -1,10 +1,12 @@
 import { Scene } from 'phaser';
 import { SoundManager } from '../systems/SoundManager';
+import { TutorialManager } from '../systems/TutorialManager';
 
 interface ModeButton {
   icon: string;
   title: string;
   desc: string;
+  badge?: string;
   action: () => void;
 }
 
@@ -43,6 +45,7 @@ export class ModeSelect extends Scene {
         icon: '📖',
         title: 'TUTORIAL',
         desc: 'Learn the basics step by step',
+        badge: TutorialManager.isComplete() ? '✓ Completed' : undefined,
         action: () => {
           SoundManager.play('select');
           this.scene.start('GamePlay', {
@@ -145,6 +148,16 @@ export class ModeSelect extends Scene {
         color: '#8899aa',
       })
       .setOrigin(0, 0.5);
+
+    if (mode.badge) {
+      this.add
+        .text(x + w - 14, y + h / 2, mode.badge, {
+          fontFamily: 'monospace',
+          fontSize: '9px',
+          color: '#3fb950',
+        })
+        .setOrigin(1, 0.5);
+    }
 
     const zone = this.add
       .zone(cx, y + h / 2, w, h)

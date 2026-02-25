@@ -1,5 +1,22 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.103] - 2026-02-25 — AI Passive, Tutorial Persistence, Mobile Adaptations (wf-1772059016)
+
+### Changed
+- **AI passive during tutorial**: AI opponents now skip their turn entirely during tutorial mode instead of firing back. This prevents confusion for new players learning the mechanics. The AI turn completes automatically after a 500ms delay.
+- **Mobile tutorial text**: Tutorial steps detect touch input and display touch-specific instructions (e.g., "Tap the 🎯 button" instead of "Press SPACE"). Affects all 11 steps including hints.
+
+### Added
+- **Tutorial persistence**: Tutorial completion is stored in `localStorage`. After completing or skipping the tutorial, returning to the mode select screen shows a green "✓ Completed" badge on the Tutorial button.
+- **Static `TutorialManager.isComplete()`**: Utility method to check if the tutorial has been completed, used by ModeSelect for the badge.
+
+### Files Changed
+- `src/client/game/systems/TutorialManager.ts` — Added touch detection, mobile-aware step text, localStorage persistence, static `isComplete()`.
+- `src/client/game/scenes/GamePlay.ts` — AI turn skips `executeTurn` when tutorial is active.
+- `src/client/game/scenes/ModeSelect.ts` — Imports TutorialManager, shows "✓ Completed" badge on Tutorial button.
+
+---
+
 ## [v0.0.12.102] - 2026-02-25 — Tutorial Polish: Interactive Steps, Skip, Progress (wf-1772053086)
 
 ### Fixed
