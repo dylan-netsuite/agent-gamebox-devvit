@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.2.95 - Hole 5 v3: Easier Ramp + Candy-Themed Visuals (2026-02-25)
+
+### Fixed
+- **Ramp force reduced from 3 to 1.5** — still too hard to crest. Now beatable at ~60-70% power.
+
+### Changed
+- **Removed "HILL" label** from ramp zone.
+- **Candy jawbreaker ramp texture**: Replaced green gradient with colorful horizontal candy stripes (red, orange, yellow, green, cyan, purple, pink) with glossy per-stripe highlights and sugar crystal sparkle.
+- **Candy plateau texture**: Replaced green elevated area with pastel pink candy base, swirled pastel patches, sugar sparkle, and glossy dome highlight.
+- **Rainbow chevrons**: Replaced white/gold chevrons with cycling candy colors (pink, gold, cyan, red, purple, green).
+
 ## v0.0.2.92 - Hole 5 v2: Ramp Physics Fix + Major Visual Polish (2026-02-25)
 
 ### Fixed

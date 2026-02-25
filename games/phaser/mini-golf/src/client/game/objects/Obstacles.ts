@@ -239,33 +239,35 @@ export class Obstacles {
     const rect = new Phaser.Geom.Rectangle(tl.x, tl.y, w, h);
     this.zones.push({ type: 'ramp', rect, forceX, forceY });
 
-    // Ramp gradient texture (dark bottom → bright top)
+    // Jawbreaker ramp texture
     if (this.scene.textures.exists('jawbreaker')) {
       const tile = this.scene.add.tileSprite(tl.x + w / 2, tl.y + h / 2, w, h, 'jawbreaker');
       tile.setDepth(2);
       this.gameObjects.push(tile);
     }
 
-    // Bottom edge: dark lip suggesting the base of the incline
     const g = this.zoneGraphics;
-    g.fillStyle(0x0a1f10, 0.5);
+
+    // Bottom edge: dark candy shadow
+    g.fillStyle(0x4a0020, 0.6);
     g.fillRect(tl.x, tl.y + h - scaleValue(this.scene, 6), w, scaleValue(this.scene, 6));
 
-    // Top edge: bright highlight suggesting the crest
-    g.fillStyle(0xa0f0b0, 0.4);
+    // Top edge: bright candy highlight
+    g.fillStyle(0xffccee, 0.5);
     g.fillRect(tl.x, tl.y, w, scaleValue(this.scene, 4));
 
-    // Bold upward-pointing chevrons — full width, candy-striped
-    const chevronSpacing = scaleValue(this.scene, 22);
-    const chevronW = w * 0.4;
+    // Candy-colored upward chevrons
+    const chevronSpacing = scaleValue(this.scene, 20);
+    const chevronW = w * 0.42;
     const chevronH = scaleValue(this.scene, 10);
     const centerX = tl.x + w / 2;
-    const lineW = scaleValue(this.scene, 3.5);
+    const lineW = scaleValue(this.scene, 3);
+    const candyColors = [0xff69b4, 0xffd700, 0x00ced1, 0xff6347, 0x9370db, 0x32cd32];
 
     let rowIdx = 0;
     for (let cy = tl.y + h - chevronSpacing * 0.5; cy > tl.y + chevronH; cy -= chevronSpacing) {
-      const alpha = 0.35 + (1 - (cy - tl.y) / h) * 0.45;
-      const color = rowIdx % 2 === 0 ? 0xffffff : 0xffd700;
+      const alpha = 0.5 + (1 - (cy - tl.y) / h) * 0.4;
+      const color = candyColors[rowIdx % candyColors.length]!;
 
       g.lineStyle(lineW, color, alpha);
       g.beginPath();
@@ -277,22 +279,7 @@ export class Obstacles {
       rowIdx++;
     }
 
-    // "UPHILL" label at center of ramp
-    const labelY = tl.y + h * 0.5;
-    const label = this.scene.add.text(centerX, labelY, '▲ HILL ▲', {
-      fontFamily: '"Arial Black", "Impact", sans-serif',
-      fontSize: `${Math.round(scaleValue(this.scene, 14))}px`,
-      color: '#ffffff',
-      stroke: '#1a3d20',
-      strokeThickness: 3,
-      align: 'center',
-    });
-    label.setOrigin(0.5);
-    label.setDepth(8);
-    label.setAlpha(0.7);
-    this.gameObjects.push(label);
-
-    // Plateau zone above the ramp (lighter elevated green)
+    // Plateau zone above the ramp (candy-themed elevated area)
     if (this.scene.textures.exists('ramp-plateau')) {
       const plateauTl = toScreen(this.scene, zone.x, zone.y - (zone.height * 2));
       const plateauBr = toScreen(this.scene, zone.x + zone.width, zone.y);
@@ -303,7 +290,7 @@ export class Obstacles {
         plateauTl.x + pw / 2, plateauTl.y + ph / 2, pw, ph, 'ramp-plateau'
       );
       pTile.setDepth(2);
-      pTile.setAlpha(0.6);
+      pTile.setAlpha(0.55);
       this.gameObjects.push(pTile);
     }
   }

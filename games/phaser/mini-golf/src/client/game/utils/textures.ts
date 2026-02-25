@@ -442,49 +442,51 @@ export class TextureFactory {
     canvas.height = h;
     const ctx = canvas.getContext('2d')!;
 
-    // Vertical gradient: dark at bottom (base) → bright at top (crest)
-    const grad = ctx.createLinearGradient(0, h, 0, 0);
-    grad.addColorStop(0, '#1a3d20');
-    grad.addColorStop(0.3, '#2a6b3a');
-    grad.addColorStop(0.6, '#3a9a50');
-    grad.addColorStop(0.85, '#5cc070');
-    grad.addColorStop(1, '#80e090');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
-
-    // Horizontal contour lines suggesting elevation
-    ctx.globalAlpha = 0.2;
-    for (let y = 0; y < h; y += 16) {
-      const brightness = Math.floor(80 + (1 - y / h) * 120);
-      ctx.strokeStyle = `rgb(${brightness},${brightness + 40},${brightness})`;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(w, y);
-      ctx.stroke();
+    // Jawbreaker candy stripes — horizontal bands of candy colors
+    const stripes = [
+      '#e03030', '#ff8c00', '#ffd700', '#32cd32',
+      '#00ced1', '#6a5acd', '#ff69b4', '#e03030',
+      '#ff8c00', '#ffd700', '#32cd32', '#00ced1',
+      '#6a5acd', '#ff69b4', '#e03030', '#ff8c00',
+    ];
+    const stripeH = h / stripes.length;
+    for (let i = 0; i < stripes.length; i++) {
+      ctx.fillStyle = stripes[i]!;
+      ctx.fillRect(0, i * stripeH, w, stripeH + 1);
     }
 
-    // Side shadow edges for 3D depth
+    // Glossy highlight across each stripe
+    for (let i = 0; i < stripes.length; i++) {
+      const sy = i * stripeH;
+      const grad = ctx.createLinearGradient(0, sy, 0, sy + stripeH);
+      grad.addColorStop(0, 'rgba(255,255,255,0.25)');
+      grad.addColorStop(0.4, 'rgba(255,255,255,0.05)');
+      grad.addColorStop(1, 'rgba(0,0,0,0.15)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, sy, w, stripeH);
+    }
+
+    // Side shadow edges for 3D ramp depth
     ctx.globalAlpha = 1;
-    const leftShadow = ctx.createLinearGradient(0, 0, w * 0.25, 0);
-    leftShadow.addColorStop(0, 'rgba(0,0,0,0.35)');
+    const leftShadow = ctx.createLinearGradient(0, 0, w * 0.2, 0);
+    leftShadow.addColorStop(0, 'rgba(0,0,0,0.4)');
     leftShadow.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = leftShadow;
-    ctx.fillRect(0, 0, w * 0.25, h);
+    ctx.fillRect(0, 0, w * 0.2, h);
 
-    const rightShadow = ctx.createLinearGradient(w * 0.75, 0, w, 0);
+    const rightShadow = ctx.createLinearGradient(w * 0.8, 0, w, 0);
     rightShadow.addColorStop(0, 'rgba(0,0,0,0)');
-    rightShadow.addColorStop(1, 'rgba(0,0,0,0.35)');
+    rightShadow.addColorStop(1, 'rgba(0,0,0,0.4)');
     ctx.fillStyle = rightShadow;
-    ctx.fillRect(w * 0.75, 0, w * 0.25, h);
+    ctx.fillRect(w * 0.8, 0, w * 0.2, h);
 
-    // Noise grain for texture
-    for (let i = 0; i < 300; i++) {
+    // Sugar crystal sparkle
+    for (let i = 0; i < 150; i++) {
       const nx = Math.random() * w;
       const ny = Math.random() * h;
-      ctx.globalAlpha = 0.06 + Math.random() * 0.08;
-      ctx.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#000000';
-      ctx.fillRect(nx, ny, 1, 1);
+      ctx.globalAlpha = 0.15 + Math.random() * 0.2;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(nx, ny, 1 + Math.random(), 1 + Math.random());
     }
 
     ctx.globalAlpha = 1;
@@ -498,27 +500,42 @@ export class TextureFactory {
     canvas.height = size;
     const ctx = canvas.getContext('2d')!;
 
-    // Bright elevated green
-    ctx.fillStyle = '#5cc070';
+    // Pastel pink candy base (like the inside of a jawbreaker)
+    ctx.fillStyle = '#ffb6c1';
     ctx.fillRect(0, 0, size, size);
 
-    // Subtle grass-like noise
-    const shades = ['#6ad080', '#50b868', '#70d890', '#48a858'];
-    for (let i = 0; i < 200; i++) {
+    // Swirled candy pattern — soft pastel patches
+    const pastels = ['#ffc0cb', '#ffe4b5', '#e6e6fa', '#b0e0e6', '#f0e68c'];
+    for (let i = 0; i < 80; i++) {
       const x = Math.random() * size;
       const y = Math.random() * size;
-      const shade = shades[Math.floor(Math.random() * shades.length)]!;
-      ctx.globalAlpha = 0.2 + Math.random() * 0.2;
-      ctx.fillStyle = shade;
-      ctx.fillRect(x, y, 1 + Math.random() * 2, 2 + Math.random() * 3);
+      const r = 4 + Math.random() * 12;
+      const color = pastels[Math.floor(Math.random() * pastels.length)]!;
+      ctx.globalAlpha = 0.2 + Math.random() * 0.25;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // Edge highlight at top to suggest "crest"
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = '#a0f0b0';
-    ctx.fillRect(0, 0, size, 4);
+    // Sugar sparkle
+    for (let i = 0; i < 100; i++) {
+      const x = Math.random() * size;
+      const y = Math.random() * size;
+      ctx.globalAlpha = 0.2 + Math.random() * 0.3;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x, y, 1 + Math.random(), 1 + Math.random());
+    }
 
+    // Glossy dome highlight
+    const gloss = ctx.createRadialGradient(size * 0.35, size * 0.35, 0, size / 2, size / 2, size * 0.7);
+    gloss.addColorStop(0, 'rgba(255,255,255,0.25)');
+    gloss.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+    gloss.addColorStop(1, 'rgba(0,0,0,0.1)');
     ctx.globalAlpha = 1;
+    ctx.fillStyle = gloss;
+    ctx.fillRect(0, 0, size, size);
+
     scene.textures.addCanvas('ramp-plateau', canvas);
   }
 }

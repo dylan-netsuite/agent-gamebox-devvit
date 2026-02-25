@@ -214,7 +214,7 @@ export const HOLES: HoleDefinition[] = [
       ],
     ],
     obstacles: [
-      // Ramp zone — gentle downward force simulates uphill slope
+      // Ramp zone — mild downward force simulates uphill slope
       {
         type: 'ramp',
         x: 190,
@@ -222,7 +222,7 @@ export const HOLES: HoleDefinition[] = [
         width: 120,
         height: 120,
         forceX: 0,
-        forceY: 3,
+        forceY: 1.5,
       },
     ],
   },
