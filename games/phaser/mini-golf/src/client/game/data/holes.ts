@@ -222,7 +222,7 @@ export const HOLES: HoleDefinition[] = [
         width: 120,
         height: 120,
         forceX: 0,
-        forceY: 1.5,
+        forceY: 2.25,
       },
     ],
   },

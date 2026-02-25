@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.2.98 - Hole 5 v4: Ramp Force Tuned to 2.25 (2026-02-25)
+
+### Changed
+- **Ramp force adjusted from 1.5 to 2.25** — splits the difference for the ideal difficulty sweet spot.
+
 ## v0.0.2.95 - Hole 5 v3: Easier Ramp + Candy-Themed Visuals (2026-02-25)
 
 ### Fixed
