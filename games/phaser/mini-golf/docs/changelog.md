@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.2.83 - Hole 4 v3: Tighter Needle + Hole 2-Style Corner Bumpers (2026-02-25)
+
+### Changed
+- **Needle channel narrowed to 40px** (x:80-120, ~22px effective physics gap, 3px clearance per side). Tee and cup at x:100.
+- **Corner bumpers resized to 70x30** (matching Hole 2's chocolate block) and repositioned flush into the actual wall corners at (385, 95) and (385, 705).
+
 ## v0.0.2.77 - Hole 4 Redesign v2: Straight-Line Needle + Angled Corner Bumpers (2026-02-25)
 
 ### Changed
