@@ -65,6 +65,11 @@ export class HUD {
 
   private infoContainer!: Phaser.GameObjects.Container;
 
+  private miniContainer!: Phaser.GameObjects.Container;
+  private miniTeamText!: Phaser.GameObjects.Text;
+  private miniWeaponText!: Phaser.GameObjects.Text;
+  private miniTimerText!: Phaser.GameObjects.Text;
+
   private panelW = 0;
   private panelH = 0;
   private weaponGridH = 0;
@@ -90,6 +95,7 @@ export class HUD {
 
     this.buildBarBg();
     this.buildToggle();
+    this.buildMiniStatus();
     this.buildStateRow();
     this.buildWeaponGrid();
     this.buildInfoSection();
@@ -147,7 +153,7 @@ export class HUD {
     this.barContainer.add(this.toggleBg);
 
     this.toggleArrow = this.scene.add
-      .text(TOGGLE_W / 2, this.panelH / 2, '◀', {
+      .text(TOGGLE_W / 2, this.panelH / 2 + 40, '◀', {
         fontSize: '12px',
         color: ACCENT,
         fontFamily: 'monospace',
@@ -155,6 +161,35 @@ export class HUD {
       })
       .setOrigin(0.5);
     this.barContainer.add(this.toggleArrow);
+  }
+
+  private buildMiniStatus(): void {
+    const cx = TOGGLE_W / 2;
+    const midY = this.panelH / 2;
+
+    this.miniContainer = this.scene.add.container(0, 0);
+    this.barContainer.add(this.miniContainer);
+    this.miniContainer.setVisible(false);
+
+    this.miniTeamText = this.scene.add
+      .text(cx, midY - 28, '', { fontSize: '12px', fontFamily: 'monospace' })
+      .setOrigin(0.5);
+    this.miniContainer.add(this.miniTeamText);
+
+    this.miniWeaponText = this.scene.add
+      .text(cx, midY - 6, '', { fontSize: '16px' })
+      .setOrigin(0.5);
+    this.miniContainer.add(this.miniWeaponText);
+
+    this.miniTimerText = this.scene.add
+      .text(cx, midY + 18, '', {
+        fontSize: '9px',
+        color: '#ffcc00',
+        fontFamily: 'monospace',
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5);
+    this.miniContainer.add(this.miniTimerText);
   }
 
   private buildStateRow(): void {
@@ -364,6 +399,7 @@ export class HUD {
     this.weaponContainer.setVisible(contentVisible);
     this.statusContainer.setVisible(contentVisible);
     this.infoContainer.setVisible(contentVisible);
+    this.miniContainer.setVisible(!contentVisible);
 
     this.toggleArrow.setText(this.expanded ? '◀' : '▶');
     this.drawBarBg();
@@ -475,6 +511,9 @@ export class HUD {
     const teamLabel = teamLabels[team] ?? '🔴';
     const isRemote = this.getIsRemoteTurn?.() ?? false;
 
+    this.miniTeamText.setText(teamLabel);
+    this.miniWeaponText.setText(weapon.icon);
+
     if (isRemote) {
       if (state === 'firing') {
         this.stateText.setText(`${teamLabel} 💥 Firing...`);
@@ -514,16 +553,21 @@ export class HUD {
     const state = this.weapons.currentState;
     if (state === 'resolved' || state === 'firing') {
       this.timerText.setText('');
+      this.miniTimerText.setText('');
       return;
     }
     if (timer <= 0) {
       this.timerText.setColor('#88ff88');
       this.timerText.setText('∞');
+      this.miniTimerText.setColor('#88ff88');
+      this.miniTimerText.setText('∞');
       return;
     }
     const color = timer <= 10 ? '#ff4444' : timer <= 20 ? '#ffcc00' : '#88ff88';
     this.timerText.setColor(color);
     this.timerText.setText(`${timer}s`);
+    this.miniTimerText.setColor(color);
+    this.miniTimerText.setText(`${timer}`);
   }
 
   private buildTooltip(): void {

@@ -1260,3 +1260,8 @@ Redesigned all character draw functions to use organic shapes and curved paths i
 ### Fixed
 - **HUD collapse toggle**: Collapsing the left-side HUD no longer slides the entire container off-screen. The toggle strip (◀/▶) now stays pinned at x=0 and remains visible and clickable at all times.
 - **Toggle mechanism**: Replaced the sliding animation with instant show/hide of content containers (weapon grid, status row, info section). The background redraws to match the collapsed/expanded width.
+
+## [v0.0.12.69] - 2026-02-25 — Collapsed HUD Mini-Display (wf-1771994843)
+
+### Added
+- **Mini-display in collapsed HUD**: When the left panel is collapsed, the narrow toggle strip now shows three key pieces of information stacked vertically: team emoji, selected weapon icon, and turn timer countdown. This gives players essential turn info at a glance without needing to expand the panel.
