@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.0.2.26 - Difficulty Tuning Pass (2026-02-25)
+
+### Changed
+- Increased max shot velocity from 12 to 18 so ball can reach cups on long holes
+- Reduced air friction from 0.04 to 0.025 for longer ball rolls
+- Raised ball stop velocity from 0.08 to 0.12 to prevent endless slow rolling
+- Raised capture velocity threshold from 5.0 to 6.0 for more forgiving sinks
+- Increased speed clamp multiplier from 1.2x to 1.5x to preserve momentum after bumper bounces
+- **Hole 4**: Spread bumpers apart (320/480/400 instead of 350/450/400) and reduced radii from 20 to 14
+- **Hole 5**: Fixed ramp direction from forceY:3 (pushing away from cup) to forceY:-2 (boosting toward cup)
+- **Hole 6**: Widened bridge from 40 to 60 units (370-430)
+- **Hole 7**: Reduced windmill to 3 blades (from 4), shorter blades (60 vs 70), slower speed (1.0 vs 1.5)
+- **Hole 9**: Shortened zig-zag walls (gaps at y:350 instead of y:400), raised par from 4 to 5
+- **Hole 13**: Reduced par from 4 to 3 (cup is only 220 units from tee)
+- **Hole 14**: Reduced par from 4 to 3 (gravity wells aren't implemented yet)
+- **Hole 15**: Removed 4 plinko pegs (12→8), widened row spacing, reduced ramp force from 1.5 to 0.8
+- **Hole 17**: Widened bridge from 40 to 60 units, reduced par from 4 to 3
+- **Hole 18**: Widened bridge from 60 to 80 units, slowed windmill from 2.5 to 1.5, shortened blades from 60 to 55
+
 ## v0.0.2.22 - Physics Tuning & Course Playability (2026-02-25)
 
 ### Changed

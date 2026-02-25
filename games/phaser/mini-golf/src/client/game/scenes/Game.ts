@@ -251,7 +251,7 @@ export class Game extends Scene {
     if (this.state === 'sinking') return;
 
     this.ball.update();
-    this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.2);
+    this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);
     this.powerMeter.update(delta);
 
     if (this.state === 'aiming') {

@@ -131,9 +131,9 @@ export const HOLES: HoleDefinition[] = [
       ],
     ],
     obstacles: [
-      { type: 'bumper', x: 350, y: 200, radius: 20, color: 0xff6347 },
-      { type: 'bumper', x: 450, y: 200, radius: 20, color: 0x32cd32 },
-      { type: 'bumper', x: 400, y: 150, radius: 20, color: 0xffd700 },
+      { type: 'bumper', x: 320, y: 280, radius: 14, color: 0xff6347 },
+      { type: 'bumper', x: 480, y: 280, radius: 14, color: 0x32cd32 },
+      { type: 'bumper', x: 400, y: 200, radius: 14, color: 0xffd700 },
     ],
   },
 
@@ -161,14 +161,13 @@ export const HOLES: HoleDefinition[] = [
       ],
     ],
     obstacles: [
-      // Ramp zone in the narrow section
       {
         type: 'ramp',
         x: 350,
         y: 240,
         width: 100,
         height: 80,
-        forceY: 3,
+        forceY: -2,
       },
     ],
   },
@@ -181,28 +180,26 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 400, y: 500 },
     cup: { x: 400, y: 100 },
     walls: [
-      // Bottom island — open top between x:380-420 for bridge access
-      [{ x: 300, y: 400 }, { x: 380, y: 400 }],
-      [{ x: 420, y: 400 }, { x: 500, y: 400 }],
+      // Bottom island — open top between x:370-430 for bridge access
+      [{ x: 300, y: 400 }, { x: 370, y: 400 }],
+      [{ x: 430, y: 400 }, { x: 500, y: 400 }],
       [{ x: 500, y: 400 }, { x: 500, y: 560 }],
       [{ x: 500, y: 560 }, { x: 300, y: 560 }],
       [{ x: 300, y: 560 }, { x: 300, y: 400 }],
-      // Top island — open bottom between x:380-420 for bridge access
+      // Top island — open bottom between x:370-430 for bridge access
       [{ x: 300, y: 40 }, { x: 500, y: 40 }],
       [{ x: 500, y: 40 }, { x: 500, y: 200 }],
-      [{ x: 500, y: 200 }, { x: 420, y: 200 }],
-      [{ x: 380, y: 200 }, { x: 300, y: 200 }],
+      [{ x: 500, y: 200 }, { x: 430, y: 200 }],
+      [{ x: 370, y: 200 }, { x: 300, y: 200 }],
       [{ x: 300, y: 200 }, { x: 300, y: 40 }],
       // Bridge rails
-      [{ x: 380, y: 200 }, { x: 380, y: 400 }],
-      [{ x: 420, y: 200 }, { x: 420, y: 400 }],
+      [{ x: 370, y: 200 }, { x: 370, y: 400 }],
+      [{ x: 430, y: 200 }, { x: 430, y: 400 }],
     ],
     obstacles: [],
     waterZones: [
-      // Water left of bridge
-      { x: 300, y: 200, width: 80, height: 200, color: 0xff69b4 },
-      // Water right of bridge
-      { x: 420, y: 200, width: 80, height: 200, color: 0xff69b4 },
+      { x: 300, y: 200, width: 70, height: 200, color: 0xff69b4 },
+      { x: 430, y: 200, width: 70, height: 200, color: 0xff69b4 },
     ],
   },
 
@@ -227,9 +224,9 @@ export const HOLES: HoleDefinition[] = [
         type: 'windmill',
         x: 400,
         y: 300,
-        bladeCount: 4,
-        bladeLength: 70,
-        speed: 1.5,
+        bladeCount: 3,
+        bladeLength: 60,
+        speed: 1.0,
         color: 0xe9c46a,
       },
     ],
@@ -272,7 +269,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 9,
     name: 'The Ice Cream Glide',
-    par: 4,
+    par: 5,
     tee: { x: 100, y: 530 },
     cup: { x: 700, y: 70 },
     walls: [
@@ -283,18 +280,18 @@ export const HOLES: HoleDefinition[] = [
         { x: 50, y: 570 },
         { x: 50, y: 30 },
       ],
-      // Zig-zag internal walls
+      // Shorter zig-zag walls with wider gaps
       [
         { x: 200, y: 30 },
-        { x: 200, y: 400 },
+        { x: 200, y: 350 },
       ],
       [
-        { x: 400, y: 200 },
+        { x: 400, y: 250 },
         { x: 400, y: 570 },
       ],
       [
         { x: 600, y: 30 },
-        { x: 600, y: 400 },
+        { x: 600, y: 350 },
       ],
     ],
     obstacles: [],
@@ -389,7 +386,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 13,
     name: 'The Flavour Grabber',
-    par: 4,
+    par: 3,
     tee: { x: 400, y: 520 },
     cup: { x: 400, y: 300 },
     walls: [
@@ -414,7 +411,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 14,
     name: 'Gravity Wells',
-    par: 4,
+    par: 3,
     tee: { x: 150, y: 500 },
     cup: { x: 650, y: 100 },
     walls: [
@@ -449,21 +446,16 @@ export const HOLES: HoleDefinition[] = [
       ],
     ],
     obstacles: [
-      // Plinko pegs
-      { type: 'bumper', x: 330, y: 150, radius: 6, color: 0xff69b4 },
-      { type: 'bumper', x: 400, y: 150, radius: 6, color: 0xffd700 },
-      { type: 'bumper', x: 470, y: 150, radius: 6, color: 0xff69b4 },
-      { type: 'bumper', x: 365, y: 210, radius: 6, color: 0x32cd32 },
-      { type: 'bumper', x: 435, y: 210, radius: 6, color: 0x32cd32 },
-      { type: 'bumper', x: 330, y: 270, radius: 6, color: 0xff69b4 },
-      { type: 'bumper', x: 400, y: 270, radius: 6, color: 0xffd700 },
-      { type: 'bumper', x: 470, y: 270, radius: 6, color: 0xff69b4 },
-      { type: 'bumper', x: 365, y: 330, radius: 6, color: 0x32cd32 },
-      { type: 'bumper', x: 435, y: 330, radius: 6, color: 0x32cd32 },
-      { type: 'bumper', x: 330, y: 390, radius: 6, color: 0xff69b4 },
-      { type: 'bumper', x: 400, y: 390, radius: 6, color: 0xffd700 },
-      { type: 'bumper', x: 470, y: 390, radius: 6, color: 0xff69b4 },
-      { type: 'ramp', x: 250, y: 100, width: 300, height: 400, forceY: 1.5 },
+      // Plinko pegs — wider spacing, fewer rows
+      { type: 'bumper', x: 330, y: 170, radius: 6, color: 0xff69b4 },
+      { type: 'bumper', x: 400, y: 170, radius: 6, color: 0xffd700 },
+      { type: 'bumper', x: 470, y: 170, radius: 6, color: 0xff69b4 },
+      { type: 'bumper', x: 365, y: 260, radius: 6, color: 0x32cd32 },
+      { type: 'bumper', x: 435, y: 260, radius: 6, color: 0x32cd32 },
+      { type: 'bumper', x: 330, y: 350, radius: 6, color: 0xff69b4 },
+      { type: 'bumper', x: 400, y: 350, radius: 6, color: 0xffd700 },
+      { type: 'bumper', x: 470, y: 350, radius: 6, color: 0xff69b4 },
+      { type: 'ramp', x: 250, y: 100, width: 300, height: 400, forceY: 0.8 },
     ],
     frictionZones: [
       { x: 280, y: 480, width: 100, height: 80, color: 0xd2b48c },
@@ -512,32 +504,30 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 17,
     name: 'The Moving Islands',
-    par: 4,
+    par: 3,
     tee: { x: 400, y: 530 },
     cup: { x: 400, y: 70 },
     walls: [
-      // Start platform — open top between x:380-420
-      [{ x: 300, y: 480 }, { x: 380, y: 480 }],
-      [{ x: 420, y: 480 }, { x: 500, y: 480 }],
+      // Start platform — open top between x:370-430
+      [{ x: 300, y: 480 }, { x: 370, y: 480 }],
+      [{ x: 430, y: 480 }, { x: 500, y: 480 }],
       [{ x: 500, y: 480 }, { x: 500, y: 570 }],
       [{ x: 500, y: 570 }, { x: 300, y: 570 }],
       [{ x: 300, y: 570 }, { x: 300, y: 480 }],
-      // End platform — open bottom between x:380-420
+      // End platform — open bottom between x:370-430
       [{ x: 300, y: 30 }, { x: 500, y: 30 }],
       [{ x: 500, y: 30 }, { x: 500, y: 120 }],
-      [{ x: 500, y: 120 }, { x: 420, y: 120 }],
-      [{ x: 380, y: 120 }, { x: 300, y: 120 }],
+      [{ x: 500, y: 120 }, { x: 430, y: 120 }],
+      [{ x: 370, y: 120 }, { x: 300, y: 120 }],
       [{ x: 300, y: 120 }, { x: 300, y: 30 }],
       // Bridge rails through water
-      [{ x: 380, y: 120 }, { x: 380, y: 480 }],
-      [{ x: 420, y: 120 }, { x: 420, y: 480 }],
+      [{ x: 370, y: 120 }, { x: 370, y: 480 }],
+      [{ x: 430, y: 120 }, { x: 430, y: 480 }],
     ],
     obstacles: [],
     waterZones: [
-      // Water left of bridge
-      { x: 200, y: 120, width: 180, height: 360, color: 0xff69b4 },
-      // Water right of bridge
-      { x: 420, y: 120, width: 180, height: 360, color: 0xff69b4 },
+      { x: 200, y: 120, width: 170, height: 360, color: 0xff69b4 },
+      { x: 430, y: 120, width: 170, height: 360, color: 0xff69b4 },
     ],
   },
 
@@ -549,14 +539,14 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 400, y: 530 },
     cup: { x: 400, y: 100 },
     walls: [
-      // Narrow bridge approach
+      // Wider bridge approach (360-440)
       [
-        { x: 370, y: 300 },
-        { x: 370, y: 570 },
+        { x: 360, y: 300 },
+        { x: 360, y: 570 },
       ],
       [
-        { x: 430, y: 300 },
-        { x: 430, y: 570 },
+        { x: 440, y: 300 },
+        { x: 440, y: 570 },
       ],
       // Skull arena (closed)
       [
@@ -573,14 +563,14 @@ export const HOLES: HoleDefinition[] = [
         x: 400,
         y: 200,
         bladeCount: 2,
-        bladeLength: 60,
-        speed: 2.5,
+        bladeLength: 55,
+        speed: 1.5,
         color: 0xff1493,
       },
     ],
     waterZones: [
-      { x: 200, y: 300, width: 170, height: 270, color: 0xff4500 },
-      { x: 430, y: 300, width: 170, height: 270, color: 0xff4500 },
+      { x: 200, y: 300, width: 160, height: 270, color: 0xff4500 },
+      { x: 440, y: 300, width: 160, height: 270, color: 0xff4500 },
     ],
   },
 ];
