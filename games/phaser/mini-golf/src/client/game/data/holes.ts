@@ -303,4 +303,78 @@ export const HOLES: HoleDefinition[] = [
       },
     ],
   },
+
+  // ---- HOLE 8: The Teleportation Tunnels ----
+  // Puzzle hole with two physically separate areas. Tee box at bottom has three
+  // colored pipe entrances (Red, Blue, Green) in the top wall. Cup is in a
+  // walled-off exit area at the top, reachable only via teleporters.
+  // Red pipe → sand trap (away from hole). Blue pipe → corner bounce (chaotic).
+  // Green pipe → straight shot at hole (but entrance is blocked by chocolate).
+  // Player must bank off the wall to slip into the hidden Green pipe.
+  {
+    id: 8,
+    name: 'The Teleportation Tunnels',
+    par: 3,
+    tee: { x: 250, y: 650 },
+    cup: { x: 250, y: 160 },
+    walls: [
+      // Tee box (bottom enclosed area)
+      [
+        { x: 150, y: 540 },
+        { x: 350, y: 540 },
+        { x: 350, y: 700 },
+        { x: 150, y: 700 },
+        { x: 150, y: 540 },
+      ],
+      // Exit area (top enclosed area — physically unreachable)
+      [
+        { x: 100, y: 60 },
+        { x: 400, y: 60 },
+        { x: 400, y: 320 },
+        { x: 100, y: 320 },
+        { x: 100, y: 60 },
+      ],
+    ],
+    obstacles: [
+      // Chocolate block partially obscuring the Green pipe entrance
+      {
+        type: 'block',
+        x: 250,
+        y: 610,
+        width: 40,
+        height: 20,
+        angle: 0,
+      },
+    ],
+    frictionZones: [
+      // Sand trap around the Red pipe exit
+      { x: 300, y: 220, width: 95, height: 95 },
+    ],
+    teleporters: [
+      // Red pipe — exits pointing right/down, away from hole, into sand trap
+      {
+        entryX: 190,
+        entryY: 590,
+        exitX: 350,
+        exitY: 270,
+        color: 0xff3333,
+      },
+      // Blue pipe — exits in top-left corner for chaotic bounce
+      {
+        entryX: 310,
+        entryY: 590,
+        exitX: 130,
+        exitY: 90,
+        color: 0x3399ff,
+      },
+      // Green pipe — exits pointing straight at the hole
+      {
+        entryX: 250,
+        entryY: 590,
+        exitX: 250,
+        exitY: 240,
+        color: 0x33cc33,
+      },
+    ],
+  },
 ];

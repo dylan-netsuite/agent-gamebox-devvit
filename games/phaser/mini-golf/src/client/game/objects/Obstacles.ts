@@ -339,12 +339,27 @@ export class Obstacles {
     this.teleporters.push({ entryRect, exitX: exit.x, exitY: exit.y, cooldown: 0 });
 
     const color = def.color ?? 0x9370db;
-    this.graphics.fillStyle(color, 0.8);
-    this.graphics.fillCircle(entry.x, entry.y, r);
-    this.graphics.fillCircle(exit.x, exit.y, r);
-    this.graphics.lineStyle(2, 0xffffff, 0.4);
-    this.graphics.strokeCircle(entry.x, entry.y, r);
-    this.graphics.strokeCircle(exit.x, exit.y, r);
+    const g = this.graphics;
+
+    for (const pos of [entry, exit]) {
+      g.fillStyle(0x000000, 0.3);
+      g.fillCircle(pos.x + 1, pos.y + 1, r + 3);
+
+      g.fillStyle(0x333333, 1);
+      g.fillCircle(pos.x, pos.y, r + 3);
+
+      g.fillStyle(color, 0.9);
+      g.fillCircle(pos.x, pos.y, r);
+
+      g.fillStyle(0x000000, 0.6);
+      g.fillCircle(pos.x, pos.y, r * 0.55);
+
+      g.fillStyle(0xffffff, 0.3);
+      g.fillCircle(pos.x - r * 0.3, pos.y - r * 0.3, r * 0.25);
+
+      g.lineStyle(2, 0xffffff, 0.5);
+      g.strokeCircle(pos.x, pos.y, r + 2);
+    }
   }
 
   addWindmill(def: ObstacleDef): void {

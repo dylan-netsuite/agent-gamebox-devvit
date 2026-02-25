@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.0.2.153 - Hole 8: The Teleportation Tunnels (2026-02-25)
+
+### Added
+- **Hole 8: The Teleportation Tunnels** — Par 3. Puzzle-oriented hole with two physically separate walled areas connected only by teleporter pipes. Tee box at bottom has three colored pipe entrances (Red, Blue, Green). Cup is in a walled-off exit area at top, unreachable without teleporting.
+- **Three-pipe teleporter system**: Red pipe exits into a sand trap (away from hole), Blue pipe exits into a corner for chaotic bounces, Green pipe exits pointing straight at the cup for an easy roll-in.
+- **Chocolate block puzzle**: A static chocolate block partially obscures the Green pipe entrance, forcing players to bank off the side wall to reach it. Direct shots are blocked.
+
+### Changed
+- **Enhanced teleporter visuals** — pipe entrances/exits now render with a dark outer ring, colored fill, dark center hole, specular highlight, and white stroke ring for a 3D pipe appearance.
+
 ## v0.0.2.142 - Fix Windmill Ball Sticking (2026-02-25)
 
 ### Fixed

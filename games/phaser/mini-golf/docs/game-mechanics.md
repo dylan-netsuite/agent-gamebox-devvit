@@ -6,7 +6,7 @@ All hole coordinates are defined in a 500x800 portrait design space, optimized f
 
 ## Course Structure
 
-Currently 7 holes. Holes are added iteratively with high visual and gameplay quality.
+Currently 8 holes. Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
 Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
@@ -28,6 +28,9 @@ Two isolated rectangular islands — bottom island (x:120-380, y:520-700) with t
 
 ### Hole 7: The Wafer Windmill (Par 3)
 Classic retro mini-golf timing challenge. Straight rectangular fairway (x:150-350, y:60-700) with the tee at x:250,y:650 and cup at x:250,y:110. A massive 4-blade windmill is positioned dead center at x:250,y:380. The blades are 180 design units long — extending wall-to-wall across the 200-unit-wide fairway, completely blocking any safe path around them. Each blade is a kinematic Matter.js rectangle with restitution 1.5, meaning contact violently deflects the ball off course. The windmill rotates at 1.2 rad/s (~5.2 seconds per full rotation). Blades are rendered as wafer cookies with a tan/golden base, grid pattern, light/dark edges, and shadows. The center hub is chocolate-themed. The player must observe the rotation speed, mentally calculate the gap timing, and release their shot so the ball slips cleanly between two blades. This is a pure, distilled test of hand-eye coordination — an absolute staple of retro mini-golf.
+
+### Hole 8: The Teleportation Tunnels (Par 3)
+Puzzle-oriented hole with two physically separate walled areas. The tee box (x:150-350, y:540-700) is a small enclosed room with the tee at x:250,y:650. Three colored pipe entrances (Red at x:190, Blue at x:310, Green at x:250) are embedded in the upper portion of the tee box at y:590. The cup sits at x:250,y:160 in a completely separate walled exit area (x:100-400, y:60-320) that is physically unreachable without teleporting. Each pipe entrance is an overlap trigger that instantaneously teleports the ball to a corresponding exit, preserving the ball's exact scalar velocity. **Red pipe** exits at x:350,y:270 — pointing away from the hole, directly into a sand trap zone (x:300-395, y:220-315). **Blue pipe** exits at x:130,y:90 — into the top-left corner for chaotic wall bounces. **Green pipe** exits at x:250,y:240 — pointing perfectly straight at the cup for an effortless slow-rolling hole-in-one. The catch: a static chocolate block (40x20 design units) at x:250,y:610 partially obscures the Green pipe entrance, blocking direct shots. The player must bank the ball off the side wall to slip it past the block and into the Green pipe. This highly puzzle-oriented hole breaks the visual flow, forcing the player to view the screen holistically and deduce the correct bank angle through trial, error, and spatial memory.
 
 ## Play Modes
 
@@ -138,6 +141,16 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 | Animation | Ball shrinks to 30% scale and fades to 0 alpha over 500ms before reset |
 | Visual | Tileable 256x256 pink taffy texture with flowing sine-wave patterns, glossy sheen, and sugar crystal sparkle |
 | Behavior | Overlap trigger zone — triggers penalty and reset unless ball is on a bridge body. Bridge collision check uses body position + ball radius for tolerance. |
+
+## Teleporter Pipe Physics
+
+| Property | Value |
+|----------|-------|
+| Entry Zone | Rectangular overlap trigger (28x28 screen pixels, from 14 design unit radius) |
+| Behavior | When ball center enters the entry rectangle, ball position is instantly set to the exit coordinates. Ball velocity (vx, vy) is preserved exactly. |
+| Cooldown | 30 frames (~0.5s at 60fps) — prevents immediate re-triggering after teleport |
+| Visual | Colored circle with dark outer ring (gray), colored fill, dark center hole, specular highlight, and white stroke ring. Entry and exit pipes share the same color. |
+| Colors | Red (0xff3333), Blue (0x3399ff), Green (0x33cc33) |
 
 ## Hole Capture
 
