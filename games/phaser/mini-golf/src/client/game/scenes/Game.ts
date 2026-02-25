@@ -92,13 +92,23 @@ export class Game extends Scene {
   private initSparkles(): void {
     const { width, height } = this.scale;
     this.sparkles = [];
-    for (let i = 0; i < 30; i++) {
+    // Mix of large prominent sparkles and small subtle ones
+    for (let i = 0; i < 15; i++) {
+      this.sparkles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.3 + Math.random() * 0.8,
+        size: 5 + Math.random() * 8,
+      });
+    }
+    for (let i = 0; i < 25; i++) {
       this.sparkles.push({
         x: Math.random() * width,
         y: Math.random() * height,
         phase: Math.random() * Math.PI * 2,
         speed: 0.5 + Math.random() * 1.5,
-        size: 1 + Math.random() * 2,
+        size: 1.5 + Math.random() * 3,
       });
     }
   }
@@ -170,27 +180,49 @@ export class Game extends Scene {
   private drawBackground(): void {
     const { width, height } = this.scale;
 
-    // Dark grass base
-    this.bgGraphics.fillStyle(0x1a472a, 1);
+    // Rich dark grass base
+    this.bgGraphics.fillStyle(0x14381f, 1);
     this.bgGraphics.fillRect(0, 0, width, height);
 
-    // Subtle grass texture dots
-    const dotCount = Math.floor((width * height) / 600);
-    for (let i = 0; i < dotCount; i++) {
-      const dx = Math.random() * width;
-      const dy = Math.random() * height;
-      const shade = Math.random() > 0.5 ? 0x1f5232 : 0x153d23;
-      const alpha = 0.3 + Math.random() * 0.4;
-      this.bgGraphics.fillStyle(shade, alpha);
-      this.bgGraphics.fillCircle(dx, dy, 0.8 + Math.random() * 1.2);
+    // Dense grass fiber texture — many small strokes for realistic look
+    const fiberCount = Math.floor((width * height) / 120);
+    for (let i = 0; i < fiberCount; i++) {
+      const fx = Math.random() * width;
+      const fy = Math.random() * height;
+      const shade = [0x1a4a2a, 0x164020, 0x1e5530, 0x123518, 0x0f2d14][
+        Math.floor(Math.random() * 5)
+      ]!;
+      const a = 0.2 + Math.random() * 0.5;
+      this.bgGraphics.fillStyle(shade, a);
+      // Tiny elongated dots to simulate grass blades
+      const bw = 0.5 + Math.random() * 1.5;
+      const bh = 1.5 + Math.random() * 3;
+      this.bgGraphics.fillRect(fx, fy, bw, bh);
     }
 
-    // Subtle vignette
-    const { s } = getScaleFactor(this);
-    const ox = (width - DESIGN_WIDTH * s) / 2;
-    const oy = (height - DESIGN_HEIGHT * s) / 2;
-    this.bgGraphics.fillStyle(0x0d3320, 0.3);
-    this.bgGraphics.fillRect(ox, oy, DESIGN_WIDTH * s, DESIGN_HEIGHT * s);
+    // Scattered lighter highlights
+    const highlightCount = Math.floor(fiberCount * 0.15);
+    for (let i = 0; i < highlightCount; i++) {
+      const fx = Math.random() * width;
+      const fy = Math.random() * height;
+      this.bgGraphics.fillStyle(0x2a6b3a, 0.15 + Math.random() * 0.2);
+      this.bgGraphics.fillCircle(fx, fy, 0.5 + Math.random() * 1);
+    }
+
+    // Darker vignette around edges
+    const vignetteSize = Math.max(width, height) * 0.15;
+    // Top
+    this.bgGraphics.fillStyle(0x0a1f10, 0.25);
+    this.bgGraphics.fillRect(0, 0, width, vignetteSize);
+    // Bottom
+    this.bgGraphics.fillStyle(0x0a1f10, 0.25);
+    this.bgGraphics.fillRect(0, height - vignetteSize, width, vignetteSize);
+    // Left
+    this.bgGraphics.fillStyle(0x0a1f10, 0.2);
+    this.bgGraphics.fillRect(0, 0, vignetteSize, height);
+    // Right
+    this.bgGraphics.fillStyle(0x0a1f10, 0.2);
+    this.bgGraphics.fillRect(width - vignetteSize, 0, vignetteSize, height);
   }
 
   private drawSparkles(): void {
@@ -198,15 +230,35 @@ export class Game extends Scene {
     const t = this.elapsed / 1000;
 
     for (const sp of this.sparkles) {
-      const alpha = 0.3 + Math.sin(t * sp.speed + sp.phase) * 0.3;
-      if (alpha < 0.1) continue;
+      const alpha = 0.3 + Math.sin(t * sp.speed + sp.phase) * 0.4;
+      if (alpha < 0.08) continue;
 
-      this.sparkleGraphics.fillStyle(0xffffff, alpha);
-
-      // 4-point star shape
       const s = sp.size;
-      this.sparkleGraphics.fillRect(sp.x - s / 2, sp.y - 0.5, s, 1);
-      this.sparkleGraphics.fillRect(sp.x - 0.5, sp.y - s / 2, 1, s);
+
+      if (s > 5) {
+        // Large sparkles — proper diamond 4-point star
+        this.sparkleGraphics.fillStyle(0xffffff, alpha);
+        this.sparkleGraphics.beginPath();
+        this.sparkleGraphics.moveTo(sp.x, sp.y - s);
+        this.sparkleGraphics.lineTo(sp.x + s * 0.18, sp.y - s * 0.18);
+        this.sparkleGraphics.lineTo(sp.x + s, sp.y);
+        this.sparkleGraphics.lineTo(sp.x + s * 0.18, sp.y + s * 0.18);
+        this.sparkleGraphics.lineTo(sp.x, sp.y + s);
+        this.sparkleGraphics.lineTo(sp.x - s * 0.18, sp.y + s * 0.18);
+        this.sparkleGraphics.lineTo(sp.x - s, sp.y);
+        this.sparkleGraphics.lineTo(sp.x - s * 0.18, sp.y - s * 0.18);
+        this.sparkleGraphics.closePath();
+        this.sparkleGraphics.fillPath();
+
+        // Inner glow
+        this.sparkleGraphics.fillStyle(0xffffff, alpha * 0.6);
+        this.sparkleGraphics.fillCircle(sp.x, sp.y, s * 0.2);
+      } else {
+        // Small sparkles — simple cross
+        this.sparkleGraphics.fillStyle(0xffffff, alpha);
+        this.sparkleGraphics.fillRect(sp.x - s / 2, sp.y - 0.5, s, 1);
+        this.sparkleGraphics.fillRect(sp.x - 0.5, sp.y - s / 2, 1, s);
+      }
     }
   }
 
@@ -217,70 +269,104 @@ export class Game extends Scene {
     this.hud = this.add.container(0, 0);
     this.hud.setDepth(200);
 
-    const hudH = 52;
+    const hudH = 58;
     const hudY = height - hudH;
     const cx = width / 2;
 
-    // HUD background panel
     const hudBg = this.add.graphics();
-    hudBg.fillStyle(0x3d2b1f, 0.95);
-    hudBg.fillRect(0, hudY, width, hudH);
-    // Gold top border
-    hudBg.fillStyle(0xc8a84e, 1);
-    hudBg.fillRect(0, hudY, width, 3);
-    // Inner border
-    hudBg.lineStyle(1, 0x8b6914, 0.6);
-    hudBg.strokeRect(4, hudY + 4, width - 8, hudH - 8);
+
+    // Red outer border frame
+    hudBg.fillStyle(0xcc2200, 1);
+    hudBg.fillRect(0, hudY - 3, width, hudH + 3);
+
+    // Gold border line
+    hudBg.fillStyle(0xd4a843, 1);
+    hudBg.fillRect(2, hudY - 1, width - 4, hudH - 1);
+
+    // Dark brown main panel
+    hudBg.fillStyle(0x3d2b1f, 0.97);
+    hudBg.fillRect(4, hudY + 2, width - 8, hudH - 6);
+
+    // Inner gold border
+    hudBg.lineStyle(1.5, 0xc8a84e, 0.7);
+    hudBg.strokeRect(7, hudY + 5, width - 14, hudH - 12);
+
+    // Red inner accent line
+    hudBg.lineStyle(1, 0xcc2200, 0.4);
+    hudBg.strokeRect(5, hudY + 3, width - 10, hudH - 8);
+
     this.hud.add(hudBg);
 
-    // Peppermint swirl left
-    this.drawPeppermintSwirl(cx - 90, hudY + hudH / 2, 10);
-    // Peppermint swirl right
-    this.drawPeppermintSwirl(cx + 90, hudY + hudH / 2, 10);
+    // Peppermint swirls flanking the hole label
+    this.drawPeppermintSwirl(cx - 95, hudY + hudH / 2, 11);
+    this.drawPeppermintSwirl(cx + 95, hudY + hudH / 2, 11);
 
-    // HOLE label centered
-    const holeBannerW = 160;
-    const holeBannerH = 28;
+    // HOLE label — larger, more ornate banner
+    const holeBannerW = 170;
+    const holeBannerH = 32;
+    const bannerY = hudY + (hudH - holeBannerH) / 2;
     const holeBannerBg = this.add.graphics();
+
+    // Outer banner border (dark gold)
     holeBannerBg.fillStyle(0x8b6914, 1);
-    holeBannerBg.fillRoundedRect(cx - holeBannerW / 2, hudY + (hudH - holeBannerH) / 2, holeBannerW, holeBannerH, 6);
-    holeBannerBg.fillStyle(0xc8a84e, 0.8);
-    holeBannerBg.fillRoundedRect(cx - holeBannerW / 2 + 2, hudY + (hudH - holeBannerH) / 2 + 2, holeBannerW - 4, holeBannerH - 4, 5);
+    holeBannerBg.fillRoundedRect(cx - holeBannerW / 2, bannerY, holeBannerW, holeBannerH, 7);
+    // Inner banner fill (warm gold)
+    holeBannerBg.fillStyle(0xc8a84e, 0.9);
+    holeBannerBg.fillRoundedRect(
+      cx - holeBannerW / 2 + 2,
+      bannerY + 2,
+      holeBannerW - 4,
+      holeBannerH - 4,
+      6
+    );
+    // Highlight on top half
+    holeBannerBg.fillStyle(0xddc060, 0.4);
+    holeBannerBg.fillRoundedRect(
+      cx - holeBannerW / 2 + 3,
+      bannerY + 3,
+      holeBannerW - 6,
+      (holeBannerH - 6) / 2,
+      { tl: 5, tr: 5, bl: 0, br: 0 }
+    );
     this.hud.add(holeBannerBg);
 
     const holeText = this.add
       .text(cx, hudY + hudH / 2, `HOLE ${def.id}`, {
         fontFamily: '"Arial Black", "Impact", sans-serif',
-        fontSize: '16px',
+        fontSize: '18px',
         color: '#3d2b1f',
         stroke: '#c8a84e',
-        strokeThickness: 0.5,
+        strokeThickness: 1,
       })
       .setOrigin(0.5);
     this.hud.add(holeText);
 
     // SCORE on left with green gumdrop
-    const scoreX = 30;
-    this.drawGumdrop(scoreX, hudY + hudH / 2, 7, 0x32cd32);
+    const scoreX = 28;
+    this.drawGumdrop(scoreX, hudY + hudH / 2, 8, 0x32cd32);
 
     this.strokeLabel = this.add
-      .text(scoreX + 18, hudY + hudH / 2, `SCORE: ${this.strokes}`, {
+      .text(scoreX + 20, hudY + hudH / 2, `SCORE: ${this.strokes}`, {
         fontFamily: '"Arial Black", sans-serif',
-        fontSize: '12px',
-        color: '#e0d8c0',
+        fontSize: '13px',
+        color: '#e8e0c8',
+        stroke: '#000000',
+        strokeThickness: 1,
       })
       .setOrigin(0, 0.5);
     this.hud.add(this.strokeLabel);
 
     // PAR on right with purple gumdrop
-    const parX = width - 30;
-    this.drawGumdrop(parX, hudY + hudH / 2, 7, 0x9370db);
+    const parX = width - 28;
+    this.drawGumdrop(parX, hudY + hudH / 2, 8, 0x9370db);
 
     const parLabel = this.add
-      .text(parX - 18, hudY + hudH / 2, `PAR ${def.par}`, {
+      .text(parX - 20, hudY + hudH / 2, `PAR ${def.par}`, {
         fontFamily: '"Arial Black", sans-serif',
-        fontSize: '12px',
-        color: '#e0d8c0',
+        fontSize: '13px',
+        color: '#e8e0c8',
+        stroke: '#000000',
+        strokeThickness: 1,
       })
       .setOrigin(1, 0.5);
     this.hud.add(parLabel);

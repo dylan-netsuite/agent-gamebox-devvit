@@ -44,12 +44,26 @@ export class GolfBall {
 
   private drawBall(): void {
     this.graphics.clear();
-    this.graphics.fillStyle(0xffffff, 1);
+
+    // Drop shadow
+    this.graphics.fillStyle(0x000000, 0.25);
+    this.graphics.fillCircle(this.radius * 0.15, this.radius * 0.2, this.radius * 1.15);
+
+    // Main ball body
+    this.graphics.fillStyle(0xf0f0f0, 1);
     this.graphics.fillCircle(0, 0, this.radius);
-    this.graphics.lineStyle(1, 0xcccccc, 0.6);
+
+    // Outer ring
+    this.graphics.lineStyle(1.5, 0xc0c0c0, 0.5);
     this.graphics.strokeCircle(0, 0, this.radius);
-    this.graphics.fillStyle(0xeeeeee, 0.4);
-    this.graphics.fillCircle(-this.radius * 0.3, -this.radius * 0.3, this.radius * 0.3);
+
+    // Bright highlight (top-left)
+    this.graphics.fillStyle(0xffffff, 0.7);
+    this.graphics.fillCircle(-this.radius * 0.3, -this.radius * 0.3, this.radius * 0.35);
+
+    // Subtle bottom-right shadow on ball surface
+    this.graphics.fillStyle(0xcccccc, 0.3);
+    this.graphics.fillCircle(this.radius * 0.2, this.radius * 0.2, this.radius * 0.5);
   }
 
   update(): void {

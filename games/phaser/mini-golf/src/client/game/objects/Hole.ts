@@ -36,37 +36,55 @@ export class Hole {
   }
 
   private drawHole(): void {
-    this.graphics.fillStyle(0x1a1a1a, 0.3);
+    // Outer shadow ring
+    this.graphics.fillStyle(0x0a0a0a, 0.2);
     this.graphics.fillCircle(this.x, this.y, this.attractionRadius);
 
-    this.graphics.fillStyle(0x000000, 0.9);
+    // Darker ring around hole
+    this.graphics.fillStyle(0x111111, 0.6);
+    this.graphics.fillCircle(this.x, this.y, this.visualRadius * 1.3);
+
+    // Main hole
+    this.graphics.fillStyle(0x000000, 1);
     this.graphics.fillCircle(this.x, this.y, this.visualRadius);
-    this.graphics.lineStyle(2, 0x333333, 0.8);
+
+    // Rim highlight
+    this.graphics.lineStyle(2, 0x444444, 0.7);
     this.graphics.strokeCircle(this.x, this.y, this.visualRadius);
-    this.graphics.fillStyle(0x111111, 0.5);
-    this.graphics.fillCircle(this.x, this.y, this.visualRadius * 0.5);
+
+    // Inner depth
+    this.graphics.fillStyle(0x080808, 0.8);
+    this.graphics.fillCircle(this.x, this.y, this.visualRadius * 0.6);
   }
 
   private drawFlag(): void {
-    const poleHeight = scaleValue(this.scene, 30);
-    const flagW = scaleValue(this.scene, 14);
-    const flagH = scaleValue(this.scene, 10);
+    const poleHeight = scaleValue(this.scene, 34);
+    const flagW = scaleValue(this.scene, 12);
+    const flagH = scaleValue(this.scene, 8);
 
-    this.flagGraphics.lineStyle(2, 0xcccccc, 0.8);
+    // Pole shadow
+    this.flagGraphics.lineStyle(3, 0x000000, 0.2);
+    this.flagGraphics.beginPath();
+    this.flagGraphics.moveTo(this.x + 1, this.y + 1);
+    this.flagGraphics.lineTo(this.x + 1, this.y - poleHeight + 1);
+    this.flagGraphics.strokePath();
+
+    // Pole
+    this.flagGraphics.lineStyle(2, 0xdddddd, 0.9);
     this.flagGraphics.beginPath();
     this.flagGraphics.moveTo(this.x, this.y);
     this.flagGraphics.lineTo(this.x, this.y - poleHeight);
     this.flagGraphics.strokePath();
 
-    this.flagGraphics.fillStyle(0xff1493, 1);
-    this.flagGraphics.fillTriangle(
-      this.x,
-      this.y - poleHeight,
-      this.x + flagW,
-      this.y - poleHeight + flagH / 2,
-      this.x,
-      this.y - poleHeight + flagH
-    );
+    // White rectangular flag
+    this.flagGraphics.fillStyle(0xffffff, 0.95);
+    this.flagGraphics.fillRect(this.x, this.y - poleHeight, flagW, flagH);
+    this.flagGraphics.lineStyle(1, 0xcccccc, 0.5);
+    this.flagGraphics.strokeRect(this.x, this.y - poleHeight, flagW, flagH);
+
+    // Pole cap
+    this.flagGraphics.fillStyle(0xeeeeee, 1);
+    this.flagGraphics.fillCircle(this.x, this.y - poleHeight, 1.5);
   }
 
   applyAttraction(ball: GolfBall): void {

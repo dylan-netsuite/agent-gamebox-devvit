@@ -42,8 +42,8 @@ Simple straight vertical rectangle. No obstacles. Full-power straight shot = hol
 |----------|-------|
 | Restitution | 0.7 |
 | Friction | 0.1 |
-| Thickness | 14 design units |
-| Visual style | Candy cane peppermint stripes |
+| Thickness | 18 design units |
+| Visual style | Candy cane peppermint stripes with corner swirls |
 
 ## Hole Capture
 
@@ -54,13 +54,13 @@ Ball is captured when:
 
 ## Visual Theme
 
-- **Background**: Dark textured grass (0x1a472a) with procedural noise dots
-- **Sparkles**: 30 twinkling 4-point star particles
-- **Fairway**: Rich green (0x2d8a4e) with lighter inner border (0x3da85e)
-- **Walls**: Candy cane peppermint sticks — white base with diagonal red parallelogram stripes
-- **HUD**: Bottom-anchored candy panel with gold banner, peppermint swirl decorations, gumdrop icons
-- **Hole**: Black circle with white flag on pole
-- **Ball**: White with subtle highlight and trail effect
+- **Background**: Dark textured grass (0x14381f) with dense fiber-like elongated rectangles, scattered lighter highlights, directional edge vignette
+- **Sparkles**: Mix of large diamond 4-point stars (5-13px with inner glow) and small cross sparkles
+- **Fairway**: Rich green (0x2d8a4e) with visible inner border glow and secondary edge highlight
+- **Walls**: Candy cane peppermint sticks — cream base with tight diagonal red parallelogram stripes, cylindrical center sheen, rounded peppermint swirl corner joints
+- **HUD**: Bottom-anchored candy panel with red outer border, gold border line, inner gold + red accent, ornate gold banner with highlight gradient, peppermint swirl decorations, gumdrop icons, text stroke
+- **Hole**: Black circle with darker depth ring, rim highlight, white rectangular flag with pole shadow and cap
+- **Ball**: White with drop shadow, outer ring, bright top-left highlight, subtle bottom-right surface shadow, trail effect
 
 ## Scoring
 

@@ -10,7 +10,7 @@ export const BALL_DENSITY = 0.002;
 export const WALL_RESTITUTION = 0.7;
 
 export const MAX_SHOT_VELOCITY = 18;
-export const WALL_THICKNESS = 14;
+export const WALL_THICKNESS = 18;
 export const POWER_OSCILLATION_HZ = 0.9;
 export const CAPTURE_VELOCITY_THRESHOLD = 6.0;
 export const CAPTURE_RADIUS = 20;

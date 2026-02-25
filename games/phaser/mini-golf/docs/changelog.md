@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.2.39 - Visual Polish Pass (2026-02-25)
+
+### Changed
+- **Walls**: Tighter candy cane stripe spacing, thicker walls (14→18), rounded peppermint swirl corner joints, center cylindrical sheen highlight
+- **Fairway**: Richer green with visible inner border glow and secondary edge highlight
+- **Background**: Dense grass fiber texture (elongated rectangles) replacing random dots, scattered lighter highlights, directional edge vignette
+- **Sparkles**: Mix of large diamond 4-point stars (5-13px with inner glow) and small crosses
+- **HUD**: Red outer border frame, gold border line, inner gold + red accent borders, larger peppermint swirls, larger hole banner with highlight gradient, text stroke for readability
+- **Ball**: Drop shadow, outer ring, bright top-left highlight, subtle bottom-right surface shadow
+- **Hole**: Darker ring for depth, stronger rim highlight
+- **Flag**: White rectangular flag replacing pink triangle, pole shadow, pole cap
+
 ## v0.0.2.31 - Visual Overhaul & Hole 1 Rebuild (2026-02-25)
 
 ### Changed
