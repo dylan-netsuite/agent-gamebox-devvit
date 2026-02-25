@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.2.58 - Portrait Zoom Fix & Hole 2 Playability (2026-02-25)
+
+### Changed
+- **Design space**: Changed from 800x600 (landscape) to 500x800 (portrait) to match mobile Devvit webview proportions. Courses now fill the viewport instead of appearing tiny.
+- **Hole 1 coordinates**: Remapped to 500x800 space — walls at x:150-350, y:60-740. Tee at (250,690), cup at (250,110).
+- **Hole 2 coordinates**: Remapped to portrait layout with vertical corridor (x:120-280) going up then bending right into horizontal corridor (x:120-420, y:80-250).
+- **Hole 2 licorice wall**: Repositioned from fully blocking the corridor (140px wide spanning the entire path) to a vertical partial barrier at the inner bend (100x18, vertical orientation), allowing the ball to navigate past it.
+- **Phaser config**: Default dimensions updated to 500x800 to match portrait design space.
+
+### Fixed
+- Both holes were zoomed out too far on mobile — course now fills the screen properly
+- Hole 2 was unplayable because the licorice wall blocked the entire corridor width
+
 ## v0.0.2.51 - Hole 2: The Licorice Dogleg (2026-02-25)
 
 ### Added

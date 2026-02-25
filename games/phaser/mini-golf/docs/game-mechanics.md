@@ -1,14 +1,18 @@
 # Game Mechanics
 
+## Design Space
+
+All hole coordinates are defined in a 500x800 portrait design space, optimized for mobile Devvit webviews. The coordinate system scales uniformly to fit any viewport while maintaining aspect ratio.
+
 ## Course Structure
 
 Currently 2 holes. Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
-Simple straight vertical rectangle. No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
+Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
 
 ### Hole 2: The Licorice Dogleg (Par 2)
-L-shaped course bending 90 degrees right. A licorice wall blocks the direct path. A 45-degree chocolate block in the upper-left corner reflects the ball toward the cup. Aim at the block with ~75% power for a bank-shot hole-in-one. Introduces calculated bank shots and geometric physics.
+L-shaped course with a vertical corridor (x:120-280, y:250-750) bending 90 degrees right into a horizontal corridor (x:120-420, y:80-250). A licorice wall partially blocks the inner bend. A 45-degree chocolate block in the upper-left corner reflects the ball toward the cup. Aim at the block with ~75% power for a bank-shot approach. Introduces calculated bank shots and geometric physics.
 
 ## Controls
 

@@ -23,8 +23,8 @@ export const ICE_FRICTION_AIR = 0.002;
 
 export const BUMPER_RESTITUTION = 1.3;
 
-export const DESIGN_WIDTH = 800;
-export const DESIGN_HEIGHT = 600;
+export const DESIGN_WIDTH = 500;
+export const DESIGN_HEIGHT = 800;
 
 export function getBallSpeed(ball: MatterJS.BodyType): number {
   return Math.sqrt(ball.velocity.x * ball.velocity.x + ball.velocity.y * ball.velocity.y);

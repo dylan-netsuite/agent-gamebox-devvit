@@ -42,8 +42,8 @@ export class Walls {
   }
 
   private addWallSegment(
-    a: { x: number; y: number },
-    b: { x: number; y: number },
+    _a: { x: number; y: number },
+    _b: { x: number; y: number },
     sa: { x: number; y: number },
     sb: { x: number; y: number },
     thickness: number
