@@ -349,7 +349,7 @@ export class Obstacles {
   addWindmill(def: ObstacleDef): void {
     const pos = toScreen(this.scene, def.x, def.y);
     const bladeLen = scaleValue(this.scene, def.bladeLength ?? 50);
-    const bladeW = scaleValue(this.scene, 8);
+    const bladeW = scaleValue(this.scene, 10);
     const bladeCount = def.bladeCount ?? 4;
     const speed = def.speed ?? 1.5;
 
@@ -365,7 +365,7 @@ export class Obstacles {
       const body = this.scene.matter.add.rectangle(bx, by, bladeLen, bladeW, {
         isStatic: true,
         angle,
-        restitution: 0.9,
+        restitution: 1.5,
         label: 'windmill_blade',
       });
       bladeBodies.push(body);
@@ -485,18 +485,91 @@ export class Obstacles {
         this.scene.matter.body.setPosition(body, { x: bx, y: by });
         this.scene.matter.body.setAngle(body, angle);
 
-        const ex = wm.cx + Math.cos(angle) * halfLen;
-        const ey = wm.cy + Math.sin(angle) * halfLen;
+        const bladeW = scaleValue(this.scene, 10);
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const perpX = -sin;
+        const perpY = cos;
 
-        wm.graphics.lineStyle(scaleValue(this.scene, 8), 0xe9c46a, 0.9);
+        const tipX = wm.cx + cos * halfLen;
+        const tipY = wm.cy + sin * halfLen;
+        const hw = bladeW / 2;
+
+        const x0 = wm.cx + perpX * hw;
+        const y0 = wm.cy + perpY * hw;
+        const x1 = tipX + perpX * hw;
+        const y1 = tipY + perpY * hw;
+        const x2 = tipX - perpX * hw;
+        const y2 = tipY - perpY * hw;
+        const x3 = wm.cx - perpX * hw;
+        const y3 = wm.cy - perpY * hw;
+
+        // Blade shadow
+        wm.graphics.fillStyle(0x000000, 0.15);
+        wm.graphics.beginPath();
+        wm.graphics.moveTo(x0 + 2, y0 + 2);
+        wm.graphics.lineTo(x1 + 2, y1 + 2);
+        wm.graphics.lineTo(x2 + 2, y2 + 2);
+        wm.graphics.lineTo(x3 + 2, y3 + 2);
+        wm.graphics.closePath();
+        wm.graphics.fillPath();
+
+        // Wafer base color
+        wm.graphics.fillStyle(0xd4a44c, 1);
+        wm.graphics.beginPath();
+        wm.graphics.moveTo(x0, y0);
+        wm.graphics.lineTo(x1, y1);
+        wm.graphics.lineTo(x2, y2);
+        wm.graphics.lineTo(x3, y3);
+        wm.graphics.closePath();
+        wm.graphics.fillPath();
+
+        // Wafer grid lines along the blade
+        const gridSpacing = scaleValue(this.scene, 12);
+        const gridCount = Math.floor(halfLen / gridSpacing);
+        wm.graphics.lineStyle(1, 0xc08830, 0.5);
+        for (let g = 1; g <= gridCount; g++) {
+          const t = (g * gridSpacing) / halfLen;
+          const gx = wm.cx + cos * halfLen * t;
+          const gy = wm.cy + sin * halfLen * t;
+          wm.graphics.beginPath();
+          wm.graphics.moveTo(gx + perpX * hw, gy + perpY * hw);
+          wm.graphics.lineTo(gx - perpX * hw, gy - perpY * hw);
+          wm.graphics.strokePath();
+        }
+
+        // Center line along blade length
+        wm.graphics.lineStyle(1, 0xc08830, 0.3);
         wm.graphics.beginPath();
         wm.graphics.moveTo(wm.cx, wm.cy);
-        wm.graphics.lineTo(ex, ey);
+        wm.graphics.lineTo(tipX, tipY);
+        wm.graphics.strokePath();
+
+        // Highlight edge
+        wm.graphics.lineStyle(1, 0xf0d080, 0.4);
+        wm.graphics.beginPath();
+        wm.graphics.moveTo(x0, y0);
+        wm.graphics.lineTo(x1, y1);
+        wm.graphics.strokePath();
+
+        // Dark edge
+        wm.graphics.lineStyle(1, 0x8b6914, 0.4);
+        wm.graphics.beginPath();
+        wm.graphics.moveTo(x3, y3);
+        wm.graphics.lineTo(x2, y2);
         wm.graphics.strokePath();
       }
 
-      wm.graphics.fillStyle(0x8b4513, 1);
-      wm.graphics.fillCircle(wm.cx, wm.cy, scaleValue(this.scene, 6));
+      // Chocolate center hub
+      const hubR = scaleValue(this.scene, 10);
+      wm.graphics.fillStyle(0x000000, 0.2);
+      wm.graphics.fillCircle(wm.cx + 1, wm.cy + 1, hubR);
+      wm.graphics.fillStyle(0x5c3317, 1);
+      wm.graphics.fillCircle(wm.cx, wm.cy, hubR);
+      wm.graphics.fillStyle(0x7b4a2a, 1);
+      wm.graphics.fillCircle(wm.cx, wm.cy, hubR * 0.7);
+      wm.graphics.fillStyle(0xffffff, 0.25);
+      wm.graphics.fillCircle(wm.cx - hubR * 0.25, wm.cy - hubR * 0.25, hubR * 0.3);
     }
   }
 

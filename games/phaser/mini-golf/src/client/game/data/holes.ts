@@ -271,4 +271,36 @@ export const HOLES: HoleDefinition[] = [
       { x: 120, y: 280, width: 260, height: 240, color: 0xff69b4 },
     ],
   },
+
+  // ---- HOLE 7: The Wafer Windmill ----
+  // Classic retro mini-golf timing challenge. Straight fairway with a massive
+  // 4-blade windmill dead center. Blades extend wall-to-wall — no safe path
+  // around them. High restitution blades violently deflect the ball on contact.
+  // Player must time their shot to slip through the gap between rotating blades.
+  {
+    id: 7,
+    name: 'The Wafer Windmill',
+    par: 3,
+    tee: { x: 250, y: 650 },
+    cup: { x: 250, y: 110 },
+    walls: [
+      [
+        { x: 150, y: 60 },
+        { x: 350, y: 60 },
+        { x: 350, y: 700 },
+        { x: 150, y: 700 },
+        { x: 150, y: 60 },
+      ],
+    ],
+    obstacles: [
+      {
+        type: 'windmill',
+        x: 250,
+        y: 380,
+        bladeCount: 4,
+        bladeLength: 180,
+        speed: 1.2,
+      },
+    ],
+  },
 ];

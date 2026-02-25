@@ -6,7 +6,7 @@ All hole coordinates are defined in a 500x800 portrait design space, optimized f
 
 ## Course Structure
 
-Currently 6 holes. Holes are added iteratively with high visual and gameplay quality.
+Currently 7 holes. Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
 Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
@@ -25,6 +25,9 @@ Funnel-shaped fairway (x:150-350 wide bottom at y:420-740, narrowing to x:190-31
 
 ### Hole 6: The Taffy River (Par 3)
 Two isolated rectangular islands — bottom island (x:120-380, y:520-700) with the tee at x:250,y:640, and top island (x:120-380, y:60-280) with the cup at x:250,y:140. Island walls are U-shaped (open on the river-facing side) so the ball can exit/enter freely. The entire gap between islands (x:120-380, y:280-520) is a pink taffy river water hazard. If the ball enters the taffy zone (and is not on the bridge), it triggers a sinking animation (shrink + fade), a +1 stroke penalty, and resets the ball to the tee box. A wide, tall moving bridge (160x100 design units) oscillates vertically between y:500 and y:300 using smooth hermite easing at speed 0.8. The bridge is a visual-only safe zone (no physics body) — the ball passes through freely, and the water hazard is suppressed when the ball's position overlaps the bridge bounds. The player must time their shot to hit the bridge as it aligns with their trajectory. This is the player's first encounter with moving obstacles and water hazards, teaching patience and timing alongside power control.
+
+### Hole 7: The Wafer Windmill (Par 3)
+Classic retro mini-golf timing challenge. Straight rectangular fairway (x:150-350, y:60-700) with the tee at x:250,y:650 and cup at x:250,y:110. A massive 4-blade windmill is positioned dead center at x:250,y:380. The blades are 180 design units long — extending wall-to-wall across the 200-unit-wide fairway, completely blocking any safe path around them. Each blade is a kinematic Matter.js rectangle with restitution 1.5, meaning contact violently deflects the ball off course. The windmill rotates at 1.2 rad/s (~5.2 seconds per full rotation). Blades are rendered as wafer cookies with a tan/golden base, grid pattern, light/dark edges, and shadows. The center hub is chocolate-themed. The player must observe the rotation speed, mentally calculate the gap timing, and release their shot so the ball slips cleanly between two blades. This is a pure, distilled test of hand-eye coordination — an absolute staple of retro mini-golf.
 
 ## Play Modes
 
@@ -102,6 +105,18 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 | Visual | Jawbreaker tileable texture (128x128, concentric colored rings) with upward-pointing chevrons |
 | Behavior | Overlap trigger zone — applies constant force opposing ball movement, simulating uphill gravity |
 | Strategy | Hit with ~75-85% power to crest; too much overshoots into back wall |
+
+## Windmill Physics
+
+| Property | Value |
+|----------|-------|
+| Blade Count | 4 (90° apart) |
+| Blade Length | 180 design units (wall-to-wall) |
+| Blade Width | 10 design units |
+| Restitution | 1.5 (violent deflection) |
+| Rotation Speed | 1.2 rad/s (~5.2 seconds per full rotation) |
+| Behavior | Kinematic static bodies rotating around a center point. Each blade is repositioned and re-angled every frame using Matter.js setPosition/setAngle. Rotates in all game states so players can observe and time shots. |
+| Visual | Wafer cookie theme — tan/golden blades with grid pattern, light/dark edges, blade shadows, chocolate center hub with highlight |
 
 ## Moving Bridge Physics
 

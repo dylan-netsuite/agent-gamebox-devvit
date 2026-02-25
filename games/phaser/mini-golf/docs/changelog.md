@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.0.2.128 - Hole 7: The Wafer Windmill (2026-02-25)
+
+### Added
+- **Hole 7: The Wafer Windmill** — classic retro mini-golf timing challenge. Straight fairway with a massive 4-blade windmill dead center. Blades extend wall-to-wall (180 design units), completely blocking any safe path. High restitution (1.5) blades violently deflect the ball on contact. Player must time their shot to slip through the gap between rotating blades.
+- **Wafer cookie windmill visuals** — upgraded windmill rendering with tan/golden wafer-colored blades, grid pattern, light/dark edges, blade shadows, and a chocolate center hub with highlight.
+
+### Fixed
+- **Windmill rotation now animates in all game states** — previously windmills only rotated during the `simulating` state. Now `updateWindmills()` is called unconditionally in the update loop, matching bridge behavior.
+
 ## v0.0.2.120 - Hole 6: Bridge is now a pass-through safe zone (2026-02-25)
 
 ### Fixed
