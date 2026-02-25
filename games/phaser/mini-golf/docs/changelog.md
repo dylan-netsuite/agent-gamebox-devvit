@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.2.74 - Hole 4 Redesign: Needle Channel + Corner Bumpers (2026-02-25)
+
+### Changed
+- **Hole 4 layout**: Cup moved to x:93 (aligned with narrow left channel) for a true hole-in-one opportunity. Narrow channel is 26px wide (~5px clearance per side with ball diameter 16px).
+- **Right path**: Widened to 120px with two gumdrop bumpers at corners (top-right pink, bottom-right green) to redirect shots safely toward the cup.
+- **Center island**: Adjusted to x:106-300, y:150-620 to create proper channel widths. Graham cracker sand trap still covers the island.
+
 ## v0.0.2.70 - Power Boost, Hole Select Menu, Hole 4: Graham Cracker Divide (2026-02-25)
 
 ### Added

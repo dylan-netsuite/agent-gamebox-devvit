@@ -131,14 +131,15 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 4: The Graham Cracker Divide ----
-  // Branching paths: narrow left (risky hole-in-one) vs wide right (safe L-bend).
-  // Center divider is a graham cracker sand trap that kills momentum.
+  // Left: needle-thin channel (26px) aligned with cup for hole-in-one.
+  // Right: wide safe path with gumdrop bumpers at corners to redirect ball.
+  // Center island is a graham cracker sand trap that kills momentum.
   {
     id: 4,
     name: 'The Graham Cracker Divide',
     par: 3,
     tee: { x: 250, y: 700 },
-    cup: { x: 250, y: 110 },
+    cup: { x: 93, y: 110 },
     walls: [
       // Outer boundary
       [
@@ -148,19 +149,38 @@ export const HOLES: HoleDefinition[] = [
         { x: 80, y: 740 },
         { x: 80, y: 60 },
       ],
-      // Center island (divider between left and right paths)
+      // Center island — right edge of needle channel at x:106, right path starts x:300
+      // Top opens at y:150 so the needle connects to the cup zone
+      // Bottom opens at y:620 so both paths merge at the tee area
       [
-        { x: 130, y: 200 },
-        { x: 340, y: 200 },
-        { x: 340, y: 600 },
-        { x: 130, y: 600 },
-        { x: 130, y: 200 },
+        { x: 106, y: 150 },
+        { x: 300, y: 150 },
+        { x: 300, y: 620 },
+        { x: 106, y: 620 },
+        { x: 106, y: 150 },
       ],
     ],
-    obstacles: [],
+    obstacles: [
+      // Corner bumper: top-right — redirects rightward shots toward the cup
+      {
+        type: 'gumdrop_bumper',
+        x: 365,
+        y: 195,
+        radius: 24,
+        color: 0xff69b4,
+      },
+      // Corner bumper: bottom-right — guides entry into the right path
+      {
+        type: 'gumdrop_bumper',
+        x: 365,
+        y: 575,
+        radius: 24,
+        color: 0x33cc33,
+      },
+    ],
     frictionZones: [
       // Graham cracker sand trap covering the center island
-      { x: 132, y: 202, width: 206, height: 396 },
+      { x: 108, y: 152, width: 190, height: 466 },
     ],
   },
 ];
