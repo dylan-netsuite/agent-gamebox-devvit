@@ -90,8 +90,8 @@ export class AimIndicator {
     if (!this.visible) return;
     this.graphics.clear();
 
-    const maxLen = weapon?.hitscanRange ?? 500;
-    const driftStart = weapon?.hitscanDriftStart ?? 150;
+    const maxLen = weapon?.hitscanRange ?? 750;
+    const driftStart = weapon?.hitscanDriftStart ?? 200;
 
     const endX = originX + Math.cos(angle) * maxLen;
     const endY = originY + Math.sin(angle) * maxLen;

@@ -1,5 +1,13 @@
 # Reddit Royale - Changelog
 
+## [2026-02-25] Sniper Range Increase (v0.0.12.52)
+
+**Workflow:** wf-1771988923
+
+Sniper range increased from 500px to 750px, drift start from 150px to 200px. AI scoring widened (bonus 150-500px, penalty beyond 600px). All fallback defaults updated to match.
+
+---
+
 ## [2026-02-25] Shotgun Range Bump (v0.0.12.48)
 
 **Workflow:** wf-1771986960
