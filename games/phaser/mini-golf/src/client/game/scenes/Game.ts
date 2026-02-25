@@ -26,6 +26,7 @@ export class Game extends Scene {
 
   private state: GameState = 'aiming';
   private currentHoleIndex: number = 0;
+  private endHoleIndex: number = HOLES.length - 1;
   private strokes: number = 0;
   private scores: number[] = [];
   private lastBallPos: { x: number; y: number } = { x: 0, y: 0 };
@@ -41,8 +42,9 @@ export class Game extends Scene {
     super('Game');
   }
 
-  init(data?: { holeIndex?: number; scores?: number[] }) {
+  init(data?: { holeIndex?: number; endHoleIndex?: number; scores?: number[] }) {
     this.currentHoleIndex = data?.holeIndex ?? 0;
+    this.endHoleIndex = data?.endHoleIndex ?? HOLES.length - 1;
     this.scores = data?.scores ?? [];
     this.strokes = 0;
     this.state = 'aiming';
@@ -452,9 +454,10 @@ export class Game extends Scene {
       this.scores.push(this.strokes);
       this.cleanupHole();
 
-      if (this.currentHoleIndex < HOLES.length - 1) {
+      if (this.currentHoleIndex < this.endHoleIndex) {
         this.scene.start('HoleComplete', {
           holeIndex: this.currentHoleIndex,
+          endHoleIndex: this.endHoleIndex,
           strokes: this.strokes,
           par: HOLES[this.currentHoleIndex]!.par,
           scores: this.scores,

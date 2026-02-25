@@ -213,12 +213,19 @@ export class Obstacles {
     this.zoneGraphics.fillRect(tl.x, tl.y, w, h);
 
     if (type === 'sand') {
-      const dotCount = Math.floor((w * h) / 200);
-      this.zoneGraphics.fillStyle(0xc4a882, 0.4);
-      for (let i = 0; i < dotCount; i++) {
-        const dx = tl.x + Math.random() * w;
-        const dy = tl.y + Math.random() * h;
-        this.zoneGraphics.fillCircle(dx, dy, 1.5);
+      if (this.scene.textures.exists('graham-cracker')) {
+        const tile = this.scene.add.tileSprite(tl.x + w / 2, tl.y + h / 2, w, h, 'graham-cracker');
+        tile.setDepth(2);
+        tile.setAlpha(0.85);
+        this.gameObjects.push(tile);
+      } else {
+        const dotCount = Math.floor((w * h) / 200);
+        this.zoneGraphics.fillStyle(0xc4a882, 0.4);
+        for (let i = 0; i < dotCount; i++) {
+          const dx = tl.x + Math.random() * w;
+          const dy = tl.y + Math.random() * h;
+          this.zoneGraphics.fillCircle(dx, dy, 1.5);
+        }
       }
     }
   }

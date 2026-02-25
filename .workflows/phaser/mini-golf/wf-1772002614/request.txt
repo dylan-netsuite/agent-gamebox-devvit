@@ -1,0 +1,3 @@
+1. Increase max shot power — ball can't clear bumpers on Hole 2
+2. Add hole selection to MainMenu — individual holes, front 9, back 9, full 18
+3. Add Hole 4: The Graham Cracker Divide — branching path with sand trap

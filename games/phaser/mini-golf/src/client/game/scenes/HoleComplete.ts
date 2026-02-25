@@ -4,6 +4,7 @@ import { fadeIn, transitionTo, SCENE_COLORS } from '../utils/transitions';
 
 export class HoleComplete extends Scene {
   private holeIndex: number = 0;
+  private endHoleIndex: number = 0;
   private strokes: number = 0;
   private par: number = 0;
   private scores: number[] = [];
@@ -12,8 +13,15 @@ export class HoleComplete extends Scene {
     super('HoleComplete');
   }
 
-  init(data: { holeIndex: number; strokes: number; par: number; scores: number[] }) {
+  init(data: {
+    holeIndex: number;
+    endHoleIndex?: number;
+    strokes: number;
+    par: number;
+    scores: number[];
+  }) {
     this.holeIndex = data.holeIndex;
+    this.endHoleIndex = data.endHoleIndex ?? HOLES.length - 1;
     this.strokes = data.strokes;
     this.par = data.par;
     this.scores = data.scores;
@@ -122,7 +130,7 @@ export class HoleComplete extends Scene {
       .setOrigin(0.5)
       .setDepth(2);
 
-    const isLastHole = this.holeIndex >= HOLES.length - 1;
+    const isLastHole = this.holeIndex >= this.endHoleIndex;
     const btnLabel = isLastHole ? 'VIEW SCORECARD' : 'NEXT HOLE';
     const btnY = height * 0.75;
     const btnW = 200;
@@ -158,7 +166,11 @@ export class HoleComplete extends Scene {
         transitionTo(
           this,
           'Game',
-          { holeIndex: this.holeIndex + 1, scores: this.scores },
+          {
+            holeIndex: this.holeIndex + 1,
+            endHoleIndex: this.endHoleIndex,
+            scores: this.scores,
+          },
           SCENE_COLORS.dark
         );
       }

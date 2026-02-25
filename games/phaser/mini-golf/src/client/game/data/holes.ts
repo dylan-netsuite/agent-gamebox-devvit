@@ -129,4 +129,38 @@ export const HOLES: HoleDefinition[] = [
       },
     ],
   },
+
+  // ---- HOLE 4: The Graham Cracker Divide ----
+  // Branching paths: narrow left (risky hole-in-one) vs wide right (safe L-bend).
+  // Center divider is a graham cracker sand trap that kills momentum.
+  {
+    id: 4,
+    name: 'The Graham Cracker Divide',
+    par: 3,
+    tee: { x: 250, y: 700 },
+    cup: { x: 250, y: 110 },
+    walls: [
+      // Outer boundary
+      [
+        { x: 80, y: 60 },
+        { x: 420, y: 60 },
+        { x: 420, y: 740 },
+        { x: 80, y: 740 },
+        { x: 80, y: 60 },
+      ],
+      // Center island (divider between left and right paths)
+      [
+        { x: 130, y: 200 },
+        { x: 340, y: 200 },
+        { x: 340, y: 600 },
+        { x: 130, y: 600 },
+        { x: 130, y: 200 },
+      ],
+    ],
+    obstacles: [],
+    frictionZones: [
+      // Graham cracker sand trap covering the center island
+      { x: 132, y: 202, width: 206, height: 396 },
+    ],
+  },
 ];

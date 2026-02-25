@@ -10,6 +10,7 @@ export class TextureFactory {
     this.generateChocolateBlock(scene);
     this.generateLicorice(scene);
     this.generateGumdrop(scene);
+    this.generateGrahamCracker(scene);
   }
 
   private static generateCandyCane(scene: Phaser.Scene): void {
@@ -371,5 +372,63 @@ export class TextureFactory {
     ctx.stroke();
 
     scene.textures.addCanvas('gumdrop', canvas);
+  }
+
+  private static generateGrahamCracker(scene: Phaser.Scene): void {
+    const size = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d')!;
+
+    // Sandy tan base
+    ctx.fillStyle = '#c4a265';
+    ctx.fillRect(0, 0, size, size);
+
+    // Crumb fragments — irregular darker/lighter patches
+    const crumbColors = ['#b08840', '#d4b87a', '#a07830', '#c8a050', '#8a6828'];
+    for (let i = 0; i < 200; i++) {
+      const x = Math.random() * size;
+      const y = Math.random() * size;
+      const w = 2 + Math.random() * 8;
+      const h = 2 + Math.random() * 6;
+      const color = crumbColors[Math.floor(Math.random() * crumbColors.length)]!;
+      ctx.globalAlpha = 0.3 + Math.random() * 0.4;
+      ctx.fillStyle = color;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.random() * Math.PI);
+      ctx.fillRect(-w / 2, -h / 2, w, h);
+      ctx.restore();
+    }
+
+    // Crack lines
+    ctx.globalAlpha = 0.2;
+    ctx.strokeStyle = '#6a4820';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 8; i++) {
+      ctx.beginPath();
+      let px = Math.random() * size;
+      let py = Math.random() * size;
+      ctx.moveTo(px, py);
+      for (let j = 0; j < 3; j++) {
+        px += (Math.random() - 0.5) * 40;
+        py += (Math.random() - 0.5) * 40;
+        ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+
+    // Subtle noise grain
+    for (let i = 0; i < 400; i++) {
+      const x = Math.random() * size;
+      const y = Math.random() * size;
+      ctx.globalAlpha = 0.1 + Math.random() * 0.15;
+      ctx.fillStyle = Math.random() > 0.5 ? '#e0c888' : '#906828';
+      ctx.fillRect(x, y, 1, 1);
+    }
+
+    ctx.globalAlpha = 1;
+    scene.textures.addCanvas('graham-cracker', canvas);
   }
 }

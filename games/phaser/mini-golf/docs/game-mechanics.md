@@ -6,7 +6,7 @@ All hole coordinates are defined in a 500x800 portrait design space, optimized f
 
 ## Course Structure
 
-Currently 3 holes. Holes are added iteratively with high visual and gameplay quality.
+Currently 4 holes. Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
 Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
@@ -16,6 +16,20 @@ L-shaped course with a vertical corridor (x:120-280, y:250-750) bending 90 degre
 
 ### Hole 3: The Gumdrop Bumper Pinball (Par 3)
 Wide rectangular arena (x:80-420, y:60-740). Three gumdrop bumpers arranged in a semi-circle arc guard the cup at the top. Bumpers have restitution 1.5 (hyper-elastic) — hitting them sends the ball ricocheting away faster than it arrived, like pinball bumpers. Strategy: thread the microscopic gaps between bumpers with minimal power, or bank multi-angle shots around the perimeter walls. Full-power direct hits result in chaotic rebounds back to the tee. Teaches players that distinct obstacle textures signal different physics behaviors.
+
+### Hole 4: The Graham Cracker Divide (Par 3)
+Branching-path layout (x:80-420, y:60-740) with a massive center divider (x:130-340, y:200-600) creating two routes. The left path is extremely narrow (~50px clearance), offering a risky straight shot to the cup. The right path is wide (~80px) but requires an L-bend two-putt strategy. The center divider is a graham cracker sand trap — entering it exponentially increases linear damping, stopping the ball dead and requiring a full-power stroke to escape. Introduces Risk vs. Reward: novices take the safe right path for par, aggressive players thread the needle for a hole-in-one but risk clipping the boundary and landing in the trap.
+
+## Play Modes
+
+### Full 18
+Play all holes in sequence from Hole 1 to the last available hole.
+
+### Front 9 / Back 9
+Play holes 1-9 or 10-18 as separate rounds (available when 10+ holes exist).
+
+### Practice
+Select any individual hole from the MainMenu to play it as a single-hole round.
 
 ## Controls
 
@@ -43,7 +57,7 @@ Wide rectangular arena (x:80-420, y:60-740). Three gumdrop bumpers arranged in a
 | Friction | 0.03 |
 | FrictionAir | 0.025 |
 | Stop threshold | 0.12 velocity |
-| Max shot velocity | 18 |
+| Max shot velocity | 25 |
 | Speed clamp | 1.5x max velocity |
 
 ## Wall Physics
@@ -63,6 +77,15 @@ Wide rectangular arena (x:80-420, y:60-740). Three gumdrop bumpers arranged in a
 | Shape | Circle, radius 22 design units |
 | Behavior | Static body, pinball-style bounce |
 | Visual | `gumdrop` texture with per-bumper color tinting |
+
+## Sand Trap (Graham Cracker) Physics
+
+| Property | Value |
+|----------|-------|
+| Friction Air | 0.15 (6x normal) |
+| Visual | Graham cracker tileable texture (128x128, sandy tan with crumb fragments and crack lines) |
+| Behavior | Overlap trigger zone — dramatically slows the ball when it enters |
+| Strategy | Avoid at all costs; escaping requires near-full power |
 
 ## Hole Capture
 

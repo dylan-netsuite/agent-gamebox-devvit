@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.0.2.70 - Power Boost, Hole Select Menu, Hole 4: Graham Cracker Divide (2026-02-25)
+
+### Added
+- **Hole 4: The Graham Cracker Divide** — Par 3. Branching-path layout with a narrow risky left corridor and a wide safe right corridor with L-bend. Center divider is a massive graham cracker sand trap that kills ball momentum.
+- **Graham cracker texture**: 128x128 tileable texture with sandy tan base, crumb fragments, crack lines, and noise grain. Used for sand trap zones.
+- **Hole selection menu**: MainMenu now has PLAY section (FULL 18), PRACTICE section (individual hole buttons in 2-column grid), and LEADERBOARD. Each hole button shows name and number.
+- **`endHoleIndex` parameter**: Game and HoleComplete scenes accept `endHoleIndex` to support practice mode (single hole) and partial rounds (front 9, back 9).
+- **Scrollable menu**: MainMenu supports touch drag and mouse wheel scrolling when content exceeds viewport.
+
+### Changed
+- **MAX_SHOT_VELOCITY**: Increased from 18 to 25 for stronger shots. Fixes inability to clear bumpers on Hole 2.
+- **Sand zone rendering**: Sand zones now use `graham-cracker` TileSprite texture instead of plain colored fill with dot overlay.
+- **MainMenu**: Complete redesign from 2-button layout to categorized hole selection with section headers.
+
 ## v0.0.2.65 - Hole 3: The Gumdrop Bumper Pinball (2026-02-25)
 
 ### Added
