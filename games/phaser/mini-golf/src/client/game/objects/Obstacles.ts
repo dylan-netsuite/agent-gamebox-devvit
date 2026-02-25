@@ -108,6 +108,7 @@ export class Obstacles {
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
   private zoneGraphics: Phaser.GameObjects.Graphics;
+  private iceOverlayGraphics: Phaser.GameObjects.Graphics;
   private pipeGraphics: Phaser.GameObjects.Graphics;
   private windmillGraphics: Phaser.GameObjects.Graphics[] = [];
 
@@ -117,6 +118,8 @@ export class Obstacles {
     this.graphics.setDepth(5);
     this.zoneGraphics = scene.add.graphics();
     this.zoneGraphics.setDepth(1);
+    this.iceOverlayGraphics = scene.add.graphics();
+    this.iceOverlayGraphics.setDepth(3);
     this.pipeGraphics = scene.add.graphics();
     this.pipeGraphics.setDepth(1);
   }
@@ -221,7 +224,7 @@ export class Obstacles {
         break;
       case 'ice':
         color = zone.color ?? 0xadd8e6;
-        alpha = 0.5;
+        alpha = zone.color !== undefined ? 0.75 : 0.5;
         break;
       case 'water':
         color = zone.color ?? 0xff69b4;
@@ -247,6 +250,41 @@ export class Obstacles {
           this.zoneGraphics.fillCircle(dx, dy, 1.5);
         }
       }
+    }
+
+    if (type === 'ice' && zone.color !== undefined) {
+      const g = this.iceOverlayGraphics;
+
+      g.fillStyle(color, 0.75);
+      g.fillRect(tl.x, tl.y, w, h);
+
+      // Glossy sheen stripe across the top
+      g.fillStyle(0xffffff, 0.2);
+      g.fillRect(tl.x, tl.y, w, h * 0.15);
+
+      // Sprinkle dots scattered across the ice cream surface
+      const sprinkleColors = [0xff6b6b, 0x48dbfb, 0xfeca57, 0xff9ff3, 0x54a0ff, 0x5f27cd];
+      const sprinkleCount = Math.floor((w * h) / 400);
+      for (let i = 0; i < sprinkleCount; i++) {
+        const sx = tl.x + 4 + Math.random() * (w - 8);
+        const sy = tl.y + 4 + Math.random() * (h - 8);
+        const sc = sprinkleColors[Math.floor(Math.random() * sprinkleColors.length)]!;
+        g.fillStyle(sc, 0.6);
+        const angle = Math.random() * Math.PI;
+        const len = 3 + Math.random() * 2;
+        g.fillRect(sx - Math.cos(angle) * len / 2, sy - Math.sin(angle) * len / 2, len, 1.5);
+      }
+
+      // Wavy drip edge along the bottom
+      g.lineStyle(2, color, 0.4);
+      g.beginPath();
+      const dripY = tl.y + h;
+      g.moveTo(tl.x, dripY);
+      for (let dx = 0; dx <= w; dx += 8) {
+        const wavey = dripY + Math.sin(dx * 0.15) * 3;
+        g.lineTo(tl.x + dx, wavey);
+      }
+      g.strokePath();
     }
 
     if (type === 'water' && this.scene.textures.exists('taffy')) {
@@ -905,6 +943,7 @@ export class Obstacles {
     this.gameObjects = [];
     this.graphics.destroy();
     this.zoneGraphics.destroy();
+    this.iceOverlayGraphics.destroy();
     this.pipeGraphics.destroy();
     for (const g of this.windmillGraphics) {
       g.destroy();

@@ -380,4 +380,61 @@ export const HOLES: HoleDefinition[] = [
       },
     ],
   },
+
+  // ---- HOLE 9: The Ice Cream Glide ----
+  // Massive zig-zag covering the full screen. 80% melted ice cream (ultra-low
+  // friction). Ball glides endlessly, bouncing off walls with barely any energy
+  // loss. A small normal-turf island near the cup is the only place it stops.
+  // Requires a gentle, precisely-angled tap to ricochet through the maze.
+  // High power = chaotic infinite bouncing = disaster.
+  {
+    id: 9,
+    name: 'The Ice Cream Glide',
+    par: 4,
+    tee: { x: 80, y: 720 },
+    cup: { x: 420, y: 120 },
+    walls: [
+      // Outer boundary — full-screen rectangle
+      [
+        { x: 40, y: 60 },
+        { x: 460, y: 60 },
+        { x: 460, y: 770 },
+        { x: 40, y: 770 },
+        { x: 40, y: 60 },
+      ],
+      // Barrier 1 (y=630): left wall to x=390, gap on RIGHT for ball to pass
+      [
+        { x: 40, y: 630 },
+        { x: 390, y: 630 },
+      ],
+      // Barrier 2 (y=490): right wall to x=110, gap on LEFT
+      [
+        { x: 460, y: 490 },
+        { x: 110, y: 490 },
+      ],
+      // Barrier 3 (y=350): left wall to x=390, gap on RIGHT
+      [
+        { x: 40, y: 350 },
+        { x: 390, y: 350 },
+      ],
+      // Barrier 4 (y=210): right wall to x=110, gap on LEFT
+      [
+        { x: 460, y: 210 },
+        { x: 110, y: 210 },
+      ],
+    ],
+    obstacles: [],
+    slickZones: [
+      // Row 1 (bottom corridor y:630-770) — ice cream covering most of the row
+      { x: 42, y: 632, width: 416, height: 136, color: 0xffecd2 },
+      // Row 2 (y:490-630)
+      { x: 42, y: 492, width: 416, height: 136, color: 0xffc0cb },
+      // Row 3 (y:350-490)
+      { x: 42, y: 352, width: 416, height: 136, color: 0xffecd2 },
+      // Row 4 (y:210-350)
+      { x: 42, y: 212, width: 416, height: 136, color: 0xffc0cb },
+      // Row 5 (top corridor y:60-210) — leave a gap near the cup
+      { x: 42, y: 62, width: 310, height: 146, color: 0xffecd2 },
+    ],
+  },
 ];

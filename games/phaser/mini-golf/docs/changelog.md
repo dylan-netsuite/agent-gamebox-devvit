@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.0.2.198 - Hole 9: The Ice Cream Glide (2026-02-25)
+
+### Added
+- **Hole 9: The Ice Cream Glide (Par 4)** — massive zig-zag layout covering the full 500x800 design space. Five serpentine corridors with horizontal barriers alternating gaps left/right. Ball must ricochet through the geometric maze with precisely angled, gentle taps.
+- **Ice cream slick zones** — 80% of the fairway is covered in "melted ice cream" zones using `ICE_FRICTION_AIR` (0.002) for ultra-low friction. Alternating pastel pink (0xffc0cb) and cream/vanilla (0xffecd2) colors distinguish the slick zones.
+- **Normal turf island** — small green patch near the cup (top-right) is the only area with normal friction where the ball can actually stop.
+- **Ice cream visual decorations** — dedicated `iceOverlayGraphics` layer (depth 3) renders above the fairway. Includes colorful sprinkle dots, glossy sheen stripe, and wavy drip edges on each ice cream zone.
+- **Custom ice zone rendering** — when ice zones have a custom `color` property, they render at 0.75 alpha on a higher-depth overlay layer with decorative sprinkles and drips.
+
 ## v0.0.2.181 - Hole 8: Pipe depth + source fix (2026-02-25)
 
 ### Fixed

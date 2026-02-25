@@ -6,7 +6,7 @@ All hole coordinates are defined in a 500x800 portrait design space, optimized f
 
 ## Course Structure
 
-Currently 8 holes. Holes are added iteratively with high visual and gameplay quality.
+Currently 9 holes (Front 9 complete). Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
 Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
@@ -31,6 +31,9 @@ Classic retro mini-golf timing challenge. Straight rectangular fairway (x:150-35
 
 ### Hole 8: The Teleportation Tunnels (Par 3)
 Puzzle-oriented hole with two physically separate walled areas. The tee box (x:150-350, y:540-700) is a small enclosed room with the tee at x:250,y:650. Three colored pipe entrances (Red at x:190, Blue at x:310, Green at x:250) are embedded in the upper portion of the tee box at y:590. The cup sits at x:250,y:160 in a completely separate walled exit area (x:100-400, y:60-320) that is physically unreachable without teleporting. Each pipe entrance is an overlap trigger that instantaneously teleports the ball to a corresponding exit, preserving the ball's exact scalar velocity. **Red pipe** exits at x:350,y:270 — pointing away from the hole, directly into a sand trap zone (x:300-395, y:220-315). **Blue pipe** exits at x:130,y:90 — into the top-left corner for chaotic wall bounces. **Green pipe** exits at x:250,y:240 — pointing perfectly straight at the cup for an effortless slow-rolling hole-in-one. The catch: a static chocolate block (40x20 design units) at x:250,y:610 partially obscures the Green pipe entrance, blocking direct shots. The player must bank the ball off the side wall to slip it past the block and into the Green pipe. This highly puzzle-oriented hole breaks the visual flow, forcing the player to view the screen holistically and deduce the correct bank angle through trial, error, and spatial memory.
+
+### Hole 9: The Ice Cream Glide (Par 4)
+Massive zig-zag layout covering the full 500x800 design space. The outer boundary is a large rectangle (x:40-460, y:60-770) containing four horizontal barrier walls that create a serpentine path: Barrier 1 at y=630 extends from the left wall to x=390 (gap on right), Barrier 2 at y=490 extends from the right wall to x=110 (gap on left), Barrier 3 at y=350 extends from left to x=390 (gap on right), Barrier 4 at y=210 extends from right to x=110 (gap on left). The tee is at x:80,y:720 (bottom-left) and the cup at x:420,y:140 (top-right). The ball must traverse all five corridors in a serpentine path. ~80% of the fairway is covered in "melted ice cream" slick zones using `ICE_FRICTION_AIR` (0.002), reducing air friction from the normal 0.025 to near-zero. The ball barely loses momentum, sliding continuously and bouncing off walls with minimal energy loss. Five slick zones alternate between pastel cream (0xffecd2) and pink (0xffc0cb) colors. A small ~100x150 normal-turf patch in the top-right near the cup is the only place the ball can naturally come to rest. The player must calculate a complex multi-bounce trajectory using very gentle power — high power causes indefinite chaotic bouncing. This hole inverts the game's friction paradigm: instead of fighting friction, the player must master a frictionless environment where geometric angles are everything.
 
 ## Play Modes
 
