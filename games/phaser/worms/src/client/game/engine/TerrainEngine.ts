@@ -22,6 +22,12 @@ export class TerrainEngine {
   private recentCraters: Crater[] = [];
   private seed: number;
   private redrawScheduled = false;
+  private persistentCanvas: HTMLCanvasElement | null = null;
+  private dirtyMinX = 0;
+  private dirtyMinY = 0;
+  private dirtyMaxX = 0;
+  private dirtyMaxY = 0;
+  private fullRedrawNeeded = true;
 
   constructor(
     scene: Phaser.Scene,
@@ -134,6 +140,17 @@ export class TerrainEngine {
       }
     }
     this.dirty = true;
+
+    const margin = 4;
+    const rMinX = Math.max(0, minX - margin);
+    const rMinY = Math.max(0, minY - margin);
+    const rMaxX = Math.min(this.terrainWidth - 1, maxX + margin);
+    const rMaxY = Math.min(this.terrainHeight - 1, maxY + margin);
+    if (this.fullRedrawNeeded) return;
+    this.dirtyMinX = Math.min(this.dirtyMinX, rMinX);
+    this.dirtyMinY = Math.min(this.dirtyMinY, rMinY);
+    this.dirtyMaxX = Math.max(this.dirtyMaxX, rMaxX);
+    this.dirtyMaxY = Math.max(this.dirtyMaxY, rMaxY);
   }
 
   scheduleRedraw(): void {
@@ -154,86 +171,124 @@ export class TerrainEngine {
   redraw(): void {
     if (!this.dirty && this.renderTexture.texture.key !== '__DEFAULT') return;
 
-    const canvas = document.createElement('canvas');
-    canvas.width = this.terrainWidth;
-    canvas.height = this.terrainHeight;
-    const ctxObj = canvas.getContext('2d')!;
-
-    const imageData = ctxObj.createImageData(this.terrainWidth, this.terrainHeight);
-    const data = imageData.data;
-    const c = this.mapPreset.colors;
     const w = this.terrainWidth;
     const h = this.terrainHeight;
+    const c = this.mapPreset.colors;
 
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const idx = y * w + x;
-        const pixIdx = idx * 4;
-
-        if (this.collisionMask[idx] === 1) {
-          const isCeiling = this.ceilingMap != null && y < this.ceilingMap[x]!;
-
-          const surfaceY = this.findLocalSurface(x, y);
-          const depth = y - surfaceY;
-
-          const noise = hashNoise(x, y, this.seed);
-          const variation = (noise - 0.5) * 16;
-
-          const isEdge = this.isTerrainEdge(x, y);
-          const edgeBrightness = isEdge ? 15 : 0;
-
-          if (isCeiling) {
-            // Ceiling uses darker, blue-shifted tones
-            const ceilDepth = this.ceilingMap ? this.ceilingMap[x]! - y : 0;
-            const ceilShade = Math.max(0.4, 1 - ceilDepth * 0.003);
-            data[pixIdx] = clamp(c.deep[0] * 0.7 * ceilShade + variation * 0.2 + edgeBrightness * 0.5);
-            data[pixIdx + 1] = clamp(c.deep[1] * 0.7 * ceilShade + variation * 0.2 + edgeBrightness * 0.5);
-            data[pixIdx + 2] = clamp((c.deep[2] + 15) * ceilShade + variation * 0.15);
-            data[pixIdx + 3] = 255;
-          } else if (depth <= 2) {
-            const grassNoise = hashNoise(x, depth, this.seed + 100);
-            data[pixIdx] = clamp(c.topSurface[0] + variation * 0.5 + grassNoise * 10 + edgeBrightness);
-            data[pixIdx + 1] = clamp(c.topSurface[1] + variation * 0.3 + grassNoise * 8 + edgeBrightness);
-            data[pixIdx + 2] = clamp(c.topSurface[2] + variation * 0.3);
-            data[pixIdx + 3] = 255;
-          } else if (depth <= 6) {
-            data[pixIdx] = clamp(c.subSurface[0] + variation * 0.4 + edgeBrightness * 0.5);
-            data[pixIdx + 1] = clamp(c.subSurface[1] + variation * 0.4 + edgeBrightness * 0.5);
-            data[pixIdx + 2] = clamp(c.subSurface[2] + variation * 0.3);
-            data[pixIdx + 3] = 255;
-          } else {
-            const shade = Math.max(0.3, 1 - depth * 0.002);
-            data[pixIdx] = clamp(c.deep[0] * shade + variation * 0.3);
-            data[pixIdx + 1] = clamp(c.deep[1] * shade + variation * 0.3);
-            data[pixIdx + 2] = clamp(c.deep[2] * shade + variation * 0.2);
-            data[pixIdx + 3] = 255;
-          }
-        } else {
-          data[pixIdx] = 0;
-          data[pixIdx + 1] = 0;
-          data[pixIdx + 2] = 0;
-          data[pixIdx + 3] = 0;
-        }
+    if (this.fullRedrawNeeded || !this.persistentCanvas) {
+      this.fullRedrawNeeded = false;
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      this.persistentCanvas = canvas;
+      const ctxObj = canvas.getContext('2d')!;
+      const imageData = ctxObj.createImageData(w, h);
+      this.renderRegion(imageData.data, 0, 0, w - 1, h - 1, c, w);
+      if (!this.mapPreset.terrainStyle.cavern) {
+        this.addGrassTufts(imageData.data, w, h, c.topSurface);
+      }
+      ctxObj.putImageData(imageData, 0, 0);
+    } else {
+      const rX = this.dirtyMinX;
+      const rY = this.dirtyMinY;
+      const rW = this.dirtyMaxX - rX + 1;
+      const rH = this.dirtyMaxY - rY + 1;
+      if (rW > 0 && rH > 0) {
+        const ctxObj = this.persistentCanvas.getContext('2d')!;
+        const patch = ctxObj.createImageData(rW, rH);
+        this.renderRegionPatch(patch.data, rX, rY, this.dirtyMaxX, this.dirtyMaxY, c, w, rW);
+        ctxObj.putImageData(patch, rX, rY);
       }
     }
 
-    if (!this.mapPreset.terrainStyle.cavern) {
-      this.addGrassTufts(data, w, h, c.topSurface);
-    }
-
-    ctxObj.putImageData(imageData, 0, 0);
-
-    this.renderTexture.clear();
-    this.renderTexture.drawFrame('__canvas_terrain');
+    this.dirtyMinX = w;
+    this.dirtyMinY = h;
+    this.dirtyMaxX = 0;
+    this.dirtyMaxY = 0;
 
     if (this.scene.textures.exists('__canvas_terrain')) {
       this.scene.textures.remove('__canvas_terrain');
     }
-    this.scene.textures.addCanvas('__canvas_terrain', canvas);
+    this.scene.textures.addCanvas('__canvas_terrain', this.persistentCanvas);
     this.renderTexture.clear();
     this.renderTexture.drawFrame('__canvas_terrain');
 
     this.dirty = false;
+  }
+
+  private renderRegion(
+    data: Uint8ClampedArray,
+    minX: number, minY: number, maxX: number, maxY: number,
+    c: MapPreset['colors'], stride: number,
+  ): void {
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const idx = y * stride + x;
+        const pixIdx = idx * 4;
+        this.renderPixel(data, pixIdx, x, y, c, stride);
+      }
+    }
+  }
+
+  private renderRegionPatch(
+    data: Uint8ClampedArray,
+    minX: number, minY: number, maxX: number, maxY: number,
+    c: MapPreset['colors'], stride: number, patchW: number,
+  ): void {
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        const pIdx = ((y - minY) * patchW + (x - minX)) * 4;
+        this.renderPixel(data, pIdx, x, y, c, stride);
+      }
+    }
+  }
+
+  private renderPixel(
+    data: Uint8ClampedArray, pixIdx: number,
+    x: number, y: number,
+    c: MapPreset['colors'], w: number,
+  ): void {
+    const idx = y * w + x;
+    if (this.collisionMask[idx] === 1) {
+      const isCeiling = this.ceilingMap != null && y < this.ceilingMap[x]!;
+      const surfaceY = this.findLocalSurface(x, y);
+      const depth = y - surfaceY;
+      const noise = hashNoise(x, y, this.seed);
+      const variation = (noise - 0.5) * 16;
+      const isEdge = this.isTerrainEdge(x, y);
+      const edgeBrightness = isEdge ? 15 : 0;
+
+      if (isCeiling) {
+        const ceilDepth = this.ceilingMap ? this.ceilingMap[x]! - y : 0;
+        const ceilShade = Math.max(0.4, 1 - ceilDepth * 0.003);
+        data[pixIdx] = clamp(c.deep[0] * 0.7 * ceilShade + variation * 0.2 + edgeBrightness * 0.5);
+        data[pixIdx + 1] = clamp(c.deep[1] * 0.7 * ceilShade + variation * 0.2 + edgeBrightness * 0.5);
+        data[pixIdx + 2] = clamp((c.deep[2] + 15) * ceilShade + variation * 0.15);
+        data[pixIdx + 3] = 255;
+      } else if (depth <= 2) {
+        const grassNoise = hashNoise(x, depth, this.seed + 100);
+        data[pixIdx] = clamp(c.topSurface[0] + variation * 0.5 + grassNoise * 10 + edgeBrightness);
+        data[pixIdx + 1] = clamp(c.topSurface[1] + variation * 0.3 + grassNoise * 8 + edgeBrightness);
+        data[pixIdx + 2] = clamp(c.topSurface[2] + variation * 0.3);
+        data[pixIdx + 3] = 255;
+      } else if (depth <= 6) {
+        data[pixIdx] = clamp(c.subSurface[0] + variation * 0.4 + edgeBrightness * 0.5);
+        data[pixIdx + 1] = clamp(c.subSurface[1] + variation * 0.4 + edgeBrightness * 0.5);
+        data[pixIdx + 2] = clamp(c.subSurface[2] + variation * 0.3);
+        data[pixIdx + 3] = 255;
+      } else {
+        const shade = Math.max(0.3, 1 - depth * 0.002);
+        data[pixIdx] = clamp(c.deep[0] * shade + variation * 0.3);
+        data[pixIdx + 1] = clamp(c.deep[1] * shade + variation * 0.3);
+        data[pixIdx + 2] = clamp(c.deep[2] * shade + variation * 0.2);
+        data[pixIdx + 3] = 255;
+      }
+    } else {
+      data[pixIdx] = 0;
+      data[pixIdx + 1] = 0;
+      data[pixIdx + 2] = 0;
+      data[pixIdx + 3] = 0;
+    }
   }
 
   private isTerrainEdge(x: number, y: number): boolean {

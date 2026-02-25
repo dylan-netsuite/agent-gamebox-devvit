@@ -103,7 +103,7 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
     projectileGravity: 0.18,
     shotCount: 1,
     bounceFriction: 0,
-    icon: '🎆',
+    icon: '🧨',
   },
   'pigeon-strike': {
     id: 'pigeon-strike',

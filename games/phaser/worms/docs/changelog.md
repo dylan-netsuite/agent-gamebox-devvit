@@ -1,5 +1,17 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.90] - 2026-02-25 — Explosion Performance Deep Fix (wf-1772046749)
+
+### Fixed
+- **Incremental terrain redraw**: Terrain redraws now only recompute pixels within the bounding box of recent craters (+ 4px margin) instead of the entire 1600×800 map. A persistent canvas is reused between redraws, with only the dirty region patched via `putImageData`. This reduces a typical crater redraw from ~1.28M pixels to ~10K pixels — a 100x reduction.
+- **Reduced particle counts**: Explosion particles capped at 15 fire (was 20+radius/2), 6 smoke (was 8+radius/5), 4 debris (was 6+radius/8). Ring effect merged into the main Graphics object instead of using a separate one. Particle lifetime shortened for faster fadeout. Total particle objects per explosion reduced from ~90 to ~25.
+- **Fewer Graphics objects**: Each explosion now uses 2 Graphics objects (particles + flash) instead of 3 (particles + flash + ring). The ring is drawn on the same Graphics as particles.
+
+### Changed
+- **Firecracker icon**: Reverted from 🎆 back to 🧨 (dynamite icon).
+
+---
+
 ## [v0.0.12.86] - 2026-02-25 — Visuals, Sounds, Renames & Performance (wf-1772044227)
 
 ### Added
