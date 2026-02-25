@@ -105,8 +105,8 @@ export class ProjectileManager {
     weapon: WeaponDef,
     shooter?: Worm,
   ): void {
-    const maxDist = weapon.hitscanRange ?? 1500;
-    const driftStart = weapon.hitscanDriftStart ?? 400;
+    const maxDist = weapon.hitscanRange ?? 500;
+    const driftStart = weapon.hitscanDriftStart ?? 150;
     const windMul = weapon.hitscanWindMul ?? 3;
     const spreadMax = weapon.hitscanSpreadMax ?? 0.4;
     const step = 2;

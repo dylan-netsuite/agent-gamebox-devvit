@@ -135,12 +135,12 @@ describe('castHitscanRay', () => {
     });
 
     it('should handle shooting straight down', () => {
-      const terrain = makeTerrain(2400, 1200, (_, y) => y >= 800);
+      const terrain = makeTerrain(2400, 1200, (_, y) => y >= 400);
       const result = castHitscanRay(500, 100, Math.PI / 2, terrain, [], 'shooter');
 
       expect(result.directHitTarget).toBeNull();
-      expect(result.hitY).toBeLessThanOrEqual(802);
-      expect(result.hitY).toBeGreaterThanOrEqual(798);
+      expect(result.hitY).toBeLessThanOrEqual(402);
+      expect(result.hitY).toBeGreaterThanOrEqual(398);
     });
   });
 

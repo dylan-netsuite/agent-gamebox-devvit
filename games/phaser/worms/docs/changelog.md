@@ -1,5 +1,20 @@
 # Reddit Royale - Changelog
 
+## [2026-02-25] Hitscan Range Nerf v3 (v0.0.12.44)
+
+**Workflow:** wf-1771985540
+
+### Changed — Drastically reduced hitscan ranges
+
+| Weapon | Range before | Range after |
+|--------|-------------|-------------|
+| Sniper Rifle | 1200px | 500px |
+| Shotgun | 600px | 100px |
+
+Sniper drift starts at 150px (was 300px). Shotgun drift starts at 40px (was 150px). AI scoring adjusted proportionally. Shared `castHitscanRay` default reduced to 500px. Unit test for downward ray updated for new range.
+
+---
+
 ## [2026-02-25] Hitscan Weapon Balance Pass v2 — Per-weapon tuning (v0.0.12.40)
 
 **Workflow:** wf-1771984417

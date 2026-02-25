@@ -10,11 +10,11 @@ Turn-based artillery game where players control worms on destructible terrain, u
 |---|--------|------|-------------|--------|-------|---------|
 | 1 | Bazooka | Projectile | 40px | 45 | Yes | Arcs with gravity |
 | 2 | Grenade | Projectile | 35px | 40 | Yes | Bounces 3x, 3s fuse |
-| 3 | Shotgun | Hitscan | 20px | 25×2 | Wind drift at range | Close-range blasts — devastating up close, heavy scatter at distance |
+| 3 | Shotgun | Hitscan | 20px | 25×2 | Wind drift at range | Point-blank blasts — 100px range, heavy scatter past 40px |
 | 4 | Dynamite | Projectile | 70px | 75 | No | 4s fuse, high arc |
 | 5 | Airstrike | Targeted | 25px×5 | 30×5 | Yes | 5 missiles from above |
 | 6 | Cluster Bomb | Projectile | 20px + 18px×4 | 20 + 18×4 | Yes | Splits into 4 bomblets on detonation |
-| 7 | Sniper Rifle | Hitscan | 8px | 50 | Wind drift at range | Accurate up close, heavy drift and spread beyond 300px |
+| 7 | Sniper Rifle | Hitscan | 8px | 50 | Wind drift at range | 500px range, accurate up close, heavy drift beyond 150px |
 | 8 | Teleport | Teleport | — | — | No | Instantly moves worm to aimed location |
 | 9 | Ninja Rope | Rope | — | — | No | Grappling hook for swing traversal |
 
@@ -22,36 +22,36 @@ Turn-based artillery game where players control worms on destructible terrain, u
 The main projectile bounces once and detonates after a 2s fuse. On detonation, it deals 20 damage (20px radius) and spawns 4 smaller bomblets. Each bomblet flies outward in a random upward arc and detonates on terrain impact, dealing 18 damage (18px radius). Effective for area denial and hitting enemies behind cover.
 
 ### Shotgun Details
-Fires two hitscan rays with ±0.05 radian spread. Each ray detects direct worm hits (25 damage per hit) and impacts terrain (20px crater with splash). The shotgun uses per-weapon hitscan parameters for a close-range profile:
+Fires two hitscan rays with ±0.05 radian spread. Each ray detects direct worm hits (25 damage per hit) and impacts terrain (20px crater with splash). The shotgun is a point-blank weapon:
 
 | Parameter | Value |
 |-----------|-------|
-| Max range | 600px |
-| Drift start | 150px |
+| Max range | 100px |
+| Drift start | 40px |
 | Wind multiplier | 2× |
 | Spread max | 1.2 |
 
-- **Close range (< 150px)**: Perfectly accurate — devastating with 50 total damage on direct hits
-- **Mid range (150-400px)**: Increasing wind drift and pellet spread; hits become unreliable
-- **Beyond 600px**: Out of range entirely
-- **AI scoring**: +25 bonus within 200px, -30 penalty beyond 400px
+- **Point-blank (< 40px)**: Perfectly accurate — devastating with 50 total damage on direct hits
+- **Close range (40-100px)**: Increasing spread; still effective but less reliable
+- **Beyond 100px**: Out of range entirely
+- **AI scoring**: +25 bonus within 60px, -30 penalty beyond 80px
 
 ### Sniper Rifle Details
 Fires a single hitscan ray — instant, no travel time. The ray detects direct worm hits (full 50 damage) and also impacts terrain (8px crater with splash damage). Uses per-weapon hitscan parameters:
 
 | Parameter | Value |
 |-----------|-------|
-| Max range | 1200px |
-| Drift start | 300px |
+| Max range | 500px |
+| Drift start | 150px |
 | Wind multiplier | 5× |
 | Spread max | 0.8 |
 
-- **Close range (< 300px)**: Perfectly accurate with no drift or spread, rewarding positioning
-- **Mid range (300-800px)**: Wind drift and spread begin; still usable with good aim
-- **Long range (800-1200px)**: Significant accuracy degradation — spread can deviate ~30-35px, larger than a 20px worm hitbox
-- **Beyond 1200px**: Out of range entirely
-- **AI scoring**: +10 bonus for 200-600px, -20 penalty beyond 800px
-- **Aim indicator**: Laser-sight dots fade from full alpha to near-transparent past 300px
+- **Close range (< 150px)**: Perfectly accurate with no drift or spread, rewarding positioning
+- **Mid range (150-350px)**: Wind drift and spread begin; still usable with good aim
+- **Long range (350-500px)**: Significant accuracy degradation
+- **Beyond 500px**: Out of range entirely
+- **AI scoring**: +10 bonus for 100-300px, -30 penalty beyond 400px
+- **Aim indicator**: Laser-sight dots fade from full alpha to near-transparent past 150px
 
 ### Teleport Details
 Utility weapon that teleports the worm to the aimed position. The worm lands at the nearest surface below the target point. Uses a turn but deals no damage. Shows a cyan flash at both the origin and destination. The AI does not use this weapon.
