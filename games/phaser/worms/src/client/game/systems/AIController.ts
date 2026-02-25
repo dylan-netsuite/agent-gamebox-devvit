@@ -244,7 +244,7 @@ export class AIController {
 
     let weaponIdx = 0;
     if (dist < 60) {
-      weaponIdx = WEAPON_ORDER.indexOf('shotgun');
+      weaponIdx = WEAPON_ORDER.indexOf('banana-cannon');
     } else if (dist < 150) {
       weaponIdx = WEAPON_ORDER.indexOf('grenade');
     }
@@ -532,11 +532,11 @@ export class AIController {
     if (weapon.id === 'grenade' && distToEnemy < 200) score += 5;
     if (weapon.id === 'bazooka' && distToEnemy > 150) score += 5;
     if (weapon.id === 'cluster-bomb' && distToEnemy < 250) score += 8;
-    if (weapon.id === 'sniper') {
+    if (weapon.id === 'blow-dart') {
       if (distToEnemy > 100 && distToEnemy < 250) score += 10;
       if (distToEnemy > 300) score -= 30;
     }
-    if (weapon.id === 'shotgun') {
+    if (weapon.id === 'banana-cannon') {
       if (distToEnemy < 100) score += 25;
       if (distToEnemy > 140) score -= 30;
     }

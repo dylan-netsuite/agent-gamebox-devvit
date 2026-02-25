@@ -12,7 +12,7 @@ A moderator creates a Worms post from the subreddit menu. Players join the lobby
 |--------|--------|-------------|---------|
 | Bazooka | 45 | 40 | Affected by wind |
 | Grenade | 40 | 35 | Bounces, 3s fuse |
-| Shotgun | 25 | 15 | Two hitscan shots, no wind |
+| Banana Cannon | 25 | 15 | Two hitscan shots, no wind |
 | Dynamite | 75 | 70 | Place at your feet, 5s fuse |
 | Airstrike | 30 | 25 | 5 missiles from the sky |
 

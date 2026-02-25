@@ -1,11 +1,11 @@
 export type WeaponType =
   | 'bazooka'
   | 'grenade'
-  | 'shotgun'
+  | 'banana-cannon'
   | 'dynamite'
   | 'airstrike'
   | 'cluster-bomb'
-  | 'sniper'
+  | 'blow-dart'
   | 'teleport'
   | 'ninja-rope';
 
@@ -69,21 +69,21 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
     bounceFriction: 0.5,
     icon: '💣',
   },
-  shotgun: {
-    id: 'shotgun',
-    name: 'Shotgun',
+  'banana-cannon': {
+    id: 'banana-cannon',
+    name: 'Banana Cannon',
     blastRadius: 20,
     damage: 25,
     affectedByWind: false,
     fuse: 0,
     bounces: false,
-    description: 'Two close-range hitscan blasts — devastating up close, scatters at distance',
+    description: 'Two close-range banana blasts — devastating up close, scatters at distance',
     firingMode: 'hitscan',
     projectileSpeed: 0,
     projectileGravity: 0,
     shotCount: 2,
     bounceFriction: 0,
-    icon: '🔫',
+    icon: '🍌',
     hitscanRange: 175,
     hitscanDriftStart: 70,
     hitscanWindMul: 2,
@@ -141,15 +141,15 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
     clusterDamage: 18,
     clusterRadius: 18,
   },
-  sniper: {
-    id: 'sniper',
-    name: 'Sniper Rifle',
+  'blow-dart': {
+    id: 'blow-dart',
+    name: 'Blow Dart',
     blastRadius: 8,
     damage: 50,
     affectedByWind: false,
     fuse: 0,
     bounces: false,
-    description: 'Long-range shot — accurate up close, heavy drift at distance',
+    description: 'Long-range dart — accurate up close, heavy drift at distance',
     firingMode: 'hitscan',
     projectileSpeed: 0,
     projectileGravity: 0,
@@ -198,11 +198,11 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
 export const WEAPON_ORDER: WeaponType[] = [
   'bazooka',
   'grenade',
-  'shotgun',
+  'banana-cannon',
   'dynamite',
   'airstrike',
   'cluster-bomb',
-  'sniper',
+  'blow-dart',
   'teleport',
   'ninja-rope',
 ];

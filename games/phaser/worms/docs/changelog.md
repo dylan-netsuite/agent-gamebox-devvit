@@ -1279,3 +1279,9 @@ Redesigned all character draw functions to use organic shapes and curved paths i
 ### Fixed
 - **Rope shots hanging the game**: Ninja rope shots that missed all terrain and flew out of bounds would leave the game stuck in `firing` state indefinitely. The `ProjectileManager` resolution logic now uses a `hasFired` flag instead of checking `projectiles.length`, so rope-only shots correctly trigger turn resolution when the rope goes out of bounds.
 - **Added firing safety timeout**: A 10-second safety timer in the game loop force-resolves the weapon state if it gets stuck in `firing` with no active projectiles or ropes, preventing any future edge-case hangs.
+
+## [v0.0.12.78] - 2026-02-25 — Weapon Renames (wf-1772043257)
+
+### Changed
+- **Shotgun → Banana Cannon**: Renamed to 🍌 Banana Cannon for a more fun, family-friendly feel. All mechanics (damage, range, hitscan params, shot count) remain identical.
+- **Sniper Rifle → Blow Dart**: Renamed to 🎯 Blow Dart. All mechanics (damage, range, drift, spread) remain identical.
