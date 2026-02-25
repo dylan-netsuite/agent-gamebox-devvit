@@ -221,7 +221,64 @@ export const MAP_PRESETS: MapPreset[] = [
       waterAlpha: 0.8,
     },
   },
+  {
+    id: 'archipelago',
+    name: 'Archipelago',
+    description: 'Scattered landmasses over shallow seas',
+    terrainStyle: {
+      minHeight: 0.2,
+      maxHeight: 0.65,
+      octaves: 6,
+      flatness: 0,
+      islands: true,
+      cavern: false,
+      waterLevel: 0.75,
+    },
+    colors: {
+      topSurface: [120, 180, 90],
+      subSurface: [90, 140, 70],
+      deep: [60, 100, 50],
+      skyTop: 0x039be5,
+      skyMid: 0x4fc3f7,
+      skyLow: 0xb3e5fc,
+      skyBottom: 0x0277bd,
+      waterColor: [40, 140, 180],
+      waterAlpha: 0.5,
+    },
+  },
+  {
+    id: 'lunar',
+    name: 'Lunar Surface',
+    description: 'Barren moonscape with shallow craters',
+    terrainStyle: {
+      minHeight: 0.4,
+      maxHeight: 0.6,
+      octaves: 3,
+      flatness: 0.4,
+      islands: false,
+      cavern: false,
+      terraced: 8,
+    },
+    colors: {
+      topSurface: [180, 180, 185],
+      subSurface: [140, 140, 145],
+      deep: [90, 90, 95],
+      skyTop: 0x050510,
+      skyMid: 0x0a0a1e,
+      skyLow: 0x080818,
+      skyBottom: 0x020208,
+    },
+  },
 ];
+
+/** Real gameplay maps (excludes the "random" meta-option). */
+export const PLAYABLE_MAP_PRESETS = MAP_PRESETS;
+
+/** Picks a random playable map id. */
+export function randomMapId(): string {
+  const idx = Math.floor(Math.random() * PLAYABLE_MAP_PRESETS.length);
+  return PLAYABLE_MAP_PRESETS[idx]!.id;
+}
 
 export function getMapPreset(id: string): MapPreset {
   return MAP_PRESETS.find((m) => m.id === id) ?? MAP_PRESETS[0]!;

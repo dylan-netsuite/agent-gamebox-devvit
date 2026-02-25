@@ -1,6 +1,7 @@
 import { Scene } from 'phaser';
 import { SoundManager } from '../systems/SoundManager';
 import { TutorialManager } from '../systems/TutorialManager';
+import { LocalStats } from '../systems/LocalStats';
 
 interface ModeButton {
   icon: string;
@@ -107,6 +108,22 @@ export class ModeSelect extends Scene {
       const y = startY + i * (btnH + gap);
       this.createModeButton(cx, y, btnW, btnH, mode);
     });
+
+    const stats = LocalStats.load();
+    if (stats.gamesPlayed > 0) {
+      this.add
+        .text(
+          cx,
+          height - 30,
+          `W: ${stats.wins}  L: ${stats.losses}  GP: ${stats.gamesPlayed}  K: ${stats.killsTotal}`,
+          {
+            fontFamily: 'monospace',
+            fontSize: '10px',
+            color: '#6e7681',
+          },
+        )
+        .setOrigin(0.5);
+    }
 
     this.add
       .text(cx, height - 14, '2-4 Players • Turn-Based • Destructible Terrain', {

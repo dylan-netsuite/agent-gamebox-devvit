@@ -1,5 +1,24 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.107] - 2026-02-25 — Local Stats + Map Variety (wf-1772059886)
+
+### Added
+- **Local win/loss statistics**: Single-player game results (wins, losses, games played, kills) are now persisted to `localStorage`. A compact stats bar ("W: 5  L: 3  GP: 8  K: 27") appears on the mode select screen when games have been played.
+- **Archipelago map**: Scattered green landmasses over shallow turquoise seas (6 octaves, island generation).
+- **Lunar Surface map**: Barren grey moonscape with shallow craters against a dark sky (terraced terrain, 3 octaves).
+- **Random map option**: "🎲 Random" added as the first option in GameSetup. Selects a random map at game start.
+- **`LocalStats` system**: New client-side stats tracker (`src/client/game/systems/LocalStats.ts`) with `recordWin()`, `recordLoss()`, `addKills()` methods backed by localStorage.
+- **`randomMapId()` helper**: Utility function in `shared/types/maps.ts` to pick a random playable map.
+
+### Files Changed
+- `src/shared/types/maps.ts` — Added Archipelago and Lunar Surface presets, `PLAYABLE_MAP_PRESETS`, `randomMapId()`.
+- `src/client/game/systems/LocalStats.ts` — New file for localStorage-backed stats.
+- `src/client/game/scenes/GamePlay.ts` — Added `recordLocalStats()` method, called from `showGameOver()`.
+- `src/client/game/scenes/GameSetup.ts` — Added Random map meta-option, resolves to real map on start.
+- `src/client/game/scenes/ModeSelect.ts` — Shows stats bar below mode buttons when gamesPlayed > 0.
+
+---
+
 ## [v0.0.12.103] - 2026-02-25 — AI Passive, Tutorial Persistence, Mobile Adaptations (wf-1772059016)
 
 ### Changed

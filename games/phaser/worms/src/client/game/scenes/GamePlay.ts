@@ -15,6 +15,7 @@ import { TouchControls } from '../ui/TouchControls';
 import { SoundManager } from '../systems/SoundManager';
 import { BackgroundRenderer } from '../systems/BackgroundRenderer';
 import { TutorialManager } from '../systems/TutorialManager';
+import { LocalStats } from '../systems/LocalStats';
 import { WORM_NAMES, TEAM_COLORS } from '../../../shared/types/game';
 import type { GameConfig, AIDifficulty } from './GameSetup';
 import { MultiplayerManager } from '../systems/MultiplayerManager';
@@ -686,8 +687,26 @@ export class GamePlay extends Scene {
     }
   }
 
+  private recordLocalStats(winningTeam: number): void {
+    if (this.isOnline) return;
+    if (this.tutorial?.isActive()) return;
+    if (this.aiTeams.length === 0) return;
+
+    const kills = this.worms.filter(
+      (w) => !w.alive && this.aiTeams.includes(w.team),
+    ).length;
+    LocalStats.addKills(kills);
+
+    if (winningTeam === 0) {
+      LocalStats.recordWin();
+    } else {
+      LocalStats.recordLoss();
+    }
+  }
+
   private showGameOver(winningTeam: number): void {
     SoundManager.play('gameover');
+    this.recordLocalStats(winningTeam);
     const cam = this.cameras.main;
     if (!this.gameOverOverlay) {
       this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);

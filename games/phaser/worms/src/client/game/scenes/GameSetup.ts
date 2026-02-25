@@ -1,8 +1,19 @@
 import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
 import { TEAM_COLORS } from '../../../shared/types/game';
-import { MAP_PRESETS } from '../../../shared/types/maps';
+import { MAP_PRESETS, randomMapId } from '../../../shared/types/maps';
+import type { MapPreset } from '../../../shared/types/maps';
 import { SoundManager } from '../systems/SoundManager';
+
+const RANDOM_MAP_OPTION: MapPreset = {
+  id: 'random',
+  name: '🎲 Random',
+  description: 'A surprise map every game',
+  terrainStyle: MAP_PRESETS[0]!.terrainStyle,
+  colors: MAP_PRESETS[0]!.colors,
+};
+
+const MAP_OPTIONS: MapPreset[] = [RANDOM_MAP_OPTION, ...MAP_PRESETS];
 
 export type AIDifficulty = 'easy' | 'medium' | 'hard';
 
@@ -343,7 +354,7 @@ export class GameSetup extends Scene {
       .setInteractive({ useHandCursor: true });
 
     this.mapNameText = this.add
-      .text(controlX - 80, y - 2 + btnSize / 2, MAP_PRESETS[0]!.name, {
+      .text(controlX - 80, y - 2 + btnSize / 2, MAP_OPTIONS[0]!.name, {
         fontSize: '12px',
         color: '#ffffff',
         fontFamily: 'monospace',
@@ -368,7 +379,7 @@ export class GameSetup extends Scene {
       .setInteractive({ useHandCursor: true });
 
     this.mapDescText = this.add
-      .text(cx, y + btnSize + 4, MAP_PRESETS[0]!.description, {
+      .text(cx, y + btnSize + 4, MAP_OPTIONS[0]!.description, {
         fontSize: '8px',
         color: '#6e7681',
         fontFamily: 'monospace',
@@ -377,20 +388,20 @@ export class GameSetup extends Scene {
       .setOrigin(0.5);
 
     leftZone.on('pointerdown', () => {
-      this.mapIndex = (this.mapIndex - 1 + MAP_PRESETS.length) % MAP_PRESETS.length;
+      this.mapIndex = (this.mapIndex - 1 + MAP_OPTIONS.length) % MAP_OPTIONS.length;
       SoundManager.play('select');
       this.updateMapDisplay();
     });
 
     rightZone.on('pointerdown', () => {
-      this.mapIndex = (this.mapIndex + 1) % MAP_PRESETS.length;
+      this.mapIndex = (this.mapIndex + 1) % MAP_OPTIONS.length;
       SoundManager.play('select');
       this.updateMapDisplay();
     });
   }
 
   private updateMapDisplay(): void {
-    const map = MAP_PRESETS[this.mapIndex]!;
+    const map = MAP_OPTIONS[this.mapIndex]!;
     this.mapNameText.setText(map.name);
     this.mapDescText.setText(map.description);
   }
@@ -751,7 +762,7 @@ export class GameSetup extends Scene {
       numTeams: this.numTeams,
       wormsPerTeam: this.wormsPerTeam,
       aiTeams,
-      mapId: MAP_PRESETS[this.mapIndex]!.id,
+      mapId: MAP_OPTIONS[this.mapIndex]!.id === 'random' ? randomMapId() : MAP_OPTIONS[this.mapIndex]!.id,
       turnTimer: TIMER_PRESETS[this.timerIndex]!.value,
       aiDifficulty: AI_DIFFICULTY_PRESETS[this.aiDifficultyIndex]!.value,
     } satisfies GameConfig);
