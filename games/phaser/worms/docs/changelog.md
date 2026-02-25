@@ -1,5 +1,13 @@
 # Reddit Royale - Changelog
 
+## [2026-02-25] Sniper Range Reduction (v0.0.12.58)
+
+**Workflow:** wf-1771989548
+
+Sniper range reduced from 750px to 350px, drift start from 200px to 150px. AI scoring tightened (bonus 100-250px, penalty beyond 300px). Unit tests adjusted for shorter range.
+
+---
+
 ## [2026-02-25] Sniper Range Increase (v0.0.12.52)
 
 **Workflow:** wf-1771988923

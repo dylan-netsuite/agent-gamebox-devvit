@@ -533,8 +533,8 @@ export class AIController {
     if (weapon.id === 'bazooka' && distToEnemy > 150) score += 5;
     if (weapon.id === 'cluster-bomb' && distToEnemy < 250) score += 8;
     if (weapon.id === 'sniper') {
-      if (distToEnemy > 150 && distToEnemy < 500) score += 10;
-      if (distToEnemy > 600) score -= 30;
+      if (distToEnemy > 100 && distToEnemy < 250) score += 10;
+      if (distToEnemy > 300) score -= 30;
     }
     if (weapon.id === 'shotgun') {
       if (distToEnemy < 100) score += 25;
@@ -633,8 +633,8 @@ export class AIController {
     allWorms?: Worm[],
     shooter?: Worm,
   ): { x: number; y: number; directHit: boolean } {
-    const maxDist = weapon.hitscanRange ?? 750;
-    const driftStart = weapon.hitscanDriftStart ?? 200;
+    const maxDist = weapon.hitscanRange ?? 350;
+    const driftStart = weapon.hitscanDriftStart ?? 150;
     const windMul = weapon.hitscanWindMul ?? 3;
     const step = 2;
     const baseDx = Math.cos(angle) * step;

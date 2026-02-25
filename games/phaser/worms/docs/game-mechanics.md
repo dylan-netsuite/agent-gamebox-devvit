@@ -14,7 +14,7 @@ Turn-based artillery game where players control worms on destructible terrain, u
 | 4 | Dynamite | Projectile | 70px | 75 | No | 4s fuse, high arc |
 | 5 | Airstrike | Targeted | 25px×5 | 30×5 | Yes | 5 missiles from above |
 | 6 | Cluster Bomb | Projectile | 20px + 18px×4 | 20 + 18×4 | Yes | Splits into 4 bomblets on detonation |
-| 7 | Sniper Rifle | Hitscan | 8px | 50 | Wind drift at range | 750px range, accurate up close, heavy drift beyond 200px |
+| 7 | Sniper Rifle | Hitscan | 8px | 50 | Wind drift at range | 350px range, accurate up close, heavy drift beyond 150px |
 | 8 | Teleport | Teleport | — | — | No | Instantly moves worm to aimed location |
 | 9 | Ninja Rope | Rope | — | — | No | Grappling hook for swing traversal |
 
@@ -41,17 +41,17 @@ Fires a single hitscan ray — instant, no travel time. The ray detects direct w
 
 | Parameter | Value |
 |-----------|-------|
-| Max range | 750px |
-| Drift start | 200px |
+| Max range | 350px |
+| Drift start | 150px |
 | Wind multiplier | 5× |
 | Spread max | 0.8 |
 
-- **Close range (< 200px)**: Perfectly accurate with no drift or spread, rewarding positioning
-- **Mid range (200-500px)**: Wind drift and spread begin; still usable with good aim
-- **Long range (500-750px)**: Significant accuracy degradation
-- **Beyond 750px**: Out of range entirely
-- **AI scoring**: +10 bonus for 150-500px, -30 penalty beyond 600px
-- **Aim indicator**: Laser-sight dots fade from full alpha to near-transparent past 200px
+- **Close range (< 150px)**: Perfectly accurate with no drift or spread, rewarding positioning
+- **Mid range (150-250px)**: Wind drift and spread begin; still usable with good aim
+- **Long range (250-350px)**: Significant accuracy degradation
+- **Beyond 350px**: Out of range entirely
+- **AI scoring**: +10 bonus for 100-250px, -30 penalty beyond 300px
+- **Aim indicator**: Laser-sight dots fade from full alpha to near-transparent past 150px
 
 ### Teleport Details
 Utility weapon that teleports the worm to the aimed position. The worm lands at the nearest surface below the target point. Uses a turn but deals no damage. Shows a cyan flash at both the origin and destination. The AI does not use this weapon.

@@ -100,12 +100,12 @@ describe('castHitscanRay', () => {
 
   describe('terrain collision', () => {
     it('should stop at solid terrain', () => {
-      const terrain = makeTerrain(2400, 1200, (x) => x >= 500);
+      const terrain = makeTerrain(2400, 1200, (x) => x >= 300);
       const result = castHitscanRay(100, 600, 0, terrain, [], 'shooter');
 
       expect(result.directHitTarget).toBeNull();
-      expect(result.hitX).toBeLessThanOrEqual(502);
-      expect(result.hitX).toBeGreaterThanOrEqual(498);
+      expect(result.hitX).toBeLessThanOrEqual(302);
+      expect(result.hitX).toBeGreaterThanOrEqual(298);
     });
 
     it('should hit a worm standing on terrain before hitting the terrain', () => {
@@ -147,8 +147,8 @@ describe('castHitscanRay', () => {
   describe('worm hitbox geometry', () => {
     it('should detect hits within the 20x24 hitbox', () => {
       const terrain = makeTerrain();
-      const target = makeTarget(500, 400, 'target');
-      // Hitbox is [490, 510] x [398, 422]
+      const target = makeTarget(300, 400, 'target');
+      // Hitbox is [290, 310] x [398, 422]
       // Shoot at the left edge of the hitbox
       const result = castHitscanRay(100, 410, 0, terrain, [target], 'shooter');
       expect(result.directHitTarget).not.toBeNull();
@@ -156,7 +156,7 @@ describe('castHitscanRay', () => {
 
     it('should miss outside the hitbox', () => {
       const terrain = makeTerrain();
-      const target = makeTarget(500, 400, 'target');
+      const target = makeTarget(300, 400, 'target');
       // Shoot above the hitbox (wy - 2 = 398, so y=396 is outside)
       const result = castHitscanRay(100, 396, 0, terrain, [target], 'shooter');
       expect(result.directHitTarget).toBeNull();
