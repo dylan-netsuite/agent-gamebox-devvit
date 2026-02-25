@@ -303,7 +303,7 @@ export class AIController {
             (ec.x - selfCenter.x) ** 2 + (ec.y - selfCenter.y) ** 2,
           );
           const hitResult = this.simulateHitscan(
-            selfCenter.x, selfCenter.y, angle, allWorms, self,
+            selfCenter.x, selfCenter.y, angle, weapon, allWorms, self,
           );
           const hitDist = Math.sqrt(
             (hitResult.x - ec.x) ** 2 + (hitResult.y - ec.y) ** 2,
@@ -533,8 +533,12 @@ export class AIController {
     if (weapon.id === 'bazooka' && distToEnemy > 150) score += 5;
     if (weapon.id === 'cluster-bomb' && distToEnemy < 250) score += 8;
     if (weapon.id === 'sniper') {
-      if (distToEnemy > 200 && distToEnemy < 800) score += 10;
-      if (distToEnemy > 1000) score -= 15;
+      if (distToEnemy > 200 && distToEnemy < 600) score += 10;
+      if (distToEnemy > 800) score -= 20;
+    }
+    if (weapon.id === 'shotgun') {
+      if (distToEnemy < 200) score += 25;
+      if (distToEnemy > 400) score -= 30;
     }
 
     return score;
@@ -625,14 +629,16 @@ export class AIController {
     originX: number,
     originY: number,
     angle: number,
+    weapon: WeaponDef,
     allWorms?: Worm[],
     shooter?: Worm,
   ): { x: number; y: number; directHit: boolean } {
-    const maxDist = 1500;
+    const maxDist = weapon.hitscanRange ?? 1500;
+    const driftStart = weapon.hitscanDriftStart ?? 400;
+    const windMul = weapon.hitscanWindMul ?? 3;
     const step = 2;
     const baseDx = Math.cos(angle) * step;
     const baseDy = Math.sin(angle) * step;
-    const driftStart = 400;
     const windForce = this.wind ? this.wind.getWindForce() : 0;
 
     let hitX = originX;
@@ -643,7 +649,7 @@ export class AIController {
       let dy = baseDy;
       if (d > driftStart) {
         const t = (d - driftStart) / (maxDist - driftStart);
-        dx += windForce * t * 3 * step;
+        dx += windForce * t * windMul * step;
       }
       hitX += dx;
       hitY += dy;

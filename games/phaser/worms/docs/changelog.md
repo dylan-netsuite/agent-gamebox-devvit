@@ -1,5 +1,47 @@
 # Reddit Royale - Changelog
 
+## [2026-02-25] Hitscan Weapon Balance Pass v2 — Per-weapon tuning (v0.0.12.40)
+
+**Workflow:** wf-1771984417
+
+### Changed — Per-weapon hitscan parameters
+
+The sniper was still too effective at long range, and the shotgun shared the same hitscan profile (1500px range), making it effective at distances inappropriate for a close-range weapon.
+
+Added optional `hitscanRange`, `hitscanDriftStart`, `hitscanWindMul`, and `hitscanSpreadMax` fields to `WeaponDef`, allowing each hitscan weapon to define its own accuracy falloff curve.
+
+### Sniper Rifle — Further nerfed
+
+| Property | Before (v0.0.12.36) | After |
+|----------|---------------------|-------|
+| Max range | 1500px | 1200px |
+| Drift start | 400px | 300px |
+| Wind multiplier | 3× | 5× |
+| Spread max | 0.4 | 0.8 |
+| AI score bonus | +10 for 200-800px | +10 for 200-600px |
+| AI score penalty | -15 beyond 1000px | -20 beyond 800px |
+
+### Shotgun — Range falloff added
+
+| Property | Before | After |
+|----------|--------|-------|
+| Max range | 1500px (same as sniper) | 600px |
+| Drift start | 400px | 150px |
+| Wind multiplier | 3× | 2× |
+| Spread max | 0.4 | 1.2 |
+| AI close-range bonus | None | +25 within 200px |
+| AI long-range penalty | None | -30 beyond 400px |
+| Description | "Two quick hitscan shots" | "Two close-range hitscan blasts — devastating up close, scatters at distance" |
+
+### Files Changed
+- `src/shared/types/weapons.ts` — Added `hitscanRange/DriftStart/WindMul/SpreadMax` to `WeaponDef`; set per-weapon values
+- `src/client/game/systems/ProjectileManager.ts` — `fireHitscan()` reads weapon params instead of hardcoded values
+- `src/client/game/systems/AIController.ts` — `simulateHitscan()` accepts weapon param; shotgun/sniper scoring adjusted
+- `src/client/game/ui/AimIndicator.ts` — `drawHitscanAim()` accepts weapon for per-weapon range/drift visualization
+- `src/client/game/systems/WeaponSystem.ts` — Passes weapon to `drawHitscanAim()`
+
+---
+
 ## [2026-02-25] Sniper Rifle Balance Pass (v0.0.12.36)
 
 **Workflow:** wf-1771982147

@@ -175,7 +175,7 @@ export class WeaponSystem {
     if (weapon.firingMode === 'teleport') {
       this.aimIndicator.drawTeleportAim(center.x, center.y, this.aimAngle, this.power);
     } else if (weapon.firingMode === 'hitscan') {
-      this.aimIndicator.drawHitscanAim(center.x, center.y, this.aimAngle);
+      this.aimIndicator.drawHitscanAim(center.x, center.y, this.aimAngle, weapon);
     } else if (weapon.firingMode === 'rope') {
       this.aimIndicator.drawRopeAim(center.x, center.y, this.aimAngle);
     } else {

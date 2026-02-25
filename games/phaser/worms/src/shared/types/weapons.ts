@@ -30,6 +30,10 @@ export interface WeaponDef {
   clusterCount?: number;
   clusterDamage?: number;
   clusterRadius?: number;
+  hitscanRange?: number;
+  hitscanDriftStart?: number;
+  hitscanWindMul?: number;
+  hitscanSpreadMax?: number;
 }
 
 export const WEAPONS: Record<WeaponType, WeaponDef> = {
@@ -73,13 +77,17 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
     affectedByWind: false,
     fuse: 0,
     bounces: false,
-    description: 'Two quick hitscan shots',
+    description: 'Two close-range hitscan blasts — devastating up close, scatters at distance',
     firingMode: 'hitscan',
     projectileSpeed: 0,
     projectileGravity: 0,
     shotCount: 2,
     bounceFriction: 0,
     icon: '🔫',
+    hitscanRange: 600,
+    hitscanDriftStart: 150,
+    hitscanWindMul: 2,
+    hitscanSpreadMax: 1.2,
   },
   dynamite: {
     id: 'dynamite',
@@ -141,13 +149,17 @@ export const WEAPONS: Record<WeaponType, WeaponDef> = {
     affectedByWind: false,
     fuse: 0,
     bounces: false,
-    description: 'Long-range shot — accurate up close, drifts with wind at distance',
+    description: 'Long-range shot — accurate up close, heavy drift at distance',
     firingMode: 'hitscan',
     projectileSpeed: 0,
     projectileGravity: 0,
     shotCount: 1,
     bounceFriction: 0,
     icon: '🎯',
+    hitscanRange: 1200,
+    hitscanDriftStart: 300,
+    hitscanWindMul: 5,
+    hitscanSpreadMax: 0.8,
   },
   teleport: {
     id: 'teleport',

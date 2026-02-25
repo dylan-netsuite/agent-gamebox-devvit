@@ -105,12 +105,14 @@ export class ProjectileManager {
     weapon: WeaponDef,
     shooter?: Worm,
   ): void {
-    const maxDist = 1500;
+    const maxDist = weapon.hitscanRange ?? 1500;
+    const driftStart = weapon.hitscanDriftStart ?? 400;
+    const windMul = weapon.hitscanWindMul ?? 3;
+    const spreadMax = weapon.hitscanSpreadMax ?? 0.4;
     const step = 2;
     const baseDx = Math.cos(angle) * step;
     const baseDy = Math.sin(angle) * step;
 
-    const driftStart = 400;
     const windForce = this.wind.getWindForce();
     const perpX = -Math.sin(angle);
     const perpY = Math.cos(angle);
@@ -126,9 +128,9 @@ export class ProjectileManager {
 
       if (d > driftStart) {
         const t = (d - driftStart) / (maxDist - driftStart);
-        dx += windForce * t * 3 * step;
+        dx += windForce * t * windMul * step;
 
-        const spreadAmount = t * 0.4;
+        const spreadAmount = t * spreadMax;
         const noise = Math.sin(spreadSeed + d * 0.1) * spreadAmount;
         dx += perpX * noise;
         dy += perpY * noise;

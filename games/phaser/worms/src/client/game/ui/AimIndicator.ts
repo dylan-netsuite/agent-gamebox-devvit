@@ -1,5 +1,6 @@
 import * as Phaser from 'phaser';
 import type { WindSystem } from '../systems/WindSystem';
+import type { WeaponDef } from '../../../shared/types/weapons';
 
 /**
  * Visual aim indicator showing angle line and dotted trajectory preview.
@@ -84,12 +85,13 @@ export class AimIndicator {
     originX: number,
     originY: number,
     angle: number,
+    weapon?: WeaponDef,
   ): void {
     if (!this.visible) return;
     this.graphics.clear();
 
-    const maxLen = 1500;
-    const driftStart = 400;
+    const maxLen = weapon?.hitscanRange ?? 1500;
+    const driftStart = weapon?.hitscanDriftStart ?? 400;
 
     const endX = originX + Math.cos(angle) * maxLen;
     const endY = originY + Math.sin(angle) * maxLen;
@@ -100,7 +102,8 @@ export class AimIndicator {
     this.graphics.lineTo(endX, endY);
     this.graphics.strokePath();
 
-    for (let d = 80; d < maxLen; d += 80) {
+    const dotSpacing = maxLen < 800 ? 40 : 80;
+    for (let d = dotSpacing; d < maxLen; d += dotSpacing) {
       const dx = originX + Math.cos(angle) * d;
       const dy = originY + Math.sin(angle) * d;
       if (dx < -50 || dx > 2500 || dy < -50 || dy > 1300) break;
