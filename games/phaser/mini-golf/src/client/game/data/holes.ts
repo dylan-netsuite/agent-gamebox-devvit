@@ -568,66 +568,70 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 11: The Loop-de-Loop ----
-  // Vertical straightaway into a 360° loop, then a tiny green. Par 3.
-  // Slick ice on the approach builds speed. The loop requires a minimum
-  // velocity to clear; too slow and the ball is rejected backward.
-  // Too fast and the ball overshoots the small green into surrounding water.
+  // The ball goes UP the right side of the loop, OVER the top, and DOWN
+  // the left side. Entry ramp curves from the corridor to the right side;
+  // exit ramp curves from the left side back to the corridor above.
+  // Ice approach builds speed; sand green decelerates for putting.
   {
     id: 11,
     name: 'The Loop-de-Loop',
     par: 3,
     tee: { x: 250, y: 730 },
-    cup: { x: 250, y: 105 },
+    cup: { x: 250, y: 100 },
     walls: [
-      // Left wall — tee corridor up to green opening
+      // Left wall — corridor widens around loop, narrows above
       [
-        { x: 185, y: 770 },
-        { x: 185, y: 200 },
-        { x: 155, y: 200 },
-        { x: 155, y: 60 },
+        { x: 180, y: 770 },
+        { x: 180, y: 520 },
+        { x: 120, y: 520 },
+        { x: 120, y: 210 },
+        { x: 155, y: 210 },
+        { x: 155, y: 55 },
       ],
-      // Right wall — tee corridor up to green opening
+      // Right wall — corridor widens around loop, narrows above
       [
-        { x: 315, y: 770 },
-        { x: 315, y: 200 },
-        { x: 345, y: 200 },
-        { x: 345, y: 60 },
+        { x: 320, y: 770 },
+        { x: 320, y: 520 },
+        { x: 380, y: 520 },
+        { x: 380, y: 210 },
+        { x: 345, y: 210 },
+        { x: 345, y: 55 },
       ],
       // Bottom corridor wall
       [
-        { x: 185, y: 770 },
-        { x: 315, y: 770 },
+        { x: 180, y: 770 },
+        { x: 320, y: 770 },
       ],
     ],
     obstacles: [
       {
         type: 'loop',
         x: 250,
-        y: 430,
-        width: 130,
-        radius: 55,
-        speed: 3.0,
+        y: 460,
+        width: 140,
+        radius: 50,
+        speed: 2.8,
       },
     ],
     slickZones: [
       // Ice runway from tee to loop — builds speed
-      { x: 187, y: 520, width: 126, height: 200, color: 0xadd8e6 },
+      { x: 182, y: 550, width: 136, height: 210, color: 0xadd8e6 },
     ],
     frictionZones: [
       // Sand on the green — decelerates ball after loop exit
-      { x: 160, y: 80, width: 180, height: 100 },
+      { x: 155, y: 75, width: 190, height: 110 },
     ],
     waterZones: [
       // Water behind the green (top)
-      { x: 120, y: 10, width: 260, height: 50, color: 0x69b4ff },
+      { x: 115, y: 5, width: 270, height: 50, color: 0x69b4ff },
       // Water left of green
-      { x: 75, y: 60, width: 78, height: 240, color: 0x69b4ff },
+      { x: 60, y: 55, width: 93, height: 255, color: 0x69b4ff },
       // Water right of green
-      { x: 347, y: 60, width: 78, height: 240, color: 0x69b4ff },
-      // Water left of corridor
-      { x: 75, y: 300, width: 108, height: 470, color: 0x69b4ff },
-      // Water right of corridor
-      { x: 317, y: 300, width: 108, height: 470, color: 0x69b4ff },
+      { x: 347, y: 55, width: 93, height: 255, color: 0x69b4ff },
+      // Water left of loop area
+      { x: 60, y: 310, width: 58, height: 460, color: 0x69b4ff },
+      // Water right of loop area
+      { x: 382, y: 310, width: 58, height: 460, color: 0x69b4ff },
     ],
   },
 ];

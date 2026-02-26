@@ -39,22 +39,25 @@ S-curve course using diagonal wall geometry for bank-shot redirection. Tee at (1
 Narrow corridor gauntlet inspired by Candystand's "Sours" course. Tee at (250,720) bottom center, cup at (250,130) top center. The fairway is a claustrophobic 150-unit-wide corridor (x:175-325) flanked by deep sand trap gutters (x:72-175 left, x:327-428 right) that run the full length. Six kinematic "tongue" obstacles extend and retract from the corridor walls on sine-wave timers with alternating phases. Left tongues extend rightward, right tongues extend leftward. Each tongue is 80 design units long and 18 units thick (leaving 70 units of clearance when fully extended), rendered as colorful sour candy with sugar crystal texture and HSL color cycling. Tongue speeds are tuned for playability: 0.5 Hz (bottom pair, ~2s cycle), 0.6 Hz (middle), 0.7 Hz (top). When a tongue strikes the ball, it applies a moderate lateral knockback force (4-6 units) perpendicular to the corridor, pushing the ball toward the sand gutter where high friction (0.15 frictionAir) slows it dramatically. **Aggressive strategy**: full power straight up, requires good timing to pass tongues during their retracted phases. **Conservative strategy (intended)**: 3-5 soft shots, laying up in the safe zones between tongue pairs, then timing the next shot. A friction zone near the cup decelerates the ball for the final putt. Par 4 with disciplined multi-stage timing.
 
 ### Hole 11: The Loop-de-Loop (Par 3)
-Vertical straightaway into a simulated 360° loop, then a tiny green. Tee at (250,730), cup at (250,105). The corridor (x:185-315, 130 units wide) runs from the tee upward through the green area, widening into a T-shape at the top (x:155-345, y:60-200). An ice slick zone (y:520-720) builds speed on approach. At y:430 a narrow trigger zone (130x50 design units) checks the ball's upward velocity. If the ball exceeds the minimum speed threshold (~3.0 design units scaled) while traveling upward (negative vy), it enters a 750ms 360° loop animation with ease-in-out timing. The ball sweeps CW from the bottom through the full circle with depth scaling (0.55x at top/back, 1.0x at bottom/front) and exits above the loop at 45% of entry speed. Two-layer rendering (back at depth 5, front at depth 12) with support pillars creates convincing 3D occlusion. If speed is too low, the ball is rejected backward. A sand friction zone on the small green (y:80-180) decelerates the ball for putting. Water hazards surround the green on three sides and flank the corridor, punishing overshoot. The sweet spot is ~60-75% power for a clean loop clearance with a controlled stop on the green. On exit, the ball is placed above the loop top with ~55% of its entry speed, continuing upward through the corridor into the green. If the ball enters the trigger too slowly, it is rejected backward. Water hazards flank the green on the left (x:80-148) and right (x:352-420), and a water zone behind the green (x:120-380, y:20-75) punishes overshoot. A friction zone on the green (x:170-330, y:100-180) helps the ball stop near the cup. The loop graphic is rendered as a 3D candy ribbon ramp (inspired by Candystand mini golf) with red/orange filled polygon segments, perspective-based shading, a gold center racing stripe, visible edge thickness on the foreground, and candy-colored entry/exit ramps. **Strategy**: 30%+ power reaches the loop; 70%+ power gives a hole-in-one; below 30% the ball doesn't reach the loop trigger zone.
+Vertical corridor with a 360° side-view loop. Tee at (250,730), cup at (250,100). The corridor (x:180-320) widens around the loop area (x:120-380, y:210-520) to accommodate curved entry/exit ramps. An ice slick zone (y:550-760) builds speed on approach. At y:460 a trigger zone (140x50 design units) checks upward velocity. If the ball exceeds the minimum speed threshold (~2.8 design units scaled) while traveling upward, it enters an 850ms loop animation. The ball starts at the RIGHT side of the loop (angle 0), sweeps CCW: UP the right side → OVER the top → DOWN the left side, creating a clear visual of "going up one side and down the other." A curved entry ramp sweeps from the center corridor to the right side of the loop, and a curved exit ramp sweeps from the left side back to center above the loop. Directional arrows (UP on right, DOWN on left) reinforce the path. The ball exits above the loop at 45% of entry speed, continuing upward into the green. Two-layer rendering (back at depth 5, front at depth 12) with support pillars. A sand friction zone on the green (y:75-185) decelerates for putting. Water hazards surround the green and flank the loop area. **Strategy**: ~60-75% power for a clean loop clearance with controlled stop on the green.
 
 ## Loop Obstacle Physics
 
 | Property | Value |
 |----------|-------|
-| Trigger Zone | 130x50 design units at loop entrance, requires upward velocity (vy < 0) |
-| Min Speed | 3.0 design units (scaled to screen) |
-| Animation | 360° CW sweep from bottom (PI/2), 750ms, ease-in-out timing |
-| Depth Scale | 0.55x at top (background), 1.0x at bottom (foreground) |
-| Exit Position | Above loop top (cy - radius - 8px scaled), prevents re-trigger |
+| Trigger Zone | 140x50 design units at loop entrance, requires upward velocity (vy < 0) |
+| Min Speed | 2.8 design units (scaled to screen) |
+| Animation | 360° CCW sweep from right side (angle 0), 850ms, ease-in-out timing |
+| Animation Path | Right (0) → Top (-PI/2) → Left (-PI) → Bottom (-3PI/2) — ball goes UP right side, DOWN left side |
+| Depth Scale | 0.5x at top (background), 1.0x at bottom (foreground) |
+| Exit Position | Above loop top (cy - radius - 12px scaled), prevents re-trigger |
 | Exit Velocity | 45% of entry speed, directed upward |
 | Rejection | Velocity reversed at 30% horizontal, 50% vertical bounce |
-| Exit Grace | 80ms post-exit immunity from zone effects |
-| Rendering | Two layers: back half at depth 5, front half at depth 12, support pillars |
-| Visual | Circular track with inner/outer rails, gold center stripe, red/orange shading, support pillars, entry/exit ramps, direction arrow |
+| Exit Grace | 100ms post-exit immunity from zone effects |
+| Rendering | Two layers: back half (right side, depth 5), front half (left side, depth 12), support pillars |
+| Entry Ramp | Curved quadratic Bezier from center-bottom to right side of loop |
+| Exit Ramp | Curved quadratic Bezier from left side of loop to center-top |
+| Visual | Circular track with inner/outer rails, gold center stripe, red/orange shading, support pillars, curved entry/exit ramps, UP/DOWN directional arrows |
 
 ## Tongue Obstacle Physics
 

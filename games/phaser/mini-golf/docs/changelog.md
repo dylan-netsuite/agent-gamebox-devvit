@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.0.3.81 - Loop Direction Fix: Ball Goes Up One Side, Down the Other (2026-02-26)
+
+### Changed
+- **Loop animation direction redesigned**: Ball now starts at the RIGHT side of the loop and sweeps counter-clockwise (right → top → left), clearly showing it going UP the right side, OVER the top, and DOWN the left side
+  - Previously ball entered from the bottom and circled around, which didn't visually read as a loop-de-loop
+  - Entry point offset to angle 0 (right side), exit above the loop top
+- **Curved entry/exit ramps**: Replaced straight vertical ramps with quadratic Bezier curved ramps
+  - Entry ramp sweeps from center corridor to the right side of the loop
+  - Exit ramp sweeps from the left side of the loop back to center above
+  - New `drawCurvedRamp` method renders track-width Bezier curves with rails and center stripe
+- **Directional arrows**: UP arrow on the right side, DOWN arrow on the left side of the loop
+- **Loop lighting**: Shading now based on vertical position (-sin) for better top-lit effect
+- **Corridor widened around loop**: Walls step out to x:120-380 in the loop area to accommodate curved ramps
+- **Animation duration**: Increased to 850ms (from 750ms) for the longer visual path
+- **Exit grace period**: Increased to 100ms (from 80ms)
+- **Min speed threshold**: Reduced to 2.8 (from 3.0) for better playability with the new animation
+- **Depth scaling range**: 0.5x-1.0x (was 0.55x-1.0x) for more pronounced 3D effect
+
+### Fixed
+- **Loop visual clarity**: The loop now clearly communicates "ball goes up one side and down the other" instead of looking like the ball teleports past an obstacle
+
 ## v0.0.3.77 - Hole 11 Loop-de-Loop Overhaul (2026-02-26)
 
 ### Changed
