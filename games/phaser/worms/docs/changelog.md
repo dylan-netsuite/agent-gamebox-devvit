@@ -1,5 +1,21 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.124] - 2026-02-26 — Fix End-of-Game Resolution (wf-1772087090)
+
+### Fixed
+- **Game-over detection guard**: `checkWinCondition()` now guards against re-entry, preventing double `showGameOver()` calls from race conditions between `settleWorms()` and the main `update()` loop.
+- **Auto-advance after player turn in single-player**: After the player fires and worms settle, the turn now auto-advances after 1.2s delay. Previously, local non-online, non-AI turns required manual ENTER press with no UI indication.
+- **Settling phase isolation**: Added `isSettling` flag to prevent double worm physics updates. The main `update()` loop now skips worm updates while `settleWorms()` is active, eliminating race conditions.
+- **Early game-over detection during settling**: `settleWorms()` now checks team alive count each tick and exits early when only one team remains, rather than waiting for all worms to finish settling.
+- **Dead worm guard in `startTurn()`**: Now checks if the active worm is alive before starting a turn. If the worm is dead, triggers `checkWinCondition()` instead of starting an invalid turn.
+- **Game-over overlay reliability**: Overlay now explicitly registers with `uiContainers` on creation. Background is interactive to block clicks from passing through to game elements.
+- **Improved game-over UI**: Replaced generic "ENTER — New Game" text with distinct "Play Again" and "Main Menu" buttons with better visual hierarchy.
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts` — All game-over flow fixes, settling isolation, auto-advance, overlay improvements.
+
+---
+
 ## [v0.0.12.123] - 2026-02-26 — Fix Parachute Effectiveness (wf-1772085203)
 
 ### Fixed

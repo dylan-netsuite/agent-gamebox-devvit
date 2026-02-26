@@ -61,6 +61,7 @@ export class GamePlay extends Scene {
   private turnTimerEvent: Phaser.Time.TimerEvent | null = null;
   private gameOver = false;
   private gameOverOverlay: Phaser.GameObjects.Container | null = null;
+  private isSettling = false;
 
   private numTeams = 2;
   private wormsPerTeam = 2;
@@ -99,6 +100,7 @@ export class GamePlay extends Scene {
     this.turnOrderIndex = 0;
     this.gameOver = false;
     this.gameOverOverlay = null;
+    this.isSettling = false;
     this.isAITurn = false;
     this.isRemoteTurn = false;
     this.aiController = null;
@@ -189,7 +191,9 @@ export class GamePlay extends Scene {
       }
       if (state === 'resolved') {
         this.stopTurnTimer();
+        this.isSettling = true;
         this.settleWorms(() => {
+          this.isSettling = false;
           if (this.isOnline && this.isLocalTurn) {
             this.broadcastTurnResult();
           }
@@ -201,6 +205,12 @@ export class GamePlay extends Scene {
               this.time.delayedCall(2500, () => {
                 if (this.weaponSystem.currentState === 'resolved' && !this.gameOver) {
                   this.requestNextTurn();
+                }
+              });
+            } else {
+              this.time.delayedCall(1200, () => {
+                if (this.weaponSystem.currentState === 'resolved' && !this.gameOver) {
+                  this.advanceTurn();
                 }
               });
             }
@@ -622,10 +632,16 @@ export class GamePlay extends Scene {
   }
 
   private startTurn(): void {
+    if (this.gameOver) return;
+
+    const worm = this.activeWorm;
+    if (!worm || !worm.alive) {
+      this.checkWinCondition();
+      return;
+    }
+
     this.startTurnTimer();
     this.turnStartClickConsumed = false;
-    const worm = this.activeWorm;
-    if (!worm) return;
 
     this.isAITurn = this.aiController?.isAITeam(worm.team) ?? false;
     this.isRemoteTurn = this.isOnline && worm.team !== this.localTeamIndex;
@@ -694,6 +710,10 @@ export class GamePlay extends Scene {
     const maxTicks = 120;
 
     const check = () => {
+      if (this.gameOver) {
+        onDone();
+        return;
+      }
       ticks++;
       settling = false;
       for (const w of this.worms) {
@@ -705,6 +725,16 @@ export class GamePlay extends Scene {
           if (!w.isGrounded) settling = true;
         }
       }
+
+      const teamsAlive = new Set<number>();
+      for (const w of this.worms) {
+        if (w.alive) teamsAlive.add(w.team);
+      }
+      if (teamsAlive.size <= 1) {
+        onDone();
+        return;
+      }
+
       if (settling && ticks < maxTicks) {
         this.time.delayedCall(16, check);
       } else {
@@ -715,6 +745,8 @@ export class GamePlay extends Scene {
   }
 
   private checkWinCondition(): void {
+    if (this.gameOver) return;
+
     const teamsAlive = new Set<number>();
     for (const w of this.worms) {
       if (w.alive) teamsAlive.add(w.team);
@@ -722,6 +754,7 @@ export class GamePlay extends Scene {
 
     if (teamsAlive.size <= 1) {
       this.gameOver = true;
+      this.isSettling = false;
       const winningTeam = teamsAlive.size === 1 ? [...teamsAlive][0]! : -1;
       if (this.isOnline && this.isLocalTurn) {
         void this.mp!.sendGameOver(winningTeam);
@@ -750,9 +783,11 @@ export class GamePlay extends Scene {
   private showGameOver(winningTeam: number): void {
     SoundManager.play('gameover');
     this.recordLocalStats(winningTeam);
+    this.stopTurnTimer();
     const cam = this.cameras.main;
     if (!this.gameOverOverlay) {
       this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);
+      this.uiContainers.add(this.gameOverOverlay);
     }
     this.gameOverOverlay.removeAll(true);
     this.gameOverOverlay.setVisible(true);
@@ -760,92 +795,83 @@ export class GamePlay extends Scene {
     const bg = this.add.graphics();
     bg.fillStyle(0x000000, 0.7);
     bg.fillRect(0, 0, cam.width, cam.height);
+    bg.setInteractive(
+      new Phaser.Geom.Rectangle(0, 0, cam.width, cam.height),
+      Phaser.Geom.Rectangle.Contains,
+    );
     this.gameOverOverlay.add(bg);
 
     const teamLabels = ['Red', 'Blue', 'Yellow', 'Purple'];
-    const teamName =
-      winningTeam >= 0
-        ? `Team ${teamLabels[winningTeam] ?? winningTeam}`
-        : 'Nobody';
     const teamColorMap = ['#e74c3c', '#3498db', '#f39c12', '#9b59b6'];
     const teamColor = winningTeam >= 0 ? (teamColorMap[winningTeam] ?? '#ffffff') : '#ffffff';
 
-    if (this.isOnline) {
-      const onlinePlayer = this.onlinePlayers[winningTeam];
-      if (onlinePlayer) {
-        const title = this.add
-          .text(cam.width / 2, cam.height * 0.35, 'GAME OVER', {
-            fontFamily: 'Segoe UI, system-ui, sans-serif',
-            fontSize: '48px',
-            fontStyle: 'bold',
-            color: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 4,
-          })
-          .setOrigin(0.5);
-        this.gameOverOverlay.add(title);
+    let winnerLabel: string;
+    if (this.isOnline && winningTeam >= 0 && this.onlinePlayers[winningTeam]) {
+      winnerLabel = `${this.onlinePlayers[winningTeam]!.username} Wins!`;
+    } else if (winningTeam >= 0) {
+      winnerLabel = `Team ${teamLabels[winningTeam] ?? winningTeam} Wins!`;
+    } else {
+      winnerLabel = 'Draw!';
+    }
 
-        const winner = this.add
-          .text(cam.width / 2, cam.height * 0.48, `${onlinePlayer.username} Wins!`, {
-            fontFamily: 'Segoe UI, system-ui, sans-serif',
-            fontSize: '28px',
-            fontStyle: 'bold',
-            color: teamColor,
-            stroke: '#000000',
-            strokeThickness: 3,
-          })
-          .setOrigin(0.5);
-        this.gameOverOverlay.add(winner);
+    const title = this.add
+      .text(cam.width / 2, cam.height * 0.32, 'GAME OVER', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '48px',
+        fontStyle: 'bold',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5);
+    this.gameOverOverlay.add(title);
+
+    const winner = this.add
+      .text(cam.width / 2, cam.height * 0.45, winnerLabel, {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '28px',
+        fontStyle: 'bold',
+        color: teamColor,
+        stroke: '#000000',
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5);
+    this.gameOverOverlay.add(winner);
+
+    const goToMenu = () => {
+      if (this.mp) {
+        void this.mp.disconnect();
+        this.mp = null;
       }
-    }
+      this.scene.start('ModeSelect');
+    };
 
-    if (!this.gameOverOverlay.list.some((o) => o instanceof Phaser.GameObjects.Text && (o as Phaser.GameObjects.Text).text === 'GAME OVER')) {
-      const title = this.add
-        .text(cam.width / 2, cam.height * 0.35, 'GAME OVER', {
-          fontFamily: 'Segoe UI, system-ui, sans-serif',
-          fontSize: '48px',
-          fontStyle: 'bold',
-          color: '#ffffff',
-          stroke: '#000000',
-          strokeThickness: 4,
-        })
-        .setOrigin(0.5);
-      this.gameOverOverlay.add(title);
+    const newGameText = this.add
+      .text(cam.width / 2, cam.height * 0.58, '[ Play Again ]', {
+        fontFamily: 'monospace',
+        fontSize: '18px',
+        fontStyle: 'bold',
+        color: '#4ade80',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    this.gameOverOverlay.add(newGameText);
+    newGameText.on('pointerdown', goToMenu);
 
-      const winner = this.add
-        .text(cam.width / 2, cam.height * 0.48, `${teamName} Wins!`, {
-          fontFamily: 'Segoe UI, system-ui, sans-serif',
-          fontSize: '28px',
-          fontStyle: 'bold',
-          color: teamColor,
-          stroke: '#000000',
-          strokeThickness: 3,
-        })
-        .setOrigin(0.5);
-      this.gameOverOverlay.add(winner);
-    }
-
-    const restartText = this.add
-      .text(cam.width / 2, cam.height * 0.62, '[ ENTER — New Game ]', {
+    const menuText = this.add
+      .text(cam.width / 2, cam.height * 0.66, '[ Main Menu ]', {
         fontFamily: 'monospace',
         fontSize: '16px',
         color: '#aaaaaa',
       })
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
-    this.gameOverOverlay.add(restartText);
-
-    restartText.on('pointerdown', () => {
-      if (this.mp) {
-        void this.mp.disconnect();
-        this.mp = null;
-      }
-      this.scene.start('ModeSelect');
-    });
+    this.gameOverOverlay.add(menuText);
+    menuText.on('pointerdown', goToMenu);
 
     this.tweens.add({
-      targets: restartText,
-      alpha: 0.4,
+      targets: newGameText,
+      alpha: 0.5,
       yoyo: true,
       repeat: -1,
       duration: 800,
@@ -853,7 +879,7 @@ export class GamePlay extends Scene {
 
     if (this.isOnline && this.mp) {
       const rematchText = this.add
-        .text(cam.width / 2, cam.height * 0.72, '[ REMATCH ]', {
+        .text(cam.width / 2, cam.height * 0.76, '[ REMATCH ]', {
           fontFamily: 'monospace',
           fontSize: '16px',
           fontStyle: 'bold',
@@ -1391,18 +1417,20 @@ export class GamePlay extends Scene {
 
     this.projectileManager.update();
 
-    const activeWormWasAlive = worm.alive;
-    const aliveCountBefore = this.worms.filter((w) => w.alive).length;
-    for (const w of this.worms) {
-      w.update();
-    }
-    const aliveCountAfter = this.worms.filter((w) => w.alive).length;
+    if (!this.isSettling) {
+      const activeWormWasAlive = worm.alive;
+      const aliveCountBefore = this.worms.filter((w) => w.alive).length;
+      for (const w of this.worms) {
+        w.update();
+      }
+      const aliveCountAfter = this.worms.filter((w) => w.alive).length;
 
-    if (aliveCountAfter < aliveCountBefore && !this.gameOver) {
-      this.checkWinCondition();
-      if (!this.gameOver && activeWormWasAlive && !worm.alive) {
-        this.onActiveWormDied();
-        return;
+      if (aliveCountAfter < aliveCountBefore && !this.gameOver) {
+        this.checkWinCondition();
+        if (!this.gameOver && activeWormWasAlive && !worm.alive) {
+          this.onActiveWormDied();
+          return;
+        }
       }
     }
 
