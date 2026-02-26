@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.2.307 - Hole 9: Fix Zone Overlaps + Increase Difficulty (2026-02-26)
+
+### Changed
+- **Left lane slick zone trimmed** — height reduced from 500 to 248 (y:200-448), stopping before the horizontal wall at y:450. No longer overlaps with the water hazard at y:460-560.
+- **Right lane slick zone removed** — the descent from the top-right diagonal to the cup is now on normal turf, requiring more precise power control and making the hole harder.
+- **Clearer visual distinction** — ice zones and water hazard no longer overlap, eliminating confusion about surface type.
+
 ## v0.0.2.303 - Hole 9 Redesign: S-Curve with Diagonal Wall Bank Shots (2026-02-26)
 
 ### Changed

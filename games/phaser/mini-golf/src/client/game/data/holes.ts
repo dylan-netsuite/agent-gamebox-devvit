@@ -382,19 +382,17 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 9: The Ice Cream Glide ----
-  // S-curve with two chocolate reflectors and a central water hazard. Par 3.
+  // S-curve with diagonal wall bank shots and a water hazard. Par 3.
   //
-  // Leg 1 (vertical): tee at bottom-left, shoot UP along the left lane.
-  // Turn 1: 45° reflector at top-left redirects ball RIGHTWARD.
-  // Leg 2 (horizontal): ball glides right across the top.
-  // Turn 2: -45° reflector at top-right redirects ball DOWNWARD.
-  // Leg 3 (vertical): ball descends the right lane to the cup at (400,350).
+  // Leg 1 (vertical): tee at bottom-left, shoot UP along the icy left lane.
+  // Turn 1: diagonal wall at top-left redirects ball RIGHTWARD.
+  // Leg 2 (horizontal): ball glides right across the icy top lane.
+  // Turn 2: diagonal wall at top-right redirects ball DOWNWARD.
+  // Leg 3 (vertical): ball descends the right lane on normal turf to the cup.
   //
-  // Central water hazard blocks diagonal shortcuts.
+  // No ice on leg 3 — player needs precise power to reach the cup.
+  // Water hazard below the horizontal wall punishes errant shots.
   // Gumdrop bumper near the cup adds risk/reward on the approach.
-  //
-  // Birdie: nail both reflectors with good power → ball reaches cup area
-  // in 2 strokes. Par: 3 shots navigating the S-curve.
   {
     id: 9,
     name: 'The Ice Cream Glide',
@@ -429,12 +427,10 @@ export const HOLES: HoleDefinition[] = [
       },
     ],
     slickZones: [
-      // Left lane ice — ball glides upward from tee to diagonal wall
-      { x: 52, y: 200, width: 146, height: 500, color: 0xffecd2 },
+      // Left lane ice — ball glides upward from tee toward diagonal wall (stops before horizontal wall)
+      { x: 52, y: 200, width: 146, height: 248, color: 0xffecd2 },
       // Top lane ice — ball glides rightward across the top after wall bank
       { x: 200, y: 62, width: 100, height: 140, color: 0xffc0cb },
-      // Right lane ice — ball glides downward from top-right diagonal toward cup
-      { x: 350, y: 200, width: 98, height: 150, color: 0xffecd2 },
     ],
     frictionZones: [
       // Cup approach — ball decelerates for a puttable stop
