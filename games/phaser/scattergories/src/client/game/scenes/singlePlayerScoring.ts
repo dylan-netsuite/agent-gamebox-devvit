@@ -1,5 +1,5 @@
 import type { PlayerAnswer, RoundResult } from '../../../shared/types/game';
-import { isAnswerValid } from '../../../shared/validation';
+import { isAnswerValidForCategory } from '../../../shared/validation';
 import type { AIPlayer } from '../systems/AIOpponent';
 
 export function scoreSinglePlayer(
@@ -25,7 +25,7 @@ export function scoreSinglePlayer(
     for (let catIdx = 0; catIdx < categories.length; catIdx++) {
       const raw = playerAns[catIdx] ?? '';
       const norm = playerNorm[catIdx] ?? '';
-      const valid = isAnswerValid(raw, letter);
+      const valid = isAnswerValidForCategory(raw, letter, categories[catIdx] ?? '');
 
       if (!valid || !norm) {
         pAnswers.push({ categoryIndex: catIdx, answer: raw, valid: false, duplicate: false, score: 0 });

@@ -1,5 +1,5 @@
 import type { PlayerAnswer, RoundResult } from '../../../shared/types/game';
-import { isAnswerValid } from '../../../shared/validation';
+import { isAnswerValidForCategory } from '../../../shared/validation';
 
 export function scoreLocalMultiplayer(
   roundNumber: number,
@@ -23,7 +23,7 @@ export function scoreLocalMultiplayer(
       const raw = answers[catIdx] ?? '';
       const norm = normalized[catIdx] ?? '';
 
-      if (!norm || !isAnswerValid(raw, letter)) {
+      if (!norm || !isAnswerValidForCategory(raw, letter, categories[catIdx] ?? '')) {
         playerAnswers.push({ categoryIndex: catIdx, answer: raw, valid: false, duplicate: false, score: 0 });
         continue;
       }

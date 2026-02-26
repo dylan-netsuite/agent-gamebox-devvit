@@ -1,5 +1,23 @@
 # Scattergories - Changelog
 
+## [0.7.0] - 2026-02-26
+
+### Added
+- **Category-Aware Answer Validation** — Answers are now validated against category-specific word lists for enumerable categories (Animals, Countries, Trees, Emotions, Sports, etc.). For example, "Cobra" is rejected for "Athletes" but accepted for "Animals". Open-ended categories ("Things in a Kitchen") still accept any well-formed answer.
+- **`categoryRelevance.ts` Module** — New shared module with `isCategoryRelevant()` function, `classifyCategory()` mapper (23 category types), and `fuzzyMatch()` for flexible matching (exact, multi-word, substring).
+- **Comprehensive Word Lists** — Curated lists for names, countries, animals, colors, sports, clothing, occupations, flowers, trees, instruments, cars, holidays, superheroes, emotions, food, cities, languages, insects, birds, fish, reptiles, dances, and shows.
+
+### Changed
+- **All Scoring Modules** — `scoring.ts` (server), `singlePlayerScoring.ts` (client), and `localScoring.ts` (client) now use `isAnswerValidForCategory(answer, letter, category)` instead of `isAnswerValid(answer, letter)`, enabling category-aware rejection.
+
+### Verified
+- Single player E2E: "Cobra" for Athletes correctly rejected (score 11/12), "Cedar" for Trees and "Calm" for Emotions correctly accepted
+- Open-ended categories still accept any valid answer
+- AI opponent answers also validated against categories
+- Zero console errors
+
+Workflow: wf-1772064000
+
 ## [0.6.0] - 2026-02-24
 
 ### Added

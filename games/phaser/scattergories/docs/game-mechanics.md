@@ -18,7 +18,15 @@ Based on the classic Hasbro board game (2003 edition).
 
 ### Scoring
 - **Multiplayer**: Duplicate answers between any players score 0 for both. Each unique valid answer scores 1 point.
-- **Single Player**: Any valid answer (starts with correct letter, non-empty) scores 1 point. No duplicate elimination.
+- **Single Player (vs AI)**: Valid answers score 1 point. Duplicate answers between human and AI score 0 for both.
+
+### Answer Validation
+Answers go through two validation layers:
+
+1. **Format Validation**: Must start with the required letter, minimum 2 characters, cannot be a repeated character, must contain at least one vowel.
+2. **Category Relevance**: For enumerable categories (Animals, Countries, Trees, Emotions, Sports, Colors, etc.), the answer must appear in a known word list. Matching uses fuzzy logic — exact match, multi-word partial match, and substring match. Open-ended categories ("Things in a Kitchen", "Excuses for Being Late") always pass category relevance.
+
+Supported enumerable category types: names, cities, countries, animals, food, sports, clothing, occupations, flowers, trees, colors, instruments, cars, holidays, superheroes, emotions, languages, insects, birds, fish, reptiles, dances, shows.
 
 ### Game Structure
 - 3 rounds per game

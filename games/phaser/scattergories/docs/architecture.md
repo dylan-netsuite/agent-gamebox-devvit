@@ -25,7 +25,10 @@ games/phaser/scattergories/
 │   ├── server/           # Serverless backend
 │   │   ├── index.ts      # Express routes + realtime broadcast
 │   │   └── core/         # Business logic modules
-│   └── shared/types/     # Shared TypeScript types
+│   └── shared/           # Shared code (types, validation)
+│       ├── types/        # TypeScript type definitions
+│       ├── validation.ts # Answer format + category validation
+│       └── categoryRelevance.ts # Category classification + word lists
 └── dist/                 # Build output
 ```
 
@@ -34,7 +37,7 @@ games/phaser/scattergories/
 ### Single Player
 1. Client picks random letter + category list locally
 2. Player fills in answers during 90s timer
-3. Client-side scoring validates answers (starts with correct letter)
+3. Client-side scoring validates answers (format check + category relevance)
 4. Results displayed immediately
 
 ### Multiplayer
@@ -49,6 +52,7 @@ games/phaser/scattergories/
 ## Key Design Decisions
 
 - **Server-authoritative scoring** for multiplayer to prevent cheating
+- **Category-aware validation** shared between client and server via `shared/validation.ts` and `shared/categoryRelevance.ts`
 - **DOM overlay inputs** for text entry (Phaser has no native text input)
 - **Realtime channels** per lobby: `scatter_lobby_{code}`
 - **Redis TTL** of 2 hours on all lobby keys for automatic cleanup
