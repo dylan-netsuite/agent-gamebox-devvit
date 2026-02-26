@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.0.2.303 - Hole 9 Redesign: S-Curve with Diagonal Wall Bank Shots (2026-02-26)
+
+### Changed
+- **Hole 9 redesigned with S-curve layout using diagonal wall geometry** — replaced L-shaped chocolate block reflectors with diagonal wall corners built into the outer boundary. The top-left and top-right corners are 45° wall segments that predictably redirect the ball via Matter.js wall collisions, creating reliable bank shots.
+- **Cup relocated to (400,350)** — moved from top-right to right side mid-height, making the third leg of the S-curve a downward approach.
+- **Water hazard repositioned to (120,460)** — moved below the horizontal wall (y=450) to serve as a penalty for balls that fall through gaps, without interfering with the intended S-curve path.
+- **Chocolate block obstacles removed** — diagonal wall segments in the boundary polygon provide more predictable redirection than standalone block obstacles, which suffered from inconsistent collision angles.
+- **Single gumdrop bumper at (420,310)** — one bumper near the cup adds risk/reward on the approach, replacing the previous two-bumper layout.
+- **Birdie achievable in 2 strokes** — tested and verified: straight-up shot with 70% power banks off both diagonal corners, lands near cup, second shot sinks it.
+
 ## v0.0.2.263 - Hole 9 Redesign: L-Shaped Reflector Zigzag (2026-02-26)
 
 ### Changed

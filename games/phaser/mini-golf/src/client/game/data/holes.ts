@@ -382,83 +382,67 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 9: The Ice Cream Glide ----
-  // L-shaped zigzag with chocolate reflectors and a bumper. Par 3.
+  // S-curve with two chocolate reflectors and a central water hazard. Par 3.
   //
   // Leg 1 (vertical): tee at bottom-left, shoot UP along the left lane.
-  // Turn: 45° chocolate reflector at the top-left redirects ball RIGHT.
-  // Leg 2 (horizontal): ball glides right across the top on ice cream.
-  // Cup at top-right (400,140).
+  // Turn 1: 45° reflector at top-left redirects ball RIGHTWARD.
+  // Leg 2 (horizontal): ball glides right across the top.
+  // Turn 2: -45° reflector at top-right redirects ball DOWNWARD.
+  // Leg 3 (vertical): ball descends the right lane to the cup at (400,350).
   //
-  // A gumdrop bumper in the horizontal lane adds risk — hit it and the
-  // ball bounces unpredictably. A second reflector near the right wall
-  // can redirect overshoots downward.
+  // Central water hazard blocks diagonal shortcuts.
+  // Gumdrop bumper near the cup adds risk/reward on the approach.
   //
-  // Birdie: aim up with good power, bank off the reflector, ball glides
-  // right and stops near the cup. Tap-in for 2.
-  // Ace: perfect power + aim sends the ball all the way to the cup.
+  // Birdie: nail both reflectors with good power → ball reaches cup area
+  // in 2 strokes. Par: 3 shots navigating the S-curve.
   {
     id: 9,
     name: 'The Ice Cream Glide',
     par: 3,
     tee: { x: 100, y: 700 },
-    cup: { x: 400, y: 140 },
+    cup: { x: 400, y: 350 },
     walls: [
-      // Outer boundary
+      // Outer boundary with diagonal corners for ball redirection
       [
-        { x: 50, y: 60 },
-        { x: 450, y: 60 },
+        { x: 50, y: 200 },
+        { x: 200, y: 60 },
+        { x: 300, y: 60 },
+        { x: 450, y: 200 },
         { x: 450, y: 770 },
         { x: 50, y: 770 },
-        { x: 50, y: 60 },
+        { x: 50, y: 200 },
       ],
-      // Horizontal wall blocking direct right-side path from the tee area
+      // Horizontal wall from right — blocks diagonal shortcuts, forces S-curve
       [
-        { x: 200, y: 300 },
-        { x: 450, y: 300 },
+        { x: 200, y: 450 },
+        { x: 450, y: 450 },
       ],
     ],
     obstacles: [
-      // 45° chocolate reflector at top-left — the key bank shot target.
-      // Ball going UP hits it and gets redirected RIGHTWARD.
-      {
-        type: 'block',
-        x: 130,
-        y: 130,
-        width: 80,
-        height: 30,
-        angle: 0.785,
-      },
-      // Gumdrop bumper in the horizontal lane — adds excitement.
-      // Ball coming from the reflector may hit this and bounce wildly.
-      {
-        type: 'gumdrop_bumper',
-        x: 280,
-        y: 110,
-        radius: 16,
-        color: 0xff69b4,
-      },
-      // Second gumdrop bumper near the cup for risk/reward
+      // Gumdrop bumper on the right-side approach to the cup
       {
         type: 'gumdrop_bumper',
         x: 420,
-        y: 200,
+        y: 310,
         radius: 16,
-        color: 0x87ceeb,
+        color: 0xff69b4,
       },
     ],
     slickZones: [
-      // Vertical lane ice — ball glides upward from tee to reflector
-      { x: 52, y: 130, width: 146, height: 570, color: 0xffecd2 },
-      // Horizontal lane ice — ball glides rightward after the reflector
-      { x: 130, y: 62, width: 200, height: 100, color: 0xffc0cb },
+      // Left lane ice — ball glides upward from tee to diagonal wall
+      { x: 52, y: 200, width: 146, height: 500, color: 0xffecd2 },
+      // Top lane ice — ball glides rightward across the top after wall bank
+      { x: 200, y: 62, width: 100, height: 140, color: 0xffc0cb },
+      // Right lane ice — ball glides downward from top-right diagonal toward cup
+      { x: 350, y: 200, width: 98, height: 150, color: 0xffecd2 },
     ],
     frictionZones: [
       // Cup approach — ball decelerates for a puttable stop
-      { x: 330, y: 62, width: 118, height: 236 },
+      { x: 340, y: 300, width: 108, height: 120 },
     ],
     waterZones: [
-      // Dead-end hazard below the horizontal wall on the right side
-      { x: 300, y: 500, width: 148, height: 200, color: 0xff69b4 },
+      // Central water hazard — between the two lanes, punishes straight diagonal shortcuts
+      { x: 120, y: 460, width: 160, height: 100, color: 0xff69b4 },
     ],
   },
 ];
