@@ -394,6 +394,11 @@ export const HOLES: HoleDefinition[] = [
   // Water hazard below the horizontal wall punishes errant shots.
   // Small taffy pond near the cup forces precise approach shots.
   // Gumdrop bumper near the cup adds risk/reward on the approach.
+  //
+  // HOLE-IN-ONE ROUTE: A narrow ~35-unit gap (x:190-225) in the horizontal
+  // wall allows a hero shot from the tee. Aim up-right with full power to
+  // thread the needle. The water hazard sits directly below the gap,
+  // punishing near-misses. Extremely difficult but rewarding.
   {
     id: 9,
     name: 'The Ice Cream Glide',
@@ -411,9 +416,15 @@ export const HOLES: HoleDefinition[] = [
         { x: 50, y: 770 },
         { x: 50, y: 200 },
       ],
-      // Horizontal wall from right — blocks diagonal shortcuts, forces S-curve
+      // Left portion of horizontal wall — closes off most of the left side
       [
-        { x: 200, y: 450 },
+        { x: 50, y: 450 },
+        { x: 190, y: 450 },
+      ],
+      // Right portion of horizontal wall — main barrier forcing the S-curve
+      // Gap between x:190 and x:225 (~35 units) allows a difficult hole-in-one
+      [
+        { x: 225, y: 450 },
         { x: 450, y: 450 },
       ],
     ],
@@ -438,8 +449,8 @@ export const HOLES: HoleDefinition[] = [
       { x: 340, y: 300, width: 108, height: 120 },
     ],
     waterZones: [
-      // Central water hazard — between the two lanes, punishes straight diagonal shortcuts
-      { x: 120, y: 460, width: 160, height: 100, color: 0xff69b4 },
+      // Water hazard — right side below the wall, punishes shots that miss the gap rightward
+      { x: 300, y: 480, width: 140, height: 100, color: 0xff69b4 },
       // Small taffy pond near the cup — punishes overshooting the approach
       { x: 340, y: 220, width: 80, height: 60, color: 0xff85c1 },
     ],

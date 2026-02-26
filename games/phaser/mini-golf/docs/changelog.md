@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.3.16 - Hole 9: Hole-in-One Hero Shot Route (2026-02-26)
+
+### Changed
+- **Horizontal wall split into two segments** — gap at x:190-225 (~35 design units) allows a difficult hole-in-one hero shot from the tee
+- **Left wall segment** (x:50→190) and **right wall segment** (x:225→450) create a narrow passage
+- **Water hazard repositioned** — moved to right side at (300, 480) so it doesn't block the hero shot trajectory but still punishes shots that miss the gap rightward
+- **Hole-in-one route documented** — aim up-right from tee at full power to thread the gap, bank off top-right diagonal wall, and descend to cup
+
 ## v0.0.3.1 - Hole 9: Rounded Hazards, New Hazard, Shinier Ice (2026-02-26)
 
 ### Changed
