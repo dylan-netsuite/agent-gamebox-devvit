@@ -1,5 +1,18 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.122] - 2026-02-26 — Rebalance Rope Swing + Player Control (wf-1772078022)
+
+### Improved
+- **Rope swing rebalanced**: Damping changed from 0.975 to 0.99 for a natural decay that still allows meaningful swinging. Gravity increased to 0.0035, angular velocity cap raised to 0.06 rad/frame.
+- **Player-driven swing**: Left/right arrow keys now pump the pendulum while on the rope, letting players actively build momentum instead of passively waiting.
+- **Fixed rope detach direction**: Removed the forced-upward velocity on release (`-Math.abs(...)`) that caused the worm to always fly upward and then take fall damage. Detach now uses actual tangential direction. Release scale adjusted to 0.85.
+
+### Files Changed
+- `src/client/game/entities/Worm.ts` — Rebalanced constants, added `swingInput()`, fixed `detachRope()` velocity.
+- `src/client/game/scenes/GamePlay.ts` — Wired left/right keys to `swingInput()` when on rope.
+
+---
+
 ## [v0.0.12.119] - 2026-02-26 — Smooth Ninja Rope Swing (wf-1772076556)
 
 ### Improved

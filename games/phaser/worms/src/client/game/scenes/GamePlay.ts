@@ -1309,6 +1309,11 @@ export class GamePlay extends Scene {
 
     if (this.canAct() && this.cursors) {
       if (worm.isOnRope) {
+        if (this.cursors.left.isDown) {
+          worm.swingInput(-1);
+        } else if (this.cursors.right.isDown) {
+          worm.swingInput(1);
+        }
         if (this.cursors.up.isDown) {
           worm.adjustRopeLength(-2);
         } else if (this.cursors.down.isDown) {

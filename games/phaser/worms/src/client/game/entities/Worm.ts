@@ -193,12 +193,18 @@ export class Worm {
     SoundManager.play('rope-attach');
   }
 
+  swingInput(direction: -1 | 0 | 1): void {
+    if (!this._ropeAnchor || direction === 0) return;
+    const SWING_FORCE = 0.0012;
+    this._ropeAngularVel += direction * SWING_FORCE;
+  }
+
   detachRope(): void {
     if (!this._ropeAnchor) return;
-    const RELEASE_SCALE = 0.7;
+    const RELEASE_SCALE = 0.85;
     const tangentialSpeed = this._ropeAngularVel * this._ropeLength * RELEASE_SCALE;
     this.horizontalVelocity = Math.cos(this._ropeAngle) * tangentialSpeed;
-    this.fallVelocity = -Math.abs(Math.sin(this._ropeAngle) * tangentialSpeed) - 1;
+    this.fallVelocity = -Math.sin(this._ropeAngle) * tangentialSpeed - 1;
     this._ropeAnchor = null;
     this._ropeLength = 0;
     this._ropeAngularVel = 0;
@@ -262,9 +268,9 @@ export class Worm {
     if (!this.alive) return;
 
     if (this._ropeAnchor) {
-      const ROPE_GRAVITY = 0.003;
-      const ROPE_DAMPING = 0.975;
-      const MAX_ANGULAR_VEL = 0.04;
+      const ROPE_GRAVITY = 0.0035;
+      const ROPE_DAMPING = 0.99;
+      const MAX_ANGULAR_VEL = 0.06;
 
       this._ropeAngularVel += Math.sin(this._ropeAngle) * ROPE_GRAVITY;
       this._ropeAngularVel *= ROPE_DAMPING;
