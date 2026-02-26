@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.2.230 - Hole 9 Redesign: Fun 3-Corridor Zigzag (2026-02-26)
+
+### Changed
+- **Hole 9 redesigned to 3-corridor zigzag** — replaced simple 2-lane layout with a three-corridor zigzag using two horizontal dividers. Bottom lane goes RIGHT, middle lane goes LEFT, top lane goes RIGHT to cup. More engaging and strategic path.
+- **Par increased from 3 to 4** — extra corridor makes par 4 appropriate.
+- **4 gumdrop bumpers added at turns** — colorful bumpers (pink, sky blue, orange, pink) at bottom-right corner, right gap, left gap, and top-left corner. High restitution (1.8) adds excitement and unpredictability.
+- **2 water hazards added** — pink taffy pool above the lower gap punishes overshooting, and a taffy puddle in the center of the middle corridor forces careful aim through the lane.
+- **3 ice cream zones across all corridors** — slick surfaces in the straightaway sections of each corridor keep the ball gliding.
+- **3 friction zones at key points** — right U-turn, left U-turn, and cup landing pad provide controllable rest areas.
+
+### Fixed
+- **Hole 9 is now more fun and challenging** — previous 2-lane layout was too simple. New zigzag pattern with bumpers and hazards creates an engaging mini-golf experience with risk/reward decisions at each turn.
+
 ## v0.0.2.228 - Hole 9 Redesign: Playable 2-Lane Zigzag (2026-02-26)
 
 ### Changed
