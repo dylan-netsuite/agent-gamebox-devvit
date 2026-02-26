@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.2.263 - Hole 9 Redesign: L-Shaped Reflector Zigzag (2026-02-26)
+
+### Changed
+- **Hole 9 completely redesigned with L-shaped layout** — replaced nonsensical 3-corridor zigzag with a clean L-shaped course using 45° chocolate block reflectors. Vertical leg 1 (aim up) redirects via reflector to horizontal leg 2 (glide right to cup).
+- **Par reduced from 4 to 3** — the L-shaped path with reflectors is completable in 2-3 strokes. Birdie setup on a great first bank shot, hole-in-one possible with perfect aim.
+- **Chocolate block reflector replaces bumper-based turns** — circular bumpers can't redirect the ball (they reflect it back). The 45° chocolate block at (130,130) physically redirects upward-traveling balls rightward. This is the satisfying "bank shot" mechanic.
+- **Two gumdrop bumpers as lane obstacles** — placed in the horizontal lane (280,110) and near the cup (420,200) for risk/reward, not direction changes.
+- **Ice cream zones on both legs** — vertical and horizontal lanes keep the ball gliding with 0.012 frictionAir.
+- **Horizontal wall at y=300** — blocks diagonal shortcut from tee to cup, forcing the L-path.
+- **Water hazard moved to right side dead-end** — punishes balls that go right without using the reflector.
+
 ## v0.0.2.230 - Hole 9 Redesign: Fun 3-Corridor Zigzag (2026-02-26)
 
 ### Changed

@@ -382,16 +382,26 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 9: The Ice Cream Glide ----
-  // Three-corridor zigzag with bumpers at the turns and hazards in the path.
-  // Bottom lane goes RIGHT, middle lane goes LEFT, top lane goes RIGHT to cup.
-  // Gumdrop bumpers at each end add excitement. Water and sand hazards punish
-  // sloppy shots. Ice cream zones keep the ball gliding. Par 4.
+  // L-shaped zigzag with chocolate reflectors and a bumper. Par 3.
+  //
+  // Leg 1 (vertical): tee at bottom-left, shoot UP along the left lane.
+  // Turn: 45° chocolate reflector at the top-left redirects ball RIGHT.
+  // Leg 2 (horizontal): ball glides right across the top on ice cream.
+  // Cup at top-right (400,140).
+  //
+  // A gumdrop bumper in the horizontal lane adds risk — hit it and the
+  // ball bounces unpredictably. A second reflector near the right wall
+  // can redirect overshoots downward.
+  //
+  // Birdie: aim up with good power, bank off the reflector, ball glides
+  // right and stops near the cup. Tap-in for 2.
+  // Ace: perfect power + aim sends the ball all the way to the cup.
   {
     id: 9,
     name: 'The Ice Cream Glide',
-    par: 4,
+    par: 3,
     tee: { x: 100, y: 700 },
-    cup: { x: 400, y: 150 },
+    cup: { x: 400, y: 140 },
     walls: [
       // Outer boundary
       [
@@ -401,72 +411,54 @@ export const HOLES: HoleDefinition[] = [
         { x: 50, y: 770 },
         { x: 50, y: 60 },
       ],
-      // Lower divider at y=540: gap on RIGHT (x:310→450)
+      // Horizontal wall blocking direct right-side path from the tee area
       [
-        { x: 50, y: 540 },
-        { x: 310, y: 540 },
-      ],
-      // Upper divider at y=300: gap on LEFT (x:50→190)
-      [
-        { x: 190, y: 300 },
+        { x: 200, y: 300 },
         { x: 450, y: 300 },
       ],
     ],
     obstacles: [
-      // Bottom-right corner bumper — bounces ball toward the gap
+      // 45° chocolate reflector at top-left — the key bank shot target.
+      // Ball going UP hits it and gets redirected RIGHTWARD.
+      {
+        type: 'block',
+        x: 130,
+        y: 130,
+        width: 80,
+        height: 30,
+        angle: 0.785,
+      },
+      // Gumdrop bumper in the horizontal lane — adds excitement.
+      // Ball coming from the reflector may hit this and bounce wildly.
       {
         type: 'gumdrop_bumper',
-        x: 410,
-        y: 700,
+        x: 280,
+        y: 110,
         radius: 16,
         color: 0xff69b4,
       },
-      // Right-side bumper near lower gap — deflects ball upward into middle lane
+      // Second gumdrop bumper near the cup for risk/reward
       {
         type: 'gumdrop_bumper',
-        x: 400,
-        y: 470,
+        x: 420,
+        y: 200,
         radius: 16,
         color: 0x87ceeb,
       },
-      // Left-side bumper near upper gap — deflects ball upward into top lane
-      {
-        type: 'gumdrop_bumper',
-        x: 100,
-        y: 370,
-        radius: 16,
-        color: 0xffa500,
-      },
-      // Top-left corner bumper — risk near the cup approach
-      {
-        type: 'gumdrop_bumper',
-        x: 90,
-        y: 100,
-        radius: 16,
-        color: 0xff69b4,
-      },
     ],
     slickZones: [
-      // Bottom corridor ice — center glide strip
-      { x: 120, y: 542, width: 188, height: 226, color: 0xffecd2 },
-      // Middle corridor ice — glide strip through the center
-      { x: 120, y: 302, width: 170, height: 236, color: 0xffc0cb },
-      // Top corridor ice — right-side approach to cup
-      { x: 250, y: 62, width: 148, height: 236, color: 0xffecd2 },
+      // Vertical lane ice — ball glides upward from tee to reflector
+      { x: 52, y: 130, width: 146, height: 570, color: 0xffecd2 },
+      // Horizontal lane ice — ball glides rightward after the reflector
+      { x: 130, y: 62, width: 200, height: 100, color: 0xffc0cb },
     ],
     frictionZones: [
-      // Right U-turn friction — ball can stop and re-aim after the lower gap
-      { x: 310, y: 540, width: 138, height: 228 },
-      // Left U-turn friction — ball can stop after threading upper gap
-      { x: 52, y: 180, width: 136, height: 258 },
-      // Landing pad around the cup
-      { x: 52, y: 62, width: 196, height: 236 },
+      // Cup approach — ball decelerates for a puttable stop
+      { x: 330, y: 62, width: 118, height: 236 },
     ],
     waterZones: [
-      // Taffy pool above the lower gap — miss the gap and you sink
-      { x: 340, y: 430, width: 108, height: 108, color: 0xff69b4 },
-      // Taffy puddle in center of middle corridor — forces careful aim
-      { x: 215, y: 380, width: 80, height: 80, color: 0xff69b4 },
+      // Dead-end hazard below the horizontal wall on the right side
+      { x: 300, y: 500, width: 148, height: 200, color: 0xff69b4 },
     ],
   },
 ];
