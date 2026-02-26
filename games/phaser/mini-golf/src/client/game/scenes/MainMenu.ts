@@ -23,17 +23,29 @@ export class MainMenu extends Scene {
     return Math.min(this.scale.width / 1024, this.scale.height / 768);
   }
 
+  private wheelPreventDefault = (e: WheelEvent) => e.preventDefault();
+
   create() {
     this.cameras.main.setBackgroundColor(0x14381f);
     fadeIn(this, SCENE_COLORS.dark);
     this.allObjects = [];
     this.elapsed = 0;
     this.scrollY = 0;
+
+    this.game.canvas.addEventListener('wheel', this.wheelPreventDefault, { passive: false });
+
     this.buildUI();
 
     this.scale.on('resize', () => {
+      this.input.off('pointermove');
+      this.input.off('pointerup');
+      this.input.off('wheel');
       this.destroyAll();
       this.buildUI();
+    });
+
+    this.events.on('shutdown', () => {
+      this.game.canvas.removeEventListener('wheel', this.wheelPreventDefault);
     });
   }
 
@@ -479,7 +491,7 @@ export class MainMenu extends Scene {
       dragging = false;
     });
 
-    this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _gx: number[], _gy: number[], _gz: number[], _gw: number, deltaY: number) => {
+    this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _gameObjects: Phaser.GameObjects.GameObject[], _deltaX: number, deltaY: number) => {
       if (!this.scrollContainer) return;
       this.scrollY = Phaser.Math.Clamp(this.scrollY + deltaY * 0.5, 0, maxScroll);
       this.scrollContainer.setY(-this.scrollY);

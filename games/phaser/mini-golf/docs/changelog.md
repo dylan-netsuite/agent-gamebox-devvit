@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.0.3.63 - Fix Menu Scroll + Hole 11 Playability (2026-02-26)
+
+### Fixed
+- **Main menu scroll bug**: Fixed Phaser wheel event callback signature — was using wrong parameter order causing `NaN` scrollY, making the menu disappear on scroll
+- **Canvas wheel preventDefault**: Added `preventDefault` on the game canvas to stop browser-level scroll propagation in the Devvit webview
+- **Input listener cleanup**: Old pointermove/pointerup/wheel listeners are now removed before resize rebuild to prevent duplicates
+
+### Changed
+- **Hole 11 redesigned**: Complete layout overhaul to fix ball landing in water after loop exit
+  - Loop moved to y:450 with radius 60 (was y:400, radius 70)
+  - Cup moved to y:120 (was y:130)
+  - Walls restructured as continuous L-shaped segments — no closed polygon blocking loop exit
+  - Green widened into T-shape (x:150-350) above the corridor
+  - Top wall removed — overshoot flies into water behind green
+  - Water zones repositioned to sides and behind green only
+  - Friction zone reduced in size for better overshoot risk
+- **Exit grace period** reduced from 300ms to 50ms — allows water detection for overshoot shots
+
 ## v0.0.3.47 - Hole 11: The Loop-de-Loop (2026-02-26)
 
 ### Added

@@ -126,6 +126,7 @@ interface LoopData {
   animDuration: number;
   entrySpeed: number;
   rejected: boolean;
+  exitGraceMs: number;
 }
 
 export class Obstacles {
@@ -870,6 +871,7 @@ export class Obstacles {
       animDuration: 900,
       entrySpeed: 0,
       rejected: false,
+      exitGraceMs: 0,
     });
   }
 
@@ -929,6 +931,10 @@ export class Obstacles {
     for (const loop of this.loops) {
       if (!ball) continue;
 
+      if (loop.exitGraceMs > 0) {
+        loop.exitGraceMs -= delta;
+      }
+
       if (loop.animating) {
         loop.animProgress += delta / loop.animDuration;
 
@@ -946,6 +952,7 @@ export class Obstacles {
           });
 
           ball.graphics.setScale(1);
+          loop.exitGraceMs = 50;
           continue;
         }
 
@@ -1265,7 +1272,7 @@ export class Obstacles {
   }
 
   isLoopAnimating(): boolean {
-    return this.loops.some(l => l.animating);
+    return this.loops.some(l => l.animating || l.exitGraceMs > 0);
   }
 
   update(delta: number, ball: GolfBall): { inWater: boolean; teleported: boolean } {
