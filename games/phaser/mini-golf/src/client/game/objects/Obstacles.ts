@@ -801,7 +801,7 @@ export class Obstacles {
           by - br < y + h
         ) {
           const knockDir = t.side === 'left' ? 1 : -1;
-          const knockForce = 5 + wave * 3;
+          const knockForce = 4 + wave * 2;
           this.scene.matter.body.setVelocity(ball.body, {
             x: knockDir * knockForce,
             y: ball.body.velocity.y * 0.3,

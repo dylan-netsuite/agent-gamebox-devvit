@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.3.23 - Hole 10 Tongue Speed Tuning (2026-02-26)
+
+### Changed
+- **Tongue speeds** reduced from 1.2/1.4/1.6 Hz to 0.5/0.6/0.7 Hz (~2s cycles) for playability
+- **Tongue width** reduced from 100 to 80 design units (70 units clearance when extended)
+- **Knockback force** reduced from 5+wave*3 to 4+wave*2 for less punishing collisions
+
 ## v0.0.3.20 - Hole 10: The Sour Tongues (2026-02-26)
 
 ### Added
