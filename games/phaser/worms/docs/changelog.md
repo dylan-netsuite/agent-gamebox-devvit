@@ -1,5 +1,20 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.123] - 2026-02-26 — Fix Parachute Effectiveness (wf-1772085203)
+
+### Fixed
+- **Auto-parachute during settling for all worms**: Previously only AI worms auto-deployed parachutes when falling dangerously after explosions. Human player worms now also get automatic parachute protection during the post-weapon settling phase, since players can't control worms during that phase anyway.
+- **Parachute deceleration improved**: When opened mid-fall at high velocity, the parachute now smoothly decelerates (0.85× per frame) instead of instantly capping at max speed. Slower terminal velocity (0.8 vs 1.0) and gentler gravity (0.1 vs 0.15).
+
+### Balanced
+- **Fall damage reduced**: Threshold increased from 60px to 80px, damage per pixel reduced from 0.5 to 0.35. A 120px fall now deals ~14 damage instead of ~30.
+
+### Files Changed
+- `src/client/game/entities/Worm.ts` — Fall damage constants, parachute deceleration physics.
+- `src/client/game/scenes/GamePlay.ts` — Removed AI-only check for auto-parachute in `settleWorms()`.
+
+---
+
 ## [v0.0.12.122] - 2026-02-26 — Rebalance Rope Swing + Player Control (wf-1772078022)
 
 ### Improved

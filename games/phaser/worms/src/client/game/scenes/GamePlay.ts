@@ -698,7 +698,7 @@ export class GamePlay extends Scene {
       settling = false;
       for (const w of this.worms) {
         if (w.alive) {
-          if (this.aiController?.isAITeam(w.team) && w.isFallingDangerously() && !w.parachuteOpen) {
+          if (w.isFallingDangerously() && !w.parachuteOpen) {
             w.openParachute();
           }
           w.update();

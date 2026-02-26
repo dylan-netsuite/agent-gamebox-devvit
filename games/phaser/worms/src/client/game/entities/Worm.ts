@@ -12,11 +12,11 @@ const MAX_CLIMB = 8;
 const JUMP_VELOCITY = -6;
 const BACKFLIP_VY = -8;
 const BACKFLIP_VX = 4;
-const FALL_DAMAGE_THRESHOLD = 60;
+const FALL_DAMAGE_THRESHOLD = 80;
 const AIR_CONTROL_SPEED = 1.5;
-const FALL_DAMAGE_PER_PIXEL = 0.5;
-const PARACHUTE_MAX_FALL_SPEED = 1.0;
-const PARACHUTE_DRAG = 0.9;
+const FALL_DAMAGE_PER_PIXEL = 0.35;
+const PARACHUTE_MAX_FALL_SPEED = 0.8;
+const PARACHUTE_DRAG = 0.92;
 
 export class Worm {
   private terrain: TerrainEngine;
@@ -293,7 +293,11 @@ export class Worm {
 
     if (this.falling) {
       if (this._parachuteOpen) {
-        this.fallVelocity = Math.min(this.fallVelocity + 0.15, PARACHUTE_MAX_FALL_SPEED);
+        if (this.fallVelocity > PARACHUTE_MAX_FALL_SPEED) {
+          this.fallVelocity *= 0.85;
+        } else {
+          this.fallVelocity = Math.min(this.fallVelocity + 0.1, PARACHUTE_MAX_FALL_SPEED);
+        }
         this.horizontalVelocity *= PARACHUTE_DRAG;
       } else {
         this.fallVelocity = Math.min(this.fallVelocity + 0.5, GRAVITY);
