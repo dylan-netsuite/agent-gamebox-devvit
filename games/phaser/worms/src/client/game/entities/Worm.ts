@@ -195,7 +195,8 @@ export class Worm {
 
   detachRope(): void {
     if (!this._ropeAnchor) return;
-    const tangentialSpeed = this._ropeAngularVel * this._ropeLength;
+    const RELEASE_SCALE = 0.7;
+    const tangentialSpeed = this._ropeAngularVel * this._ropeLength * RELEASE_SCALE;
     this.horizontalVelocity = Math.cos(this._ropeAngle) * tangentialSpeed;
     this.fallVelocity = -Math.abs(Math.sin(this._ropeAngle) * tangentialSpeed) - 1;
     this._ropeAnchor = null;
@@ -261,9 +262,13 @@ export class Worm {
     if (!this.alive) return;
 
     if (this._ropeAnchor) {
-      const ROPE_GRAVITY = 0.004;
+      const ROPE_GRAVITY = 0.003;
+      const ROPE_DAMPING = 0.975;
+      const MAX_ANGULAR_VEL = 0.04;
+
       this._ropeAngularVel += Math.sin(this._ropeAngle) * ROPE_GRAVITY;
-      this._ropeAngularVel *= 0.995;
+      this._ropeAngularVel *= ROPE_DAMPING;
+      this._ropeAngularVel = Math.max(-MAX_ANGULAR_VEL, Math.min(MAX_ANGULAR_VEL, this._ropeAngularVel));
       this._ropeAngle += this._ropeAngularVel;
 
       this.x = this._ropeAnchor.x + Math.sin(this._ropeAngle) * this._ropeLength;

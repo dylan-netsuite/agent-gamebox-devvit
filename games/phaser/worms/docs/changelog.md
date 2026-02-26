@@ -1,5 +1,18 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.119] - 2026-02-26 — Smooth Ninja Rope Swing (wf-1772076556)
+
+### Improved
+- **Rope swing damping increased**: Changed from 0.995 to 0.975 so the pendulum settles faster instead of oscillating wildly for many seconds.
+- **Gravity reduced**: Lowered from 0.004 to 0.003 for gentler swing acceleration.
+- **Angular velocity capped**: Added ±0.04 rad/frame cap to prevent runaway spinning at high amplitudes.
+- **Smoother detach launch**: Release velocity scaled by 0.7× to prevent overly aggressive flings on rope release.
+
+### Files Changed
+- `src/client/game/entities/Worm.ts` — Tuned rope physics constants and added velocity cap.
+
+---
+
 ## [v0.0.12.115] - 2026-02-26 — Graceful Active Worm Death (wf-1772065032)
 
 ### Fixed
