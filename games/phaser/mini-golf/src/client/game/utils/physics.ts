@@ -19,7 +19,7 @@ export const ATTRACTION_STRENGTH = 0.0004;
 export const BALL_STOP_VELOCITY = 0.12;
 
 export const SAND_FRICTION_AIR = 0.15;
-export const ICE_FRICTION_AIR = 0.002;
+export const ICE_FRICTION_AIR = 0.012;
 
 export const BUMPER_RESTITUTION = 1.5;
 export const GUMDROP_RESTITUTION = 1.8;

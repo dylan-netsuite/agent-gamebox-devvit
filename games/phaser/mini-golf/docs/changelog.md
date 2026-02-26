@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.2.228 - Hole 9 Redesign: Playable 2-Lane Zigzag (2026-02-26)
+
+### Changed
+- **Hole 9 completely redesigned** — replaced unplayable 5-corridor serpentine layout with a clean 2-lane zigzag. Single horizontal divider at y=420 with a wide 150px gap on the right side. Ball navigates right across the bottom lane, through the gap, then left to the cup.
+- **Par reduced from 4 to 3** — simpler layout is completable in fewer strokes.
+- **Gumdrop bumpers replaced with block deflector** — removed chaotic 1.8x restitution gumdrop bumpers. Single 45-degree chocolate block at the gap corner provides gentle redirection (1.1x restitution).
+- **`ICE_FRICTION_AIR` increased from 0.002 to 0.012** — balls now gradually decelerate on ice instead of sliding indefinitely. Still very slippery but manageable.
+- **Large friction zones at turns and cup** — right-side U-turn area and the cup landing pad use sand friction, giving players control points to stop and re-aim.
+- **Cup moved from (420,140) to (400,200)** — positioned within the friction landing pad for reliable capture.
+
+### Fixed
+- **Hole 9 is now playable** — previous layout caused balls to fly off screen, bounce indefinitely, or get stuck. New design tested and verified: ball successfully sinks in 3-5 shots.
+
 ## v0.0.2.198 - Hole 9: The Ice Cream Glide (2026-02-25)
 
 ### Added
