@@ -568,65 +568,85 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 11: The Corkscrew Cannon ----
-  // Ball enters a cannon tube at the bottom and gets shot out the top.
-  // Ice approach builds speed; cannon requires minimum velocity.
-  // Too slow and ball is rejected; too fast and it overshoots the green.
+  // Ice runway into cannon, then a hard right-angle dogleg to the cup.
+  // Cannon shoots ball upward; the corridor bends RIGHT forcing a bank shot.
+  // No sand around the cup — overshoot into the water behind it.
   {
     id: 11,
     name: 'The Corkscrew Cannon',
     par: 3,
-    tee: { x: 250, y: 730 },
-    cup: { x: 250, y: 100 },
+    tee: { x: 200, y: 730 },
+    cup: { x: 410, y: 155 },
     walls: [
-      // Left wall — straight corridor
+      // Vertical corridor — left wall
       [
-        { x: 185, y: 770 },
-        { x: 185, y: 200 },
-        { x: 155, y: 200 },
-        { x: 155, y: 55 },
+        { x: 140, y: 770 },
+        { x: 140, y: 110 },
       ],
-      // Right wall — straight corridor
+      // Vertical corridor — right wall (stops at dogleg opening)
       [
-        { x: 315, y: 770 },
-        { x: 315, y: 200 },
-        { x: 345, y: 200 },
-        { x: 345, y: 55 },
+        { x: 270, y: 770 },
+        { x: 270, y: 230 },
       ],
-      // Bottom corridor wall
+      // Top wall — runs across the whole width above the dogleg
       [
-        { x: 185, y: 770 },
-        { x: 315, y: 770 },
+        { x: 140, y: 110 },
+        { x: 460, y: 110 },
+      ],
+      // Bottom wall of horizontal corridor (dogleg floor)
+      [
+        { x: 270, y: 230 },
+        { x: 460, y: 230 },
+      ],
+      // Right wall of horizontal corridor
+      [
+        { x: 460, y: 110 },
+        { x: 460, y: 230 },
+      ],
+      // Bottom of vertical corridor
+      [
+        { x: 140, y: 770 },
+        { x: 270, y: 770 },
       ],
     ],
     obstacles: [
       {
         type: 'cannon',
-        x: 250,
-        y: 480,
+        x: 200,
+        y: 500,
         width: 55,
         height: 160,
         speed: 2.8,
       },
+      // Gumdrop bumper at the dogleg corner — deflects ball into the turn
+      {
+        type: 'gumdrop_bumper',
+        x: 220,
+        y: 155,
+        radius: 18,
+      },
     ],
     slickZones: [
-      // Ice runway from tee to cannon — builds speed
-      { x: 187, y: 530, width: 126, height: 230, color: 0xadd8e6 },
+      // Ice runway from tee to cannon
+      { x: 142, y: 550, width: 126, height: 210, color: 0xadd8e6 },
     ],
     frictionZones: [
-      // Sand on the green — decelerates ball after cannon exit
-      { x: 155, y: 70, width: 190, height: 110 },
+      // Small sand trap on inside of the dogleg corner
+      { x: 270, y: 180, width: 55, height: 48 },
     ],
     waterZones: [
-      // Water behind the green (top)
-      { x: 115, y: 5, width: 270, height: 50, color: 0x69b4ff },
-      // Water left of green
-      { x: 60, y: 55, width: 93, height: 245, color: 0x69b4ff },
-      // Water right of green
-      { x: 347, y: 55, width: 93, height: 245, color: 0x69b4ff },
-      // Water left of corridor
-      { x: 60, y: 300, width: 123, height: 470, color: 0x69b4ff },
-      // Water right of corridor
-      { x: 317, y: 300, width: 123, height: 470, color: 0x69b4ff },
+      // Water past the cup (right side of horizontal corridor, behind cup)
+      { x: 462, y: 110, width: 35, height: 120, color: 0x69b4ff },
+      // Water above the top wall
+      { x: 60, y: 40, width: 435, height: 68, color: 0x69b4ff },
+      // Water left of vertical corridor
+      { x: 60, y: 110, width: 78, height: 660, color: 0x69b4ff },
+      // Water right of horizontal corridor
+      { x: 462, y: 232, width: 35, height: 100, color: 0x69b4ff },
+      // Water right of vertical corridor (below dogleg opening)
+      { x: 272, y: 300, width: 70, height: 470, color: 0x69b4ff },
+      // Water below the bottom wall
+      { x: 60, y: 772, width: 280, height: 25, color: 0x69b4ff },
     ],
   },
 ];

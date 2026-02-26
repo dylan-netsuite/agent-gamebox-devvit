@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.3.88 - Hole 11 Dogleg Redesign (2026-02-26)
+
+### Changed
+- **Hole 11 layout overhauled**: Replaced straight corridor with L-shaped dogleg
+  - Vertical corridor (x:140-270) with cannon, bends 90° right into horizontal corridor (x:270-460, y:110-230)
+  - Cup moved from (250,100) to (410,155) at far right of horizontal section
+  - Tee moved from (250,730) to (200,730)
+- **Removed sand bunker around the cup** — no more free deceleration; requires pure power control
+- **Added gumdrop bumper** at dogleg corner (220,155, radius 18) for deflection risk
+- **Added small sand trap** on inside of dogleg corner (x:270, y:180, 55x48)
+- **Water hazards** repositioned to surround the new L-shaped corridor and punish overshooting past the cup
+- **Increased difficulty**: Ball exits cannon going straight up but cup is to the right, requiring bank shots or precise multi-shot play to navigate the 90° turn
+
 ## v0.0.3.85 - Replace Loop with Corkscrew Cannon (2026-02-26)
 
 ### Changed
