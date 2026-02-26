@@ -357,6 +357,8 @@ export class GamePlay extends Scene {
     if (this.isAITurn) return false;
     if (this.isRemoteTurn) return false;
     if (this.tutorial?.isBlocking()) return false;
+    const worm = this.activeWorm;
+    if (worm && !worm.alive) return false;
     return true;
   }
 
@@ -890,6 +892,17 @@ export class GamePlay extends Scene {
     }
   }
 
+  private onActiveWormDied(): void {
+    this.stopTurnTimer();
+    this.weaponSystem.reset();
+    this.projectileManager.cleanupRopes();
+    this.time.delayedCall(800, () => {
+      if (!this.gameOver) {
+        this.advanceTurn();
+      }
+    });
+  }
+
   private advanceTurn(): void {
     if (this.gameOver) return;
 
@@ -1373,6 +1386,7 @@ export class GamePlay extends Scene {
 
     this.projectileManager.update();
 
+    const activeWormWasAlive = worm.alive;
     const aliveCountBefore = this.worms.filter((w) => w.alive).length;
     for (const w of this.worms) {
       w.update();
@@ -1381,6 +1395,10 @@ export class GamePlay extends Scene {
 
     if (aliveCountAfter < aliveCountBefore && !this.gameOver) {
       this.checkWinCondition();
+      if (!this.gameOver && activeWormWasAlive && !worm.alive) {
+        this.onActiveWormDied();
+        return;
+      }
     }
 
     this.followActiveWorm();

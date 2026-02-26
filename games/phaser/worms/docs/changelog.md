@@ -1,5 +1,16 @@
 # Reddit Royale - Changelog
 
+## [v0.0.12.115] - 2026-02-26 — Graceful Active Worm Death (wf-1772065032)
+
+### Fixed
+- **Active worm dying mid-turn no longer stalls the game**: When the active worm walks off a cliff or takes fatal fall damage during its turn (outside the weapon resolution flow), the turn now auto-advances after an 800ms delay instead of leaving the player stuck until the turn timer expires.
+- **Dead worm input blocked**: `canAct()` now returns `false` when the active worm is dead, preventing phantom movement/weapon input on a dead worm.
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts` — Added `onActiveWormDied()` method, dead-worm guard in `canAct()`, and active-worm-death detection in `update()`.
+
+---
+
 ## [v0.0.12.111] - 2026-02-25 — Fix Game-Over & Restart Bug (wf-1772061756)
 
 ### Fixed
