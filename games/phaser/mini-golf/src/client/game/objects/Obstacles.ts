@@ -840,10 +840,11 @@ export class Obstacles {
 
   addLoop(def: ObstacleDef): void {
     const pos = toScreen(this.scene, def.x, def.y);
-    const loopRadius = scaleValue(this.scene, def.radius ?? 70);
-    const triggerW = scaleValue(this.scene, def.width ?? 120);
-    const triggerH = scaleValue(this.scene, 200);
+    const loopRadius = scaleValue(this.scene, def.radius ?? 55);
+    const triggerW = scaleValue(this.scene, def.width ?? 130);
+    const triggerH = scaleValue(this.scene, 50);
 
+    // Trigger zone sits at the bottom entrance of the loop
     const triggerRect = new Phaser.Geom.Rectangle(
       pos.x - triggerW / 2,
       pos.y - triggerH / 2,
@@ -869,47 +870,100 @@ export class Obstacles {
       cx,
       cy,
       loopRadius,
-      minSpeed: scaleValue(this.scene, def.speed ?? 5),
-      exitVelocityScale: 0.55,
+      minSpeed: scaleValue(this.scene, def.speed ?? 3),
+      exitVelocityScale: 0.45,
       animating: false,
       animProgress: 0,
-      animDuration: 900,
+      animDuration: 750,
       entrySpeed: 0,
       rejected: false,
       exitGraceMs: 0,
     });
   }
 
-  private drawLoopArc(
+  private lerpColor(c1: number, c2: number, t: number): number {
+    const r1 = (c1 >> 16) & 0xff, g1 = (c1 >> 8) & 0xff, b1 = c1 & 0xff;
+    const r2 = (c2 >> 16) & 0xff, g2 = (c2 >> 8) & 0xff, b2 = c2 & 0xff;
+    const r = Math.round(r1 + (r2 - r1) * t);
+    const g = Math.round(g1 + (g2 - g1) * t);
+    const b = Math.round(b1 + (b2 - b1) * t);
+    return (r << 16) | (g << 8) | b;
+  }
+
+  private drawLoopTrackSegment(
     g: Phaser.GameObjects.Graphics,
     cx: number,
     cy: number,
     r: number,
     startAngle: number,
     endAngle: number,
-    ccw: boolean,
+    segments: number,
   ): void {
-    const tubeW = scaleValue(this.scene, 22);
+    const trackW = scaleValue(this.scene, 30);
+    const innerR = r - trackW * 0.5;
+    const outerR = r + trackW * 0.5;
+    const step = (endAngle - startAngle) / segments;
 
-    g.lineStyle(tubeW + 6, 0x000000, 0.25);
-    g.beginPath();
-    g.arc(cx, cy, r, startAngle, endAngle, ccw);
-    g.strokePath();
+    for (let i = 0; i < segments; i++) {
+      const a0 = startAngle + step * i;
+      const a1 = startAngle + step * (i + 1);
 
-    g.lineStyle(tubeW + 2, 0x707070, 1);
-    g.beginPath();
-    g.arc(cx, cy, r, startAngle, endAngle, ccw);
-    g.strokePath();
+      // Lighting: brighter at top, darker at bottom
+      const lightT = (Math.cos(a0) + 1) / 2;
+      const baseColor = this.lerpColor(0x881100, 0xff5533, lightT);
 
-    g.lineStyle(tubeW - 2, 0xa8a8a8, 1);
-    g.beginPath();
-    g.arc(cx, cy, r, startAngle, endAngle, ccw);
-    g.strokePath();
+      const ix0 = cx + Math.cos(a0) * innerR;
+      const iy0 = cy + Math.sin(a0) * innerR;
+      const ox0 = cx + Math.cos(a0) * outerR;
+      const oy0 = cy + Math.sin(a0) * outerR;
+      const ix1 = cx + Math.cos(a1) * innerR;
+      const iy1 = cy + Math.sin(a1) * innerR;
+      const ox1 = cx + Math.cos(a1) * outerR;
+      const oy1 = cy + Math.sin(a1) * outerR;
 
-    g.lineStyle(tubeW * 0.25, 0xd0d0d0, 0.5);
-    g.beginPath();
-    g.arc(cx, cy, r - tubeW * 0.15, startAngle, endAngle, ccw);
-    g.strokePath();
+      g.fillStyle(baseColor, 1);
+      g.beginPath();
+      g.moveTo(ix0, iy0);
+      g.lineTo(ox0, oy0);
+      g.lineTo(ox1, oy1);
+      g.lineTo(ix1, iy1);
+      g.closePath();
+      g.fillPath();
+
+      // Outer rail
+      g.lineStyle(2, 0x661100, 0.7);
+      g.beginPath();
+      g.moveTo(ox0, oy0);
+      g.lineTo(ox1, oy1);
+      g.strokePath();
+
+      // Inner rail
+      g.lineStyle(2, 0x661100, 0.5);
+      g.beginPath();
+      g.moveTo(ix0, iy0);
+      g.lineTo(ix1, iy1);
+      g.strokePath();
+
+      // Gold center stripe
+      const mx0 = cx + Math.cos(a0) * r;
+      const my0 = cy + Math.sin(a0) * r;
+      const mx1 = cx + Math.cos(a1) * r;
+      const my1 = cy + Math.sin(a1) * r;
+      g.lineStyle(scaleValue(this.scene, 2.5), 0xffcc44, 0.3 + lightT * 0.4);
+      g.beginPath();
+      g.moveTo(mx0, my0);
+      g.lineTo(mx1, my1);
+      g.strokePath();
+
+      // Highlight on outer edge at the top of the loop
+      if (lightT > 0.6) {
+        g.lineStyle(1, 0xffaa66, 0.3);
+        g.beginPath();
+        g.moveTo(ox0, oy0);
+        g.lineTo(ox1, oy1);
+        g.strokePath();
+      }
+    }
   }
 
   private drawLoopBack(
@@ -918,20 +972,34 @@ export class Obstacles {
     cy: number,
     r: number,
   ): void {
-    const tubeW = scaleValue(this.scene, 22);
+    // Back half: right side of the loop (from bottom going CW to top)
+    // Angles: PI/2 (bottom) → -PI/2 (top) going through 0 (right)
+    this.drawLoopTrackSegment(g, cx, cy, r, Math.PI / 2, -Math.PI / 2, 20);
 
-    this.drawLoopArc(g, cx, cy, r, -Math.PI / 2, Math.PI / 2, false);
+    // Support structure — two vertical pillars behind the loop
+    const trackW = scaleValue(this.scene, 30);
+    const pillarW = scaleValue(this.scene, 8);
+    const pillarTop = cy - r - trackW * 0.3;
+    const pillarBot = cy + r + scaleValue(this.scene, 40);
 
-    const rampLen = scaleValue(this.scene, 30);
-    g.lineStyle(tubeW - 2, 0xa8a8a8, 0.6);
-    g.beginPath();
-    g.moveTo(cx - rampLen, cy + r);
-    g.lineTo(cx + rampLen, cy + r);
-    g.strokePath();
+    // Left pillar
+    g.fillStyle(0x553311, 0.6);
+    g.fillRect(cx - r * 0.6 - pillarW / 2, pillarTop, pillarW, pillarBot - pillarTop);
+    g.lineStyle(1, 0x331100, 0.4);
+    g.strokeRect(cx - r * 0.6 - pillarW / 2, pillarTop, pillarW, pillarBot - pillarTop);
 
-    const arrowY = cy - r - tubeW * 0.6;
-    g.fillStyle(0xffd700, 0.7);
-    g.fillTriangle(cx, arrowY - 8, cx - 6, arrowY + 4, cx + 6, arrowY + 4);
+    // Right pillar
+    g.fillRect(cx + r * 0.6 - pillarW / 2, pillarTop, pillarW, pillarBot - pillarTop);
+    g.strokeRect(cx + r * 0.6 - pillarW / 2, pillarTop, pillarW, pillarBot - pillarTop);
+
+    // Cross beam at top
+    g.fillStyle(0x664422, 0.5);
+    g.fillRect(cx - r * 0.6 - pillarW / 2, pillarTop, r * 1.2 + pillarW, pillarW * 0.7);
+
+    // Direction arrow at top
+    const arrowY = cy - r - trackW * 0.5;
+    g.fillStyle(0xffdd44, 0.7);
+    g.fillTriangle(cx, arrowY - 6, cx - 5, arrowY + 4, cx + 5, arrowY + 4);
   }
 
   private drawLoopFront(
@@ -940,42 +1008,42 @@ export class Obstacles {
     cy: number,
     r: number,
   ): void {
-    const tubeW = scaleValue(this.scene, 22);
+    // Front half: left side of the loop (from top going CW to bottom)
+    // Angles: -PI/2 (top) → PI/2 (bottom) going through PI/-PI (left)
+    this.drawLoopTrackSegment(g, cx, cy, r, -Math.PI / 2, -Math.PI * 1.5, 20);
 
-    this.drawLoopArc(g, cx, cy, r, Math.PI / 2, -Math.PI / 2, true);
+    const trackW = scaleValue(this.scene, 30);
+    const rampLen = scaleValue(this.scene, 45);
 
-    const rampLen = scaleValue(this.scene, 40);
-    const rampInner = r - tubeW * 0.5;
-    const rampOuter = r + tubeW * 0.5;
+    // Entry ramp (below the loop, coming from the tee)
+    g.fillStyle(0xee4422, 1);
+    g.fillRect(cx - trackW * 0.5, cy + r - 2, trackW, rampLen);
+    g.lineStyle(1.5, 0x661100, 0.6);
+    g.strokeRect(cx - trackW * 0.5, cy + r - 2, trackW, rampLen);
 
-    g.lineStyle(3, 0x808080, 0.8);
+    // Entry ramp center stripe
+    g.lineStyle(scaleValue(this.scene, 2.5), 0xffcc44, 0.4);
     g.beginPath();
-    g.moveTo(cx - rampLen, cy + rampInner);
-    g.lineTo(cx, cy + rampInner);
-    g.strokePath();
-    g.beginPath();
-    g.moveTo(cx - rampLen, cy + rampOuter);
-    g.lineTo(cx, cy + rampOuter);
-    g.strokePath();
-
-    g.beginPath();
-    g.moveTo(cx, cy + rampInner);
-    g.lineTo(cx + rampLen, cy + rampInner);
-    g.strokePath();
-    g.beginPath();
-    g.moveTo(cx, cy + rampOuter);
-    g.lineTo(cx + rampLen, cy + rampOuter);
+    g.moveTo(cx, cy + r);
+    g.lineTo(cx, cy + r + rampLen - 2);
     g.strokePath();
 
-    const rivetCount = 12;
-    for (let i = 0; i < rivetCount; i++) {
-      const t = i / rivetCount;
-      const angle = Math.PI / 2 + t * Math.PI;
-      const rx = cx + Math.cos(angle) * r;
-      const ry = cy + Math.sin(angle) * r;
-      g.fillStyle(0x606060, 0.5);
-      g.fillCircle(rx, ry, 2);
-    }
+    // Exit ramp (above the loop entrance, ball exits upward)
+    g.fillStyle(0xee4422, 1);
+    g.fillRect(cx - trackW * 0.5, cy + r - rampLen, trackW, rampLen);
+    g.lineStyle(1.5, 0x661100, 0.6);
+    g.strokeRect(cx - trackW * 0.5, cy + r - rampLen, trackW, rampLen);
+
+    // Exit ramp center stripe
+    g.lineStyle(scaleValue(this.scene, 2.5), 0xffcc44, 0.4);
+    g.beginPath();
+    g.moveTo(cx, cy + r - rampLen);
+    g.lineTo(cx, cy + r);
+    g.strokePath();
+
+    // Entrance/exit opening highlight
+    g.fillStyle(0x000000, 0.3);
+    g.fillRect(cx - trackW * 0.5, cy + r - 3, trackW, 6);
   }
 
   updateLoops(delta: number, ball?: GolfBall): void {
@@ -993,7 +1061,8 @@ export class Obstacles {
           loop.animProgress = 1;
           loop.animating = false;
 
-          const exitY = loop.cy - loop.loopRadius - 5;
+          // Exit just above the loop's bottom (same position as entry, but ball continues upward)
+          const exitY = loop.cy - loop.loopRadius - scaleValue(this.scene, 8);
           this.scene.matter.body.setPosition(ball.body, { x: loop.cx, y: exitY });
           this.scene.matter.body.setStatic(ball.body, false);
           ball.body.collisionFilter.mask = 0xffffffff;
@@ -1006,26 +1075,31 @@ export class Obstacles {
 
           ball.graphics.setScale(1);
           ball.graphics.setDepth(10);
-          loop.exitGraceMs = 50;
+          loop.exitGraceMs = 80;
           continue;
         }
 
-        // Ball enters from bottom (PI/2), sweeps CW: right side up, over top, down left side
+        // Eased progress for more natural feel — slow at top, fast at bottom
         const t = loop.animProgress;
-        const angle = Math.PI / 2 - t * Math.PI * 2;
+        const eased = t < 0.5
+          ? 2 * t * t
+          : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+        // Ball enters from bottom (PI/2), sweeps CW through full 360°
+        const angle = Math.PI / 2 - eased * Math.PI * 2;
         const bx = loop.cx + Math.cos(angle) * loop.loopRadius;
         const by = loop.cy + Math.sin(angle) * loop.loopRadius;
 
         this.scene.matter.body.setPosition(ball.body, { x: bx, y: by });
         this.scene.matter.body.setVelocity(ball.body, { x: 0, y: 0 });
 
-        // Depth scale: large at bottom (foreground), small at top (background)
-        const depthScale = 0.7 + 0.3 * Math.sin(angle);
+        // Scale: smaller when at the "back" of the loop (top), larger at the "front" (bottom)
+        const depthScale = 0.55 + 0.45 * ((Math.sin(angle) + 1) / 2);
         ball.graphics.setScale(depthScale);
 
-        // Ball depth: behind front loop arc when in back half, in front when in front half
-        const inBackHalf = angle > -Math.PI / 2 && angle < Math.PI / 2;
-        ball.graphics.setDepth(inBackHalf ? 10 : 7);
+        // Depth: ball goes behind the front track arc when in the back half
+        const sinAngle = Math.sin(angle);
+        ball.graphics.setDepth(sinAngle > 0 ? 10 : 7);
 
         continue;
       }
@@ -1042,8 +1116,11 @@ export class Obstacles {
 
       if (!loop.triggerRect.contains(bx, by)) continue;
 
+      // Only trigger if ball is moving upward (negative vy)
       const vx = ball.body.velocity.x;
       const vy = ball.body.velocity.y;
+      if (vy >= 0) continue;
+
       const speed = Math.sqrt(vx * vx + vy * vy);
 
       if (speed >= loop.minSpeed) {
@@ -1060,8 +1137,8 @@ export class Obstacles {
       } else {
         loop.rejected = true;
         this.scene.matter.body.setVelocity(ball.body, {
-          x: vx * -0.4,
-          y: Math.abs(vy) * 0.6,
+          x: vx * -0.3,
+          y: Math.abs(vy) * 0.5,
         });
       }
     }

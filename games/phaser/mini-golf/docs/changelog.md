@@ -1,5 +1,43 @@
 # Changelog
 
+## v0.0.3.77 - Hole 11 Loop-de-Loop Overhaul (2026-02-26)
+
+### Changed
+- **Loop visual completely redesigned**: Replaced candy ribbon ramp with a proper loop-de-loop track structure
+  - Circular track with inner/outer rails drawn as filled polygon segments per arc
+  - Lighting-based shading: brighter at top, darker at bottom for depth
+  - Gold center racing stripe with variable opacity
+  - Support pillars and cross beam behind the loop for structural realism
+  - Entry/exit ramps with center stripe and dark opening highlight
+  - Direction arrow at the top of the loop
+- **Loop trigger zone reduced**: From 120x200 to 130x50, now positioned precisely at the loop entrance
+- **Directional requirement**: Loop only triggers when ball is traveling upward (negative vy)
+- **Loop animation timing**: Eased with quadratic ease-in-out for natural feel (slow at apex, fast at entry/exit)
+- **Depth scaling range**: 0.55x-1.0x (was 0.7x-1.0x) for more pronounced 3D effect
+- **Exit velocity**: Reduced to 45% of entry speed (was 55%) for better green control
+- **Exit grace period**: Increased to 80ms (was 50ms) to prevent re-trigger
+- **Rejection force**: Softened to 30%/50% (was 40%/60%) for less chaotic bounce-back
+- **Animation duration**: Reduced to 750ms (was 900ms) for snappier feel
+
+### Fixed
+- **Hole 11 layout tuned**: Widened corridor (185-315, was 190-310), adjusted wall widening at green
+- **Tee and cup repositioned**: Tee at y:730 (was 720), cup at y:105 (was 120) for better spacing
+- **Ice runway adjusted**: Now covers y:520-720 (was 550-730) for longer speed buildup
+- **Sand zone expanded**: Covers y:80-180 (was 100-180) for better deceleration on green
+- **Water hazards repositioned**: Better coverage around green and corridor edges
+- **Min speed threshold**: Increased to 3.0 (was 2.5) to require more deliberate power application
+
+## v0.0.3.74 - Candystand-Style Loop Visual (2026-02-26)
+
+### Changed
+- **Loop visual redesigned as 3D candy ribbon ramp**: Replaced flat metallic circle outlines with filled polygon segments that create a 3D ramp appearance
+  - Each segment is a filled quad with perspective scaling (narrower at back, wider at front)
+  - Red/orange candy color scheme with depth-based shading (dark at back, light at front)
+  - Gold center racing stripe along the track surface
+  - Visible edge thickness on foreground segments for 3D depth
+  - Candy-colored entry/exit ramps extending from the loop base
+  - New `lerpColor` and `drawLoopRibbon` methods replace old `drawLoopArc`
+
 ## v0.0.3.71 - Loop-de-Loop Visual & Mechanic Rework (2026-02-26)
 
 ### Changed
