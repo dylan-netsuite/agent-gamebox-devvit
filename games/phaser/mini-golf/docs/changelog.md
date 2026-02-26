@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.3.71 - Loop-de-Loop Visual & Mechanic Rework (2026-02-26)
+
+### Changed
+- **Loop visual overhauled**: Replaced wooden half-circle with full metallic silver circle matching real mini-golf loop-de-loops
+  - Two-layer rendering: back half (depth 5) drawn behind ball, front half (depth 12) in front for 3D occlusion
+  - Guide rails at entry/exit with rivet details
+  - Gold directional arrow at top of loop
+  - Metallic gray color scheme (0x707070/0xa8a8a8/0xd0d0d0) replaces old brown wood
+- **Loop animation direction**: Ball now sweeps CW from bottom (right side up, over top, down left side)
+- **Depth scaling improved**: Ball scales 0.4x at top (background) to 1.0x at bottom (foreground) for convincing 3D perspective
+- **Exit position fixed**: Ball now exits above the loop top (cy - radius - 5) instead of at the bottom, preventing the double-loop re-trigger bug
+- **Ball depth toggling**: Ball depth switches between 10 (foreground) and 7 (behind front arc) during animation
+
 ## v0.0.3.63 - Fix Menu Scroll + Hole 11 Playability (2026-02-26)
 
 ### Fixed

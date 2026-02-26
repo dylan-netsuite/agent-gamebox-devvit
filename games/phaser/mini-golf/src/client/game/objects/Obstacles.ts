@@ -114,7 +114,8 @@ interface TongueData {
 }
 
 interface LoopData {
-  graphics: Phaser.GameObjects.Graphics;
+  backGraphics: Phaser.GameObjects.Graphics;
+  frontGraphics: Phaser.GameObjects.Graphics;
   triggerRect: Phaser.Geom.Rectangle;
   cx: number;
   cy: number;
@@ -850,16 +851,20 @@ export class Obstacles {
       triggerH
     );
 
-    const g = this.scene.add.graphics();
-    g.setDepth(6);
-
     const cx = pos.x;
     const cy = pos.y - loopRadius;
 
-    this.drawLoopGraphic(g, cx, cy, loopRadius);
+    const backG = this.scene.add.graphics();
+    backG.setDepth(5);
+    this.drawLoopBack(backG, cx, cy, loopRadius);
+
+    const frontG = this.scene.add.graphics();
+    frontG.setDepth(12);
+    this.drawLoopFront(frontG, cx, cy, loopRadius);
 
     this.loops.push({
-      graphics: g,
+      backGraphics: backG,
+      frontGraphics: frontG,
       triggerRect,
       cx,
       cy,
@@ -875,7 +880,39 @@ export class Obstacles {
     });
   }
 
-  private drawLoopGraphic(
+  private drawLoopArc(
+    g: Phaser.GameObjects.Graphics,
+    cx: number,
+    cy: number,
+    r: number,
+    startAngle: number,
+    endAngle: number,
+    ccw: boolean,
+  ): void {
+    const tubeW = scaleValue(this.scene, 22);
+
+    g.lineStyle(tubeW + 6, 0x000000, 0.25);
+    g.beginPath();
+    g.arc(cx, cy, r, startAngle, endAngle, ccw);
+    g.strokePath();
+
+    g.lineStyle(tubeW + 2, 0x707070, 1);
+    g.beginPath();
+    g.arc(cx, cy, r, startAngle, endAngle, ccw);
+    g.strokePath();
+
+    g.lineStyle(tubeW - 2, 0xa8a8a8, 1);
+    g.beginPath();
+    g.arc(cx, cy, r, startAngle, endAngle, ccw);
+    g.strokePath();
+
+    g.lineStyle(tubeW * 0.25, 0xd0d0d0, 0.5);
+    g.beginPath();
+    g.arc(cx, cy, r - tubeW * 0.15, startAngle, endAngle, ccw);
+    g.strokePath();
+  }
+
+  private drawLoopBack(
     g: Phaser.GameObjects.Graphics,
     cx: number,
     cy: number,
@@ -883,48 +920,62 @@ export class Obstacles {
   ): void {
     const tubeW = scaleValue(this.scene, 22);
 
-    g.lineStyle(tubeW + 6, 0x000000, 0.2);
+    this.drawLoopArc(g, cx, cy, r, -Math.PI / 2, Math.PI / 2, false);
+
+    const rampLen = scaleValue(this.scene, 30);
+    g.lineStyle(tubeW - 2, 0xa8a8a8, 0.6);
     g.beginPath();
-    g.arc(cx, cy, r, Math.PI * 0.15, Math.PI * 0.85, false);
+    g.moveTo(cx - rampLen, cy + r);
+    g.lineTo(cx + rampLen, cy + r);
     g.strokePath();
 
-    g.lineStyle(tubeW + 2, 0x8b4513, 0.9);
+    const arrowY = cy - r - tubeW * 0.6;
+    g.fillStyle(0xffd700, 0.7);
+    g.fillTriangle(cx, arrowY - 8, cx - 6, arrowY + 4, cx + 6, arrowY + 4);
+  }
+
+  private drawLoopFront(
+    g: Phaser.GameObjects.Graphics,
+    cx: number,
+    cy: number,
+    r: number,
+  ): void {
+    const tubeW = scaleValue(this.scene, 22);
+
+    this.drawLoopArc(g, cx, cy, r, Math.PI / 2, -Math.PI / 2, true);
+
+    const rampLen = scaleValue(this.scene, 40);
+    const rampInner = r - tubeW * 0.5;
+    const rampOuter = r + tubeW * 0.5;
+
+    g.lineStyle(3, 0x808080, 0.8);
     g.beginPath();
-    g.arc(cx, cy, r, Math.PI * 0.15, Math.PI * 0.85, false);
+    g.moveTo(cx - rampLen, cy + rampInner);
+    g.lineTo(cx, cy + rampInner);
+    g.strokePath();
+    g.beginPath();
+    g.moveTo(cx - rampLen, cy + rampOuter);
+    g.lineTo(cx, cy + rampOuter);
     g.strokePath();
 
-    g.lineStyle(tubeW - 2, 0xd2691e, 1);
     g.beginPath();
-    g.arc(cx, cy, r, Math.PI * 0.15, Math.PI * 0.85, false);
+    g.moveTo(cx, cy + rampInner);
+    g.lineTo(cx + rampLen, cy + rampInner);
+    g.strokePath();
+    g.beginPath();
+    g.moveTo(cx, cy + rampOuter);
+    g.lineTo(cx + rampLen, cy + rampOuter);
     g.strokePath();
 
-    g.lineStyle(tubeW * 0.3, 0xf0d080, 0.4);
-    g.beginPath();
-    g.arc(cx, cy, r - tubeW * 0.15, Math.PI * 0.2, Math.PI * 0.8, false);
-    g.strokePath();
-
-    const stripeCount = 16;
-    for (let i = 0; i < stripeCount; i++) {
-      const t = i / stripeCount;
-      const angle = Math.PI * 0.15 + t * Math.PI * 0.7;
-      const sx = cx + Math.cos(angle) * r;
-      const sy = cy + Math.sin(angle) * r;
-      g.lineStyle(1.5, 0xff69b4, 0.5);
-      g.beginPath();
-      g.moveTo(sx - Math.cos(angle) * tubeW * 0.4, sy - Math.sin(angle) * tubeW * 0.4);
-      g.lineTo(sx + Math.cos(angle) * tubeW * 0.4, sy + Math.sin(angle) * tubeW * 0.4);
-      g.strokePath();
+    const rivetCount = 12;
+    for (let i = 0; i < rivetCount; i++) {
+      const t = i / rivetCount;
+      const angle = Math.PI / 2 + t * Math.PI;
+      const rx = cx + Math.cos(angle) * r;
+      const ry = cy + Math.sin(angle) * r;
+      g.fillStyle(0x606060, 0.5);
+      g.fillCircle(rx, ry, 2);
     }
-
-    const arrowAngle = Math.PI * 0.5;
-    const ax = cx + Math.cos(arrowAngle) * (r + tubeW * 0.8);
-    const ay = cy + Math.sin(arrowAngle) * (r + tubeW * 0.8);
-    g.fillStyle(0xffd700, 0.8);
-    g.fillTriangle(
-      ax, ay - 6,
-      ax - 5, ay + 4,
-      ax + 5, ay + 4,
-    );
   }
 
   updateLoops(delta: number, ball?: GolfBall): void {
@@ -942,6 +993,8 @@ export class Obstacles {
           loop.animProgress = 1;
           loop.animating = false;
 
+          const exitY = loop.cy - loop.loopRadius - 5;
+          this.scene.matter.body.setPosition(ball.body, { x: loop.cx, y: exitY });
           this.scene.matter.body.setStatic(ball.body, false);
           ball.body.collisionFilter.mask = 0xffffffff;
 
@@ -952,20 +1005,27 @@ export class Obstacles {
           });
 
           ball.graphics.setScale(1);
+          ball.graphics.setDepth(10);
           loop.exitGraceMs = 50;
           continue;
         }
 
+        // Ball enters from bottom (PI/2), sweeps CW: right side up, over top, down left side
         const t = loop.animProgress;
-        const angle = -Math.PI / 2 + t * Math.PI * 2;
+        const angle = Math.PI / 2 - t * Math.PI * 2;
         const bx = loop.cx + Math.cos(angle) * loop.loopRadius;
         const by = loop.cy + Math.sin(angle) * loop.loopRadius;
 
         this.scene.matter.body.setPosition(ball.body, { x: bx, y: by });
         this.scene.matter.body.setVelocity(ball.body, { x: 0, y: 0 });
 
-        const depthScale = 0.5 + 0.5 * ((Math.sin(angle) + 1) / 2);
+        // Depth scale: large at bottom (foreground), small at top (background)
+        const depthScale = 0.7 + 0.3 * Math.sin(angle);
         ball.graphics.setScale(depthScale);
+
+        // Ball depth: behind front loop arc when in back half, in front when in front half
+        const inBackHalf = angle > -Math.PI / 2 && angle < Math.PI / 2;
+        ball.graphics.setDepth(inBackHalf ? 10 : 7);
 
         continue;
       }
@@ -1301,7 +1361,8 @@ export class Obstacles {
     }
     this.tongues = [];
     for (const l of this.loops) {
-      l.graphics.destroy();
+      l.backGraphics.destroy();
+      l.frontGraphics.destroy();
     }
     this.loops = [];
     for (const obj of this.gameObjects) {
