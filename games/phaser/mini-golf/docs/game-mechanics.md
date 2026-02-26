@@ -38,26 +38,25 @@ S-curve course using diagonal wall geometry for bank-shot redirection. Tee at (1
 ### Hole 10: The Sour Tongues (Par 4)
 Narrow corridor gauntlet inspired by Candystand's "Sours" course. Tee at (250,720) bottom center, cup at (250,130) top center. The fairway is a claustrophobic 150-unit-wide corridor (x:175-325) flanked by deep sand trap gutters (x:72-175 left, x:327-428 right) that run the full length. Six kinematic "tongue" obstacles extend and retract from the corridor walls on sine-wave timers with alternating phases. Left tongues extend rightward, right tongues extend leftward. Each tongue is 80 design units long and 18 units thick (leaving 70 units of clearance when fully extended), rendered as colorful sour candy with sugar crystal texture and HSL color cycling. Tongue speeds are tuned for playability: 0.5 Hz (bottom pair, ~2s cycle), 0.6 Hz (middle), 0.7 Hz (top). When a tongue strikes the ball, it applies a moderate lateral knockback force (4-6 units) perpendicular to the corridor, pushing the ball toward the sand gutter where high friction (0.15 frictionAir) slows it dramatically. **Aggressive strategy**: full power straight up, requires good timing to pass tongues during their retracted phases. **Conservative strategy (intended)**: 3-5 soft shots, laying up in the safe zones between tongue pairs, then timing the next shot. A friction zone near the cup decelerates the ball for the final putt. Par 4 with disciplined multi-stage timing.
 
-### Hole 11: The Loop-de-Loop (Par 3)
-Vertical corridor with a 360° side-view loop. Tee at (250,730), cup at (250,100). The corridor (x:180-320) widens around the loop area (x:120-380, y:210-520) to accommodate curved entry/exit ramps. An ice slick zone (y:550-760) builds speed on approach. At y:460 a trigger zone (140x50 design units) checks upward velocity. If the ball exceeds the minimum speed threshold (~2.8 design units scaled) while traveling upward, it enters an 850ms loop animation. The ball starts at the RIGHT side of the loop (angle 0), sweeps CCW: UP the right side → OVER the top → DOWN the left side, creating a clear visual of "going up one side and down the other." A curved entry ramp sweeps from the center corridor to the right side of the loop, and a curved exit ramp sweeps from the left side back to center above the loop. Directional arrows (UP on right, DOWN on left) reinforce the path. The ball exits above the loop at 45% of entry speed, continuing upward into the green. Two-layer rendering (back at depth 5, front at depth 12) with support pillars. A sand friction zone on the green (y:75-185) decelerates for putting. Water hazards surround the green and flank the loop area. **Strategy**: ~60-75% power for a clean loop clearance with controlled stop on the green.
+### Hole 11: The Corkscrew Cannon (Par 3)
+Vertical corridor with a cannon/tube obstacle in the center. Tee at (250,730), cup at (250,100). The corridor (x:185-315, 130 units wide) runs straight from tee to green. An ice slick zone (y:530-760) builds speed on approach. At y:480 a trigger zone (55x30 design units) checks upward velocity. If the ball exceeds the minimum speed threshold (~2.8 design units scaled) while traveling upward, it enters an 800ms cannon transit animation. The ball shrinks as it enters the bottom opening, spirals through the transparent tube section (visible as animated trailing dots following a corkscrew path), and grows back to full size as it exits the flared top opening with a glow effect. The ball exits at 40% of entry speed, continuing upward into the green. If speed is too low, the ball is rejected backward. The cannon is visually rendered as a decorated metallic pipe with bronze/copper bands, rivets, a transparent middle section showing the internal corkscrew spiral, a dark entry hole at the bottom, and a flared barrel mouth with a glow ring at the top. A sand friction zone on the green (y:70-180) decelerates for putting. Water hazards surround the green and flank the corridor. **Strategy**: ~60-75% power for a clean cannon transit with controlled stop on the green.
 
-## Loop Obstacle Physics
+## Cannon Obstacle Physics
 
 | Property | Value |
 |----------|-------|
-| Trigger Zone | 140x50 design units at loop entrance, requires upward velocity (vy < 0) |
+| Trigger Zone | 55x30 design units at cannon entrance, requires upward velocity (vy < 0) |
 | Min Speed | 2.8 design units (scaled to screen) |
-| Animation | 360° CCW sweep from right side (angle 0), 850ms, ease-in-out timing |
-| Animation Path | Right (0) → Top (-PI/2) → Left (-PI) → Bottom (-3PI/2) — ball goes UP right side, DOWN left side |
-| Depth Scale | 0.5x at top (background), 1.0x at bottom (foreground) |
-| Exit Position | Above loop top (cy - radius - 12px scaled), prevents re-trigger |
-| Exit Velocity | 45% of entry speed, directed upward |
+| Animation | Linear traversal from entry to exit with spiral oscillation, 800ms, ease-in-out timing |
+| Ball Scale | Shrinks to 0.4x during transit (0-15% entry shrink, 85-100% exit grow) |
+| Ball Alpha | 0.6 during mid-transit, 1.0 at entry/exit |
+| Spiral Trail | 6 trailing dots following the ball's corkscrew path through the transparent section |
+| Exit Position | Above cannon exit (exitY - 15px scaled), prevents re-trigger |
+| Exit Velocity | 40% of entry speed, directed upward |
 | Rejection | Velocity reversed at 30% horizontal, 50% vertical bounce |
-| Exit Grace | 100ms post-exit immunity from zone effects |
-| Rendering | Two layers: back half (right side, depth 5), front half (left side, depth 12), support pillars |
-| Entry Ramp | Curved quadratic Bezier from center-bottom to right side of loop |
-| Exit Ramp | Curved quadratic Bezier from left side of loop to center-top |
-| Visual | Circular track with inner/outer rails, gold center stripe, red/orange shading, support pillars, curved entry/exit ramps, UP/DOWN directional arrows |
+| Exit Grace | 120ms post-exit immunity from zone effects |
+| Exit Glow | Orange glow effect at barrel mouth when ball is >70% through |
+| Visual | Dark metallic pipe body with decorative bands, rivets, transparent middle showing corkscrew spiral, dark entry hole, flared exit mouth with glow ring, directional arrow |
 
 ## Tongue Obstacle Physics
 

@@ -567,71 +567,66 @@ export const HOLES: HoleDefinition[] = [
     ],
   },
 
-  // ---- HOLE 11: The Loop-de-Loop ----
-  // The ball goes UP the right side of the loop, OVER the top, and DOWN
-  // the left side. Entry ramp curves from the corridor to the right side;
-  // exit ramp curves from the left side back to the corridor above.
-  // Ice approach builds speed; sand green decelerates for putting.
+  // ---- HOLE 11: The Corkscrew Cannon ----
+  // Ball enters a cannon tube at the bottom and gets shot out the top.
+  // Ice approach builds speed; cannon requires minimum velocity.
+  // Too slow and ball is rejected; too fast and it overshoots the green.
   {
     id: 11,
-    name: 'The Loop-de-Loop',
+    name: 'The Corkscrew Cannon',
     par: 3,
     tee: { x: 250, y: 730 },
     cup: { x: 250, y: 100 },
     walls: [
-      // Left wall — corridor widens around loop, narrows above
+      // Left wall — straight corridor
       [
-        { x: 180, y: 770 },
-        { x: 180, y: 520 },
-        { x: 120, y: 520 },
-        { x: 120, y: 210 },
-        { x: 155, y: 210 },
+        { x: 185, y: 770 },
+        { x: 185, y: 200 },
+        { x: 155, y: 200 },
         { x: 155, y: 55 },
       ],
-      // Right wall — corridor widens around loop, narrows above
+      // Right wall — straight corridor
       [
-        { x: 320, y: 770 },
-        { x: 320, y: 520 },
-        { x: 380, y: 520 },
-        { x: 380, y: 210 },
-        { x: 345, y: 210 },
+        { x: 315, y: 770 },
+        { x: 315, y: 200 },
+        { x: 345, y: 200 },
         { x: 345, y: 55 },
       ],
       // Bottom corridor wall
       [
-        { x: 180, y: 770 },
-        { x: 320, y: 770 },
+        { x: 185, y: 770 },
+        { x: 315, y: 770 },
       ],
     ],
     obstacles: [
       {
-        type: 'loop',
+        type: 'cannon',
         x: 250,
-        y: 460,
-        width: 140,
-        radius: 50,
+        y: 480,
+        width: 55,
+        height: 160,
         speed: 2.8,
       },
     ],
     slickZones: [
-      // Ice runway from tee to loop — builds speed
-      { x: 182, y: 550, width: 136, height: 210, color: 0xadd8e6 },
+      // Ice runway from tee to cannon — builds speed
+      { x: 187, y: 530, width: 126, height: 230, color: 0xadd8e6 },
     ],
     frictionZones: [
-      // Sand on the green — decelerates ball after loop exit
-      { x: 155, y: 75, width: 190, height: 110 },
+      // Sand on the green — decelerates ball after cannon exit
+      { x: 155, y: 70, width: 190, height: 110 },
     ],
     waterZones: [
       // Water behind the green (top)
       { x: 115, y: 5, width: 270, height: 50, color: 0x69b4ff },
       // Water left of green
-      { x: 60, y: 55, width: 93, height: 255, color: 0x69b4ff },
+      { x: 60, y: 55, width: 93, height: 245, color: 0x69b4ff },
       // Water right of green
-      { x: 347, y: 55, width: 93, height: 255, color: 0x69b4ff },
-      // Water left of loop area
-      { x: 60, y: 310, width: 58, height: 460, color: 0x69b4ff },
-      // Water right of loop area
-      { x: 382, y: 310, width: 58, height: 460, color: 0x69b4ff },
+      { x: 347, y: 55, width: 93, height: 245, color: 0x69b4ff },
+      // Water left of corridor
+      { x: 60, y: 300, width: 123, height: 470, color: 0x69b4ff },
+      // Water right of corridor
+      { x: 317, y: 300, width: 123, height: 470, color: 0x69b4ff },
     ],
   },
 ];

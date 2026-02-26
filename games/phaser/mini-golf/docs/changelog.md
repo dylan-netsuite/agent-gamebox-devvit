@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.0.3.85 - Replace Loop with Corkscrew Cannon (2026-02-26)
+
+### Changed
+- **Hole 11 redesigned**: Replaced "The Loop-de-Loop" with "The Corkscrew Cannon"
+  - The loop-de-loop didn't translate well to 2D top-down; replaced with a cannon/tube obstacle
+  - Ball enters a decorated pipe at the bottom and gets shot out the top
+  - During transit: ball shrinks, spirals through a transparent corkscrew tube (visible animated trailing dots), then grows back and exits with a glow effect
+  - Same velocity-gated mechanic: too slow and ball is rejected; too fast and it overshoots the green
+- **New obstacle type: `cannon`** — replaces `loop` type
+  - `addCannon(def)` creates the static cannon graphic and spiral animation layer
+  - `updateCannons(delta, ball)` handles trigger detection, transit animation with spiral trail, and exit
+  - `isCannonAnimating()` replaces `isLoopAnimating()`
+  - `drawCannon()` renders: dark metallic pipe body, decorative bands with rivets, transparent middle showing corkscrew spiral, dark entry hole, flared exit with glow ring, directional arrow
+- **Simpler corridor layout**: Removed the loop-area wall widening; straight corridor (x:185-315) from tee to green
+- **Exit velocity**: 40% of entry speed (was 45% for loop)
+- **Animation duration**: 800ms (was 850ms for loop)
+- **Exit grace period**: 120ms (was 100ms for loop)
+
+### Removed
+- All loop-related code: `LoopData`, `addLoop`, `drawLoopBack`, `drawLoopFront`, `drawLoopTrackSegment`, `drawCurvedRamp`, `updateLoops`, `isLoopAnimating`, `lerpColor`
+- `loop` obstacle type from the `ObstacleType` union
+
 ## v0.0.3.81 - Loop Direction Fix: Ball Goes Up One Side, Down the Other (2026-02-26)
 
 ### Changed

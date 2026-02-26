@@ -20,7 +20,7 @@ export type ObstacleType =
   | 'conveyor'
   | 'thrusting_barrier'
   | 'tongue'
-  | 'loop'
+  | 'cannon'
   | 'gravity_well'
   | 'moving_bridge'
   | 'block'
@@ -113,13 +113,16 @@ interface TongueData {
   hitCooldown: number;
 }
 
-interface LoopData {
-  backGraphics: Phaser.GameObjects.Graphics;
-  frontGraphics: Phaser.GameObjects.Graphics;
+interface CannonData {
+  bodyGraphics: Phaser.GameObjects.Graphics;
+  spiralGraphics: Phaser.GameObjects.Graphics;
   triggerRect: Phaser.Geom.Rectangle;
-  cx: number;
-  cy: number;
-  loopRadius: number;
+  entryX: number;
+  entryY: number;
+  exitX: number;
+  exitY: number;
+  cannonLen: number;
+  cannonW: number;
   minSpeed: number;
   exitVelocityScale: number;
   animating: boolean;
@@ -137,7 +140,7 @@ export class Obstacles {
   private windmills: WindmillData[] = [];
   private bridges: MovingBridgeData[] = [];
   private tongues: TongueData[] = [];
-  private loops: LoopData[] = [];
+  private cannons: CannonData[] = [];
   private bodies: MatterJS.BodyType[] = [];
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
@@ -838,334 +841,251 @@ export class Obstacles {
     }
   }
 
-  addLoop(def: ObstacleDef): void {
+  addCannon(def: ObstacleDef): void {
     const pos = toScreen(this.scene, def.x, def.y);
-    const loopRadius = scaleValue(this.scene, def.radius ?? 55);
-    const triggerW = scaleValue(this.scene, def.width ?? 130);
-    const triggerH = scaleValue(this.scene, 50);
+    const cannonLen = scaleValue(this.scene, def.height ?? 160);
+    const cannonW = scaleValue(this.scene, def.width ?? 60);
+    const triggerW = cannonW;
+    const triggerH = scaleValue(this.scene, 30);
+
+    const entryX = pos.x;
+    const entryY = pos.y;
+    const exitX = pos.x;
+    const exitY = pos.y - cannonLen;
 
     const triggerRect = new Phaser.Geom.Rectangle(
-      pos.x - triggerW / 2,
-      pos.y - triggerH / 2,
+      entryX - triggerW / 2,
+      entryY - triggerH,
       triggerW,
-      triggerH
+      triggerH,
     );
 
-    const cx = pos.x;
-    const cy = pos.y - loopRadius;
+    const bodyG = this.scene.add.graphics();
+    bodyG.setDepth(6);
+    this.drawCannon(bodyG, entryX, entryY, exitX, exitY, cannonW);
 
-    const backG = this.scene.add.graphics();
-    backG.setDepth(5);
-    this.drawLoopBack(backG, cx, cy, loopRadius);
+    const spiralG = this.scene.add.graphics();
+    spiralG.setDepth(11);
 
-    const frontG = this.scene.add.graphics();
-    frontG.setDepth(12);
-    this.drawLoopFront(frontG, cx, cy, loopRadius);
-
-    this.loops.push({
-      backGraphics: backG,
-      frontGraphics: frontG,
+    this.cannons.push({
+      bodyGraphics: bodyG,
+      spiralGraphics: spiralG,
       triggerRect,
-      cx,
-      cy,
-      loopRadius,
-      minSpeed: scaleValue(this.scene, def.speed ?? 3),
-      exitVelocityScale: 0.45,
+      entryX,
+      entryY,
+      exitX,
+      exitY,
+      cannonLen,
+      cannonW,
+      minSpeed: scaleValue(this.scene, def.speed ?? 2.8),
+      exitVelocityScale: 0.4,
       animating: false,
       animProgress: 0,
-      animDuration: 850,
+      animDuration: 800,
       entrySpeed: 0,
       rejected: false,
       exitGraceMs: 0,
     });
   }
 
-  private lerpColor(c1: number, c2: number, t: number): number {
-    const r1 = (c1 >> 16) & 0xff, g1 = (c1 >> 8) & 0xff, b1 = c1 & 0xff;
-    const r2 = (c2 >> 16) & 0xff, g2 = (c2 >> 8) & 0xff, b2 = c2 & 0xff;
-    const r = Math.round(r1 + (r2 - r1) * t);
-    const g = Math.round(g1 + (g2 - g1) * t);
-    const b = Math.round(b1 + (b2 - b1) * t);
-    return (r << 16) | (g << 8) | b;
-  }
-
-  private drawLoopTrackSegment(
+  private drawCannon(
     g: Phaser.GameObjects.Graphics,
-    cx: number,
-    cy: number,
-    r: number,
-    startAngle: number,
-    endAngle: number,
-    segments: number,
+    entryX: number, entryY: number,
+    exitX: number, exitY: number,
+    w: number,
   ): void {
-    const trackW = scaleValue(this.scene, 30);
-    const innerR = r - trackW * 0.5;
-    const outerR = r + trackW * 0.5;
-    const step = (endAngle - startAngle) / segments;
+    const hw = w / 2;
+    const len = entryY - exitY;
+    const bandH = scaleValue(this.scene, 6);
+    const rivetR = scaleValue(this.scene, 2.5);
 
-    for (let i = 0; i < segments; i++) {
-      const a0 = startAngle + step * i;
-      const a1 = startAngle + step * (i + 1);
+    // Main cannon body — dark bronze/copper
+    g.fillStyle(0x665544, 1);
+    g.fillRect(entryX - hw, exitY, w, len);
 
-      const lightT = (-Math.sin(a0) + 1) / 2;
-      const baseColor = this.lerpColor(0x881100, 0xff5533, lightT);
+    // Transparent middle section — lighter, showing "inside"
+    const glassTop = exitY + len * 0.2;
+    const glassBot = entryY - len * 0.15;
+    const glassH = glassBot - glassTop;
+    g.fillStyle(0x88aacc, 0.25);
+    g.fillRect(entryX - hw + 4, glassTop, w - 8, glassH);
 
-      const ix0 = cx + Math.cos(a0) * innerR;
-      const iy0 = cy + Math.sin(a0) * innerR;
-      const ox0 = cx + Math.cos(a0) * outerR;
-      const oy0 = cy + Math.sin(a0) * outerR;
-      const ix1 = cx + Math.cos(a1) * innerR;
-      const iy1 = cy + Math.sin(a1) * innerR;
-      const ox1 = cx + Math.cos(a1) * outerR;
-      const oy1 = cy + Math.sin(a1) * outerR;
-
-      g.fillStyle(baseColor, 1);
+    // Corkscrew spiral inside the transparent section
+    const spiralSegs = 16;
+    for (let i = 0; i < spiralSegs; i++) {
+      const t0 = i / spiralSegs;
+      const t1 = (i + 1) / spiralSegs;
+      const y0 = glassBot - t0 * glassH;
+      const y1 = glassBot - t1 * glassH;
+      const x0 = entryX + Math.sin(t0 * Math.PI * 4) * (hw - 8);
+      const x1 = entryX + Math.sin(t1 * Math.PI * 4) * (hw - 8);
+      const alpha = 0.15 + 0.25 * Math.abs(Math.cos(t0 * Math.PI * 4));
+      g.lineStyle(scaleValue(this.scene, 3), 0xffcc66, alpha);
       g.beginPath();
-      g.moveTo(ix0, iy0);
-      g.lineTo(ox0, oy0);
-      g.lineTo(ox1, oy1);
-      g.lineTo(ix1, iy1);
-      g.closePath();
-      g.fillPath();
-
-      g.lineStyle(2, 0x661100, 0.7);
-      g.beginPath();
-      g.moveTo(ox0, oy0);
-      g.lineTo(ox1, oy1);
-      g.strokePath();
-
-      g.lineStyle(2, 0x661100, 0.5);
-      g.beginPath();
-      g.moveTo(ix0, iy0);
-      g.lineTo(ix1, iy1);
-      g.strokePath();
-
-      const mx0 = cx + Math.cos(a0) * r;
-      const my0 = cy + Math.sin(a0) * r;
-      const mx1 = cx + Math.cos(a1) * r;
-      const my1 = cy + Math.sin(a1) * r;
-      g.lineStyle(scaleValue(this.scene, 2.5), 0xffcc44, 0.3 + lightT * 0.4);
-      g.beginPath();
-      g.moveTo(mx0, my0);
-      g.lineTo(mx1, my1);
-      g.strokePath();
-
-      if (lightT > 0.6) {
-        g.lineStyle(1, 0xffaa66, 0.3);
-        g.beginPath();
-        g.moveTo(ox0, oy0);
-        g.lineTo(ox1, oy1);
-        g.strokePath();
-      }
-    }
-  }
-
-  private drawCurvedRamp(
-    g: Phaser.GameObjects.Graphics,
-    x0: number, y0: number,
-    x1: number, y1: number,
-    cpx: number, cpy: number,
-    color: number,
-  ): void {
-    const trackW = scaleValue(this.scene, 30);
-    const segs = 12;
-
-    for (let i = 0; i < segs; i++) {
-      const t0 = i / segs;
-      const t1 = (i + 1) / segs;
-
-      const u0 = 1 - t0;
-      const u1 = 1 - t1;
-      const px0 = u0 * u0 * x0 + 2 * u0 * t0 * cpx + t0 * t0 * x1;
-      const py0 = u0 * u0 * y0 + 2 * u0 * t0 * cpy + t0 * t0 * y1;
-      const px1 = u1 * u1 * x0 + 2 * u1 * t1 * cpx + t1 * t1 * x1;
-      const py1 = u1 * u1 * y0 + 2 * u1 * t1 * cpy + t1 * t1 * y1;
-
-      const dx0 = 2 * (1 - t0) * (cpx - x0) + 2 * t0 * (x1 - cpx);
-      const dy0 = 2 * (1 - t0) * (cpy - y0) + 2 * t0 * (y1 - cpy);
-      const len0 = Math.sqrt(dx0 * dx0 + dy0 * dy0) || 1;
-      const nx0 = -dy0 / len0;
-      const ny0 = dx0 / len0;
-
-      const dx1 = 2 * (1 - t1) * (cpx - x0) + 2 * t1 * (x1 - cpx);
-      const dy1 = 2 * (1 - t1) * (cpy - y0) + 2 * t1 * (y1 - cpy);
-      const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1) || 1;
-      const nx1 = -dy1 / len1;
-      const ny1 = dx1 / len1;
-
-      const hw = trackW * 0.5;
-
-      g.fillStyle(color, 1);
-      g.beginPath();
-      g.moveTo(px0 + nx0 * hw, py0 + ny0 * hw);
-      g.lineTo(px0 - nx0 * hw, py0 - ny0 * hw);
-      g.lineTo(px1 - nx1 * hw, py1 - ny1 * hw);
-      g.lineTo(px1 + nx1 * hw, py1 + ny1 * hw);
-      g.closePath();
-      g.fillPath();
-
-      g.lineStyle(1.5, 0x661100, 0.5);
-      g.beginPath();
-      g.moveTo(px0 + nx0 * hw, py0 + ny0 * hw);
-      g.lineTo(px1 + nx1 * hw, py1 + ny1 * hw);
-      g.strokePath();
-      g.beginPath();
-      g.moveTo(px0 - nx0 * hw, py0 - ny0 * hw);
-      g.lineTo(px1 - nx1 * hw, py1 - ny1 * hw);
-      g.strokePath();
-
-      g.lineStyle(scaleValue(this.scene, 2), 0xffcc44, 0.35);
-      g.beginPath();
-      g.moveTo(px0, py0);
-      g.lineTo(px1, py1);
+      g.moveTo(x0, y0);
+      g.lineTo(x1, y1);
       g.strokePath();
     }
+
+    // Left edge highlight
+    g.lineStyle(2, 0x998877, 0.6);
+    g.beginPath();
+    g.moveTo(entryX - hw, exitY);
+    g.lineTo(entryX - hw, entryY);
+    g.strokePath();
+
+    // Right edge shadow
+    g.lineStyle(2, 0x332211, 0.5);
+    g.beginPath();
+    g.moveTo(entryX + hw, exitY);
+    g.lineTo(entryX + hw, entryY);
+    g.strokePath();
+
+    // Decorative bands
+    const bandPositions = [0.0, 0.18, 0.82, 1.0];
+    for (const bp of bandPositions) {
+      const bandY = entryY - bp * len - bandH / 2;
+      g.fillStyle(0x887755, 1);
+      g.fillRect(entryX - hw - 2, bandY, w + 4, bandH);
+      g.lineStyle(1, 0xaa9977, 0.6);
+      g.beginPath();
+      g.moveTo(entryX - hw - 2, bandY);
+      g.lineTo(entryX + hw + 2, bandY);
+      g.strokePath();
+      g.lineStyle(1, 0x443322, 0.5);
+      g.beginPath();
+      g.moveTo(entryX - hw - 2, bandY + bandH);
+      g.lineTo(entryX + hw + 2, bandY + bandH);
+      g.strokePath();
+    }
+
+    // Rivets on the bands
+    for (const bp of [0.0, 1.0]) {
+      const bandY = entryY - bp * len;
+      g.fillStyle(0xccbb99, 0.8);
+      g.fillCircle(entryX - hw + 4, bandY, rivetR);
+      g.fillCircle(entryX + hw - 4, bandY, rivetR);
+    }
+
+    // Entry opening — dark hole at bottom
+    g.fillStyle(0x111111, 0.9);
+    g.fillEllipse(entryX, entryY, w - 4, scaleValue(this.scene, 14));
+    g.lineStyle(2, 0x887755, 0.8);
+    g.strokeEllipse(entryX, entryY, w, scaleValue(this.scene, 16));
+
+    // Exit opening — flared barrel mouth at top with glow
+    const flareW = w + scaleValue(this.scene, 12);
+    const flareH = scaleValue(this.scene, 18);
+    g.fillStyle(0x776655, 1);
+    g.fillEllipse(exitX, exitY, flareW, flareH);
+    g.fillStyle(0x111111, 0.85);
+    g.fillEllipse(exitX, exitY, flareW - 8, flareH - 6);
+    g.lineStyle(2, 0xaa9977, 0.7);
+    g.strokeEllipse(exitX, exitY, flareW, flareH);
+
+    // Glow ring at exit
+    g.lineStyle(scaleValue(this.scene, 3), 0xffaa44, 0.25);
+    g.strokeEllipse(exitX, exitY - 2, flareW + 6, flareH + 4);
+
+    // Entry arrow pointing up
+    const arrowY = entryY + scaleValue(this.scene, 14);
+    const arrowS = scaleValue(this.scene, 5);
+    g.fillStyle(0xffcc44, 0.6);
+    g.fillTriangle(entryX, arrowY - arrowS * 2, entryX - arrowS, arrowY, entryX + arrowS, arrowY);
   }
 
-  private drawLoopBack(
-    g: Phaser.GameObjects.Graphics,
-    cx: number,
-    cy: number,
-    r: number,
-  ): void {
-    // Back half: RIGHT side of the loop — ball goes UP this side
-    // From bottom (PI/2) CW to top (-PI/2), passing through 0 (right)
-    this.drawLoopTrackSegment(g, cx, cy, r, Math.PI / 2, -Math.PI / 2, 20);
-
-    // Support pillars behind the loop
-    const trackW = scaleValue(this.scene, 30);
-    const pillarW = scaleValue(this.scene, 8);
-    const pillarTop = cy - r - trackW * 0.3;
-    const pillarBot = cy + r + scaleValue(this.scene, 15);
-
-    g.fillStyle(0x553311, 0.6);
-    g.fillRect(cx - r * 0.6 - pillarW / 2, pillarTop, pillarW, pillarBot - pillarTop);
-    g.lineStyle(1, 0x331100, 0.4);
-    g.strokeRect(cx - r * 0.6 - pillarW / 2, pillarTop, pillarW, pillarBot - pillarTop);
-    g.fillStyle(0x553311, 0.6);
-    g.fillRect(cx + r * 0.6 - pillarW / 2, pillarTop, pillarW, pillarBot - pillarTop);
-    g.strokeRect(cx + r * 0.6 - pillarW / 2, pillarTop, pillarW, pillarBot - pillarTop);
-
-    g.fillStyle(0x664422, 0.5);
-    g.fillRect(cx - r * 0.6 - pillarW / 2, pillarTop, r * 1.2 + pillarW, pillarW * 0.7);
-
-    // "UP" arrow on the right side to show direction
-    const arrowX = cx + r + trackW * 0.6;
-    const arrowY = cy;
-    g.fillStyle(0xffdd44, 0.6);
-    g.fillTriangle(arrowX, arrowY - 10, arrowX - 6, arrowY + 4, arrowX + 6, arrowY + 4);
-
-    // "DOWN" arrow on the left side
-    const arrowX2 = cx - r - trackW * 0.6;
-    g.fillTriangle(arrowX2, arrowY + 10, arrowX2 - 6, arrowY - 4, arrowX2 + 6, arrowY - 4);
-  }
-
-  private drawLoopFront(
-    g: Phaser.GameObjects.Graphics,
-    cx: number,
-    cy: number,
-    r: number,
-  ): void {
-    // Front half: LEFT side of the loop — ball comes DOWN this side
-    // From top (-PI/2) CW to bottom (PI/2), passing through PI (left)
-    this.drawLoopTrackSegment(g, cx, cy, r, -Math.PI / 2, -Math.PI * 1.5, 20);
-
-    const rampLen = scaleValue(this.scene, 55);
-
-    // Entry ramp: curves from center-bottom to the RIGHT side of the loop
-    // Ball approaches from below (center), ramp sweeps right to meet the loop at 0 (right side)
-    const entryStartX = cx;
-    const entryStartY = cy + r + rampLen;
-    const entryEndX = cx + r;
-    const entryEndY = cy + r;
-    const entryCpX = cx + r * 0.6;
-    const entryCpY = cy + r + rampLen * 0.5;
-    this.drawCurvedRamp(g, entryStartX, entryStartY, entryEndX, entryEndY, entryCpX, entryCpY, 0xdd3311);
-
-    // Exit ramp: curves from the LEFT side of the loop back to center-top
-    // Ball exits the loop at PI (left side), ramp sweeps to center heading upward
-    const exitStartX = cx - r;
-    const exitStartY = cy + r;
-    const exitEndX = cx;
-    const exitEndY = cy - r - rampLen * 0.6;
-    const exitCpX = cx - r * 0.6;
-    const exitCpY = cy - r - rampLen * 0.1;
-    this.drawCurvedRamp(g, exitStartX, exitStartY, exitEndX, exitEndY, exitCpX, exitCpY, 0xdd3311);
-
-    // Labels: "IN" near entry, "OUT" near exit
-    const s = scaleValue(this.scene, 1);
-    const entryLabelX = cx + r * 0.5;
-    const entryLabelY = cy + r + rampLen * 0.7;
-    g.fillStyle(0xffcc44, 0.5);
-    g.fillTriangle(
-      entryLabelX, entryLabelY - 5 * s,
-      entryLabelX - 4 * s, entryLabelY + 3 * s,
-      entryLabelX + 4 * s, entryLabelY + 3 * s,
-    );
-  }
-
-  updateLoops(delta: number, ball?: GolfBall): void {
-    for (const loop of this.loops) {
-      if (!ball) continue;
-
-      if (loop.exitGraceMs > 0) {
-        loop.exitGraceMs -= delta;
+  updateCannons(delta: number, ball?: GolfBall): void {
+    for (const c of this.cannons) {
+      if (!ball) {
+        c.spiralGraphics.clear();
+        continue;
       }
 
-      if (loop.animating) {
-        loop.animProgress += delta / loop.animDuration;
+      if (c.exitGraceMs > 0) {
+        c.exitGraceMs -= delta;
+      }
 
-        if (loop.animProgress >= 1) {
-          loop.animProgress = 1;
-          loop.animating = false;
+      c.spiralGraphics.clear();
 
-          // Exit above the loop on the left side, continuing upward
-          const exitX = loop.cx;
-          const exitY = loop.cy - loop.loopRadius - scaleValue(this.scene, 12);
-          this.scene.matter.body.setPosition(ball.body, { x: exitX, y: exitY });
+      if (c.animating) {
+        c.animProgress += delta / c.animDuration;
+
+        if (c.animProgress >= 1) {
+          c.animProgress = 1;
+          c.animating = false;
+
+          const exitOffset = scaleValue(this.scene, 15);
+          this.scene.matter.body.setPosition(ball.body, {
+            x: c.exitX,
+            y: c.exitY - exitOffset,
+          });
           this.scene.matter.body.setStatic(ball.body, false);
           ball.body.collisionFilter.mask = 0xffffffff;
 
-          const exitSpeed = loop.entrySpeed * loop.exitVelocityScale;
-          this.scene.matter.body.setVelocity(ball.body, {
-            x: 0,
-            y: -exitSpeed,
-          });
+          const exitSpeed = c.entrySpeed * c.exitVelocityScale;
+          this.scene.matter.body.setVelocity(ball.body, { x: 0, y: -exitSpeed });
 
           ball.graphics.setScale(1);
           ball.graphics.setDepth(10);
-          loop.exitGraceMs = 100;
+          ball.graphics.setAlpha(1);
+          c.exitGraceMs = 120;
           continue;
         }
 
-        const t = loop.animProgress;
+        const t = c.animProgress;
         const eased = t < 0.5
           ? 2 * t * t
           : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-        // Ball enters at 0 (right side of loop), sweeps CCW:
-        // 0 (right) → -PI/2 (top) → -PI (left) → -3PI/2 (bottom-left area)
-        // This makes the ball go UP the right side, OVER the top, DOWN the left side
-        const angle = -eased * Math.PI * 2;
-        const bx = loop.cx + Math.cos(angle) * loop.loopRadius;
-        const by = loop.cy + Math.sin(angle) * loop.loopRadius;
-
-        this.scene.matter.body.setPosition(ball.body, { x: bx, y: by });
+        // Ball position: lerp from entry to exit along the cannon
+        const by = c.entryY - eased * c.cannonLen;
+        const spiralX = c.entryX + Math.sin(eased * Math.PI * 4) * (c.cannonW * 0.25);
+        this.scene.matter.body.setPosition(ball.body, { x: spiralX, y: by });
         this.scene.matter.body.setVelocity(ball.body, { x: 0, y: 0 });
 
-        // Scale: smaller at top (background), larger at bottom (foreground)
-        const depthScale = 0.5 + 0.5 * ((Math.sin(angle) + 1) / 2);
-        ball.graphics.setScale(depthScale);
+        // Scale: shrink on entry, grow on exit
+        let scale = 1;
+        if (t < 0.15) {
+          scale = 1 - (t / 0.15) * 0.6;
+        } else if (t > 0.85) {
+          scale = 0.4 + ((t - 0.85) / 0.15) * 0.6;
+        } else {
+          scale = 0.4;
+        }
+        ball.graphics.setScale(scale);
+        ball.graphics.setDepth(8);
+        ball.graphics.setAlpha(t < 0.1 || t > 0.9 ? 1 : 0.6);
 
-        // Depth: ball behind front arc when in the back half (top portion)
-        ball.graphics.setDepth(Math.sin(angle) > 0 ? 10 : 7);
+        // Animated spiral dots trailing behind the ball inside the tube
+        const hw = c.cannonW / 2;
+        const glassTop = c.exitY + c.cannonLen * 0.2;
+        const glassBot = c.entryY - c.cannonLen * 0.15;
+
+        for (let d = 0; d < 6; d++) {
+          const dt = eased - d * 0.06;
+          if (dt < 0 || dt > 1) continue;
+          const dy = c.entryY - dt * c.cannonLen;
+          if (dy < glassTop || dy > glassBot) continue;
+          const dx = c.entryX + Math.sin(dt * Math.PI * 4) * (hw - 8);
+          const dotAlpha = 0.7 - d * 0.1;
+          const dotR = scaleValue(this.scene, 3 - d * 0.3);
+          c.spiralGraphics.fillStyle(0xffdd66, dotAlpha);
+          c.spiralGraphics.fillCircle(dx, dy, dotR);
+        }
+
+        // Glow at exit when ball is near the top
+        if (t > 0.7) {
+          const glowAlpha = (t - 0.7) / 0.3 * 0.4;
+          c.spiralGraphics.fillStyle(0xffaa33, glowAlpha);
+          c.spiralGraphics.fillEllipse(c.exitX, c.exitY, c.cannonW + 8, scaleValue(this.scene, 16));
+        }
 
         continue;
       }
 
-      if (loop.rejected) {
+      if (c.rejected) {
         if (ball.isStopped()) {
-          loop.rejected = false;
+          c.rejected = false;
         }
         continue;
       }
@@ -1173,7 +1093,7 @@ export class Obstacles {
       const bx = ball.body.position.x;
       const by = ball.body.position.y;
 
-      if (!loop.triggerRect.contains(bx, by)) continue;
+      if (!c.triggerRect.contains(bx, by)) continue;
 
       const vx = ball.body.velocity.x;
       const vy = ball.body.velocity.y;
@@ -1181,20 +1101,16 @@ export class Obstacles {
 
       const speed = Math.sqrt(vx * vx + vy * vy);
 
-      if (speed >= loop.minSpeed) {
-        loop.animating = true;
-        loop.animProgress = 0;
-        loop.entrySpeed = speed;
+      if (speed >= c.minSpeed) {
+        c.animating = true;
+        c.animProgress = 0;
+        c.entrySpeed = speed;
 
         ball.body.collisionFilter.mask = 0;
         this.scene.matter.body.setStatic(ball.body, true);
-
-        // Start at the right side of the loop (angle 0)
-        const startX = loop.cx + loop.loopRadius;
-        const startY = loop.cy;
-        this.scene.matter.body.setPosition(ball.body, { x: startX, y: startY });
+        this.scene.matter.body.setPosition(ball.body, { x: c.entryX, y: c.entryY });
       } else {
-        loop.rejected = true;
+        c.rejected = true;
         this.scene.matter.body.setVelocity(ball.body, {
           x: vx * -0.3,
           y: Math.abs(vy) * 0.5,
@@ -1467,12 +1383,12 @@ export class Obstacles {
     return false;
   }
 
-  isLoopAnimating(): boolean {
-    return this.loops.some(l => l.animating || l.exitGraceMs > 0);
+  isCannonAnimating(): boolean {
+    return this.cannons.some(c => c.animating || c.exitGraceMs > 0);
   }
 
   update(delta: number, ball: GolfBall): { inWater: boolean; teleported: boolean } {
-    if (this.isLoopAnimating()) {
+    if (this.isCannonAnimating()) {
       return { inWater: false, teleported: false };
     }
     const { inWater } = this.applyZoneEffects(ball);
@@ -1496,11 +1412,11 @@ export class Obstacles {
       t.graphics.destroy();
     }
     this.tongues = [];
-    for (const l of this.loops) {
-      l.backGraphics.destroy();
-      l.frontGraphics.destroy();
+    for (const c of this.cannons) {
+      c.bodyGraphics.destroy();
+      c.spiralGraphics.destroy();
     }
-    this.loops = [];
+    this.cannons = [];
     for (const obj of this.gameObjects) {
       obj.destroy();
     }
