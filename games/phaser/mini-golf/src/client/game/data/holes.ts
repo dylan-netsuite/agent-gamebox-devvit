@@ -392,6 +392,7 @@ export const HOLES: HoleDefinition[] = [
   //
   // No ice on leg 3 — player needs precise power to reach the cup.
   // Water hazard below the horizontal wall punishes errant shots.
+  // Small taffy pond near the cup forces precise approach shots.
   // Gumdrop bumper near the cup adds risk/reward on the approach.
   {
     id: 9,
@@ -439,6 +440,8 @@ export const HOLES: HoleDefinition[] = [
     waterZones: [
       // Central water hazard — between the two lanes, punishes straight diagonal shortcuts
       { x: 120, y: 460, width: 160, height: 100, color: 0xff69b4 },
+      // Small taffy pond near the cup — punishes overshooting the approach
+      { x: 340, y: 220, width: 80, height: 60, color: 0xff85c1 },
     ],
   },
 ];

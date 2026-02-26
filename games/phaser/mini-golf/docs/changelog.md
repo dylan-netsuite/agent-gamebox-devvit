@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.3.1 - Hole 9: Rounded Hazards, New Hazard, Shinier Ice (2026-02-26)
+
+### Changed
+- **Rounded water hazards** — all water zones now render with rounded corners (30% radius) instead of sharp rectangles, giving them a softer taffy-pool look
+- **Water zone visual enhancements** — taffy tile sprites clip to rounded shape via geometry mask; subtle white wave ripple lines and top-left gloss highlight added
+- **Shinier slick zones** — ice overlay alpha increased to 0.8, top gloss sheen widened to 20% with 0.35 alpha, added secondary mid-sheen band, diagonal highlight streak, white border outline, increased sprinkle density, and stronger wavy drip edge
+- **New water hazard near cup** — small taffy pond at (340, 220, 80x60) above the cup punishes overshooting the approach shot
+
 ## v0.0.2.307 - Hole 9: Fix Zone Overlaps + Increase Difficulty (2026-02-26)
 
 ### Changed
