@@ -20,6 +20,7 @@ export type ObstacleType =
   | 'conveyor'
   | 'thrusting_barrier'
   | 'tongue'
+  | 'loop'
   | 'gravity_well'
   | 'moving_bridge'
   | 'block'
@@ -112,6 +113,21 @@ interface TongueData {
   hitCooldown: number;
 }
 
+interface LoopData {
+  graphics: Phaser.GameObjects.Graphics;
+  triggerRect: Phaser.Geom.Rectangle;
+  cx: number;
+  cy: number;
+  loopRadius: number;
+  minSpeed: number;
+  exitVelocityScale: number;
+  animating: boolean;
+  animProgress: number;
+  animDuration: number;
+  entrySpeed: number;
+  rejected: boolean;
+}
+
 export class Obstacles {
   scene: Phaser.Scene;
   private zones: ActiveZone[] = [];
@@ -119,6 +135,7 @@ export class Obstacles {
   private windmills: WindmillData[] = [];
   private bridges: MovingBridgeData[] = [];
   private tongues: TongueData[] = [];
+  private loops: LoopData[] = [];
   private bodies: MatterJS.BodyType[] = [];
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
@@ -819,6 +836,170 @@ export class Obstacles {
     }
   }
 
+  addLoop(def: ObstacleDef): void {
+    const pos = toScreen(this.scene, def.x, def.y);
+    const loopRadius = scaleValue(this.scene, def.radius ?? 70);
+    const triggerW = scaleValue(this.scene, def.width ?? 120);
+    const triggerH = scaleValue(this.scene, 200);
+
+    const triggerRect = new Phaser.Geom.Rectangle(
+      pos.x - triggerW / 2,
+      pos.y - triggerH / 2,
+      triggerW,
+      triggerH
+    );
+
+    const g = this.scene.add.graphics();
+    g.setDepth(6);
+
+    const cx = pos.x;
+    const cy = pos.y - loopRadius;
+
+    this.drawLoopGraphic(g, cx, cy, loopRadius);
+
+    this.loops.push({
+      graphics: g,
+      triggerRect,
+      cx,
+      cy,
+      loopRadius,
+      minSpeed: scaleValue(this.scene, def.speed ?? 5),
+      exitVelocityScale: 0.55,
+      animating: false,
+      animProgress: 0,
+      animDuration: 900,
+      entrySpeed: 0,
+      rejected: false,
+    });
+  }
+
+  private drawLoopGraphic(
+    g: Phaser.GameObjects.Graphics,
+    cx: number,
+    cy: number,
+    r: number,
+  ): void {
+    const tubeW = scaleValue(this.scene, 22);
+
+    g.lineStyle(tubeW + 6, 0x000000, 0.2);
+    g.beginPath();
+    g.arc(cx, cy, r, Math.PI * 0.15, Math.PI * 0.85, false);
+    g.strokePath();
+
+    g.lineStyle(tubeW + 2, 0x8b4513, 0.9);
+    g.beginPath();
+    g.arc(cx, cy, r, Math.PI * 0.15, Math.PI * 0.85, false);
+    g.strokePath();
+
+    g.lineStyle(tubeW - 2, 0xd2691e, 1);
+    g.beginPath();
+    g.arc(cx, cy, r, Math.PI * 0.15, Math.PI * 0.85, false);
+    g.strokePath();
+
+    g.lineStyle(tubeW * 0.3, 0xf0d080, 0.4);
+    g.beginPath();
+    g.arc(cx, cy, r - tubeW * 0.15, Math.PI * 0.2, Math.PI * 0.8, false);
+    g.strokePath();
+
+    const stripeCount = 16;
+    for (let i = 0; i < stripeCount; i++) {
+      const t = i / stripeCount;
+      const angle = Math.PI * 0.15 + t * Math.PI * 0.7;
+      const sx = cx + Math.cos(angle) * r;
+      const sy = cy + Math.sin(angle) * r;
+      g.lineStyle(1.5, 0xff69b4, 0.5);
+      g.beginPath();
+      g.moveTo(sx - Math.cos(angle) * tubeW * 0.4, sy - Math.sin(angle) * tubeW * 0.4);
+      g.lineTo(sx + Math.cos(angle) * tubeW * 0.4, sy + Math.sin(angle) * tubeW * 0.4);
+      g.strokePath();
+    }
+
+    const arrowAngle = Math.PI * 0.5;
+    const ax = cx + Math.cos(arrowAngle) * (r + tubeW * 0.8);
+    const ay = cy + Math.sin(arrowAngle) * (r + tubeW * 0.8);
+    g.fillStyle(0xffd700, 0.8);
+    g.fillTriangle(
+      ax, ay - 6,
+      ax - 5, ay + 4,
+      ax + 5, ay + 4,
+    );
+  }
+
+  updateLoops(delta: number, ball?: GolfBall): void {
+    for (const loop of this.loops) {
+      if (!ball) continue;
+
+      if (loop.animating) {
+        loop.animProgress += delta / loop.animDuration;
+
+        if (loop.animProgress >= 1) {
+          loop.animProgress = 1;
+          loop.animating = false;
+
+          this.scene.matter.body.setStatic(ball.body, false);
+          ball.body.collisionFilter.mask = 0xffffffff;
+
+          const exitSpeed = loop.entrySpeed * loop.exitVelocityScale;
+          this.scene.matter.body.setVelocity(ball.body, {
+            x: 0,
+            y: -exitSpeed,
+          });
+
+          ball.graphics.setScale(1);
+          continue;
+        }
+
+        const t = loop.animProgress;
+        const angle = -Math.PI / 2 + t * Math.PI * 2;
+        const bx = loop.cx + Math.cos(angle) * loop.loopRadius;
+        const by = loop.cy + Math.sin(angle) * loop.loopRadius;
+
+        this.scene.matter.body.setPosition(ball.body, { x: bx, y: by });
+        this.scene.matter.body.setVelocity(ball.body, { x: 0, y: 0 });
+
+        const depthScale = 0.5 + 0.5 * ((Math.sin(angle) + 1) / 2);
+        ball.graphics.setScale(depthScale);
+
+        continue;
+      }
+
+      if (loop.rejected) {
+        if (ball.isStopped()) {
+          loop.rejected = false;
+        }
+        continue;
+      }
+
+      const bx = ball.body.position.x;
+      const by = ball.body.position.y;
+
+      if (!loop.triggerRect.contains(bx, by)) continue;
+
+      const vx = ball.body.velocity.x;
+      const vy = ball.body.velocity.y;
+      const speed = Math.sqrt(vx * vx + vy * vy);
+
+      if (speed >= loop.minSpeed) {
+        loop.animating = true;
+        loop.animProgress = 0;
+        loop.entrySpeed = speed;
+
+        ball.body.collisionFilter.mask = 0;
+        this.scene.matter.body.setStatic(ball.body, true);
+
+        const startX = loop.cx;
+        const startY = loop.cy + loop.loopRadius;
+        this.scene.matter.body.setPosition(ball.body, { x: startX, y: startY });
+      } else {
+        loop.rejected = true;
+        this.scene.matter.body.setVelocity(ball.body, {
+          x: vx * -0.4,
+          y: Math.abs(vy) * 0.6,
+        });
+      }
+    }
+  }
+
   updateWindmills(delta: number, ball?: GolfBall): void {
     for (const wm of this.windmills) {
       wm.currentAngle += (wm.speed * delta) / 1000;
@@ -1083,7 +1264,14 @@ export class Obstacles {
     return false;
   }
 
+  isLoopAnimating(): boolean {
+    return this.loops.some(l => l.animating);
+  }
+
   update(delta: number, ball: GolfBall): { inWater: boolean; teleported: boolean } {
+    if (this.isLoopAnimating()) {
+      return { inWater: false, teleported: false };
+    }
     const { inWater } = this.applyZoneEffects(ball);
     const teleported = this.checkTeleporters(ball);
     return { inWater, teleported };
@@ -1105,6 +1293,10 @@ export class Obstacles {
       t.graphics.destroy();
     }
     this.tongues = [];
+    for (const l of this.loops) {
+      l.graphics.destroy();
+    }
+    this.loops = [];
     for (const obj of this.gameObjects) {
       obj.destroy();
     }

@@ -175,6 +175,9 @@ export class Game extends Scene {
         case 'tongue':
           this.obstacles.addTongue(obs);
           break;
+        case 'loop':
+          this.obstacles.addLoop(obs);
+          break;
       }
     }
 
@@ -363,6 +366,8 @@ export class Game extends Scene {
 
     this.obstacles.updateBridges(delta);
     this.obstacles.updateTongues(delta, this.state === 'simulating' ? this.ball : undefined);
+    const loopBall = (this.state === 'simulating' || this.obstacles.isLoopAnimating()) ? this.ball : undefined;
+    this.obstacles.updateLoops(delta, loopBall);
     this.obstacles.updateWindmills(delta, this.state === 'simulating' ? this.ball : undefined);
 
     this.ball.update();
@@ -393,7 +398,7 @@ export class Game extends Scene {
         return;
       }
 
-      if (this.ball.isStopped()) {
+      if (this.ball.isStopped() && !this.obstacles.isLoopAnimating()) {
         this.state = 'aiming';
         this.arrow.setVisible(true);
         this.arrow.updatePosition(this.ball.body.position.x, this.ball.body.position.y);

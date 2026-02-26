@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.0.3.47 - Hole 11: The Loop-de-Loop (2026-02-26)
+
+### Added
+- **Hole 11: The Loop-de-Loop** — straightaway into a simulated 360° loop, par 3
+- **New obstacle type: `loop`** — velocity-gated trigger that plays a circular tween animation
+  - Checks ball speed against configurable minimum threshold
+  - Fast enough: ball follows 360° circular path with depth-based scaling (3D illusion)
+  - Too slow: ball is rejected backward with reduced velocity
+  - Water/zone effects suppressed during animation to prevent false hazard triggers
+  - Chocolate candy tube visual with pink stripe markers and gold directional arrow
+- **Slick zone speed ramp** in the corridor to help the ball maintain velocity
+- **Tiny green island** surrounded by water hazards on all sides — precision landing required
+- **`isLoopAnimating()` method** on Obstacles class to coordinate game state during loop animation
+
+### Changed
+- Game update loop now passes ball to `updateLoops` even when state is `aiming` if a loop animation is in progress
+- Ball `isStopped()` check skipped during active loop animations to prevent premature state transitions
+
 ## v0.0.3.23 - Hole 10 Tongue Speed Tuning (2026-02-26)
 
 ### Changed

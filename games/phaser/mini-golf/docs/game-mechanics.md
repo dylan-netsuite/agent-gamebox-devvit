@@ -6,7 +6,7 @@ All hole coordinates are defined in a 500x800 portrait design space, optimized f
 
 ## Course Structure
 
-Currently 9 holes (Front 9 complete). Holes are added iteratively with high visual and gameplay quality.
+Currently 11 holes. Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
 Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
@@ -37,6 +37,22 @@ S-curve course using diagonal wall geometry for bank-shot redirection. Tee at (1
 
 ### Hole 10: The Sour Tongues (Par 4)
 Narrow corridor gauntlet inspired by Candystand's "Sours" course. Tee at (250,720) bottom center, cup at (250,130) top center. The fairway is a claustrophobic 150-unit-wide corridor (x:175-325) flanked by deep sand trap gutters (x:72-175 left, x:327-428 right) that run the full length. Six kinematic "tongue" obstacles extend and retract from the corridor walls on sine-wave timers with alternating phases. Left tongues extend rightward, right tongues extend leftward. Each tongue is 80 design units long and 18 units thick (leaving 70 units of clearance when fully extended), rendered as colorful sour candy with sugar crystal texture and HSL color cycling. Tongue speeds are tuned for playability: 0.5 Hz (bottom pair, ~2s cycle), 0.6 Hz (middle), 0.7 Hz (top). When a tongue strikes the ball, it applies a moderate lateral knockback force (4-6 units) perpendicular to the corridor, pushing the ball toward the sand gutter where high friction (0.15 frictionAir) slows it dramatically. **Aggressive strategy**: full power straight up, requires good timing to pass tongues during their retracted phases. **Conservative strategy (intended)**: 3-5 soft shots, laying up in the safe zones between tongue pairs, then timing the next shot. A friction zone near the cup decelerates the ball for the final putt. Par 4 with disciplined multi-stage timing.
+
+### Hole 11: The Loop-de-Loop (Par 3)
+Long straightaway into a simulated 360° loop. Tee at (250,720) bottom center, cup at (250,130) on a tiny green island. The straightaway corridor (x:190-310, 120 units wide) runs from the tee up to y:380 where the walls open. A slick zone (ice friction 0.012) covers the lower corridor (y:500-700) to help the ball maintain speed. At y:400, a loop trigger zone checks the ball's velocity. If the ball exceeds the minimum speed threshold (~2.5 design units scaled), it enters a 360° tween animation: the ball follows a circular path (radius 70 design units) around the loop center, with depth-based scaling (0.50x at the "back" of the loop, 1.0x at the "front") to simulate 3D perspective. The animation takes ~900ms. On exit, the ball emerges at the loop bottom with ~55% of its entry speed, traveling upward toward the green. If the ball enters the trigger too slowly, it is rejected backward (velocity reversed at 40% with 60% forward bounce). The green island (x:170-330, y:80-200) is tiny and surrounded on all sides by water hazards: left (x:100-168), right (x:332-400), top (x:170-330, y:40-78), and a gap below (x:170-330, y:202-262). A heavy friction zone on the green helps the ball stop. The loop graphic is rendered as a chocolate candy tube with pink candy stripes and a gold directional arrow. **Strategy**: find the razor-thin power window (~70-80%) that clears the loop but doesn't carry enough residual speed to fly off the green into the water. Too weak = rejected. Too strong = overshoots into water. A true test of power meter precision.
+
+## Loop Obstacle Physics
+
+| Property | Value |
+|----------|-------|
+| Trigger Zone | 200 design units tall, centered on loop entrance position |
+| Min Speed | 2.5 design units (scaled to screen) |
+| Animation | 360° circular path, 900ms duration |
+| Depth Scale | 0.5x at top of loop (back), 1.0x at bottom (front) |
+| Exit Velocity | 55% of entry speed, directed upward |
+| Rejection | Velocity reversed at 40% horizontal, 60% vertical bounce |
+| Water Protection | Zone effects skipped during loop animation |
+| Visual | Chocolate tube arc with pink candy stripe markers, gold arrow |
 
 ## Tongue Obstacle Physics
 

@@ -566,4 +566,78 @@ export const HOLES: HoleDefinition[] = [
       { x: 200, y: 100, width: 100, height: 60 },
     ],
   },
+
+  // ---- HOLE 11: The Loop-de-Loop ----
+  // Long straightaway into a simulated 360° loop. Par 3.
+  //
+  // The ball must be hit with enough speed to clear the loop trigger
+  // threshold. If fast enough, the ball follows a tween animation
+  // around the loop and exits with reduced velocity onto a tiny green
+  // surrounded by water. Too slow = rejected backward. Too fast =
+  // overshoots the green into the water hazard.
+  //
+  // Strategy: find the razor-thin power window (~70-80%) that clears
+  // the loop but doesn't carry enough residual speed to fly off the
+  // green. A true test of power meter precision.
+  {
+    id: 11,
+    name: 'The Loop-de-Loop',
+    par: 3,
+    tee: { x: 250, y: 720 },
+    cup: { x: 250, y: 130 },
+    walls: [
+      // Left corridor wall (open at top for loop entry)
+      [
+        { x: 190, y: 770 },
+        { x: 190, y: 380 },
+      ],
+      // Right corridor wall (open at top for loop entry)
+      [
+        { x: 310, y: 770 },
+        { x: 310, y: 380 },
+      ],
+      // Bottom corridor wall
+      [
+        { x: 190, y: 770 },
+        { x: 310, y: 770 },
+      ],
+      // Green island (top) — small platform surrounded by water
+      [
+        { x: 170, y: 80 },
+        { x: 330, y: 80 },
+        { x: 330, y: 200 },
+        { x: 170, y: 200 },
+        { x: 170, y: 80 },
+      ],
+    ],
+    obstacles: [
+      // Loop obstacle — trigger at the top of the straightaway
+      {
+        type: 'loop',
+        x: 250,
+        y: 400,
+        width: 120,
+        radius: 70,
+        speed: 2.5,
+      },
+    ],
+    slickZones: [
+      // Speed ramp in the corridor — helps ball maintain velocity
+      { x: 192, y: 500, width: 116, height: 200, color: 0xadd8e6 },
+    ],
+    frictionZones: [
+      // Green approach — heavy friction to help the ball stop
+      { x: 180, y: 90, width: 140, height: 100 },
+    ],
+    waterZones: [
+      // Water surrounding the green — left
+      { x: 100, y: 80, width: 68, height: 140, color: 0x69b4ff },
+      // Water surrounding the green — right
+      { x: 332, y: 80, width: 68, height: 140, color: 0x69b4ff },
+      // Water behind the green (top)
+      { x: 170, y: 40, width: 160, height: 38, color: 0x69b4ff },
+      // Water below the green (gap between loop exit and green)
+      { x: 170, y: 202, width: 160, height: 60, color: 0x69b4ff },
+    ],
+  },
 ];
