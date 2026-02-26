@@ -172,6 +172,9 @@ export class Game extends Scene {
         case 'moving_bridge':
           this.obstacles.addMovingBridge(obs);
           break;
+        case 'tongue':
+          this.obstacles.addTongue(obs);
+          break;
       }
     }
 
@@ -359,6 +362,7 @@ export class Game extends Scene {
     if (this.state === 'sinking') return;
 
     this.obstacles.updateBridges(delta);
+    this.obstacles.updateTongues(delta, this.state === 'simulating' ? this.ball : undefined);
     this.obstacles.updateWindmills(delta, this.state === 'simulating' ? this.ball : undefined);
 
     this.ball.update();

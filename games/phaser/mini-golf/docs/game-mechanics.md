@@ -35,6 +35,21 @@ Puzzle-oriented hole with two physically separate walled areas. The tee box (x:1
 ### Hole 9: The Ice Cream Glide (Par 3)
 S-curve course using diagonal wall geometry for bank-shot redirection. Tee at (100,700) bottom-left, cup at (400,350) right side mid-height. The outer boundary has diagonal corners (45° wall segments) at top-left and top-right that act as built-in reflectors, converting upward velocity to rightward and rightward to downward. The horizontal wall at y=450 is split into two segments (x:50→190 and x:225→450) with a narrow ~35-unit gap (x:190-225) that enables a difficult hole-in-one hero shot. Ice cream slick zones (0.012 frictionAir) cover only the left lane and top lane — rendered with enhanced glossy sheen (bright top highlight, secondary mid-sheen, diagonal gloss streak, white border outline, and colorful sprinkles) to clearly distinguish them from normal turf. The right lane descent has normal turf friction, requiring precise power control. A friction zone near the cup decelerates the ball for a puttable stop. Two rounded taffy water hazards: a large one at (300,480) on the right side below the wall that punishes shots missing the gap rightward, and a small one at (340,220) above the cup that punishes overshooting the approach. Both render with rounded corners and subtle wave ripple effects. One gumdrop bumper (1.8x restitution) at (420,310) adds risk on the cup approach. **Hole-in-one route**: aim up-right from the tee at full power to thread the narrow gap in the horizontal wall; the ball must then bank off the top-right diagonal wall and descend to the cup — requires pixel-perfect angle and maximum power. Birdie route: aim straight up with ~70% power → ball banks off both diagonal wall corners → lands in the upper course → precise second shot threading between the cup-side water hazard and bumper. Par 3 with careful navigation of the S-curve.
 
+### Hole 10: The Sour Tongues (Par 4)
+Narrow corridor gauntlet inspired by Candystand's "Sours" course. Tee at (250,720) bottom center, cup at (250,130) top center. The fairway is a claustrophobic 150-unit-wide corridor (x:175-325) flanked by deep sand trap gutters (x:72-175 left, x:327-428 right) that run the full length. Six kinematic "tongue" obstacles extend and retract from the corridor walls on sine-wave timers with alternating phases. Left tongues extend rightward, right tongues extend leftward. Each tongue is 100 design units long and 18 units thick, rendered as colorful sour candy with sugar crystal texture and HSL color cycling. Tongue speeds increase from 1.2 Hz (bottom pair) to 1.4 Hz (middle) to 1.6 Hz (top). When a tongue strikes the ball, it applies a lateral knockback force (5-8 units) perpendicular to the corridor, pushing the ball into the sand gutter where high friction (0.15 frictionAir) slows it dramatically. **Aggressive strategy**: full power straight up, requires the ball to pass all 6 tongues during their retracted phases — frame-perfect timing. **Conservative strategy (intended)**: 2-3 soft shots, laying up in the ~80-unit safe zones between tongue pairs, then timing the next shot. A friction zone near the cup decelerates the ball for the final putt. Par 4 with disciplined multi-stage timing.
+
+## Tongue Obstacle Physics
+
+| Property | Value |
+|----------|-------|
+| Motion | Sine-wave extension/retraction, `(sin(t * speed * 2π + phase) + 1) / 2` |
+| Extension | 0 to full tongue length (100 design units) |
+| Collision | AABB overlap check with ball radius |
+| Knockback | Lateral force 5-8 units perpendicular to corridor |
+| Push-out | Ball repositioned outside tongue bounds + ball radius + 2px |
+| Cooldown | 300ms after hit to prevent rapid re-triggering |
+| Visual | HSL color cycling sour candy body with rounded corners, white sugar crystal dots, dark outline |
+
 ## Play Modes
 
 ### Full 18

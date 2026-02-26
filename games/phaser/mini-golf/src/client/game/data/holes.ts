@@ -455,4 +455,115 @@ export const HOLES: HoleDefinition[] = [
       { x: 340, y: 220, width: 80, height: 60, color: 0xff85c1 },
     ],
   },
+
+  // ---- HOLE 10: The Sour Tongues ----
+  // Narrow corridor gauntlet with kinematic tongue blocks. Par 4.
+  //
+  // A long, claustrophobic central corridor (150 units wide) runs from
+  // tee to cup. Six sour candy "tongues" extend and retract from the
+  // walls on alternating sine-wave timers. When a tongue strikes the
+  // ball, it gets knocked sideways into the sand trap gutters.
+  //
+  // Strategy: blast through with frame-perfect timing (risky), or lay
+  // up in the safe zones between tongue pairs for a controlled par.
+  {
+    id: 10,
+    name: 'The Sour Tongues',
+    par: 4,
+    tee: { x: 250, y: 720 },
+    cup: { x: 250, y: 130 },
+    walls: [
+      // Outer boundary
+      [
+        { x: 70, y: 60 },
+        { x: 430, y: 60 },
+        { x: 430, y: 770 },
+        { x: 70, y: 770 },
+        { x: 70, y: 60 },
+      ],
+      // Left corridor wall
+      [
+        { x: 175, y: 100 },
+        { x: 175, y: 750 },
+      ],
+      // Right corridor wall
+      [
+        { x: 325, y: 100 },
+        { x: 325, y: 750 },
+      ],
+    ],
+    obstacles: [
+      // Tongue pair 1 (bottom) — left then right
+      {
+        type: 'tongue',
+        x: 175,
+        y: 640,
+        width: 100,
+        height: 18,
+        speed: 1.2,
+        forceX: 1,
+        angle: 0,
+      },
+      {
+        type: 'tongue',
+        x: 225,
+        y: 560,
+        width: 100,
+        height: 18,
+        speed: 1.2,
+        forceX: -1,
+        angle: Math.PI,
+      },
+      // Tongue pair 2 (middle)
+      {
+        type: 'tongue',
+        x: 175,
+        y: 480,
+        width: 100,
+        height: 18,
+        speed: 1.4,
+        forceX: 1,
+        angle: Math.PI * 0.5,
+      },
+      {
+        type: 'tongue',
+        x: 225,
+        y: 400,
+        width: 100,
+        height: 18,
+        speed: 1.4,
+        forceX: -1,
+        angle: Math.PI * 1.5,
+      },
+      // Tongue pair 3 (top) — fastest
+      {
+        type: 'tongue',
+        x: 175,
+        y: 320,
+        width: 100,
+        height: 18,
+        speed: 1.6,
+        forceX: 1,
+        angle: Math.PI * 0.25,
+      },
+      {
+        type: 'tongue',
+        x: 225,
+        y: 240,
+        width: 100,
+        height: 18,
+        speed: 1.6,
+        forceX: -1,
+        angle: Math.PI * 1.25,
+      },
+    ],
+    frictionZones: [
+      // Left sand gutter
+      { x: 72, y: 62, width: 101, height: 706 },
+      // Right sand gutter
+      { x: 327, y: 62, width: 101, height: 706 },
+      // Cup approach — ball decelerates near the hole
+      { x: 200, y: 100, width: 100, height: 60 },
+    ],
+  },
 ];

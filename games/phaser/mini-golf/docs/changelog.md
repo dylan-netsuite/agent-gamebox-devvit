@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.3.20 - Hole 10: The Sour Tongues (2026-02-26)
+
+### Added
+- **Hole 10: The Sour Tongues** — narrow corridor gauntlet with kinematic tongue obstacles, par 4
+- **New obstacle type: `tongue`** — kinematic blocks that extend/retract from walls on sine-wave timers
+  - Colorful sour candy visual with HSL color cycling and sugar crystal texture
+  - Ball collision applies lateral knockback force into sand gutters
+  - 300ms hit cooldown prevents rapid re-triggering
+  - Configurable speed, phase offset, and direction (left/right)
+- **6 tongue obstacles** arranged in 3 pairs with increasing speed (1.2→1.4→1.6 Hz)
+- **Sand trap gutters** flanking the corridor on both sides
+- **Friction zone** near the cup for approach deceleration
+
 ## v0.0.3.16 - Hole 9: Hole-in-One Hero Shot Route (2026-02-26)
 
 ### Changed

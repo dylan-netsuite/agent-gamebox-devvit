@@ -19,6 +19,7 @@ export type ObstacleType =
   | 'ramp'
   | 'conveyor'
   | 'thrusting_barrier'
+  | 'tongue'
   | 'gravity_well'
   | 'moving_bridge'
   | 'block'
@@ -98,12 +99,26 @@ interface MovingBridgeData {
   direction: 1 | -1;
 }
 
+interface TongueData {
+  body: MatterJS.BodyType;
+  graphics: Phaser.GameObjects.Graphics;
+  anchorX: number;
+  anchorY: number;
+  tongueLen: number;
+  tongueH: number;
+  side: 'left' | 'right';
+  speed: number;
+  phase: number;
+  hitCooldown: number;
+}
+
 export class Obstacles {
   scene: Phaser.Scene;
   private zones: ActiveZone[] = [];
   private teleporters: ActiveTeleporter[] = [];
   private windmills: WindmillData[] = [];
   private bridges: MovingBridgeData[] = [];
+  private tongues: TongueData[] = [];
   private bodies: MatterJS.BodyType[] = [];
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
@@ -695,6 +710,115 @@ export class Obstacles {
     }
   }
 
+  addTongue(def: ObstacleDef): void {
+    const side = (def.forceX ?? 1) > 0 ? 'right' : 'left';
+    const tongueLen = scaleValue(this.scene, def.width ?? 100);
+    const tongueH = scaleValue(this.scene, def.height ?? 18);
+    const wallPos = toScreen(
+      this.scene,
+      side === 'left' ? def.x : def.x + (def.width ?? 100),
+      def.y
+    );
+
+    const body = this.scene.matter.add.rectangle(wallPos.x, wallPos.y, tongueLen, tongueH, {
+      isStatic: true,
+      isSensor: true,
+      label: 'tongue',
+    });
+    this.bodies.push(body);
+
+    const g = this.scene.add.graphics();
+    g.setDepth(7);
+
+    this.tongues.push({
+      body,
+      graphics: g,
+      anchorX: wallPos.x,
+      anchorY: wallPos.y,
+      tongueLen,
+      tongueH,
+      side,
+      speed: def.speed ?? 1.2,
+      phase: def.angle ?? 0,
+      hitCooldown: 0,
+    });
+  }
+
+  updateTongues(delta: number, ball?: GolfBall): void {
+    const time = this.scene.time.now / 1000;
+
+    for (const t of this.tongues) {
+      if (t.hitCooldown > 0) t.hitCooldown -= delta;
+
+      const wave = (Math.sin((time * t.speed * Math.PI * 2) + t.phase) + 1) / 2;
+      const extend = wave * t.tongueLen;
+
+      const dir = t.side === 'left' ? 1 : -1;
+      const cx = t.anchorX + (dir * extend) / 2;
+      const cy = t.anchorY;
+
+      this.scene.matter.body.setPosition(t.body, { x: cx, y: cy });
+
+      const g = t.graphics;
+      g.clear();
+
+      const x = cx - extend / 2;
+      const y = cy - t.tongueH / 2;
+      const w = extend;
+      const h = t.tongueH;
+
+      if (w > 1) {
+        // Sour candy tongue body
+        const hue = ((time * 60 + t.phase * 30) % 360);
+        const sourColor = Phaser.Display.Color.HSLToColor(hue / 360, 0.7, 0.55).color;
+        g.fillStyle(sourColor, 0.9);
+        g.fillRoundedRect(x, y, w, h, Math.min(h * 0.3, 4));
+
+        // Sugar crystal texture
+        g.fillStyle(0xffffff, 0.3);
+        const crystalCount = Math.floor(w / 8);
+        for (let i = 0; i < crystalCount; i++) {
+          const cx2 = x + 3 + ((i * 7 + t.phase * 13) % (w - 6));
+          const cy2 = y + 2 + ((i * 5 + t.phase * 7) % (h - 4));
+          g.fillRect(cx2, cy2, 2, 2);
+        }
+
+        // Dark outline
+        g.lineStyle(1, 0x000000, 0.3);
+        g.strokeRoundedRect(x, y, w, h, Math.min(h * 0.3, 4));
+      }
+
+      // Ball collision
+      if (ball && t.hitCooldown <= 0 && w > 2) {
+        const bx = ball.body.position.x;
+        const by = ball.body.position.y;
+        const br = ball.radius;
+
+        if (
+          bx + br > x &&
+          bx - br < x + w &&
+          by + br > y &&
+          by - br < y + h
+        ) {
+          const knockDir = t.side === 'left' ? 1 : -1;
+          const knockForce = 5 + wave * 3;
+          this.scene.matter.body.setVelocity(ball.body, {
+            x: knockDir * knockForce,
+            y: ball.body.velocity.y * 0.3,
+          });
+
+          const pushOut = t.side === 'left' ? x + w + br + 2 : x - br - 2;
+          this.scene.matter.body.setPosition(ball.body, {
+            x: pushOut,
+            y: by,
+          });
+
+          t.hitCooldown = 300;
+        }
+      }
+    }
+  }
+
   updateWindmills(delta: number, ball?: GolfBall): void {
     for (const wm of this.windmills) {
       wm.currentAngle += (wm.speed * delta) / 1000;
@@ -977,6 +1101,10 @@ export class Obstacles {
       b.graphics.destroy();
     }
     this.bridges = [];
+    for (const t of this.tongues) {
+      t.graphics.destroy();
+    }
+    this.tongues = [];
     for (const obj of this.gameObjects) {
       obj.destroy();
     }
