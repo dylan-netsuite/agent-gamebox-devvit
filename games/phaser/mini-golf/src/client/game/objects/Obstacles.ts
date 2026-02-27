@@ -788,8 +788,7 @@ export class Obstacles {
       const by = ball.body.position.y;
       const dx = well.centerX - bx;
       const dy = well.centerY - by;
-      const distSq = dx * dx + dy * dy;
-      const dist = Math.sqrt(distSq);
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < dr) {
         swallowed = true;
@@ -797,9 +796,10 @@ export class Obstacles {
       }
 
       if (dist < ar) {
-        const forceMag = well.strength / Math.max(distSq, dr * dr);
-        const fx = (dx / dist) * forceMag;
-        const fy = (dy / dist) * forceMag;
+        const t = 1 - (dist - dr) / (ar - dr);
+        const pull = well.strength * t * t;
+        const fx = (dx / dist) * pull;
+        const fy = (dy / dist) * pull;
         this.scene.matter.body.applyForce(ball.body, ball.body.position, { x: fx, y: fy });
       }
     }

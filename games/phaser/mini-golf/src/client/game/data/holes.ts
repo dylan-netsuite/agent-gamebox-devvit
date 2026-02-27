@@ -886,11 +886,11 @@ export const HOLES: HoleDefinition[] = [
     ],
     obstacles: [
       // Well A — lower right, near diagonal wall #1 gap; slingshot right around it
-      { type: 'gravity_well', x: 350, y: 560, radius: 55, speed: 0.012 },
+      { type: 'gravity_well', x: 350, y: 560, radius: 60, speed: 0.0015 },
       // Well B — center left, near diagonal wall #2 gap; slingshot left around it
-      { type: 'gravity_well', x: 160, y: 340, radius: 50, speed: 0.014 },
+      { type: 'gravity_well', x: 160, y: 340, radius: 55, speed: 0.0018 },
       // Well C — upper area, guards the cup approach
-      { type: 'gravity_well', x: 370, y: 200, radius: 50, speed: 0.016 },
+      { type: 'gravity_well', x: 370, y: 200, radius: 55, speed: 0.002 },
       // Bumpers at key turning points — each a different color
       { type: 'gumdrop_bumper', x: 130, y: 650, radius: 12, color: 0x00ddff },   // Cyan — left of tee
       { type: 'gumdrop_bumper', x: 400, y: 450, radius: 12, color: 0xff44aa },   // Hot pink — right chicane

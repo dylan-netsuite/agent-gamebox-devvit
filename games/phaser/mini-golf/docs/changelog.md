@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.7.8 - Hole 14: Rewrote Gravity Force Model (2026-02-27)
+
+### Fixed
+- **Completely rewrote gravity force formula** — old inverse-square model (`F = strength / dist²`) produced near-zero forces because screen-pixel distances made the denominator enormous. New model normalizes distance to 0-1 within the attract radius and applies `F = strength × t²` where t=0 at the edge and t=1 at the dead zone. Forces are now resolution-independent and genuinely powerful.
+- **Increased well radii** (55/50/50 → 60/55/55) for a larger zone of influence
+- Ball now visibly curves when passing near a well's edge and gets sucked in if moving too slowly
+
 ## v0.0.7.4 - Hole 14: Even Stronger Gravity + Colored Bumpers (2026-02-27)
 
 ### Changed

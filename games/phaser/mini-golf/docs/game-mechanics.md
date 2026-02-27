@@ -54,10 +54,10 @@ Surreal space-themed par 4 with an irregular angular boundary and three powerful
 
 | Property | Value |
 |----------|-------|
-| Force Model | Inverse-square: F = strength / dist², capped at dead radius |
+| Force Model | Normalized quadratic: t = 1 - (dist-deadR)/(attractR-deadR), F = strength × t² |
 | Attraction Radius | Per-well (50-55 design units) |
 | Dead Zone | 18% of attract radius — ball entering = swallowed (+1 penalty) |
-| Strength | 0.012–0.016 (extremely strong; ball curves dramatically near wells) |
+| Strength | 0.0015–0.002 (normalized quadratic; ball visibly curves and gets sucked in) |
 | Visual | Spinning purple vortex with 4 spiral arms, orbiting dots, dark center, outer glow |
 | Rotation | 2.5 radians/second |
 
