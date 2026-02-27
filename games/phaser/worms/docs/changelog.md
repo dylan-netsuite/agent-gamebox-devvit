@@ -1,5 +1,21 @@
 # Reddit Royale - Changelog
 
+## [v0.0.18.17] - 2026-02-27 — Fix Home Button Visibility & Interactivity (wf-1772179000)
+
+### Fixed
+- **Home button position**: Moved from top-right (hidden behind minimap) to between the team panel and minimap where it is clearly visible.
+- **Camera rendering bug**: Home button and exit confirmation dialog were invisible because Phaser's `addedtoscene` event handler was ignoring them on the UI camera before they could be registered as UI elements.
+- **Interactive hit area**: Replaced container-internal `Zone` with a direct scene `Rectangle` for the hit area, ensuring Phaser's input system properly processes clicks.
+- **Exit confirmation rendering**: Confirmation dialog container now uses `addUIObject` helper to properly register with the dual-camera system.
+
+### Changed
+- `buildHomeButton()` now runs before `setupUICamera()` so all home button elements are present when camera ignore lists are constructed.
+- Child game objects inside home button container use `new Phaser.GameObjects.*()` constructors instead of `this.add.*()` to avoid premature `addedtoscene` events.
+- Added `addUIObject()` helper method for registering UI containers created after camera setup.
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts`
+
 ## [v0.0.18.1] - 2026-02-27 — Home Button for Tutorial & Single Player (wf-1772176657)
 
 ### Added

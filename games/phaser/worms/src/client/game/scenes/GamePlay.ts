@@ -341,8 +341,8 @@ export class GamePlay extends Scene {
     }
 
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-    this.setupUICamera();
     this.buildHomeButton();
+    this.setupUICamera();
     this.centerCameraOnWorm();
 
     this.setupCameraDrag();
@@ -795,68 +795,76 @@ export class GamePlay extends Scene {
 
     const cam = this.cameras.main;
     const btnSize = 36;
-    const margin = 10;
+    const margin = 8;
+    const minimapW = 150;
+    const btnX = cam.width - minimapW - margin - btnSize - 6;
+    const btnY = margin;
+    const cx = btnX + btnSize / 2;
+    const cy = btnY + btnSize / 2;
 
     this.homeButtonContainer = this.add.container(0, 0).setDepth(250).setScrollFactor(0);
+    this.uiContainers.add(this.homeButtonContainer);
+    cam.ignore(this.homeButtonContainer);
 
-    const bg = this.add.graphics();
+    const bg = new Phaser.GameObjects.Graphics(this);
     bg.fillStyle(0x0f1923, 0.85);
-    bg.fillRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+    bg.fillRoundedRect(btnX, btnY, btnSize, btnSize, 8);
     bg.lineStyle(1, 0x2a3a5a, 0.6);
-    bg.strokeRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+    bg.strokeRoundedRect(btnX, btnY, btnSize, btnSize, 8);
     this.homeButtonContainer.add(bg);
 
-    const icon = this.add
-      .text(cam.width - btnSize / 2 - margin, margin + btnSize / 2, '🏠', {
-        fontSize: '18px',
-      })
-      .setOrigin(0.5);
+    const icon = new Phaser.GameObjects.Text(this, cx, cy, '🏠', {
+      fontSize: '18px',
+    }).setOrigin(0.5);
     this.homeButtonContainer.add(icon);
 
-    const zone = this.add
-      .zone(cam.width - btnSize / 2 - margin, margin + btnSize / 2, btnSize, btnSize)
-      .setInteractive({ useHandCursor: true });
-    this.homeButtonContainer.add(zone);
+    const label = new Phaser.GameObjects.Text(this, cx, btnY + btnSize + 4, 'MENU', {
+      fontFamily: 'monospace',
+      fontSize: '7px',
+      color: '#6e7681',
+    }).setOrigin(0.5, 0);
+    this.homeButtonContainer.add(label);
 
-    zone.on('pointerover', () => {
+    const hitArea = this.add
+      .rectangle(cx, cy, btnSize, btnSize, 0x000000, 0)
+      .setDepth(252)
+      .setScrollFactor(0)
+      .setInteractive({ useHandCursor: true });
+    this.uiContainers.add(hitArea);
+
+    hitArea.on('pointerover', () => {
       bg.clear();
       bg.fillStyle(0x1e2d4f, 0.95);
-      bg.fillRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+      bg.fillRoundedRect(btnX, btnY, btnSize, btnSize, 8);
       bg.lineStyle(2, 0x00e5ff, 0.6);
-      bg.strokeRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+      bg.strokeRoundedRect(btnX, btnY, btnSize, btnSize, 8);
     });
 
-    zone.on('pointerout', () => {
+    hitArea.on('pointerout', () => {
       bg.clear();
       bg.fillStyle(0x0f1923, 0.85);
-      bg.fillRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+      bg.fillRoundedRect(btnX, btnY, btnSize, btnSize, 8);
       bg.lineStyle(1, 0x2a3a5a, 0.6);
-      bg.strokeRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+      bg.strokeRoundedRect(btnX, btnY, btnSize, btnSize, 8);
     });
 
-    zone.on('pointerdown', () => {
+    hitArea.on('pointerdown', () => {
       SoundManager.play('select');
       this.showExitConfirmation();
     });
-
-    this.uiContainers.add(this.homeButtonContainer);
-    cam.ignore(this.homeButtonContainer);
-    this.uiCamera.ignore([]);
-
-    for (const obj of this.children.list) {
-      if (!this.uiContainers.has(obj)) {
-        this.uiCamera.ignore(obj);
-      }
-    }
   }
 
   private showExitConfirmation(): void {
     if (this.exitConfirmContainer) return;
 
     const cam = this.cameras.main;
-    this.exitConfirmContainer = this.add.container(0, 0).setDepth(600).setScrollFactor(0);
+    this.exitConfirmContainer = this.addUIObject(
+      new Phaser.GameObjects.Container(this, 0, 0),
+    )
+      .setDepth(600)
+      .setScrollFactor(0);
 
-    const overlay = this.add.graphics();
+    const overlay = new Phaser.GameObjects.Graphics(this);
     overlay.fillStyle(0x000000, 0.6);
     overlay.fillRect(0, 0, cam.width, cam.height);
     overlay.setInteractive(
@@ -870,30 +878,38 @@ export class GamePlay extends Scene {
     const boxX = (cam.width - boxW) / 2;
     const boxY = (cam.height - boxH) / 2;
 
-    const boxBg = this.add.graphics();
+    const boxBg = new Phaser.GameObjects.Graphics(this);
     boxBg.fillStyle(0x0f1923, 0.95);
     boxBg.fillRoundedRect(boxX, boxY, boxW, boxH, 12);
     boxBg.lineStyle(2, 0x00e5ff, 0.6);
     boxBg.strokeRoundedRect(boxX, boxY, boxW, boxH, 12);
     this.exitConfirmContainer.add(boxBg);
 
-    const title = this.add
-      .text(cam.width / 2, boxY + 28, 'Return to Main Menu?', {
+    const title = new Phaser.GameObjects.Text(
+      this,
+      cam.width / 2,
+      boxY + 28,
+      'Return to Main Menu?',
+      {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '16px',
         fontStyle: 'bold',
         color: '#ffffff',
-      })
-      .setOrigin(0.5);
+      },
+    ).setOrigin(0.5);
     this.exitConfirmContainer.add(title);
 
-    const subtitle = this.add
-      .text(cam.width / 2, boxY + 52, 'Current game progress will be lost.', {
+    const subtitle = new Phaser.GameObjects.Text(
+      this,
+      cam.width / 2,
+      boxY + 52,
+      'Current game progress will be lost.',
+      {
         fontFamily: 'monospace',
         fontSize: '10px',
         color: '#8899aa',
-      })
-      .setOrigin(0.5);
+      },
+    ).setOrigin(0.5);
     this.exitConfirmContainer.add(subtitle);
 
     const btnW = 90;
@@ -902,24 +918,26 @@ export class GamePlay extends Scene {
     const btnY = boxY + boxH - btnH - 20;
 
     const buildConfirmBtn = (x: number, label: string, color: number, action: () => void) => {
-      const bg = this.add.graphics();
+      const bg = new Phaser.GameObjects.Graphics(this);
       bg.fillStyle(color, 0.9);
       bg.fillRoundedRect(x, btnY, btnW, btnH, 8);
       this.exitConfirmContainer!.add(bg);
 
-      const txt = this.add
-        .text(x + btnW / 2, btnY + btnH / 2, label, {
-          fontFamily: 'Segoe UI, system-ui, sans-serif',
-          fontSize: '14px',
-          fontStyle: 'bold',
-          color: '#ffffff',
-        })
-        .setOrigin(0.5);
+      const txt = new Phaser.GameObjects.Text(this, x + btnW / 2, btnY + btnH / 2, label, {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: '#ffffff',
+      }).setOrigin(0.5);
       this.exitConfirmContainer!.add(txt);
 
-      const zone = this.add
-        .zone(x + btnW / 2, btnY + btnH / 2, btnW, btnH)
-        .setInteractive({ useHandCursor: true });
+      const zone = new Phaser.GameObjects.Zone(
+        this,
+        x + btnW / 2,
+        btnY + btnH / 2,
+        btnW,
+        btnH,
+      ).setInteractive({ useHandCursor: true });
       this.exitConfirmContainer!.add(zone);
 
       zone.on('pointerdown', () => {
@@ -944,9 +962,6 @@ export class GamePlay extends Scene {
     buildConfirmBtn(noBtnX, 'No', 0x2a3a5a, () => {
       this.dismissExitConfirmation();
     });
-
-    this.uiContainers.add(this.exitConfirmContainer);
-    cam.ignore(this.exitConfirmContainer);
   }
 
   private dismissExitConfirmation(): void {
@@ -964,8 +979,11 @@ export class GamePlay extends Scene {
     this.dismissExitConfirmation();
     const cam = this.cameras.main;
     if (!this.gameOverOverlay) {
-      this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);
-      this.uiContainers.add(this.gameOverOverlay);
+      this.gameOverOverlay = this.addUIObject(
+        new Phaser.GameObjects.Container(this, 0, 0),
+      )
+        .setDepth(500)
+        .setScrollFactor(0);
     }
     this.gameOverOverlay.removeAll(true);
     this.gameOverOverlay.setVisible(true);
@@ -1649,10 +1667,18 @@ export class GamePlay extends Scene {
     }
 
     this.events.on('addedtoscene', (obj: Phaser.GameObjects.GameObject) => {
-      if (!this.uiContainers.has(obj)) {
+      if (this.uiContainers.has(obj)) {
+        cam.ignore(obj);
+      } else {
         this.uiCamera.ignore(obj);
       }
     });
+  }
+
+  private addUIObject<T extends Phaser.GameObjects.GameObject>(obj: T): T {
+    this.uiContainers.add(obj);
+    this.sys.displayList.add(obj);
+    return obj;
   }
 
   private followActiveWorm(): void {
