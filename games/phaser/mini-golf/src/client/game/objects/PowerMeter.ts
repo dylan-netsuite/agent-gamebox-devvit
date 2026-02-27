@@ -72,7 +72,8 @@ export class PowerMeter {
     if (!this.active) return;
 
     this.elapsed += delta / 1000;
-    this.power = Math.abs(Math.sin(this.elapsed * Math.PI * POWER_OSCILLATION_HZ));
+    const raw = Math.abs(Math.sin(this.elapsed * Math.PI * POWER_OSCILLATION_HZ));
+    this.power = Math.pow(raw, 1.6);
 
     const { width, height } = this.scene.scale;
     const x = (width - this.barWidth) / 2;

@@ -108,11 +108,12 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 
 ### Power Phase
 - Click/tap and hold to start power meter
-- Power bar oscillates using sine wave at ~0.9 Hz (full cycle ~1.1s)
+- Power bar oscillates using sine wave at 0.75 Hz (full cycle ~1.33s)
+- Raw sine value is raised to exponent 1.6, expanding the low-power range for easier soft shots while preserving max power (1.0^1.6 = 1.0)
 - Arrow color shifts from blue (low power) to red (max power)
 
 ### Shot Execution
-- On release, sine value sampled as power (0-1)
+- On release, curved power value sampled (0-1)
 - Impulse applied: `power * MAX_SHOT_VELOCITY * scale * direction_vector`
 - Inputs locked during simulation
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.3.119 - Softer Shot Control (2026-02-27)
+
+### Changed
+- **Power curve exponent** applied to meter: raw sine value raised to 1.6, expanding the low-power range so soft shots are much easier to time (e.g. raw 0.2 → effective 0.072) while max power stays at 1.0
+- **Oscillation speed** reduced from 0.9 Hz to 0.75 Hz (~1.33s full cycle vs ~1.1s), giving more reaction time overall
+
 ## v0.0.3.116 - Hole 12: Corridor Barrier Walls (2026-02-27)
 
 ### Added

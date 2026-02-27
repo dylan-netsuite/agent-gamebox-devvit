@@ -11,7 +11,7 @@ export const WALL_RESTITUTION = 0.7;
 
 export const MAX_SHOT_VELOCITY = 25;
 export const WALL_THICKNESS = 18;
-export const POWER_OSCILLATION_HZ = 0.9;
+export const POWER_OSCILLATION_HZ = 0.75;
 export const CAPTURE_VELOCITY_THRESHOLD = 6.0;
 export const CAPTURE_RADIUS = 20;
 export const ATTRACTION_RADIUS = 40;
