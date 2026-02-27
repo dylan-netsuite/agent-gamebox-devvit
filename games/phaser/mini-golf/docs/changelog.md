@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.7.4 - Hole 14: Even Stronger Gravity + Colored Bumpers (2026-02-27)
+
+### Changed
+- **Gravity strength doubled again** (0.006–0.008 → 0.012–0.016) — wells are now extremely aggressive
+- **Bumpers now have distinct colors** — cyan, hot pink, lime, and orange for visual clarity and personality
+
 ## v0.0.3.147 - Hole 14: Layout Overhaul + Stronger Gravity (2026-02-27)
 
 ### Changed

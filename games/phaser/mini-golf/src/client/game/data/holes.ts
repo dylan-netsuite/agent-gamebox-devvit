@@ -886,16 +886,16 @@ export const HOLES: HoleDefinition[] = [
     ],
     obstacles: [
       // Well A — lower right, near diagonal wall #1 gap; slingshot right around it
-      { type: 'gravity_well', x: 350, y: 560, radius: 55, speed: 0.006 },
+      { type: 'gravity_well', x: 350, y: 560, radius: 55, speed: 0.012 },
       // Well B — center left, near diagonal wall #2 gap; slingshot left around it
-      { type: 'gravity_well', x: 160, y: 340, radius: 50, speed: 0.007 },
+      { type: 'gravity_well', x: 160, y: 340, radius: 50, speed: 0.014 },
       // Well C — upper area, guards the cup approach
-      { type: 'gravity_well', x: 370, y: 200, radius: 50, speed: 0.008 },
-      // Bumpers at key turning points
-      { type: 'gumdrop_bumper', x: 130, y: 650, radius: 12 },   // Left of tee, redirect right
-      { type: 'gumdrop_bumper', x: 400, y: 450, radius: 12 },   // Right wall chicane
-      { type: 'gumdrop_bumper', x: 120, y: 290, radius: 12 },   // Left alcove, redirect up
-      { type: 'gumdrop_bumper', x: 340, y: 100, radius: 12 },   // Cup approach guide
+      { type: 'gravity_well', x: 370, y: 200, radius: 50, speed: 0.016 },
+      // Bumpers at key turning points — each a different color
+      { type: 'gumdrop_bumper', x: 130, y: 650, radius: 12, color: 0x00ddff },   // Cyan — left of tee
+      { type: 'gumdrop_bumper', x: 400, y: 450, radius: 12, color: 0xff44aa },   // Hot pink — right chicane
+      { type: 'gumdrop_bumper', x: 120, y: 290, radius: 12, color: 0x44ff44 },   // Lime — left alcove
+      { type: 'gumdrop_bumper', x: 340, y: 100, radius: 12, color: 0xffaa00 },   // Orange — cup approach
     ],
   },
 ];
