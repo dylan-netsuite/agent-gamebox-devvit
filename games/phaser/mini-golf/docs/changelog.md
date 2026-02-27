@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.3.137 - Hole 13: Instant Claw Grab & Remove Bumpers (2026-02-27)
+
+### Changed
+- **Claw grab animation 3x faster** — reduced from 1200ms to 400ms; claw now snaps shut almost instantly when shadow crosses ball
+- **Removed all 4 corner bumpers** — pending repositioning per user feedback
+
 ## v0.0.3.132 - Hole 13: Corner Bumpers & Claw Fix (2026-02-27)
 
 ### Added

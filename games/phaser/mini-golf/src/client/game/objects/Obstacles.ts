@@ -657,7 +657,7 @@ export class Obstacles {
       }
 
       if (claw.grabbing) {
-        claw.grabProgress += delta / 1200;
+        claw.grabProgress += delta / 400;
         if (claw.grabProgress >= 1) {
           claw.grabbing = false;
           claw.grabProgress = 0;
