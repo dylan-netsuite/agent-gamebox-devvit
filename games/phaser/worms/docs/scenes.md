@@ -107,9 +107,13 @@ The main game scene. Manages all gameplay systems. Supports both local and onlin
 | Actions | Local only | Broadcast via realtime |
 | Turn advance | Local only | Server-coordinated |
 
-### Home Button (Tutorial & Single Player)
+### Pause Menu (Tutorial & Single Player)
 
-A 🏠 home button appears in the top-right corner during Tutorial and Single Player modes. Clicking it shows a confirmation dialog ("Return to Main Menu?") with Yes/No buttons. Confirming navigates back to ModeSelect, cleaning up the tutorial and multiplayer state. The button is hidden during game over (which has its own menu buttons) and does not appear in Online Play or Local Multiplayer modes.
+A MENU button appears in the top-right corner during Tutorial and Single Player modes. Clicking it opens a pause overlay with four options: Resume (continue game), Sound toggle (ON/OFF via SoundManager), Restart (restart with same config), and Main Menu (return to ModeSelect). A controls reference is displayed at the bottom of the overlay. The button is hidden during game over and does not appear in Online Play or Local Multiplayer modes.
+
+### Play Again with Same Config
+
+The Game Over screen's "Play Again" button restarts GamePlay with the same `lastConfig` (teams, map, AI difficulty, characters) instead of returning to ModeSelect. "Main Menu" still navigates to ModeSelect. Online mode retains the separate REMATCH flow.
 
 ### Initialization (`create`)
 

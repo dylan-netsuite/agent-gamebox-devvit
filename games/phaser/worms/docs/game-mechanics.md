@@ -70,6 +70,27 @@ Fires a grappling hook in the aimed direction. When the hook hits terrain, it an
   - Swing arc indicator shows the pendulum path
   - Momentum arrow shows release velocity (green=safe, red=dangerous fall)
 
+## Pause Menu
+
+Accessed via the MENU button (top-right, next to minimap) during gameplay. Blocks all game input while open.
+
+| Button | Action |
+|--------|--------|
+| Resume | Dismiss pause menu, continue game |
+| Sound: ON/OFF | Toggle global sound via SoundManager |
+| Restart | Restart game with same config (teams, map, AI, characters) |
+| Main Menu | Return to Mode Select screen |
+
+A controls reference is shown at the bottom of the pause menu.
+
+## Game Over
+
+| Button | Action |
+|--------|--------|
+| Play Again | Restart with same config (offline only) |
+| Main Menu | Return to Mode Select |
+| REMATCH | Create new lobby with same opponent (online only) |
+
 ## Controls
 
 | Input | Action |

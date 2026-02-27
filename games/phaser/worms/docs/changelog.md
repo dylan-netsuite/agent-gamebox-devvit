@@ -1,5 +1,29 @@
 # Reddit Royale - Changelog
 
+## [v0.0.18.23] - 2026-02-27 — Pause Menu, Play Again, Lifecycle Audit (wf-1772181000)
+
+### Added
+- **Pause menu**: The MENU button now opens a full pause overlay with Resume, Sound toggle, Restart, and Main Menu options, plus a controls reference at the bottom.
+- **Play Again with same config**: The "Play Again" button on the Game Over screen now restarts with the same settings (teams, map, AI difficulty, characters) instead of returning to Mode Select. "Main Menu" still returns to Mode Select.
+- **Config persistence**: `lastConfig` property stores the game configuration passed to `create()` for reuse by Restart and Play Again.
+
+### Changed
+- Replaced `showExitConfirmation()` / `dismissExitConfirmation()` with `showPauseMenu()` / `dismissPauseMenu()`.
+- Renamed `exitConfirmContainer` to `pauseMenuContainer` throughout GamePlay.
+
+### Fixed
+- **LobbyBrowser timer leak**: `dotsTimer` is now cleaned up at the start of `create()` to prevent orphaned timers from a previous session.
+
+### Scene Lifecycle Audit Results
+- Confirmed Phaser's `InputPlugin.shutdown()` automatically removes `input.on` and `keyboard.on` listeners on scene stop — no manual cleanup needed for those.
+- Confirmed custom `this.events.on('addedtoscene')` handler is properly cleaned up in `resetState()` (from previous fix).
+- Confirmed `once('shutdown')` handlers for multiplayer and pinch-zoom are properly scoped (from previous fix).
+- Only actionable issue found: LobbyBrowser `dotsTimer` — fixed.
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts`
+- `src/client/game/scenes/LobbyBrowser.ts`
+
 ## [v0.0.18.20] - 2026-02-27 — Fix HUD Disappearing on Game Restart (wf-1772180000)
 
 ### Fixed

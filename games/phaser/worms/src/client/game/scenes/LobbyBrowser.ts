@@ -22,6 +22,8 @@ export class LobbyBrowser extends Scene {
 
     this.busy = false;
     this.codeInput = '';
+    this.dotsTimer?.destroy();
+    this.dotsTimer = null;
     this.cameras.main.setBackgroundColor('#1a1a2e');
     this.postId = '';
 

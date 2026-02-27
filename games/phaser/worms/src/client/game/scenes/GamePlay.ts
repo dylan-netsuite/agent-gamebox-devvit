@@ -63,7 +63,8 @@ export class GamePlay extends Scene {
   private gameOverOverlay: Phaser.GameObjects.Container | null = null;
   private isSettling = false;
   private homeButtonContainer: Phaser.GameObjects.Container | null = null;
-  private exitConfirmContainer: Phaser.GameObjects.Container | null = null;
+  private pauseMenuContainer: Phaser.GameObjects.Container | null = null;
+  private lastConfig: OnlineGameConfig | null = null;
 
   private numTeams = 2;
   private wormsPerTeam = 2;
@@ -115,7 +116,7 @@ export class GamePlay extends Scene {
     this.gameOverOverlay = null;
     this.isSettling = false;
     this.homeButtonContainer = null;
-    this.exitConfirmContainer = null;
+    this.pauseMenuContainer = null;
     this.isAITurn = false;
     this.isRemoteTurn = false;
     this.aiController = null;
@@ -148,6 +149,7 @@ export class GamePlay extends Scene {
 
   create(data?: OnlineGameConfig) {
     this.resetState();
+    this.lastConfig = data ?? null;
 
     if (data?.numTeams) this.numTeams = data.numTeams;
     if (data?.wormsPerTeam) this.wormsPerTeam = data.wormsPerTeam;
@@ -383,7 +385,7 @@ export class GamePlay extends Scene {
     if (this.isAITurn) return false;
     if (this.isRemoteTurn) return false;
     if (this.tutorial?.isBlocking()) return false;
-    if (this.exitConfirmContainer) return false;
+    if (this.pauseMenuContainer) return false;
     const worm = this.activeWorm;
     if (worm && !worm.alive) return false;
     return true;
@@ -861,15 +863,15 @@ export class GamePlay extends Scene {
 
     hitArea.on('pointerdown', () => {
       SoundManager.play('select');
-      this.showExitConfirmation();
+      this.showPauseMenu();
     });
   }
 
-  private showExitConfirmation(): void {
-    if (this.exitConfirmContainer) return;
+  private showPauseMenu(): void {
+    if (this.pauseMenuContainer) return;
 
     const cam = this.cameras.main;
-    this.exitConfirmContainer = this.addUIObject(
+    this.pauseMenuContainer = this.addUIObject(
       new Phaser.GameObjects.Container(this, 0, 0),
     )
       .setDepth(600)
@@ -882,10 +884,10 @@ export class GamePlay extends Scene {
       new Phaser.Geom.Rectangle(0, 0, cam.width, cam.height),
       Phaser.Geom.Rectangle.Contains,
     );
-    this.exitConfirmContainer.add(overlay);
+    this.pauseMenuContainer.add(overlay);
 
     const boxW = 260;
-    const boxH = 140;
+    const boxH = 280;
     const boxX = (cam.width - boxW) / 2;
     const boxY = (cam.height - boxH) / 2;
 
@@ -894,92 +896,83 @@ export class GamePlay extends Scene {
     boxBg.fillRoundedRect(boxX, boxY, boxW, boxH, 12);
     boxBg.lineStyle(2, 0x00e5ff, 0.6);
     boxBg.strokeRoundedRect(boxX, boxY, boxW, boxH, 12);
-    this.exitConfirmContainer.add(boxBg);
+    this.pauseMenuContainer.add(boxBg);
 
     const title = new Phaser.GameObjects.Text(
-      this,
-      cam.width / 2,
-      boxY + 28,
-      'Return to Main Menu?',
-      {
-        fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '16px',
-        fontStyle: 'bold',
-        color: '#ffffff',
-      },
+      this, cam.width / 2, boxY + 24, 'PAUSED',
+      { fontFamily: 'Segoe UI, system-ui, sans-serif', fontSize: '20px', fontStyle: 'bold', color: '#ffffff' },
     ).setOrigin(0.5);
-    this.exitConfirmContainer.add(title);
+    this.pauseMenuContainer.add(title);
 
-    const subtitle = new Phaser.GameObjects.Text(
-      this,
-      cam.width / 2,
-      boxY + 52,
-      'Current game progress will be lost.',
-      {
-        fontFamily: 'monospace',
-        fontSize: '10px',
-        color: '#8899aa',
-      },
-    ).setOrigin(0.5);
-    this.exitConfirmContainer.add(subtitle);
+    const btnW = 200;
+    const btnH = 36;
+    const btnX = (cam.width - btnW) / 2;
+    let curY = boxY + 56;
 
-    const btnW = 90;
-    const btnH = 34;
-    const btnGap = 20;
-    const btnY = boxY + boxH - btnH - 20;
-
-    const buildConfirmBtn = (x: number, label: string, color: number, action: () => void) => {
+    const buildMenuBtn = (y: number, label: string, color: number, action: () => void) => {
       const bg = new Phaser.GameObjects.Graphics(this);
       bg.fillStyle(color, 0.9);
-      bg.fillRoundedRect(x, btnY, btnW, btnH, 8);
-      this.exitConfirmContainer!.add(bg);
+      bg.fillRoundedRect(btnX, y, btnW, btnH, 8);
+      this.pauseMenuContainer!.add(bg);
 
-      const txt = new Phaser.GameObjects.Text(this, x + btnW / 2, btnY + btnH / 2, label, {
-        fontFamily: 'Segoe UI, system-ui, sans-serif',
-        fontSize: '14px',
-        fontStyle: 'bold',
-        color: '#ffffff',
+      const txt = new Phaser.GameObjects.Text(this, btnX + btnW / 2, y + btnH / 2, label, {
+        fontFamily: 'Segoe UI, system-ui, sans-serif', fontSize: '14px', fontStyle: 'bold', color: '#ffffff',
       }).setOrigin(0.5);
-      this.exitConfirmContainer!.add(txt);
+      this.pauseMenuContainer!.add(txt);
 
-      const zone = new Phaser.GameObjects.Zone(
-        this,
-        x + btnW / 2,
-        btnY + btnH / 2,
-        btnW,
-        btnH,
-      ).setInteractive({ useHandCursor: true });
-      this.exitConfirmContainer!.add(zone);
+      const zone = new Phaser.GameObjects.Zone(this, btnX + btnW / 2, y + btnH / 2, btnW, btnH)
+        .setInteractive({ useHandCursor: true });
+      this.pauseMenuContainer!.add(zone);
 
-      zone.on('pointerdown', () => {
-        SoundManager.play('select');
-        action();
-      });
+      zone.on('pointerdown', () => { SoundManager.play('select'); action(); });
+      return { bg, txt };
     };
 
-    const yesBtnX = cam.width / 2 - btnW - btnGap / 2;
-    const noBtnX = cam.width / 2 + btnGap / 2;
+    // Resume
+    buildMenuBtn(curY, '▶  Resume', 0x3fb950, () => this.dismissPauseMenu());
+    curY += btnH + 10;
 
-    buildConfirmBtn(yesBtnX, 'Yes', 0xe94560, () => {
+    // Sound toggle
+    const soundLabel = () => SoundManager.isMuted() ? '🔇  Sound: OFF' : '🔊  Sound: ON';
+    const { txt: soundTxt } = buildMenuBtn(curY, soundLabel(), 0x2a3a5a, () => {
+      SoundManager.mute(!SoundManager.isMuted());
+      soundTxt.setText(soundLabel());
+      if (!SoundManager.isMuted()) SoundManager.play('select');
+    });
+    curY += btnH + 10;
+
+    // Restart
+    buildMenuBtn(curY, '🔄  Restart', 0x3498db, () => {
       this.tutorial?.destroy();
       this.tutorial = null;
-      if (this.mp) {
-        void this.mp.disconnect();
-        this.mp = null;
-      }
+      if (this.mp) { void this.mp.disconnect(); this.mp = null; }
+      this.scene.start('GamePlay', this.lastConfig ?? undefined);
+    });
+    curY += btnH + 10;
+
+    // Main Menu
+    buildMenuBtn(curY, '🏠  Main Menu', 0xe94560, () => {
+      this.tutorial?.destroy();
+      this.tutorial = null;
+      if (this.mp) { void this.mp.disconnect(); this.mp = null; }
       this.scene.start('ModeSelect');
     });
+    curY += btnH + 16;
 
-    buildConfirmBtn(noBtnX, 'No', 0x2a3a5a, () => {
-      this.dismissExitConfirmation();
-    });
+    // Controls help
+    const controlsText = new Phaser.GameObjects.Text(
+      this, cam.width / 2, curY,
+      'Arrow keys: Move  •  Space: Fire\nR: Cycle weapon  •  Mouse: Aim',
+      { fontFamily: 'monospace', fontSize: '8px', color: '#6e7681', align: 'center' },
+    ).setOrigin(0.5, 0);
+    this.pauseMenuContainer.add(controlsText);
   }
 
-  private dismissExitConfirmation(): void {
-    if (!this.exitConfirmContainer) return;
-    this.uiContainers.delete(this.exitConfirmContainer);
-    this.exitConfirmContainer.destroy();
-    this.exitConfirmContainer = null;
+  private dismissPauseMenu(): void {
+    if (!this.pauseMenuContainer) return;
+    this.uiContainers.delete(this.pauseMenuContainer);
+    this.pauseMenuContainer.destroy();
+    this.pauseMenuContainer = null;
   }
 
   private showGameOver(winningTeam: number): void {
@@ -987,7 +980,7 @@ export class GamePlay extends Scene {
     this.recordLocalStats(winningTeam);
     this.stopTurnTimer();
     this.homeButtonContainer?.setVisible(false);
-    this.dismissExitConfirmation();
+    this.dismissPauseMenu();
     const cam = this.cameras.main;
     if (!this.gameOverOverlay) {
       this.gameOverOverlay = this.addUIObject(
@@ -1053,6 +1046,14 @@ export class GamePlay extends Scene {
       this.scene.start('ModeSelect');
     };
 
+    const playAgain = () => {
+      if (this.mp) {
+        void this.mp.disconnect();
+        this.mp = null;
+      }
+      this.scene.start('GamePlay', this.lastConfig ?? undefined);
+    };
+
     const newGameText = this.add
       .text(cam.width / 2, cam.height * 0.58, '[ Play Again ]', {
         fontFamily: 'monospace',
@@ -1063,7 +1064,7 @@ export class GamePlay extends Scene {
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true });
     this.gameOverOverlay.add(newGameText);
-    newGameText.on('pointerdown', goToMenu);
+    newGameText.on('pointerdown', playAgain);
 
     const menuText = this.add
       .text(cam.width / 2, cam.height * 0.66, '[ Main Menu ]', {
