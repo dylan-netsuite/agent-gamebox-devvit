@@ -898,4 +898,142 @@ export const HOLES: HoleDefinition[] = [
       { type: 'gumdrop_bumper', x: 340, y: 100, radius: 12, color: 0xffaa00 },   // Orange — cup approach
     ],
   },
+
+  // ---- HOLE 15: The Cascading Plinko Board ----
+  // Chaotic par 4 inspired by pachinko/plinko machines.
+  // Tee at top, cup at bottom center surrounded by sand traps.
+  // Entire fairway has constant downward force (steep slope).
+  // Dense staggered grid of small high-restitution pegs causes chaotic bouncing.
+  // Deterministic physics means a precise angle/power combo can navigate perfectly.
+  {
+    id: 15,
+    name: 'The Plinko Board',
+    par: 4,
+    tee: { x: 250, y: 80 },
+    cup: { x: 250, y: 720 },
+    walls: [
+      // Outer boundary — tall narrow rectangle
+      [{ x: 80, y: 40 }, { x: 420, y: 40 }],    // Top
+      [{ x: 80, y: 40 }, { x: 80, y: 770 }],     // Left
+      [{ x: 420, y: 40 }, { x: 420, y: 770 }],   // Right
+      [{ x: 80, y: 770 }, { x: 420, y: 770 }],   // Bottom
+      // Funnel walls at the bottom to guide ball toward cup/traps
+      [{ x: 80, y: 660 }, { x: 180, y: 700 }],   // Left funnel
+      [{ x: 420, y: 660 }, { x: 320, y: 700 }],   // Right funnel
+    ],
+    obstacles: [
+      // Downward slope — covers the entire peg field
+      { type: 'ramp', x: 80, y: 120, width: 340, height: 540, forceX: 0, forceY: 4 },
+
+      // === PEG FIELD — staggered grid ===
+      // Pegs are small (radius 5), high restitution bumpers
+      // Rows spaced ~45 units apart vertically, pegs ~50 apart horizontally
+      // Even rows offset by 25 units for staggered pattern
+
+      // Row 1 (y=160)
+      { type: 'bumper', x: 130, y: 160, radius: 5, color: 0xffcc00 },
+      { type: 'bumper', x: 180, y: 160, radius: 5, color: 0xffcc00 },
+      { type: 'bumper', x: 230, y: 160, radius: 5, color: 0xffcc00 },
+      { type: 'bumper', x: 280, y: 160, radius: 5, color: 0xffcc00 },
+      { type: 'bumper', x: 330, y: 160, radius: 5, color: 0xffcc00 },
+      { type: 'bumper', x: 380, y: 160, radius: 5, color: 0xffcc00 },
+
+      // Row 2 (y=205) — offset
+      { type: 'bumper', x: 105, y: 205, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 155, y: 205, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 205, y: 205, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 255, y: 205, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 305, y: 205, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 355, y: 205, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 405, y: 205, radius: 5, color: 0xff9933 },
+
+      // Row 3 (y=250)
+      { type: 'bumper', x: 130, y: 250, radius: 5, color: 0xff6666 },
+      { type: 'bumper', x: 180, y: 250, radius: 5, color: 0xff6666 },
+      { type: 'bumper', x: 230, y: 250, radius: 5, color: 0xff6666 },
+      { type: 'bumper', x: 280, y: 250, radius: 5, color: 0xff6666 },
+      { type: 'bumper', x: 330, y: 250, radius: 5, color: 0xff6666 },
+      { type: 'bumper', x: 380, y: 250, radius: 5, color: 0xff6666 },
+
+      // Row 4 (y=295) — offset
+      { type: 'bumper', x: 105, y: 295, radius: 5, color: 0xff44cc },
+      { type: 'bumper', x: 155, y: 295, radius: 5, color: 0xff44cc },
+      { type: 'bumper', x: 205, y: 295, radius: 5, color: 0xff44cc },
+      { type: 'bumper', x: 255, y: 295, radius: 5, color: 0xff44cc },
+      { type: 'bumper', x: 305, y: 295, radius: 5, color: 0xff44cc },
+      { type: 'bumper', x: 355, y: 295, radius: 5, color: 0xff44cc },
+      { type: 'bumper', x: 405, y: 295, radius: 5, color: 0xff44cc },
+
+      // Row 5 (y=340)
+      { type: 'bumper', x: 130, y: 340, radius: 5, color: 0xcc44ff },
+      { type: 'bumper', x: 180, y: 340, radius: 5, color: 0xcc44ff },
+      { type: 'bumper', x: 230, y: 340, radius: 5, color: 0xcc44ff },
+      { type: 'bumper', x: 280, y: 340, radius: 5, color: 0xcc44ff },
+      { type: 'bumper', x: 330, y: 340, radius: 5, color: 0xcc44ff },
+      { type: 'bumper', x: 380, y: 340, radius: 5, color: 0xcc44ff },
+
+      // Row 6 (y=385) — offset
+      { type: 'bumper', x: 105, y: 385, radius: 5, color: 0x44aaff },
+      { type: 'bumper', x: 155, y: 385, radius: 5, color: 0x44aaff },
+      { type: 'bumper', x: 205, y: 385, radius: 5, color: 0x44aaff },
+      { type: 'bumper', x: 255, y: 385, radius: 5, color: 0x44aaff },
+      { type: 'bumper', x: 305, y: 385, radius: 5, color: 0x44aaff },
+      { type: 'bumper', x: 355, y: 385, radius: 5, color: 0x44aaff },
+      { type: 'bumper', x: 405, y: 385, radius: 5, color: 0x44aaff },
+
+      // Row 7 (y=430)
+      { type: 'bumper', x: 130, y: 430, radius: 5, color: 0x44ffaa },
+      { type: 'bumper', x: 180, y: 430, radius: 5, color: 0x44ffaa },
+      { type: 'bumper', x: 230, y: 430, radius: 5, color: 0x44ffaa },
+      { type: 'bumper', x: 280, y: 430, radius: 5, color: 0x44ffaa },
+      { type: 'bumper', x: 330, y: 430, radius: 5, color: 0x44ffaa },
+      { type: 'bumper', x: 380, y: 430, radius: 5, color: 0x44ffaa },
+
+      // Row 8 (y=475) — offset
+      { type: 'bumper', x: 105, y: 475, radius: 5, color: 0xaaff44 },
+      { type: 'bumper', x: 155, y: 475, radius: 5, color: 0xaaff44 },
+      { type: 'bumper', x: 205, y: 475, radius: 5, color: 0xaaff44 },
+      { type: 'bumper', x: 255, y: 475, radius: 5, color: 0xaaff44 },
+      { type: 'bumper', x: 305, y: 475, radius: 5, color: 0xaaff44 },
+      { type: 'bumper', x: 355, y: 475, radius: 5, color: 0xaaff44 },
+      { type: 'bumper', x: 405, y: 475, radius: 5, color: 0xaaff44 },
+
+      // Row 9 (y=520)
+      { type: 'bumper', x: 130, y: 520, radius: 5, color: 0xffcc00 },
+      { type: 'bumper', x: 180, y: 520, radius: 5, color: 0xffcc00 },
+      { type: 'bumper', x: 230, y: 520, radius: 5, color: 0xffcc00 },
+      { type: 'bumper', x: 280, y: 520, radius: 5, color: 0xffcc00 },
+      { type: 'bumper', x: 330, y: 520, radius: 5, color: 0xffcc00 },
+      { type: 'bumper', x: 380, y: 520, radius: 5, color: 0xffcc00 },
+
+      // Row 10 (y=565) — offset
+      { type: 'bumper', x: 105, y: 565, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 155, y: 565, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 205, y: 565, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 255, y: 565, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 305, y: 565, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 355, y: 565, radius: 5, color: 0xff9933 },
+      { type: 'bumper', x: 405, y: 565, radius: 5, color: 0xff9933 },
+
+      // Row 11 (y=610)
+      { type: 'bumper', x: 130, y: 610, radius: 5, color: 0xff6666 },
+      { type: 'bumper', x: 180, y: 610, radius: 5, color: 0xff6666 },
+      { type: 'bumper', x: 230, y: 610, radius: 5, color: 0xff6666 },
+      { type: 'bumper', x: 280, y: 610, radius: 5, color: 0xff6666 },
+      { type: 'bumper', x: 330, y: 610, radius: 5, color: 0xff6666 },
+      { type: 'bumper', x: 380, y: 610, radius: 5, color: 0xff6666 },
+
+      // Row 12 (y=650) — last row before funnel, offset
+      { type: 'bumper', x: 155, y: 650, radius: 5, color: 0xff44cc },
+      { type: 'bumper', x: 205, y: 650, radius: 5, color: 0xff44cc },
+      { type: 'bumper', x: 255, y: 650, radius: 5, color: 0xff44cc },
+      { type: 'bumper', x: 305, y: 650, radius: 5, color: 0xff44cc },
+      { type: 'bumper', x: 355, y: 650, radius: 5, color: 0xff44cc },
+    ],
+    frictionZones: [
+      // Sand traps flanking the cup at bottom
+      { x: 82, y: 700, width: 108, height: 68 },    // Left sand
+      { x: 310, y: 700, width: 108, height: 68 },    // Right sand
+    ],
+  },
 ];

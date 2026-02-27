@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.7.11 - Hole 15: The Cascading Plinko Board (2026-02-27)
+
+### Added
+- **Hole 15: The Cascading Plinko Board** — chaotic plinko/pachinko-inspired par 4
+- Tee at top, cup at bottom — ball cascades down through a dense field of staggered pegs
+- 12 rows of small high-restitution pegs in a rainbow candy color gradient (gold, orange, red, pink, purple, blue, teal, lime)
+- Constant downward ramp force across the entire fairway simulates a steep vertical slope
+- Funnel walls at the bottom guide the ball toward the cup zone
+- Deep sand traps flank the cup on both sides, punishing imprecise cascades
+- Deterministic physics ensures a specific angle/power combo can navigate the pegs perfectly
+
 ## v0.0.7.8 - Hole 14: Rewrote Gravity Force Model (2026-02-27)
 
 ### Fixed
