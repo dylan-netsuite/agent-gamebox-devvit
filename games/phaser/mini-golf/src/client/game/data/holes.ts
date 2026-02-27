@@ -614,16 +614,30 @@ export const HOLES: HoleDefinition[] = [
         type: 'cannon',
         x: 200,
         y: 500,
-        width: 55,
+        width: 38,
         height: 160,
         speed: 2.8,
       },
-      // Gumdrop bumper at the dogleg corner — deflects ball into the turn
+      // Pre-cannon bumper — forces aim adjustment on approach
       {
         type: 'gumdrop_bumper',
         x: 220,
-        y: 155,
-        radius: 18,
+        y: 620,
+        radius: 14,
+      },
+      // Post-cannon bumper at corner — deflects ball RIGHT into horizontal corridor
+      {
+        type: 'gumdrop_bumper',
+        x: 175,
+        y: 145,
+        radius: 16,
+      },
+      // Second ricochet bumper in horizontal corridor — deflects toward cup
+      {
+        type: 'gumdrop_bumper',
+        x: 340,
+        y: 150,
+        radius: 14,
       },
     ],
     slickZones: [

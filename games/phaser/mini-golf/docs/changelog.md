@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.3.91 - Hole 11 Difficulty Increase (2026-02-27)
+
+### Changed
+- **Narrower cannon**: Width reduced from 55 to 38 design units — harder to enter
+- **Pre-cannon gumdrop bumper**: Added at (220,620, radius 14) — forces aim adjustment on approach
+- **Bumper ricochet chain in dogleg**: Replaced single corner bumper with two strategically placed bumpers
+  - Corner bumper (175,145, radius 16) deflects ball right after cannon exit
+  - Mid-corridor bumper (340,150, radius 14) bounces ball toward the cup
+- **Increased exit velocity**: 45% of entry speed (up from 40%) — ball has enough energy for bumper chain
+- The hole now requires precise aim around the pre-cannon obstacle, enough power to clear the narrow cannon, and the bumper chain rewards a perfect cannon shot with a satisfying ricochet path toward the cup
+
 ## v0.0.3.88 - Hole 11 Dogleg Redesign (2026-02-26)
 
 ### Changed
