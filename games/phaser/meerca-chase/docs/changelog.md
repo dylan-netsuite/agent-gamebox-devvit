@@ -1,5 +1,22 @@
 # Meerca Chase - Changelog
 
+## v0.0.1.16 - Splash Screen Redesign (2026-02-27)
+
+### Changed
+- Complete splash screen redesign with animated Meerca snake chasing Neggs across a scrolling grid background
+- CSS-drawn Meerca head with ears, eyes, and mouth followed by 5 tail segments on a looping path
+- Colorful Negg trail (all 6 types) with pulsing glow animations along the snake's path
+- Score popups (+1, +5, +2, +10) float upward on a timed loop to suggest gameplay action
+- Scrolling purple checkerboard grid background matching the in-game aesthetic
+- "MEERCA CHASE" split across two lines with bouncy drop animation
+- "A NEOPETS CLASSIC" displayed as a purple pill badge
+- High score fetched from server and displayed with animated count-up
+- Personalized "Welcome back, {username}!" greeting
+- "CHASE!" button with inline Negg icon and shimmer effect
+- Helpful hint text: "Arrow keys to move • Collect Neggs • Avoid your tail"
+
+Workflow: wf-1772161990
+
 ## v0.0.1.13 - Tail Visibility Fix (2026-02-27)
 
 ### Fixed
