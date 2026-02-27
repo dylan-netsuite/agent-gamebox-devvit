@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.3.144 - Hole 13: Ball Immune When Stopped (2026-02-27)
+
+### Fixed
+- **Ball is now immune to claw the instant it stops** — removed the 1.5s post-stop vulnerability window that was still grabbing the ball well after it came to rest. Claw now only grabs during active simulation (while rolling).
+
 ## v0.0.3.140 - Hole 13: Bumper Placement & Claw Vulnerability Window (2026-02-27)
 
 ### Added
