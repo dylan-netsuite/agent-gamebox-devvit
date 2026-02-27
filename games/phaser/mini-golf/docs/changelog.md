@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.0.3.116 - Hole 12: Corridor Barrier Walls (2026-02-27)
+
+### Added
+- **Vertical barrier walls** on each gap corridor between conveyor legs, separating the safe passage from the adjacent water hazard
+  - Channel A→B: wall at x=350, y=500..570 (blocks leftward drift into water)
+  - Channel B→C: wall at x=150, y=350..420 (blocks rightward drift into water)
+  - Channel C→D: wall at x=350, y=200..270 (blocks leftward drift into water)
+- The outer boundary walls provide the other side of each corridor, creating fully enclosed safe passages
+
 ## v0.0.3.111 - Hole 12 Polish: Tee, Speed, Color (2026-02-27)
 
 ### Fixed

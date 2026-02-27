@@ -668,6 +668,7 @@ export const HOLES: HoleDefinition[] = [
   // ---- HOLE 12: The Conveyor Belt Matrix ----
   // Wall-guided snake path: 4 horizontal conveyor legs push the ball left/right.
   // Internal walls with gaps at alternating ends force the ball to zigzag.
+  // Vertical corridor barriers separate each gap from its adjacent water hazard.
   // No vertical conveyors — walls do the turning, conveyors do the pushing.
   //
   // Layout (bottom to top, tee clear of HUD at y=690):
@@ -726,6 +727,26 @@ export const HOLES: HoleDefinition[] = [
       [
         { x: 80, y: 110 },
         { x: 420, y: 110 },
+      ],
+
+      // Corridor barriers — vertical walls separating gap corridors from water
+
+      // Channel A→B gap (x=350..420): barrier on LEFT at x=350
+      [
+        { x: 350, y: 500 },
+        { x: 350, y: 570 },
+      ],
+
+      // Channel B→C gap (x=80..150): barrier on RIGHT at x=150
+      [
+        { x: 150, y: 350 },
+        { x: 150, y: 420 },
+      ],
+
+      // Channel C→D gap (x=350..420): barrier on LEFT at x=350
+      [
+        { x: 350, y: 200 },
+        { x: 350, y: 270 },
       ],
     ],
     obstacles: [
