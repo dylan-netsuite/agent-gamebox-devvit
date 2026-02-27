@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.3.126 - Hole 13: Fix Barriers & Remove Taffy (2026-02-27)
+
+### Fixed
+- **Split platform walls at bridge gaps** — horizontal walls on each platform are now split to leave openings at x=220..280 where bridges connect, so the ball can actually pass through
+- **Removed all water zones** — the dark background alone conveys the OOB void; removing the taffy zones eliminates visual clutter and confusion
+
 ## v0.0.3.124 - Hole 13: The Flavour Grabber (2026-02-27)
 
 ### Added

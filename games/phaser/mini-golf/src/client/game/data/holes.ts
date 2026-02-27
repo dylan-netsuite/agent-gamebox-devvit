@@ -778,17 +778,20 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 13: The Flavour Grabber (The Claw) ----
-  // Wide open expanse with no boundary walls. OOB void everywhere except
-  // three stepping-stone island platforms. An overhead claw patrols in a
-  // figure-eight, grabbing the ball if it lingers in the shadow.
+  // Open stepping-stone layout. Platforms have wall gaps where bridges attach.
+  // No water/taffy — the void is just empty space beyond the fairway fill.
+  // The claw patrols in a figure-eight over the middle area.
   //
-  // Layout:
+  // Layout (bottom to top):
   //   Bottom platform (170-330, 600-700) with tee at (250, 670)
-  //   Narrow bridge (220-280, 460-600) connecting bottom to middle
+  //     gap at top: x=220..280 for bridge
+  //   Bottom bridge (220-280, 460-600) — narrow corridor
   //   Middle platform (150-350, 340-460) — wide staging area
-  //   Narrow bridge (220-280, 220-340) connecting middle to top
+  //     gap at bottom: x=220..280 for bottom bridge
+  //     gap at top: x=220..280 for top bridge
+  //   Top bridge (220-280, 220-340) — narrow corridor
   //   Cup island (190-310, 150-220) with cup at (250, 185)
-  //   Everything else is water/void
+  //     gap at bottom: x=220..280 for top bridge
   {
     id: 13,
     name: 'The Flavour Grabber',
@@ -796,64 +799,50 @@ export const HOLES: HoleDefinition[] = [
     tee: { x: 250, y: 670 },
     cup: { x: 250, y: 185 },
     walls: [
-      // Bottom platform edges
-      [{ x: 170, y: 600 }, { x: 330, y: 600 }],
+      // === Bottom platform (170-330, 600-700) ===
+      // Bottom edge (solid)
       [{ x: 170, y: 700 }, { x: 330, y: 700 }],
+      // Left edge
       [{ x: 170, y: 600 }, { x: 170, y: 700 }],
+      // Right edge
       [{ x: 330, y: 600 }, { x: 330, y: 700 }],
+      // Top edge — split for bridge gap (220..280)
+      [{ x: 170, y: 600 }, { x: 220, y: 600 }],
+      [{ x: 280, y: 600 }, { x: 330, y: 600 }],
 
-      // Bottom bridge left wall
+      // === Bottom bridge (220-280, 460-600) ===
       [{ x: 220, y: 460 }, { x: 220, y: 600 }],
-      // Bottom bridge right wall
       [{ x: 280, y: 460 }, { x: 280, y: 600 }],
 
-      // Middle platform edges
-      [{ x: 150, y: 340 }, { x: 350, y: 340 }],
-      [{ x: 150, y: 460 }, { x: 350, y: 460 }],
+      // === Middle platform (150-350, 340-460) ===
+      // Left edge
       [{ x: 150, y: 340 }, { x: 150, y: 460 }],
+      // Right edge
       [{ x: 350, y: 340 }, { x: 350, y: 460 }],
+      // Bottom edge — split for bottom bridge gap (220..280)
+      [{ x: 150, y: 460 }, { x: 220, y: 460 }],
+      [{ x: 280, y: 460 }, { x: 350, y: 460 }],
+      // Top edge — split for top bridge gap (220..280)
+      [{ x: 150, y: 340 }, { x: 220, y: 340 }],
+      [{ x: 280, y: 340 }, { x: 350, y: 340 }],
 
-      // Top bridge left wall
+      // === Top bridge (220-280, 220-340) ===
       [{ x: 220, y: 220 }, { x: 220, y: 340 }],
-      // Top bridge right wall
       [{ x: 280, y: 220 }, { x: 280, y: 340 }],
 
-      // Cup island edges
+      // === Cup island (190-310, 150-220) ===
+      // Top edge (solid)
       [{ x: 190, y: 150 }, { x: 310, y: 150 }],
-      [{ x: 190, y: 220 }, { x: 310, y: 220 }],
+      // Left edge
       [{ x: 190, y: 150 }, { x: 190, y: 220 }],
+      // Right edge
       [{ x: 310, y: 150 }, { x: 310, y: 220 }],
+      // Bottom edge — split for top bridge gap (220..280)
+      [{ x: 190, y: 220 }, { x: 220, y: 220 }],
+      [{ x: 280, y: 220 }, { x: 310, y: 220 }],
     ],
     obstacles: [
-      // The Claw — patrols in a figure-eight over the middle area
       { type: 'claw', x: 250, y: 390, width: 130, height: 170, radius: 32, speed: 0.17 },
-    ],
-    waterZones: [
-      // OOB void — fills entire space except the island platforms and bridges
-      // Left void strip
-      { x: 0, y: 0, width: 150, height: 800, color: 0x1a0a2e },
-      // Right void strip
-      { x: 350, y: 0, width: 150, height: 800, color: 0x1a0a2e },
-      // Top void (above cup island)
-      { x: 150, y: 0, width: 200, height: 150, color: 0x1a0a2e },
-      // Between cup island and top bridge (left side)
-      { x: 150, y: 150, width: 40, height: 70, color: 0x1a0a2e },
-      // Between cup island and top bridge (right side)
-      { x: 310, y: 150, width: 40, height: 70, color: 0x1a0a2e },
-      // Between top bridge and middle platform (left side)
-      { x: 150, y: 220, width: 70, height: 120, color: 0x1a0a2e },
-      // Between top bridge and middle platform (right side)
-      { x: 280, y: 220, width: 70, height: 120, color: 0x1a0a2e },
-      // Between middle platform and bottom bridge (left side)
-      { x: 150, y: 460, width: 70, height: 140, color: 0x1a0a2e },
-      // Between middle platform and bottom bridge (right side)
-      { x: 280, y: 460, width: 70, height: 140, color: 0x1a0a2e },
-      // Between bottom bridge and bottom platform (left side)
-      { x: 170, y: 460, width: 50, height: 140, color: 0x1a0a2e },
-      // Between bottom bridge and bottom platform (right side)
-      { x: 280, y: 460, width: 50, height: 140, color: 0x1a0a2e },
-      // Below bottom platform
-      { x: 150, y: 700, width: 200, height: 100, color: 0x1a0a2e },
     ],
   },
 ];
