@@ -1,5 +1,24 @@
 # Meerca Chase - Changelog
 
+## v0.0.1.20 - Bad Egg Visual Distinction (2026-02-27)
+
+### Changed
+- Fish Neggs (bad eggs, -5 points) now use a completely different visual treatment from good Neggs:
+  - **Unique texture**: Spiky shape with X eyes and a frown instead of smooth egg
+  - **Color change**: Red (#cc3333) instead of subtle gray (#607d8b) — pops against the dark purple background
+  - **Red danger glow**: Larger, brighter, faster-pulsing red glow (vs. standard color glow)
+  - **Jitter animation**: Aggressive shaking and scaling instead of gentle breathing pulse
+  - **Point label**: Floating "-5" text above the Negg that bobs up and down
+- Bad egg sprite is 13% larger than normal Neggs for additional visual weight
+- All existing good Negg visuals are unchanged
+
+### Technical
+- Added `generateBadNegg()` to `TextureFactory` producing `negg-bad` texture with procedural spikes, X-mark eyes, and frown arc
+- `Negg` constructor branches on `type.points < 0` to select texture, glow color, animation style, and spawn warning text
+- `Negg.destroy()` properly cleans up the additional `warningText` game object and its tweens
+
+Workflow: wf-1772162913
+
 ## v0.0.1.16 - Splash Screen Redesign (2026-02-27)
 
 ### Changed

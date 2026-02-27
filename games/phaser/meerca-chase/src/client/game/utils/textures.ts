@@ -5,6 +5,7 @@ export class TextureFactory {
     this.generateMeercaHead(scene);
     this.generateTailSegment(scene);
     this.generateNegg(scene);
+    this.generateBadNegg(scene);
     this.generateGridBg(scene);
     this.generateParticle(scene);
   }
@@ -67,6 +68,57 @@ export class TextureFactory {
     g.fillEllipse(size / 2 - 4, size / 2 - 6, 12, 8);
 
     g.generateTexture('negg-base', size, size);
+    g.destroy();
+  }
+
+  private static generateBadNegg(scene: Scene): void {
+    const size = 48;
+    const g = scene.make.graphics({ x: 0, y: 0 }, false);
+    const cx = size / 2;
+    const cy = size / 2;
+
+    // Spiky body — draw 8 triangular spikes around an ellipse
+    g.fillStyle(0xffffff);
+    const spikes = 8;
+    const innerRx = 15;
+    const innerRy = 18;
+    const spikeLen = 7;
+    for (let i = 0; i < spikes; i++) {
+      const angle = (i / spikes) * Math.PI * 2;
+      const nextAngle = ((i + 1) / spikes) * Math.PI * 2;
+      const midAngle = (angle + nextAngle) / 2;
+
+      const x1 = cx + Math.cos(angle) * innerRx;
+      const y1 = cy + Math.sin(angle) * innerRy;
+      const x2 = cx + Math.cos(nextAngle) * innerRx;
+      const y2 = cy + Math.sin(nextAngle) * innerRy;
+      const sx = cx + Math.cos(midAngle) * (innerRx + spikeLen);
+      const sy = cy + Math.sin(midAngle) * (innerRy + spikeLen);
+
+      g.fillTriangle(x1, y1, sx, sy, x2, y2);
+    }
+
+    // Core ellipse
+    g.fillEllipse(cx, cy, innerRx * 2, innerRy * 2);
+
+    // X eyes
+    g.lineStyle(3, 0x000000, 0.8);
+    const eyeOff = 6;
+    const eyeSize = 3;
+    // left X
+    g.lineBetween(cx - eyeOff - eyeSize, cy - 4 - eyeSize, cx - eyeOff + eyeSize, cy - 4 + eyeSize);
+    g.lineBetween(cx - eyeOff + eyeSize, cy - 4 - eyeSize, cx - eyeOff - eyeSize, cy - 4 + eyeSize);
+    // right X
+    g.lineBetween(cx + eyeOff - eyeSize, cy - 4 - eyeSize, cx + eyeOff + eyeSize, cy - 4 + eyeSize);
+    g.lineBetween(cx + eyeOff + eyeSize, cy - 4 - eyeSize, cx + eyeOff - eyeSize, cy - 4 + eyeSize);
+
+    // Frown
+    g.lineStyle(2.5, 0x000000, 0.7);
+    g.beginPath();
+    g.arc(cx, cy + 14, 5, Math.PI * 1.2, Math.PI * 1.8, false);
+    g.strokePath();
+
+    g.generateTexture('negg-bad', size, size);
     g.destroy();
   }
 
