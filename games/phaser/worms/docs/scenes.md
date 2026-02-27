@@ -107,6 +107,10 @@ The main game scene. Manages all gameplay systems. Supports both local and onlin
 | Actions | Local only | Broadcast via realtime |
 | Turn advance | Local only | Server-coordinated |
 
+### Home Button (Tutorial & Single Player)
+
+A 🏠 home button appears in the top-right corner during Tutorial and Single Player modes. Clicking it shows a confirmation dialog ("Return to Main Menu?") with Yes/No buttons. Confirming navigates back to ModeSelect, cleaning up the tutorial and multiplayer state. The button is hidden during game over (which has its own menu buttons) and does not appear in Online Play or Local Multiplayer modes.
+
 ### Initialization (`create`)
 
 1. Draws sky gradient background

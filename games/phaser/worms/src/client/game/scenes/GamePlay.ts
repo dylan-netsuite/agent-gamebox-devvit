@@ -62,6 +62,8 @@ export class GamePlay extends Scene {
   private gameOver = false;
   private gameOverOverlay: Phaser.GameObjects.Container | null = null;
   private isSettling = false;
+  private homeButtonContainer: Phaser.GameObjects.Container | null = null;
+  private exitConfirmContainer: Phaser.GameObjects.Container | null = null;
 
   private numTeams = 2;
   private wormsPerTeam = 2;
@@ -101,6 +103,8 @@ export class GamePlay extends Scene {
     this.gameOver = false;
     this.gameOverOverlay = null;
     this.isSettling = false;
+    this.homeButtonContainer = null;
+    this.exitConfirmContainer = null;
     this.isAITurn = false;
     this.isRemoteTurn = false;
     this.aiController = null;
@@ -338,6 +342,7 @@ export class GamePlay extends Scene {
 
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.setupUICamera();
+    this.buildHomeButton();
     this.centerCameraOnWorm();
 
     this.setupCameraDrag();
@@ -367,6 +372,7 @@ export class GamePlay extends Scene {
     if (this.isAITurn) return false;
     if (this.isRemoteTurn) return false;
     if (this.tutorial?.isBlocking()) return false;
+    if (this.exitConfirmContainer) return false;
     const worm = this.activeWorm;
     if (worm && !worm.alive) return false;
     return true;
@@ -780,10 +786,182 @@ export class GamePlay extends Scene {
     }
   }
 
+  private get shouldShowHomeButton(): boolean {
+    return this.tutorial !== null || (this.aiTeams.length > 0 && !this.mp);
+  }
+
+  private buildHomeButton(): void {
+    if (!this.shouldShowHomeButton) return;
+
+    const cam = this.cameras.main;
+    const btnSize = 36;
+    const margin = 10;
+
+    this.homeButtonContainer = this.add.container(0, 0).setDepth(250).setScrollFactor(0);
+
+    const bg = this.add.graphics();
+    bg.fillStyle(0x0f1923, 0.85);
+    bg.fillRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+    bg.lineStyle(1, 0x2a3a5a, 0.6);
+    bg.strokeRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+    this.homeButtonContainer.add(bg);
+
+    const icon = this.add
+      .text(cam.width - btnSize / 2 - margin, margin + btnSize / 2, '🏠', {
+        fontSize: '18px',
+      })
+      .setOrigin(0.5);
+    this.homeButtonContainer.add(icon);
+
+    const zone = this.add
+      .zone(cam.width - btnSize / 2 - margin, margin + btnSize / 2, btnSize, btnSize)
+      .setInteractive({ useHandCursor: true });
+    this.homeButtonContainer.add(zone);
+
+    zone.on('pointerover', () => {
+      bg.clear();
+      bg.fillStyle(0x1e2d4f, 0.95);
+      bg.fillRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+      bg.lineStyle(2, 0x00e5ff, 0.6);
+      bg.strokeRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+    });
+
+    zone.on('pointerout', () => {
+      bg.clear();
+      bg.fillStyle(0x0f1923, 0.85);
+      bg.fillRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+      bg.lineStyle(1, 0x2a3a5a, 0.6);
+      bg.strokeRoundedRect(cam.width - btnSize - margin, margin, btnSize, btnSize, 8);
+    });
+
+    zone.on('pointerdown', () => {
+      SoundManager.play('select');
+      this.showExitConfirmation();
+    });
+
+    this.uiContainers.add(this.homeButtonContainer);
+    cam.ignore(this.homeButtonContainer);
+    this.uiCamera.ignore([]);
+
+    for (const obj of this.children.list) {
+      if (!this.uiContainers.has(obj)) {
+        this.uiCamera.ignore(obj);
+      }
+    }
+  }
+
+  private showExitConfirmation(): void {
+    if (this.exitConfirmContainer) return;
+
+    const cam = this.cameras.main;
+    this.exitConfirmContainer = this.add.container(0, 0).setDepth(600).setScrollFactor(0);
+
+    const overlay = this.add.graphics();
+    overlay.fillStyle(0x000000, 0.6);
+    overlay.fillRect(0, 0, cam.width, cam.height);
+    overlay.setInteractive(
+      new Phaser.Geom.Rectangle(0, 0, cam.width, cam.height),
+      Phaser.Geom.Rectangle.Contains,
+    );
+    this.exitConfirmContainer.add(overlay);
+
+    const boxW = 260;
+    const boxH = 140;
+    const boxX = (cam.width - boxW) / 2;
+    const boxY = (cam.height - boxH) / 2;
+
+    const boxBg = this.add.graphics();
+    boxBg.fillStyle(0x0f1923, 0.95);
+    boxBg.fillRoundedRect(boxX, boxY, boxW, boxH, 12);
+    boxBg.lineStyle(2, 0x00e5ff, 0.6);
+    boxBg.strokeRoundedRect(boxX, boxY, boxW, boxH, 12);
+    this.exitConfirmContainer.add(boxBg);
+
+    const title = this.add
+      .text(cam.width / 2, boxY + 28, 'Return to Main Menu?', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '16px',
+        fontStyle: 'bold',
+        color: '#ffffff',
+      })
+      .setOrigin(0.5);
+    this.exitConfirmContainer.add(title);
+
+    const subtitle = this.add
+      .text(cam.width / 2, boxY + 52, 'Current game progress will be lost.', {
+        fontFamily: 'monospace',
+        fontSize: '10px',
+        color: '#8899aa',
+      })
+      .setOrigin(0.5);
+    this.exitConfirmContainer.add(subtitle);
+
+    const btnW = 90;
+    const btnH = 34;
+    const btnGap = 20;
+    const btnY = boxY + boxH - btnH - 20;
+
+    const buildConfirmBtn = (x: number, label: string, color: number, action: () => void) => {
+      const bg = this.add.graphics();
+      bg.fillStyle(color, 0.9);
+      bg.fillRoundedRect(x, btnY, btnW, btnH, 8);
+      this.exitConfirmContainer!.add(bg);
+
+      const txt = this.add
+        .text(x + btnW / 2, btnY + btnH / 2, label, {
+          fontFamily: 'Segoe UI, system-ui, sans-serif',
+          fontSize: '14px',
+          fontStyle: 'bold',
+          color: '#ffffff',
+        })
+        .setOrigin(0.5);
+      this.exitConfirmContainer!.add(txt);
+
+      const zone = this.add
+        .zone(x + btnW / 2, btnY + btnH / 2, btnW, btnH)
+        .setInteractive({ useHandCursor: true });
+      this.exitConfirmContainer!.add(zone);
+
+      zone.on('pointerdown', () => {
+        SoundManager.play('select');
+        action();
+      });
+    };
+
+    const yesBtnX = cam.width / 2 - btnW - btnGap / 2;
+    const noBtnX = cam.width / 2 + btnGap / 2;
+
+    buildConfirmBtn(yesBtnX, 'Yes', 0xe94560, () => {
+      this.tutorial?.destroy();
+      this.tutorial = null;
+      if (this.mp) {
+        void this.mp.disconnect();
+        this.mp = null;
+      }
+      this.scene.start('ModeSelect');
+    });
+
+    buildConfirmBtn(noBtnX, 'No', 0x2a3a5a, () => {
+      this.dismissExitConfirmation();
+    });
+
+    this.uiContainers.add(this.exitConfirmContainer);
+    cam.ignore(this.exitConfirmContainer);
+  }
+
+  private dismissExitConfirmation(): void {
+    if (!this.exitConfirmContainer) return;
+    this.uiContainers.delete(this.exitConfirmContainer);
+    this.exitConfirmContainer.destroy();
+    this.exitConfirmContainer = null;
+  }
+
   private showGameOver(winningTeam: number): void {
     SoundManager.play('gameover');
     this.recordLocalStats(winningTeam);
     this.stopTurnTimer();
+    this.homeButtonContainer?.setVisible(false);
+    this.dismissExitConfirmation();
     const cam = this.cameras.main;
     if (!this.gameOverOverlay) {
       this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);

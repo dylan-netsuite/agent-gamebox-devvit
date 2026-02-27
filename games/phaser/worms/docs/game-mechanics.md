@@ -192,6 +192,16 @@ Worms are placed on the terrain floor via `getSurfaceY()`, which scans downward 
 - Movement buttons repeat-fire while held
 - Parachute (🪂) button above jump button
 
+## Home Button (Mid-Game Exit)
+
+In Tutorial and Single Player modes, a 🏠 home button is displayed in the top-right corner of the screen. This allows players to return to the main menu at any time without waiting for the game to end.
+
+- **Visibility**: Only shown when `tutorial` is active or when playing against AI (`aiTeams.length > 0 && !mp`). Not shown in Online Play or Local Multiplayer.
+- **Confirmation**: Clicking the button shows a centered dialog asking "Return to Main Menu?" with Yes/No buttons to prevent accidental exits.
+- **Input blocking**: While the confirmation dialog is open, all game input is blocked (`canAct()` returns false).
+- **Cleanup**: Confirming destroys the tutorial (if active), disconnects multiplayer (if any), and navigates to ModeSelect.
+- **Game over**: The home button is hidden when the game-over overlay appears, since that overlay has its own "Main Menu" button.
+
 ## Wind
 
 - Random value from -10 to +10 each turn

@@ -1,5 +1,23 @@
 # Reddit Royale - Changelog
 
+## [v0.0.18.1] - 2026-02-27 — Home Button for Tutorial & Single Player (wf-1772176657)
+
+### Added
+- **Home button**: A 🏠 button in the top-right corner of the GamePlay screen during Tutorial and Single Player modes, allowing players to return to the main menu at any time.
+- **Exit confirmation dialog**: Clicking the home button shows a centered "Return to Main Menu?" dialog with Yes/No buttons, preventing accidental exits.
+- **Input blocking during confirmation**: Game actions are blocked while the confirmation dialog is open.
+- **Automatic cleanup**: Confirming exit properly destroys the tutorial manager and disconnects multiplayer before navigating to ModeSelect.
+
+### Scoping
+- Home button only appears in Tutorial mode (`tutorial` flag set) and Single Player mode (`aiTeams.length > 0 && !mp`).
+- Does NOT appear in Online Play or Local Multiplayer to avoid accidental disconnects.
+- Hidden during game over (the game-over overlay has its own menu buttons).
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts` — Added `buildHomeButton()`, `showExitConfirmation()`, `dismissExitConfirmation()`, `shouldShowHomeButton` getter. Updated `canAct()` to block input during confirmation. Updated `showGameOver()` to hide the home button.
+
+---
+
 ## [v0.0.12.124] - 2026-02-26 — Fix End-of-Game Resolution (wf-1772087090)
 
 ### Fixed
