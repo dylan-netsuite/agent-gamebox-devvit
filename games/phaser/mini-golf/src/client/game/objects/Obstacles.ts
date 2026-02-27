@@ -27,7 +27,8 @@ export type ObstacleType =
   | 'licorice_wall'
   | 'gumdrop_bumper'
   | 'claw'
-  | 'invisible_wall';
+  | 'invisible_wall'
+  | 'moving_island';
 
 export interface ObstacleDef {
   type: ObstacleType;
@@ -185,6 +186,21 @@ interface InvisibleWallData {
   flashAlpha: number;
 }
 
+interface MovingIslandData {
+  body: MatterJS.BodyType;
+  graphics: Phaser.GameObjects.Graphics;
+  startX: number;
+  endX: number;
+  currentX: number;
+  cy: number;
+  width: number;
+  height: number;
+  speed: number;
+  progress: number;
+  direction: 1 | -1;
+  color: number;
+}
+
 export class Obstacles {
   scene: Phaser.Scene;
   private zones: ActiveZone[] = [];
@@ -197,6 +213,7 @@ export class Obstacles {
   private claws: ClawData[] = [];
   private gravityWells: GravityWellData[] = [];
   private invisibleWalls: InvisibleWallData[] = [];
+  private movingIslands: MovingIslandData[] = [];
   private bodies: MatterJS.BodyType[] = [];
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
@@ -1102,6 +1119,124 @@ export class Obstacles {
     }
   }
 
+  addMovingIsland(def: ObstacleDef): void {
+    const startPos = toScreen(this.scene, def.x, def.y);
+    const endPos = toScreen(this.scene, def.targetX ?? def.x, def.y);
+    const w = scaleValue(this.scene, def.width ?? 80);
+    const h = scaleValue(this.scene, def.height ?? 35);
+
+    const body = this.scene.matter.add.rectangle(startPos.x, startPos.y, w, h, {
+      isStatic: true,
+      label: 'moving_island',
+      friction: 1,
+      restitution: 0.2,
+    });
+    this.bodies.push(body);
+
+    const g = this.scene.add.graphics();
+    g.setDepth(7);
+
+    this.movingIslands.push({
+      body,
+      graphics: g,
+      startX: startPos.x,
+      endX: endPos.x,
+      currentX: startPos.x,
+      cy: startPos.y,
+      width: w,
+      height: h,
+      speed: def.speed ?? 0.6,
+      progress: 0,
+      direction: 1,
+      color: def.color ?? 0x66cc66,
+    });
+  }
+
+  updateMovingIslands(delta: number, ball?: GolfBall): void {
+    for (const island of this.movingIslands) {
+      const prevX = island.currentX;
+
+      island.progress += (island.speed * island.direction * delta) / 1000;
+
+      if (island.progress >= 1) {
+        island.progress = 1;
+        island.direction = -1;
+      } else if (island.progress <= 0) {
+        island.progress = 0;
+        island.direction = 1;
+      }
+
+      const t = island.progress;
+      const eased = t * t * (3 - 2 * t);
+      const cx = island.startX + (island.endX - island.startX) * eased;
+      island.currentX = cx;
+
+      const dx = cx - prevX;
+
+      this.scene.matter.body.setPosition(island.body, { x: cx, y: island.cy });
+
+      if (ball) {
+        const bx = ball.body.position.x;
+        const by = ball.body.position.y;
+        const ballR = scaleValue(this.scene, 6);
+        const halfW = island.width / 2;
+        const halfH = island.height / 2;
+
+        const onIsland =
+          bx >= cx - halfW - ballR &&
+          bx <= cx + halfW + ballR &&
+          by >= island.cy - halfH - ballR * 2 &&
+          by <= island.cy + halfH + ballR;
+
+        if (onIsland) {
+          this.scene.matter.body.setPosition(ball.body, {
+            x: ball.body.position.x + dx,
+            y: ball.body.position.y,
+          });
+        }
+      }
+
+      const g = island.graphics;
+      g.clear();
+
+      const halfW = island.width / 2;
+      const halfH = island.height / 2;
+      const x = cx - halfW;
+      const y = island.cy - halfH;
+
+      g.fillStyle(island.color, 1);
+      g.fillRoundedRect(x, y, island.width, island.height, 4);
+
+      g.fillStyle(0xffffff, 0.25);
+      g.fillRoundedRect(x + 2, y + 2, island.width - 4, halfH * 0.6, 3);
+
+      g.fillStyle(0x000000, 0.15);
+      g.fillRect(x + 2, y + island.height - halfH * 0.4, island.width - 4, halfH * 0.4);
+
+      g.lineStyle(2, 0xffffff, 0.5);
+      g.strokeRoundedRect(x, y, island.width, island.height, 4);
+    }
+  }
+
+  isBallOnIsland(ball: GolfBall): boolean {
+    const bx = ball.body.position.x;
+    const by = ball.body.position.y;
+    const ballR = scaleValue(this.scene, 6);
+    for (const island of this.movingIslands) {
+      const halfW = island.width / 2;
+      const halfH = island.height / 2;
+      if (
+        bx >= island.currentX - halfW - ballR &&
+        bx <= island.currentX + halfW + ballR &&
+        by >= island.cy - halfH - ballR * 2 &&
+        by <= island.cy + halfH + ballR
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   addTongue(def: ObstacleDef): void {
     const side = (def.forceX ?? 1) > 0 ? 'right' : 'left';
     const tongueLen = scaleValue(this.scene, def.width ?? 100);
@@ -1675,7 +1810,7 @@ export class Obstacles {
     const bx = ball.body.position.x;
     const by = ball.body.position.y;
 
-    const onBridge = this.isBallOnBridge(ball);
+    const onBridge = this.isBallOnBridge(ball) || this.isBallOnIsland(ball);
 
     for (const zone of this.zones) {
       if (!zone.rect.contains(bx, by)) continue;
@@ -1871,6 +2006,10 @@ export class Obstacles {
       iw.graphics.destroy();
     }
     this.invisibleWalls = [];
+    for (const mi of this.movingIslands) {
+      mi.graphics.destroy();
+    }
+    this.movingIslands = [];
     for (const obj of this.gameObjects) {
       obj.destroy();
     }

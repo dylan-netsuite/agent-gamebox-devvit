@@ -187,6 +187,9 @@ export class Game extends Scene {
         case 'invisible_wall':
           this.obstacles.addInvisibleWall(obs);
           break;
+        case 'moving_island':
+          this.obstacles.addMovingIsland(obs);
+          break;
       }
     }
 
@@ -393,6 +396,7 @@ export class Game extends Scene {
       return;
     }
     this.obstacles.updateInvisibleWalls(delta, this.state === 'simulating' ? this.ball : undefined);
+    this.obstacles.updateMovingIslands(delta, this.state === 'simulating' ? this.ball : undefined);
 
     this.ball.update();
     this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);

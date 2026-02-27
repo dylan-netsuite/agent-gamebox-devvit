@@ -53,8 +53,21 @@ Surreal space-themed par 4 with an irregular angular boundary and three powerful
 ### Hole 15: The Cascading Plinko Board (Par 4)
 Chaotic plinko/pachinko-inspired par 4. Tee at top-center (250,80), cup at bottom-center (250,720). The entire fairway is a tall narrow rectangle (80-420, 40-770) with a constant downward ramp force (forceY=4) simulating a steep vertical slope. The peg field consists of 12 staggered rows of small (radius 5) high-restitution bumper pegs — even rows have 6 pegs, odd (offset) rows have 7 pegs. Rows alternate in rainbow candy colors: gold, orange, red, pink, purple, blue, teal, lime, then repeating. At the bottom, funnel walls (80,660→180,700 and 420,660→320,700) guide the ball toward the cup zone. Deep sand traps flank the cup on both sides (left: 82-190,700-768; right: 310-418,700-768), punishing balls that don't land dead center. Once struck, the ball cascades violently and unpredictably through the dense peg field. Deterministic physics means a precise starting angle/power will reliably navigate the pegs — players must observe bounce patterns and micro-adjust angle on subsequent strokes.
 
+### Hole 17: The Moving Island Sequence (Par 5)
+Grueling par 5 across a vast water void. Tee at top-left (110,90), cup at bottom-right (380,720). Three small rectangular platforms oscillate laterally at different unsynchronized speeds. The ball must land on each moving island's static physics body, which physically supports it and drags it laterally via per-frame position delta. Water zones on the left and right edges penalize balls that get carried off-screen. Island 1 (green, speed 0.4, 90×40) moves x:100↔400. Island 2 (blue, speed 0.55, 80×35) moves x:380↔120. Island 3 (pink, speed 0.7, 70×35) moves x:120↔380. The player must time shots to land on moving targets and shoot from moving platforms before being carried into edge water hazards.
+
 ### Hole 16: The Invisible Maze (Par 4)
 Psychologically taxing par 4 presenting a deceptively open, empty green. Tee at top-left (120,100), cup at bottom-right (380,680). The large rectangular boundary (50-450, 50-750) looks completely open, but a complex labyrinth of invisible walls blocks direct paths. The maze uses horizontal barriers (H1-H5) with alternating gaps (left/right) that force a serpentine path. Vertical dividers (V1-V3) between rows prevent shortcuts. A final barrier (H5) near the cup at y=640, combined with a dead-end trap wall, creates a tight 40-unit gap that must be threaded to reach the hole. Dead-end trap walls punish blind shots. When the ball strikes an invisible wall, the wall **flashes white** for a fraction of a second to reveal its geometry, then fades back to full transparency. Players must intentionally bounce the ball to map the hidden maze through spatial memory and trial/error. This hole deliberately drives up stroke counts, emphasizing the importance of low scores on easier holes.
+
+## Moving Island Physics
+
+| Property | Value |
+|----------|-------|
+| Body | Static Matter.js rectangle, friction 1, restitution 0.2 |
+| Movement | Lateral oscillation using hermite smoothstep: t²(3-2t) |
+| Velocity Inheritance | Ball position updated by island dx each frame when overlapping |
+| Water Safety | `isBallOnIsland()` check integrated into `applyZoneEffects` — ball on island is immune to water |
+| Visual | Candy-themed rounded rectangle with color fill, white highlight, dark shadow, stroke border |
 
 ## Invisible Wall Physics
 

@@ -1136,4 +1136,54 @@ export const HOLES: HoleDefinition[] = [
       { type: 'invisible_wall', x: 200, y: 640, width: 140, height: 8 },
     ],
   },
+
+  // ---- HOLE 17: The Moving Island Sequence ----
+  // Grueling par 5 across a vast water void.
+  // Three small platforms move laterally at different unsynchronized speeds.
+  // Ball must land on each moving island, ride it (inheriting velocity),
+  // then jump to the next before being carried off-screen.
+  //
+  // Layout (500x800 design space):
+  //   Tee platform: top-left safe zone (40-180, 50-130)
+  //   Island 1 (y=250): moves x:100↔400, slow, width 90
+  //   Island 2 (y=430): moves x:380↔120, medium, width 80
+  //   Island 3 (y=600): moves x:120↔380, fast, width 70
+  //   Green platform: bottom-right safe zone (300-460, 680-760)
+  //   Cup at (380, 720)
+  //   Water covers entire play area
+  {
+    id: 17,
+    name: 'Moving Islands',
+    par: 5,
+    tee: { x: 110, y: 90 },
+    cup: { x: 380, y: 720 },
+    walls: [
+      // Outer boundary
+      [{ x: 30, y: 40 }, { x: 470, y: 40 }],
+      [{ x: 30, y: 40 }, { x: 30, y: 770 }],
+      [{ x: 470, y: 40 }, { x: 470, y: 770 }],
+      [{ x: 30, y: 770 }, { x: 470, y: 770 }],
+      // Tee platform walls (top-left safe zone, open bottom for exit)
+      [{ x: 40, y: 50 }, { x: 190, y: 50 }],
+      [{ x: 190, y: 50 }, { x: 190, y: 130 }],
+      // Green platform walls (bottom-right safe zone)
+      [{ x: 290, y: 680 }, { x: 460, y: 680 }],
+      [{ x: 290, y: 680 }, { x: 290, y: 760 }],
+      [{ x: 290, y: 760 }, { x: 460, y: 760 }],
+    ],
+    obstacles: [
+      // Island 1: slow, wide — easiest to land on
+      { type: 'moving_island', x: 100, y: 250, width: 90, height: 40, targetX: 400, speed: 0.4, color: 0x66cc66 },
+      // Island 2: medium speed, slightly narrower, moves opposite direction
+      { type: 'moving_island', x: 380, y: 430, width: 80, height: 35, targetX: 120, speed: 0.55, color: 0x44aaff },
+      // Island 3: fastest, narrowest — hardest to land on
+      { type: 'moving_island', x: 120, y: 600, width: 70, height: 35, targetX: 380, speed: 0.7, color: 0xff66aa },
+    ],
+    waterZones: [
+      // Left edge — ball rolls off the left side of islands
+      { x: 30, y: 140, width: 60, height: 540 },
+      // Right edge — ball rolls off the right side of islands
+      { x: 410, y: 140, width: 60, height: 540 },
+    ],
+  },
 ];

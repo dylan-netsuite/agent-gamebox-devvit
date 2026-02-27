@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.7.29 - Hole 17: The Moving Island Sequence (2026-02-27)
+
+### Added
+- **Hole 17: The Moving Island Sequence** — grueling par 5 across a vast water void
+- New `moving_island` obstacle type: laterally oscillating platforms with Matter.js static bodies
+- **Velocity inheritance**: ball physically rests on island bodies and inherits lateral movement via per-frame position delta
+- Three color-coded islands at different speeds (green 0.4, blue 0.55, pink 0.7) with hermite smoothstep easing
+- `isBallOnIsland()` method integrates with water zone safety checks (ball on island = immune to water)
+- Islands rendered with candy-themed rounded rectangles, highlights, shadows, and stroke borders
+- Water zones on left/right edges penalize balls carried off-screen by island movement
+
 ## v0.0.7.22 - Hole 16: Added H5 barrier near cup (2026-02-27)
 
 ### Changed
