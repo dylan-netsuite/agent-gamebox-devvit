@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.3.147 - Hole 14: Layout Overhaul + Stronger Gravity (2026-02-27)
+
+### Changed
+- **Gravity strength increased 5-8x** (0.0008–0.0012 → 0.006–0.008) — wells now aggressively pull the ball and frequently swallow it
+- **Completely redesigned layout** — replaced rectangular boundary and horizontal walls with an irregular angular polygon and three diagonal chicane walls, making Hole 14 visually distinct from Hole 13
+- **Added 4 gumdrop bumpers** at key turning points to create ricochet opportunities
+- **Removed friction zone** (bunker) around the cup — no more easy deceleration on approach
+
 ## v0.0.7.1 - Hole 14: Gravity Wells and Black Holes (2026-02-27)
 
 ### Added
