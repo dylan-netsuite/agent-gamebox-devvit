@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.3.108 - Hole 12: Wall-Guided Turns + Candy Theme (2026-02-27)
+
+### Fixed
+- **Vertical turn connectors removed** — they couldn't redirect the ball's horizontal momentum, causing guaranteed water penalties
+- **Ball no longer gets pushed into water at turns** — walls do the turning instead of conveyors
+
+### Changed
+- **Wall-guided snake path** — internal walls between legs with gaps at alternating ends force the ball to zigzag naturally
+- **Reduced from 6 legs to 4** — wider legs (80px vs 60px) with more space between them for clearer gameplay
+- **Force reduced from 5 to 3** — moderate push that's challenging but controllable
+- **Candy-themed conveyors** — pink/white striped backgrounds like taffy, white frosting dots with pink accents as directional indicators, pink candy border outlines
+- **Cup moved to (140, 180)** within Leg D for a reachable endpoint
+
 ## v0.0.3.105 - Hole 12: Winding Conveyor Path Redesign (2026-02-27)
 
 ### Fixed

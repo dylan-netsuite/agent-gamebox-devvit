@@ -458,9 +458,21 @@ export class Obstacles {
     const rect = new Phaser.Geom.Rectangle(tl.x, tl.y, w, h);
     this.zones.push({ type: 'conveyor', rect, forceX, forceY });
 
-    this.zoneGraphics.fillStyle(0x333340, 0.85);
-    this.zoneGraphics.fillRect(tl.x, tl.y, w, h);
-    this.zoneGraphics.lineStyle(1, 0x555566, 0.6);
+    const isHoriz = Math.abs(forceX) >= Math.abs(forceY);
+    const stripeCount = isHoriz ? 12 : 8;
+    const stripeW = isHoriz ? w / stripeCount : w;
+    const stripeH = isHoriz ? h : h / stripeCount;
+
+    for (let i = 0; i < stripeCount; i++) {
+      const color = i % 2 === 0 ? 0xff8ec6 : 0xffb6d9;
+      this.zoneGraphics.fillStyle(color, 0.9);
+      if (isHoriz) {
+        this.zoneGraphics.fillRect(tl.x + i * stripeW, tl.y, stripeW + 1, h);
+      } else {
+        this.zoneGraphics.fillRect(tl.x, tl.y + i * stripeH, w, stripeH + 1);
+      }
+    }
+    this.zoneGraphics.lineStyle(2, 0xe75480, 0.8);
     this.zoneGraphics.strokeRect(tl.x, tl.y, w, h);
 
     const g = this.scene.add.graphics();
@@ -500,8 +512,8 @@ export class Obstacles {
       const dy = c.forceY / mag;
 
       const isHoriz = Math.abs(dx) > Math.abs(dy);
-      const spacing = isHoriz ? c.screenW * 0.28 : c.screenH * 0.28;
-      const arrowSize = Math.min(c.screenW, c.screenH) * 0.22;
+      const spacing = isHoriz ? c.screenW * 0.2 : c.screenH * 0.2;
+      const dotRadius = Math.min(c.screenW, c.screenH) * 0.08;
       const count = Math.ceil((isHoriz ? c.screenW : c.screenH) / spacing) + 2;
       const offset = c.phase * spacing;
 
@@ -515,16 +527,15 @@ export class Obstacles {
           cy = c.screenY + i * spacing + offset * (dy > 0 ? 1 : -1);
         }
 
-        if (cx < c.screenX - arrowSize || cx > c.screenX + c.screenW + arrowSize) continue;
-        if (cy < c.screenY - arrowSize || cy > c.screenY + c.screenH + arrowSize) continue;
+        if (cx < c.screenX - dotRadius || cx > c.screenX + c.screenW + dotRadius) continue;
+        if (cy < c.screenY - dotRadius || cy > c.screenY + c.screenH + dotRadius) continue;
 
-        g.fillStyle(0xff9900, 0.7);
-        g.beginPath();
-        g.moveTo(cx + dx * arrowSize, cy + dy * arrowSize);
-        g.lineTo(cx - dy * arrowSize * 0.5 - dx * arrowSize * 0.4, cy + dx * arrowSize * 0.5 - dy * arrowSize * 0.4);
-        g.lineTo(cx + dy * arrowSize * 0.5 - dx * arrowSize * 0.4, cy - dx * arrowSize * 0.5 - dy * arrowSize * 0.4);
-        g.closePath();
-        g.fillPath();
+        const colors = [0xffffff, 0xffe4f0, 0xffffff];
+        const color = colors[i % 3 < 0 ? (i % 3) + 3 : i % 3];
+        g.fillStyle(color, 0.85);
+        g.fillCircle(cx, cy, dotRadius);
+        g.fillStyle(0xe75480, 0.6);
+        g.fillCircle(cx + dx * dotRadius * 0.8, cy + dy * dotRadius * 0.8, dotRadius * 0.45);
       }
     }
   }
