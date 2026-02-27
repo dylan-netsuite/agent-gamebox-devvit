@@ -76,7 +76,9 @@ export class Meerca {
       return { alive: false, newHead };
     }
 
-    this.tail.unshift({ ...this.head });
+    const oldHead = { ...this.head };
+    this.tail.unshift(oldHead);
+    this.tailSprites.unshift(this.createTailSprite(oldHead));
     this.head = newHead;
 
     this.updateSprites();
