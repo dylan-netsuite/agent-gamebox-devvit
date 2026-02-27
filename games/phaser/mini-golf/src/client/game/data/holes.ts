@@ -776,4 +776,84 @@ export const HOLES: HoleDefinition[] = [
       { x: 82, y: 202, width: 268, height: 66, color: 0x69b4ff },
     ],
   },
+
+  // ---- HOLE 13: The Flavour Grabber (The Claw) ----
+  // Wide open expanse with no boundary walls. OOB void everywhere except
+  // three stepping-stone island platforms. An overhead claw patrols in a
+  // figure-eight, grabbing the ball if it lingers in the shadow.
+  //
+  // Layout:
+  //   Bottom platform (170-330, 600-700) with tee at (250, 670)
+  //   Narrow bridge (220-280, 460-600) connecting bottom to middle
+  //   Middle platform (150-350, 340-460) — wide staging area
+  //   Narrow bridge (220-280, 220-340) connecting middle to top
+  //   Cup island (190-310, 150-220) with cup at (250, 185)
+  //   Everything else is water/void
+  {
+    id: 13,
+    name: 'The Flavour Grabber',
+    par: 4,
+    tee: { x: 250, y: 670 },
+    cup: { x: 250, y: 185 },
+    walls: [
+      // Bottom platform edges
+      [{ x: 170, y: 600 }, { x: 330, y: 600 }],
+      [{ x: 170, y: 700 }, { x: 330, y: 700 }],
+      [{ x: 170, y: 600 }, { x: 170, y: 700 }],
+      [{ x: 330, y: 600 }, { x: 330, y: 700 }],
+
+      // Bottom bridge left wall
+      [{ x: 220, y: 460 }, { x: 220, y: 600 }],
+      // Bottom bridge right wall
+      [{ x: 280, y: 460 }, { x: 280, y: 600 }],
+
+      // Middle platform edges
+      [{ x: 150, y: 340 }, { x: 350, y: 340 }],
+      [{ x: 150, y: 460 }, { x: 350, y: 460 }],
+      [{ x: 150, y: 340 }, { x: 150, y: 460 }],
+      [{ x: 350, y: 340 }, { x: 350, y: 460 }],
+
+      // Top bridge left wall
+      [{ x: 220, y: 220 }, { x: 220, y: 340 }],
+      // Top bridge right wall
+      [{ x: 280, y: 220 }, { x: 280, y: 340 }],
+
+      // Cup island edges
+      [{ x: 190, y: 150 }, { x: 310, y: 150 }],
+      [{ x: 190, y: 220 }, { x: 310, y: 220 }],
+      [{ x: 190, y: 150 }, { x: 190, y: 220 }],
+      [{ x: 310, y: 150 }, { x: 310, y: 220 }],
+    ],
+    obstacles: [
+      // The Claw — patrols in a figure-eight over the middle area
+      { type: 'claw', x: 250, y: 390, width: 130, height: 170, radius: 32, speed: 0.17 },
+    ],
+    waterZones: [
+      // OOB void — fills entire space except the island platforms and bridges
+      // Left void strip
+      { x: 0, y: 0, width: 150, height: 800, color: 0x1a0a2e },
+      // Right void strip
+      { x: 350, y: 0, width: 150, height: 800, color: 0x1a0a2e },
+      // Top void (above cup island)
+      { x: 150, y: 0, width: 200, height: 150, color: 0x1a0a2e },
+      // Between cup island and top bridge (left side)
+      { x: 150, y: 150, width: 40, height: 70, color: 0x1a0a2e },
+      // Between cup island and top bridge (right side)
+      { x: 310, y: 150, width: 40, height: 70, color: 0x1a0a2e },
+      // Between top bridge and middle platform (left side)
+      { x: 150, y: 220, width: 70, height: 120, color: 0x1a0a2e },
+      // Between top bridge and middle platform (right side)
+      { x: 280, y: 220, width: 70, height: 120, color: 0x1a0a2e },
+      // Between middle platform and bottom bridge (left side)
+      { x: 150, y: 460, width: 70, height: 140, color: 0x1a0a2e },
+      // Between middle platform and bottom bridge (right side)
+      { x: 280, y: 460, width: 70, height: 140, color: 0x1a0a2e },
+      // Between bottom bridge and bottom platform (left side)
+      { x: 170, y: 460, width: 50, height: 140, color: 0x1a0a2e },
+      // Between bottom bridge and bottom platform (right side)
+      { x: 280, y: 460, width: 50, height: 140, color: 0x1a0a2e },
+      // Below bottom platform
+      { x: 150, y: 700, width: 200, height: 100, color: 0x1a0a2e },
+    ],
+  },
 ];

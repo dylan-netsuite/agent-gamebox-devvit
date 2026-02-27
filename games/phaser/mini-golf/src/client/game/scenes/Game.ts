@@ -178,6 +178,9 @@ export class Game extends Scene {
         case 'cannon':
           this.obstacles.addCannon(obs);
           break;
+        case 'claw':
+          this.obstacles.addClaw(obs);
+          break;
       }
     }
 
@@ -359,6 +362,7 @@ export class Game extends Scene {
 
     this.state = 'simulating';
     this.arrow.setVisible(false);
+    this.obstacles.resetClawGrace();
   }
 
   override update(_time: number, delta: number): void {
@@ -370,6 +374,12 @@ export class Game extends Scene {
     const cannonBall = (this.state === 'simulating' || this.obstacles.isCannonAnimating()) ? this.ball : undefined;
     this.obstacles.updateCannons(delta, cannonBall);
     this.obstacles.updateWindmills(delta, this.state === 'simulating' ? this.ball : undefined);
+    const clawResult = this.obstacles.updateClaws(delta, this.state === 'simulating' ? this.ball : undefined);
+    if (clawResult.grabbed) {
+      this.handleWaterHazard();
+      return;
+    }
+    if (this.obstacles.isClawGrabbing()) return;
 
     this.ball.update();
     this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);

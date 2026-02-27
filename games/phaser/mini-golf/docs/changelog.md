@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.3.124 - Hole 13: The Flavour Grabber (2026-02-27)
+
+### Added
+- **Hole 13: The Flavour Grabber** — stepping-stone island layout with an overhead claw obstacle
+- **Claw obstacle type** (`'claw'`) — new obstacle that patrols in a figure-eight (lemniscate) pattern
+  - Casts a 32-unit shadow on the ground; ball entering the shadow triggers a grab animation
+  - Grab freezes the ball, plays a 1.8s claw-closing animation, then applies +1 penalty and tee reset
+  - 1.5s grace period after each shot prevents immediate grabs
+  - 3-pronged metallic claw visual with shadow circle and vertical connecting line
+- **Island platform layout** — three platforms connected by narrow 60-unit bridges, surrounded by dark OOB void
+- No outer boundary walls — first hole where the entire perimeter is fatal
+
 ## v0.0.3.120 - Tighter Hole Capture (2026-02-27)
 
 ### Changed

@@ -6,7 +6,7 @@ All hole coordinates are defined in a 500x800 portrait design space, optimized f
 
 ## Course Structure
 
-Currently 12 holes. Holes are added iteratively with high visual and gameplay quality.
+Currently 13 holes. Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
 Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
@@ -43,6 +43,23 @@ L-shaped dogleg course with a narrow cannon obstacle in the vertical section. Te
 
 ### Hole 12: The Conveyor Belt Matrix (Par 4)
 Rectangular corridor (x:80-420, y:55-730) with a wall-guided snake path of mint-green candy-themed conveyor belts. Four horizontal legs (A-D, each 320×80 design units spanning x:90-410) alternate pushing RIGHT and LEFT with gentle force magnitude 2. Internal walls between each leg have gaps at alternating ends — right side for rightward-pushing legs, left side for leftward-pushing legs — forcing the ball to zigzag through the course. Vertical corridor barrier walls separate each gap from its adjacent water hazard, creating safe passages between legs. Tee at (250,690) above the HUD with an open green approach. Cup at (140,160) within Leg D on the left side. Water hazards (pink) fill the channels between legs on the non-gap side, contrasting clearly with the mint-green conveyors. The player must aim against each leg's gentle lateral push to control where the ball exits through the gap. The walls do the turning; the conveyors provide the challenge.veyors are the sole challenge mechanic. **Visuals**: Dark conveyor squares with animated orange directional chevron arrows scrolling in the force direction, clipped to cell boundaries via geometry masks. **Strategy**: Requires intuitive vector addition — aim opposite to belt direction to achieve a straight-line result, or use belt momentum to curve around obstacles.
+
+### Hole 13: The Flavour Grabber (Par 4)
+Stepping-stone island layout with NO outer boundary walls — the entire perimeter is OOB void (dark water hazard). Three platforms connected by narrow bridges: bottom platform (170-330, 600-700) with tee at (250,670), middle staging platform (150-350, 340-460), and cup island (190-310, 150-220) with cup at (250,185). Narrow 60-unit-wide bridges connect the platforms. An overhead **claw** patrols the middle area in a continuous figure-eight (lemniscate) pattern centered at (250,390) with amplitude 130x170. The claw casts a 32-unit-radius shadow on the ground. If the ball enters the shadow zone during simulation, the claw grabs it — freezing the ball, playing a grab animation (1.8s), then triggering a +1 penalty and tee reset. A 1.5-second grace period after each shot prevents immediate grabs. Strategy requires short, timed shots to advance through the bridges while dodging the sweeping claw shadow. The psychological pressure of an overhead threat shatters the established 2D-plane rules.
+
+## Claw Physics
+
+| Property | Value |
+|----------|-------|
+| Path | Figure-eight (lemniscate): x = A·sin(t), y = B·sin(t)·cos(t) |
+| Center | (250, 390) design units |
+| Amplitude | 130 × 170 design units |
+| Shadow Radius | 32 design units |
+| Speed | 0.17 cycles/second (~5.9s per full figure-eight) |
+| Grab Animation | 1.8 seconds (claw closes, lifts, penalty applied) |
+| Grace Period | 1.5 seconds after each shot (ball immune to grab) |
+| Penalty | +1 stroke, ball reset to tee |
+| Visual | 3-pronged metallic claw with shadow circle, connected by vertical line |
 
 ## Conveyor Belt Physics
 

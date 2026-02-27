@@ -25,7 +25,8 @@ export type ObstacleType =
   | 'moving_bridge'
   | 'block'
   | 'licorice_wall'
-  | 'gumdrop_bumper';
+  | 'gumdrop_bumper'
+  | 'claw';
 
 export interface ObstacleDef {
   type: ObstacleType;
@@ -144,6 +145,24 @@ interface CannonData {
   exitGraceMs: number;
 }
 
+interface ClawData {
+  shadowGraphics: Phaser.GameObjects.Graphics;
+  clawGraphics: Phaser.GameObjects.Graphics;
+  lineGraphics: Phaser.GameObjects.Graphics;
+  centerX: number;
+  centerY: number;
+  ampX: number;
+  ampY: number;
+  shadowRadius: number;
+  speed: number;
+  phase: number;
+  grabbing: boolean;
+  grabProgress: number;
+  graceMs: number;
+  currentShadowX: number;
+  currentShadowY: number;
+}
+
 export class Obstacles {
   scene: Phaser.Scene;
   private zones: ActiveZone[] = [];
@@ -153,6 +172,7 @@ export class Obstacles {
   private tongues: TongueData[] = [];
   private cannons: CannonData[] = [];
   private conveyors: ConveyorData[] = [];
+  private claws: ClawData[] = [];
   private bodies: MatterJS.BodyType[] = [];
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
@@ -538,6 +558,138 @@ export class Obstacles {
         g.fillCircle(cx + dx * dotRadius * 0.8, cy + dy * dotRadius * 0.8, dotRadius * 0.45);
       }
     }
+  }
+
+  addClaw(obs: ObstacleDef): void {
+    const cx = toScreen(this.scene, obs.x, obs.y);
+    const ampX = scaleValue(this.scene, obs.width ?? 150);
+    const ampY = scaleValue(this.scene, obs.height ?? 200);
+    const shadowRadius = scaleValue(this.scene, obs.radius ?? 35);
+    const speed = obs.speed ?? 0.17;
+
+    const shadowGraphics = this.scene.add.graphics();
+    shadowGraphics.setDepth(3);
+    this.gameObjects.push(shadowGraphics);
+
+    const lineGraphics = this.scene.add.graphics();
+    lineGraphics.setDepth(9);
+    this.gameObjects.push(lineGraphics);
+
+    const clawGraphics = this.scene.add.graphics();
+    clawGraphics.setDepth(10);
+    this.gameObjects.push(clawGraphics);
+
+    this.claws.push({
+      shadowGraphics,
+      clawGraphics,
+      lineGraphics,
+      centerX: cx.x,
+      centerY: cx.y,
+      ampX,
+      ampY,
+      shadowRadius,
+      speed,
+      phase: 0,
+      grabbing: false,
+      grabProgress: 0,
+      graceMs: 1500,
+      currentShadowX: cx.x,
+      currentShadowY: cx.y,
+    });
+  }
+
+  updateClaws(delta: number, ball?: GolfBall): { grabbed: boolean } {
+    let grabbed = false;
+
+    for (const claw of this.claws) {
+      claw.phase += (delta / 1000) * claw.speed * Math.PI * 2;
+      if (claw.graceMs > 0) claw.graceMs -= delta;
+
+      const t = claw.phase;
+      const sx = claw.centerX + claw.ampX * Math.sin(t);
+      const sy = claw.centerY + claw.ampY * Math.sin(t) * Math.cos(t);
+      claw.currentShadowX = sx;
+      claw.currentShadowY = sy;
+
+      claw.shadowGraphics.clear();
+      claw.shadowGraphics.fillStyle(0x000000, 0.18);
+      claw.shadowGraphics.fillCircle(sx, sy, claw.shadowRadius * 1.2);
+      claw.shadowGraphics.fillStyle(0x000000, 0.3);
+      claw.shadowGraphics.fillCircle(sx, sy, claw.shadowRadius);
+
+      const clawHoverOffset = claw.grabbing
+        ? -claw.shadowRadius * 0.3 * (1 - claw.grabProgress)
+        : -claw.shadowRadius * 0.3;
+      const clawY = sy + clawHoverOffset;
+
+      claw.lineGraphics.clear();
+      claw.lineGraphics.lineStyle(2, 0x888888, 0.4);
+      claw.lineGraphics.beginPath();
+      claw.lineGraphics.moveTo(sx, clawY - claw.shadowRadius * 0.8);
+      claw.lineGraphics.lineTo(sx, clawY - claw.shadowRadius * 2.5);
+      claw.lineGraphics.strokePath();
+
+      const cg = claw.clawGraphics;
+      cg.clear();
+      const pr = claw.shadowRadius * 0.35;
+      const armLen = claw.shadowRadius * 0.55;
+      const armW = claw.shadowRadius * 0.12;
+      const openAngle = claw.grabbing ? 0.2 * (1 - claw.grabProgress) : 0.35;
+
+      cg.fillStyle(0xaaaaaa, 0.9);
+      cg.fillCircle(sx, clawY, pr);
+      cg.fillStyle(0xcccccc, 0.5);
+      cg.fillCircle(sx - pr * 0.2, clawY - pr * 0.2, pr * 0.4);
+
+      for (let i = 0; i < 3; i++) {
+        const baseAngle = (Math.PI / 2) + (i - 1) * openAngle;
+        const tipX = sx + Math.cos(baseAngle) * armLen;
+        const tipY = clawY + Math.sin(baseAngle) * armLen;
+        cg.lineStyle(armW, 0x999999, 0.9);
+        cg.beginPath();
+        cg.moveTo(sx + Math.cos(baseAngle) * pr * 0.7, clawY + Math.sin(baseAngle) * pr * 0.7);
+        cg.lineTo(tipX, tipY);
+        cg.strokePath();
+        cg.fillStyle(0x777777, 1);
+        cg.fillCircle(tipX, tipY, armW * 0.6);
+      }
+
+      if (claw.grabbing) {
+        claw.grabProgress += delta / 1800;
+        if (claw.grabProgress >= 1) {
+          claw.grabbing = false;
+          claw.grabProgress = 0;
+          grabbed = true;
+        }
+        continue;
+      }
+
+      if (ball && claw.graceMs <= 0) {
+        const bx = ball.body.position.x;
+        const by = ball.body.position.y;
+        const dx = bx - sx;
+        const dy = by - sy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < claw.shadowRadius) {
+          claw.grabbing = true;
+          claw.grabProgress = 0;
+          this.scene.matter.body.setVelocity(ball.body, { x: 0, y: 0 });
+          this.scene.matter.body.setStatic(ball.body, true);
+        }
+      }
+    }
+
+    return { grabbed };
+  }
+
+  resetClawGrace(): void {
+    for (const claw of this.claws) {
+      claw.graceMs = 1500;
+    }
+  }
+
+  isClawGrabbing(): boolean {
+    return this.claws.some(c => c.grabbing);
   }
 
   private generateTangledPath(
