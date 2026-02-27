@@ -1060,9 +1060,11 @@ export const HOLES: HoleDefinition[] = [
   //      Gap in H3 at x:50-240 (left side) lets ball pass.
   //   6. Shoot RIGHT from zone F into zone G (x:260-450, y:424-536)
   //      Gap in V3 at y:470-540 lets ball cross the center.
-  //   7. Shoot DOWN from zone G into zone H (x:260-450, y:544-750)
+  //   7. Shoot DOWN from zone G into zone H (x:260-450, y:544-636)
   //      Gap in H4 at x:260-450 (right side) lets ball pass.
-  //   8. Putt into cup at (380,680).
+  //   8. Shoot LEFT to squeeze through the gap at x:270-310 in H5+trap (y=640).
+  //      H5 blocks x:310-450, trap blocks x:130-270. Gap: x:270-310 (40 units).
+  //   9. From below H5 (y:644+), putt RIGHT into cup at (380,680).
   {
     id: 16,
     name: 'The Invisible Maze',
@@ -1121,10 +1123,16 @@ export const HOLES: HoleDefinition[] = [
       // Gap: x:250-450 (ball can pass on the right)
       { type: 'invisible_wall', x: 150, y: 540, width: 200, height: 8 },
 
+      // H5 (y=640): RIGHT side blocks, narrow gap at x:270-310
+      // Spans x:310-450 (width 140, centered at 380)
+      // Combined with the trap wall below, only a 40-unit gap at x:270-310
+      { type: 'invisible_wall', x: 380, y: 640, width: 140, height: 8 },
+
       // --- Dead-end traps to punish careless shots ---
       // Blocks direct south through the center (catches straight shots from tee)
       { type: 'invisible_wall', x: 250, y: 130, width: 8, height: 100 },
-      // Horizontal trap near the cup area (prevents easy diagonal from left)
+      // Horizontal trap near the cup area (blocks left side of H5 gap approach)
+      // Spans x:130-270 (width 140, centered at 200)
       { type: 'invisible_wall', x: 200, y: 640, width: 140, height: 8 },
     ],
   },

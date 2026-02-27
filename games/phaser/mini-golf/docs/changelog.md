@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.7.22 - Hole 16: Added H5 barrier near cup (2026-02-27)
+
+### Changed
+- **Added H5 invisible barrier near the cup** at y=640, blocking x:310-450
+- Combined with existing trap wall (x:130-270), creates a tight 40-unit gap at x:270-310
+- Requires an extra precise shot to thread the needle before reaching the hole
+- Verified playable: completed in 4 strokes (par) during testing
+
 ## v0.0.3.159 - Hole 16: The Invisible Maze (2026-02-27)
 
 ### Added
