@@ -213,9 +213,9 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 ## Hole Capture
 
 Ball is captured when:
-- Ball center within capture radius (20 design units) AND speed < 6.0
+- Ball center within capture radius (14 design units, matching visual hole size) AND speed < 4.5
 - Swept-path detection checks intermediate positions for fast-moving balls
-- Attraction force applied within 40 units of hole center
+- Attraction force (strength 0.0003) applied within 25 units of hole center
 
 ## Visual Theme
 

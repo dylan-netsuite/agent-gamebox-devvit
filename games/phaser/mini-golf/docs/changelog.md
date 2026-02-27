@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.3.120 - Tighter Hole Capture (2026-02-27)
+
+### Changed
+- **Capture radius** reduced from 20 to 14 design units (now matches the visual hole size — ball must actually be over the hole)
+- **Attraction radius** reduced from 40 to 25 design units (much smaller gravity well)
+- **Attraction strength** reduced from 0.0004 to 0.0003 (weaker pull)
+- **Capture velocity threshold** reduced from 6.0 to 4.5 (ball must be moving slower to sink)
+
 ## v0.0.3.119 - Softer Shot Control (2026-02-27)
 
 ### Changed
