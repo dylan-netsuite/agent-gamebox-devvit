@@ -1,5 +1,23 @@
 # Reddit Royale - Changelog
 
+## [v0.0.18.20] - 2026-02-27 — Fix HUD Disappearing on Game Restart (wf-1772180000)
+
+### Fixed
+- **HUD invisible after game restart**: Starting a new game after exiting (via home button or game over) caused the HUD, minimap, team panel, and home button to be invisible. Root cause was a stale `addedtoscene` event handler from the previous game session that corrupted new game objects' `cameraFilter` bitmasks using the destroyed camera's ID.
+- **Event listener accumulation**: The `addedtoscene` handler was registered each time `create()` ran but never removed on scene shutdown, causing duplicate handlers to stack across game sessions.
+- **Shutdown listener accumulation**: `on('shutdown', ...)` handlers in multiplayer and pinch-zoom setup used `on` instead of `once`, causing them to accumulate across restarts.
+
+### Changed
+- Added `addedToSceneHandler` property to store and clean up the event handler reference between game sessions.
+- `resetState()` now removes the stale `addedtoscene` handler and any leftover UI camera before creating new game objects.
+- Changed `on('shutdown', ...)` to `once('shutdown', ...)` for multiplayer and pinch-zoom cleanup handlers.
+
+### Root Cause Details
+Phaser's `Camera.ignore()` works by setting bits on each game object's `cameraFilter` bitmask. Camera IDs are recycled across scene restarts. The stale handler from the previous session would call `ignore()` on the destroyed camera (which still held its old ID), setting the wrong bit on freshly created HUD containers. When the new UI camera was created with the same recycled ID, those HUD containers were already masked out.
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts`
+
 ## [v0.0.18.17] - 2026-02-27 — Fix Home Button Visibility & Interactivity (wf-1772179000)
 
 ### Fixed

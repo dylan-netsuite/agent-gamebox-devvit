@@ -88,6 +88,7 @@ export class GamePlay extends Scene {
   private pendingMoveThrottle = 0;
   private turnStartClickConsumed = false;
   private tutorial: TutorialManager | null = null;
+  private addedToSceneHandler: ((obj: Phaser.GameObjects.GameObject) => void) | null = null;
 
   constructor() {
     super('GamePlay');
@@ -96,6 +97,16 @@ export class GamePlay extends Scene {
   private resetState(): void {
     this.stopTurnTimer();
     this.tutorial?.destroy();
+
+    if (this.addedToSceneHandler) {
+      this.events.off('addedtoscene', this.addedToSceneHandler);
+      this.addedToSceneHandler = null;
+    }
+
+    const existingUi = this.cameras.getCamera('ui');
+    if (existingUi) {
+      this.cameras.remove(existingUi);
+    }
 
     this.worms = [];
     this.turnOrder = [];
@@ -422,7 +433,7 @@ export class GamePlay extends Scene {
 
     this.mp.onMessage(this.mpHandler);
 
-    this.events.on('shutdown', () => {
+    this.events.once('shutdown', () => {
       if (this.mpHandler && this.mp) {
         this.mp.offMessage(this.mpHandler);
       }
@@ -1499,7 +1510,7 @@ export class GamePlay extends Scene {
     canvas.addEventListener('touchmove', onTouchMove, { passive: false });
     canvas.addEventListener('touchend', onTouchEnd);
 
-    this.events.on('shutdown', () => {
+    this.events.once('shutdown', () => {
       canvas.removeEventListener('touchstart', onTouchStart);
       canvas.removeEventListener('touchmove', onTouchMove);
       canvas.removeEventListener('touchend', onTouchEnd);
@@ -1666,13 +1677,14 @@ export class GamePlay extends Scene {
       }
     }
 
-    this.events.on('addedtoscene', (obj: Phaser.GameObjects.GameObject) => {
+    this.addedToSceneHandler = (obj: Phaser.GameObjects.GameObject) => {
       if (this.uiContainers.has(obj)) {
         cam.ignore(obj);
       } else {
         this.uiCamera.ignore(obj);
       }
-    });
+    };
+    this.events.on('addedtoscene', this.addedToSceneHandler);
   }
 
   private addUIObject<T extends Phaser.GameObjects.GameObject>(obj: T): T {
