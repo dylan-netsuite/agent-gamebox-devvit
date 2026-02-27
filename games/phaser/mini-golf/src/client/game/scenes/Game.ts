@@ -374,7 +374,7 @@ export class Game extends Scene {
     const cannonBall = (this.state === 'simulating' || this.obstacles.isCannonAnimating()) ? this.ball : undefined;
     this.obstacles.updateCannons(delta, cannonBall);
     this.obstacles.updateWindmills(delta, this.state === 'simulating' ? this.ball : undefined);
-    const clawResult = this.obstacles.updateClaws(delta, this.state === 'simulating' ? this.ball : undefined);
+    const clawResult = this.obstacles.updateClaws(delta, this.ball);
     if (clawResult.grabbed) {
       this.handleWaterHazard();
       return;

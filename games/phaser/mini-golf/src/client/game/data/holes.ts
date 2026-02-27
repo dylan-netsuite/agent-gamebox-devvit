@@ -835,6 +835,11 @@ export const HOLES: HoleDefinition[] = [
     ],
     obstacles: [
       { type: 'claw', x: 250, y: 400, width: 160, height: 130, radius: 45, speed: 0.35 },
+      // Corner bumpers at each switchback
+      { type: 'gumdrop_bumper', x: 155, y: 595, radius: 12 },
+      { type: 'gumdrop_bumper', x: 165, y: 455, radius: 12 },
+      { type: 'gumdrop_bumper', x: 355, y: 345, radius: 12 },
+      { type: 'gumdrop_bumper', x: 355, y: 225, radius: 12 },
     ],
   },
 ];

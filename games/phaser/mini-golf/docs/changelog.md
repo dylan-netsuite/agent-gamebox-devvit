@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.0.3.132 - Hole 13: Corner Bumpers & Claw Fix (2026-02-27)
+
+### Added
+- **4 gumdrop bumpers** at each switchback corner to help guide the ball through doglegs
+  - Bottom-left bridge entry (155, 595)
+  - Bottom-left middle platform (165, 455)
+  - Top-right middle platform (355, 345)
+  - Bottom-right cup island (355, 225)
+
+### Fixed
+- **Claw now checks for ball at ALL times** — previously only during ball simulation (`state === 'simulating'`), so the claw would sweep harmlessly over a stationary ball. Now the claw is a constant threat even while the player aims.
+- **Grab animation sped up** from 1.8s to 1.2s for a snappier, more impactful grab feel
+
 ## v0.0.3.129 - Hole 13: Zigzag Layout & Aggressive Claw (2026-02-27)
 
 ### Changed
