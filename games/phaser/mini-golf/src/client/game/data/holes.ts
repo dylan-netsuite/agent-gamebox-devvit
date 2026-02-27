@@ -1042,18 +1042,32 @@ export const HOLES: HoleDefinition[] = [
   // Hidden inside: a labyrinth of invisible walls that flash white on impact.
   // Player must map the maze through trial, error, and spatial memory.
   //
-  // Maze solution path (for reference — player discovers by bouncing):
-  //   Tee (120,120) → go RIGHT along top corridor to (380,120)
-  //   → go DOWN right corridor to (380,320)
-  //   → go LEFT through middle gap to (120,320)
-  //   → go DOWN left corridor to (120,520)
-  //   → go RIGHT through lower gap to (380,520)
-  //   → go DOWN right corridor to cup (380,680)
+  // Design space: outer walls 50-450 x 50-750 (400 wide, 700 tall)
+  // All invisible walls are centered at (x,y) with given width/height.
+  // Actual span: [x-w/2 .. x+w/2] horizontal, [y-h/2 .. y+h/2] vertical.
+  //
+  // VERIFIED solution path:
+  //   Tee (120,100) — in zone A (top-left, x:50-240, y:50-176)
+  //   1. Shoot DOWN through zone A to zone B (x:50-240, y:184-296)
+  //      Gap in H1 at x:50-240 (left side) lets ball pass.
+  //   2. Shoot RIGHT from zone B into zone C (x:260-450, y:184-296)
+  //      Gap in V1 at y:240-300 lets ball cross the center.
+  //   3. Shoot DOWN from zone C into zone D (x:260-450, y:304-416)
+  //      Gap in H2 at x:260-450 (right side) lets ball pass.
+  //   4. Shoot LEFT from zone D into zone E (x:50-240, y:304-416)
+  //      Gap in V2 at y:350-420 lets ball cross the center.
+  //   5. Shoot DOWN from zone E into zone F (x:50-240, y:424-536)
+  //      Gap in H3 at x:50-240 (left side) lets ball pass.
+  //   6. Shoot RIGHT from zone F into zone G (x:260-450, y:424-536)
+  //      Gap in V3 at y:470-540 lets ball cross the center.
+  //   7. Shoot DOWN from zone G into zone H (x:260-450, y:544-750)
+  //      Gap in H4 at x:260-450 (right side) lets ball pass.
+  //   8. Putt into cup at (380,680).
   {
     id: 16,
     name: 'The Invisible Maze',
     par: 4,
-    tee: { x: 120, y: 120 },
+    tee: { x: 120, y: 100 },
     cup: { x: 380, y: 680 },
     walls: [
       // Outer boundary — large open rectangle
@@ -1063,48 +1077,55 @@ export const HOLES: HoleDefinition[] = [
       [{ x: 50, y: 750 }, { x: 450, y: 750 }],    // Bottom
     ],
     obstacles: [
-      // === INVISIBLE MAZE WALLS ===
-      // All walls are horizontal or vertical segments, thickness 8
+      // === INVISIBLE MAZE WALLS — VERIFIED SOLVABLE ===
+      //
+      // Horizontal barriers span HALF the width with alternating gaps.
+      // Vertical dividers have gaps to let the ball cross at the right moment.
+      //
+      // H = horizontal barrier, V = vertical divider
+      // Each H blocks half, gap on the other half.
+      // Each V blocks a vertical stretch with a gap to cross.
 
-      // --- Row 1 barrier (y=180): blocks direct south from tee area ---
-      // Gap on the RIGHT side at x=350-450 to allow passage down
-      { type: 'invisible_wall', x: 200, y: 180, width: 260, height: 8 },
+      // H1 (y=180): RIGHT half blocks, LEFT half is the gap
+      // Spans x:250-450 (width 200, centered at 350)
+      // Gap: x:50-250 (ball can pass on the left)
+      { type: 'invisible_wall', x: 350, y: 180, width: 200, height: 8 },
 
-      // --- Row 2 barrier (y=260): blocks passage from right corridor ---
-      // Gap on the LEFT side at x=50-150 to allow passage left
-      { type: 'invisible_wall', x: 330, y: 260, width: 240, height: 8 },
+      // V1 — vertical divider at x=250, between H1 and H2
+      // Blocks y:180-240, gap at y:240-300
+      // Ball in left corridor must cross RIGHT through the gap
+      { type: 'invisible_wall', x: 250, y: 206, width: 8, height: 56 },
 
-      // --- Row 3 barrier (y=380): blocks direct south from left side ---
-      // Gap on the RIGHT side at x=350-450 to allow passage right
-      { type: 'invisible_wall', x: 200, y: 380, width: 260, height: 8 },
+      // H2 (y=300): LEFT half blocks, RIGHT half is the gap
+      // Spans x:50-250 (width 200, centered at 150)
+      // Gap: x:250-450 (ball can pass on the right)
+      { type: 'invisible_wall', x: 150, y: 300, width: 200, height: 8 },
 
-      // --- Row 4 barrier (y=460): blocks passage from right corridor ---
-      // Gap on the LEFT side at x=50-150 to allow passage left
-      { type: 'invisible_wall', x: 330, y: 460, width: 240, height: 8 },
+      // V2 — vertical divider at x=250, between H2 and H3
+      // Blocks y:300-350, gap at y:350-420
+      // Ball in right corridor must cross LEFT through the gap
+      { type: 'invisible_wall', x: 250, y: 321, width: 8, height: 46 },
 
-      // --- Row 5 barrier (y=570): blocks direct south to cup ---
-      // Gap on the RIGHT side at x=320-450 to allow final approach
-      { type: 'invisible_wall', x: 175, y: 570, width: 210, height: 8 },
+      // H3 (y=420): RIGHT half blocks, LEFT half is the gap
+      // Spans x:250-450 (width 200, centered at 350)
+      // Gap: x:50-250 (ball can pass on the left)
+      { type: 'invisible_wall', x: 350, y: 420, width: 200, height: 8 },
 
-      // --- Vertical dividers to create corridors ---
-      // Left vertical wall between rows 1-2 (forces right-side travel)
-      { type: 'invisible_wall', x: 250, y: 220, width: 8, height: 80 },
+      // V3 — vertical divider at x=250, between H3 and H4
+      // Blocks y:420-470, gap at y:470-540
+      // Ball in left corridor must cross RIGHT through the gap
+      { type: 'invisible_wall', x: 250, y: 441, width: 8, height: 46 },
 
-      // Right vertical wall between rows 2-3 (forces left-side travel)
-      { type: 'invisible_wall', x: 250, y: 320, width: 8, height: 60 },
+      // H4 (y=540): LEFT half blocks, RIGHT half is the gap
+      // Spans x:50-250 (width 200, centered at 150)
+      // Gap: x:250-450 (ball can pass on the right)
+      { type: 'invisible_wall', x: 150, y: 540, width: 200, height: 8 },
 
-      // Left vertical wall between rows 3-4 (forces right-side travel)
-      { type: 'invisible_wall', x: 250, y: 420, width: 8, height: 60 },
-
-      // Center vertical wall between rows 4-5 (forces left-side travel)
-      { type: 'invisible_wall', x: 250, y: 520, width: 8, height: 50 },
-
-      // --- Dead-end traps to punish blind shots ---
-      // Small pocket wall near top-left
-      { type: 'invisible_wall', x: 120, y: 140, width: 8, height: 50 },
-
-      // Small pocket wall near bottom-center
-      { type: 'invisible_wall', x: 250, y: 640, width: 130, height: 8 },
+      // --- Dead-end traps to punish careless shots ---
+      // Blocks direct south through the center (catches straight shots from tee)
+      { type: 'invisible_wall', x: 250, y: 130, width: 8, height: 100 },
+      // Horizontal trap near the cup area (prevents easy diagonal from left)
+      { type: 'invisible_wall', x: 200, y: 640, width: 140, height: 8 },
     ],
   },
 ];
