@@ -878,7 +878,7 @@ export class Obstacles {
       cannonLen,
       cannonW,
       minSpeed: scaleValue(this.scene, def.speed ?? 2.8),
-      exitVelocityScale: 0.45,
+      exitVelocityScale: 0.6,
       animating: false,
       animProgress: 0,
       animDuration: 800,

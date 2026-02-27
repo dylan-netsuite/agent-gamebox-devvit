@@ -625,18 +625,19 @@ export const HOLES: HoleDefinition[] = [
         y: 620,
         radius: 14,
       },
-      // Post-cannon bumper at corner — deflects ball RIGHT into horizontal corridor
+      // Post-cannon bumper — aligned with cannon exit (x:200) to guarantee impact
+      // Offset slightly left so ball hits right side and deflects RIGHT
       {
         type: 'gumdrop_bumper',
-        x: 175,
-        y: 145,
-        radius: 16,
-      },
-      // Second ricochet bumper in horizontal corridor — deflects toward cup
-      {
-        type: 'gumdrop_bumper',
-        x: 340,
+        x: 197,
         y: 150,
+        radius: 18,
+      },
+      // Second ricochet bumper — catches deflection and redirects toward cup
+      {
+        type: 'gumdrop_bumper',
+        x: 330,
+        y: 165,
         radius: 14,
       },
     ],

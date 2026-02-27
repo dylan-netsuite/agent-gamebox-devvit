@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.3.93 - Bumper Alignment + Exit Velocity (2026-02-27)
+
+### Changed
+- **Exit velocity increased**: 60% of entry speed (up from 45%) for stronger, more satisfying bumper ricochets
+- **Post-cannon bumper aligned with exit trajectory**: Moved from (175,145) to (197,150, radius 18) — directly in the ball's exit path at x:200, guaranteeing impact every time the ball clears the cannon
+- **Second bumper repositioned**: Moved from (340,150) to (330,165) to better catch the ricochet and redirect toward the cup
+- The ball now exits the cannon fast, immediately slams into the first bumper (1.8x restitution), and ricochets into the horizontal corridor with a satisfying bounce
+
 ## v0.0.3.91 - Hole 11 Difficulty Increase (2026-02-27)
 
 ### Changed
