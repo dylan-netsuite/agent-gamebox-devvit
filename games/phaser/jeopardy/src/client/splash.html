@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" type="text/css" href="splash/splash.css" />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width, height=device-height, user-scalable=0"
+    />
+    <title>Jeopardy!</title>
+  </head>
+  <body class="app">
+    <div class="splash-bg">
+      <!-- Ambient light rays -->
+      <div class="rays"></div>
+
+      <div class="splash-content">
+        <h1 class="splash-title">JEOPARDY!</h1>
+        <p class="splash-subtitle" id="subtitle">Test Your Knowledge</p>
+
+        <!-- Mini game board preview -->
+        <div class="mini-board">
+          <div class="mini-row mini-categories">
+            <div class="mini-cell cat-cell">SCIENCE</div>
+            <div class="mini-cell cat-cell">HISTORY</div>
+            <div class="mini-cell cat-cell">GEO</div>
+            <div class="mini-cell cat-cell">POP</div>
+            <div class="mini-cell cat-cell">LIT</div>
+            <div class="mini-cell cat-cell">SPORTS</div>
+          </div>
+          <div class="mini-row">
+            <div class="mini-cell val" style="--i:0">$200</div>
+            <div class="mini-cell val" style="--i:1">$200</div>
+            <div class="mini-cell val" style="--i:2">$200</div>
+            <div class="mini-cell val" style="--i:3">$200</div>
+            <div class="mini-cell val" style="--i:4">$200</div>
+            <div class="mini-cell val" style="--i:5">$200</div>
+          </div>
+          <div class="mini-row">
+            <div class="mini-cell val" style="--i:6">$400</div>
+            <div class="mini-cell val" style="--i:7">$400</div>
+            <div class="mini-cell val" style="--i:8">$400</div>
+            <div class="mini-cell val" style="--i:9">$400</div>
+            <div class="mini-cell val" style="--i:10">$400</div>
+            <div class="mini-cell val" style="--i:11">$400</div>
+          </div>
+          <div class="mini-row">
+            <div class="mini-cell val" style="--i:12">$600</div>
+            <div class="mini-cell val" style="--i:13">$600</div>
+            <div class="mini-cell val" style="--i:14">$600</div>
+            <div class="mini-cell val" style="--i:15">$600</div>
+            <div class="mini-cell val" style="--i:16">$600</div>
+            <div class="mini-cell val" style="--i:17">$600</div>
+          </div>
+          <div class="mini-row">
+            <div class="mini-cell val" style="--i:18">$800</div>
+            <div class="mini-cell val" style="--i:19">$800</div>
+            <div class="mini-cell val" style="--i:20">$800</div>
+            <div class="mini-cell val" style="--i:21">$800</div>
+            <div class="mini-cell val" style="--i:22">$800</div>
+            <div class="mini-cell val" style="--i:23">$800</div>
+          </div>
+          <div class="mini-row">
+            <div class="mini-cell val" style="--i:24">$1000</div>
+            <div class="mini-cell val" style="--i:25">$1000</div>
+            <div class="mini-cell val" style="--i:26">$1000</div>
+            <div class="mini-cell val" style="--i:27">$1000</div>
+            <div class="mini-cell val" style="--i:28">$1000</div>
+            <div class="mini-cell val" style="--i:29">$1000</div>
+          </div>
+        </div>
+
+        <button class="play-button" id="start-button">
+          <span class="play-label">PLAY</span>
+        </button>
+      </div>
+    </div>
+    <script type="module" src="splash/splash.ts" defer></script>
+  </body>
+</html>

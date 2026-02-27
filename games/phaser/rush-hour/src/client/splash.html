@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" type="text/css" href="splash/splash.css" />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width, height=device-height, user-scalable=0"
+    />
+    <title>Rush Hour</title>
+  </head>
+  <body class="app">
+    <div class="splash-bg">
+      <div class="rays"></div>
+      <div class="vignette"></div>
+
+      <div class="blocks">
+        <!-- Cars (2:1 ratio) and trucks (3:1 ratio) scattered around edges -->
+        <div class="block car" style="--bx:5%;--by:8%;--rot:-12deg;--a:0.22;--color:#e63946;--delay:0s;--dur:8s"></div>
+        <div class="block truck" style="--bx:78%;--by:5%;--rot:8deg;--a:0.18;--color:#457b9d;--delay:1s;--dur:10s"></div>
+        <div class="block car" style="--bx:88%;--by:22%;--rot:-18deg;--a:0.2;--color:#2a9d8f;--delay:0.5s;--dur:9s"></div>
+        <div class="block truck" style="--bx:2%;--by:38%;--rot:15deg;--a:0.15;--color:#e9c46a;--delay:2s;--dur:11s"></div>
+        <div class="block car" style="--bx:82%;--by:52%;--rot:-8deg;--a:0.2;--color:#f4a261;--delay:1.5s;--dur:7s"></div>
+        <div class="block car" style="--bx:10%;--by:68%;--rot:20deg;--a:0.18;--color:#6a4c93;--delay:0.8s;--dur:12s"></div>
+        <div class="block truck" style="--bx:75%;--by:75%;--rot:-14deg;--a:0.16;--color:#48bfe3;--delay:3s;--dur:9s"></div>
+        <div class="block car" style="--bx:18%;--by:85%;--rot:10deg;--a:0.22;--color:#e63946;--delay:1.2s;--dur:8s"></div>
+        <div class="block car" style="--bx:60%;--by:88%;--rot:-22deg;--a:0.15;--color:#457b9d;--delay:2.5s;--dur:10s"></div>
+        <div class="block truck" style="--bx:35%;--by:4%;--rot:5deg;--a:0.14;--color:#2a9d8f;--delay:0.3s;--dur:11s"></div>
+        <div class="block car" style="--bx:92%;--by:65%;--rot:16deg;--a:0.17;--color:#e9c46a;--delay:4s;--dur:8s"></div>
+        <div class="block car vert" style="--bx:48%;--by:82%;--rot:-6deg;--a:0.12;--color:#f4a261;--delay:1.8s;--dur:13s"></div>
+        <div class="block car vert" style="--bx:0%;--by:15%;--rot:12deg;--a:0.16;--color:#6a4c93;--delay:2.2s;--dur:9s"></div>
+        <div class="block truck vert" style="--bx:90%;--by:40%;--rot:-10deg;--a:0.13;--color:#48bfe3;--delay:3.5s;--dur:10s"></div>
+      </div>
+
+      <div class="splash-content">
+        <div class="title-glow"></div>
+        <h1 class="splash-title">RUSH HOUR</h1>
+        <p class="splash-subtitle" id="subtitle">Slide to escape!</p>
+
+        <button class="play-button" id="start-button">
+          <span class="play-label">PLAY</span>
+        </button>
+      </div>
+    </div>
+    <script type="module" src="splash/splash.ts" defer></script>
+  </body>
+</html>

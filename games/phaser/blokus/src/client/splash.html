@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" type="text/css" href="splash/splash.css" />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width, height=device-height, user-scalable=0"
+    />
+    <title>Blokus</title>
+  </head>
+  <body class="app">
+    <div class="splash-bg">
+      <div class="rays"></div>
+      <div class="vignette"></div>
+
+      <div class="blocks">
+        <div class="block t-piece" style="--bx:8%;--by:10%;--rot:-15deg;--a:0.25;--color:#4a90d9;--delay:0s;--dur:9s"></div>
+        <div class="block l-piece" style="--bx:80%;--by:6%;--rot:20deg;--a:0.2;--color:#e8913a;--delay:1s;--dur:11s"></div>
+        <div class="block s-piece" style="--bx:85%;--by:30%;--rot:-10deg;--a:0.22;--color:#4a90d9;--delay:0.5s;--dur:8s"></div>
+        <div class="block i-piece" style="--bx:3%;--by:45%;--rot:12deg;--a:0.18;--color:#e8913a;--delay:2s;--dur:10s"></div>
+        <div class="block o-piece" style="--bx:88%;--by:55%;--rot:-5deg;--a:0.2;--color:#4a90d9;--delay:1.5s;--dur:7s"></div>
+        <div class="block t-piece" style="--bx:6%;--by:70%;--rot:18deg;--a:0.16;--color:#e8913a;--delay:0.8s;--dur:12s"></div>
+        <div class="block l-piece" style="--bx:78%;--by:78%;--rot:-20deg;--a:0.2;--color:#4a90d9;--delay:3s;--dur:9s"></div>
+        <div class="block s-piece" style="--bx:15%;--by:88%;--rot:8deg;--a:0.22;--color:#e8913a;--delay:1.2s;--dur:8s"></div>
+        <div class="block i-piece" style="--bx:55%;--by:90%;--rot:-18deg;--a:0.15;--color:#4a90d9;--delay:2.5s;--dur:10s"></div>
+        <div class="block o-piece" style="--bx:40%;--by:5%;--rot:6deg;--a:0.14;--color:#e8913a;--delay:0.3s;--dur:11s"></div>
+      </div>
+
+      <div class="splash-content">
+        <div class="title-glow"></div>
+        <h1 class="splash-title">BLOKUS</h1>
+        <p class="splash-subtitle" id="subtitle">Claim your territory!</p>
+
+        <button class="play-button" id="start-button">
+          <span class="play-label">PLAY</span>
+        </button>
+      </div>
+    </div>
+    <script type="module" src="splash/splash.ts" defer></script>
+  </body>
+</html>

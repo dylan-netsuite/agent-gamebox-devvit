@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" type="text/css" href="splash/splash.css" />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width, height=device-height, user-scalable=0"
+    />
+    <title>Meerca Chase</title>
+  </head>
+  <body class="app">
+    <div class="splash-bg">
+      <div class="grid-overlay"></div>
+      <div class="vignette"></div>
+
+      <!-- Animated snake that loops across the screen -->
+      <div class="snake-track">
+        <div class="snake">
+          <div class="snake-head">
+            <div class="ear ear-l"></div>
+            <div class="ear ear-r"></div>
+            <div class="eye eye-l"><div class="pupil"></div></div>
+            <div class="eye eye-r"><div class="pupil"></div></div>
+            <div class="mouth"></div>
+          </div>
+          <div class="snake-seg seg-1"></div>
+          <div class="snake-seg seg-2"></div>
+          <div class="snake-seg seg-3"></div>
+          <div class="snake-seg seg-4"></div>
+          <div class="snake-seg seg-5"></div>
+        </div>
+      </div>
+
+      <!-- Neggs that appear and get eaten -->
+      <div class="negg-track">
+        <div class="trail-negg tn-1"></div>
+        <div class="trail-negg tn-2"></div>
+        <div class="trail-negg tn-3"></div>
+        <div class="trail-negg tn-4"></div>
+        <div class="trail-negg tn-5"></div>
+        <div class="trail-negg tn-6"></div>
+      </div>
+
+      <!-- Floating score popups -->
+      <div class="popup-layer">
+        <div class="score-pop pop-1">+1</div>
+        <div class="score-pop pop-2">+5</div>
+        <div class="score-pop pop-3">+2</div>
+        <div class="score-pop pop-4">+10</div>
+      </div>
+
+      <div class="splash-content">
+        <div class="title-glow"></div>
+        <h1 class="splash-title">MEERCA<br/>CHASE</h1>
+        <div class="neopets-badge">A Neopets Classic</div>
+
+        <div class="score-display" id="score-display">
+          <span class="score-label">HIGH SCORE</span>
+          <span class="score-value" id="high-score">---</span>
+        </div>
+
+        <button class="play-button" id="start-button">
+          <span class="btn-negg"></span>
+          <span class="play-label">CHASE!</span>
+        </button>
+
+        <p class="splash-hint" id="subtitle">Arrow keys to move &bull; Collect Neggs &bull; Avoid your tail</p>
+      </div>
+    </div>
+    <script type="module" src="splash/splash.ts" defer></script>
+  </body>
+</html>

@@ -33,15 +33,16 @@ Given a game path like `phaser/jeopardy`:
 
 ## Documentation Structure
 
-The skill maintains these files in `games/{game-path}/docs/`:
+The skill maintains the **README** and the files in `games/{game-path}/docs/`:
 
 | File | Purpose |
 |------|---------|
-| `architecture.md` | System architecture, tech stack, data flow |
-| `game-mechanics.md` | Game rules, scenes, scoring, timers, interactions |
-| `api-reference.md` | Server endpoints, Redis keys, request/response shapes |
-| `scenes.md` | Phaser scene inventory with lifecycle and layout details |
-| `changelog.md` | Running log of features added, bugs fixed, iterations |
+| `README.md` | **User-facing app description** — included in Devvit uploads and shown on the app listing page. Must be kept accurate and polished. |
+| `docs/architecture.md` | System architecture, tech stack, data flow |
+| `docs/game-mechanics.md` | Game rules, scenes, scoring, timers, interactions |
+| `docs/api-reference.md` | Server endpoints, Redis keys, request/response shapes |
+| `docs/scenes.md` | Phaser scene inventory with lifecycle and layout details |
+| `docs/changelog.md` | Running log of features added, bugs fixed, iterations |
 
 ## Workflow
 
@@ -59,7 +60,19 @@ The skill maintains these files in `games/{game-path}/docs/`:
    - Scan `games/{game-path}/src/shared/types/*.ts`
    - Read `games/{game-path}/devvit.json`
 
-### Step 2: Update Each Doc
+### Step 2: Update README
+
+Update `games/{game-path}/README.md` — this is the **most important file** because it ships with every Devvit upload and is displayed on the app listing page.
+
+#### README Guidelines
+- **Audience:** End users (Reddit community members and moderators), NOT developers
+- **Tone:** Friendly, concise, informative — sell the game and explain how to play
+- **Structure:** Title → one-line pitch → "How It Works" → game modes/features → "How to Play" steps
+- **Accuracy is critical:** Every feature, game mode, and mechanic mentioned must reflect the current state of the code. If a feature was added or removed, the README must be updated.
+- **Do NOT include:** Developer setup instructions, build commands, architecture details, or API docs (those belong in `docs/`)
+- **Do NOT include:** Screenshots or images (these are not supported in Devvit app listings)
+
+### Step 3: Update Each Doc
 
 Update all doc files in `games/{game-path}/docs/`. See the writing guidelines below.
 
@@ -80,11 +93,12 @@ Update all doc files in `games/{game-path}/docs/`. See the writing guidelines be
 - Append-only log (newest first)
 - Format: `## [YYYY-MM-DD] Feature/Fix Title` with workflow ID, summary, files modified
 
-### Step 3: Validate
+### Step 4: Validate
 
-1. Ensure all markdown renders correctly
-2. Cross-check scene list against actual files
-3. Ensure changelog entry was added if invoked from a workflow
+1. Ensure the README accurately reflects the current game features and mechanics — no stale or missing info
+2. Ensure all markdown renders correctly
+3. Cross-check scene list against actual files
+4. Ensure changelog entry was added if invoked from a workflow
 
 ## Writing Guidelines
 

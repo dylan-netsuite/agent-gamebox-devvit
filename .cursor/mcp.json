@@ -9,20 +9,22 @@
       "args": [
         "@playwright/mcp@latest",
         "--user-data-dir",
-        "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/profiles/p1",
+        ".devvit-testing/profiles/p1",
         "--output-dir",
-        "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/screenshots/p1"
-      ]
+        ".devvit-testing/screenshots/p1"
+      ],
+      "cwd": ".devvit-testing/screenshots/p1"
     },
     "player_two": {
       "command": "npx",
       "args": [
         "@playwright/mcp@latest",
         "--user-data-dir",
-        "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/profiles/p2",
+        ".devvit-testing/profiles/p2",
         "--output-dir",
-        "/Users/dylan.glenn/repos/agent-gamebox-devvit/.devvit-testing/screenshots/p2"
-      ]
+        ".devvit-testing/screenshots/p2"
+      ],
+      "cwd": ".devvit-testing/screenshots/p2"
     }
   }
 }

@@ -1,0 +1,490 @@
+import * as Phaser from 'phaser';
+import type { WeaponSystem } from './WeaponSystem';
+import type { HUD } from '../ui/HUD';
+
+interface HighlightRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+interface TutorialStep {
+  id: string;
+  title: string;
+  body: string;
+  hint?: string;
+  clickToContinue?: boolean;
+  condition?: () => boolean;
+  getHighlight?: () => HighlightRect | null;
+  onEnter?: () => void;
+}
+
+const OVERLAY_ALPHA = 0.55;
+const BOX_W = 320;
+const BOX_PAD = 18;
+const ACCENT = 0x00e5ff;
+const BOX_BG = 0x0f1923;
+
+const STORAGE_KEY = 'worms_tutorial_complete';
+
+export class TutorialManager {
+  private scene: Phaser.Scene;
+  private weapons: WeaponSystem;
+  private hud: HUD | null;
+  private isTouch: boolean;
+  private container!: Phaser.GameObjects.Container;
+  private backdropGfx!: Phaser.GameObjects.Graphics;
+  private boxGfx!: Phaser.GameObjects.Graphics;
+  private highlightGfx!: Phaser.GameObjects.Graphics;
+  private highlightTween: Phaser.Tweens.Tween | null = null;
+  private titleText!: Phaser.GameObjects.Text;
+  private bodyText!: Phaser.GameObjects.Text;
+  private hintText!: Phaser.GameObjects.Text;
+  private progressText!: Phaser.GameObjects.Text;
+  private skipText!: Phaser.GameObjects.Text;
+  private steps: TutorialStep[];
+  private stepIndex = 0;
+  private active = true;
+  private waitingForClick = false;
+  private playerMoved = false;
+  private playerJumped = false;
+  private playerSwitchedWeapon = false;
+  private initialWeaponIndex = 0;
+  private turnAdvanced = false;
+  private parachuteUsed = false;
+  private ropeUsed = false;
+  private teleportUsed = false;
+  private onComplete: () => void;
+
+  constructor(
+    scene: Phaser.Scene,
+    weapons: WeaponSystem,
+    onComplete: () => void,
+    hud?: HUD,
+  ) {
+    this.scene = scene;
+    this.weapons = weapons;
+    this.onComplete = onComplete;
+    this.hud = hud ?? null;
+    this.isTouch = !!scene.sys.game.device.input.touch;
+
+    this.steps = this.buildSteps();
+    this.buildUI();
+    this.showStep(0);
+  }
+
+  static isComplete(): boolean {
+    try {
+      return localStorage.getItem(STORAGE_KEY) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  private buildSteps(): TutorialStep[] {
+    const t = this.isTouch;
+    return [
+      {
+        id: 'welcome',
+        title: '👋 Welcome to Reddit Royale!',
+        body: "Let's learn the basics of turn-based artillery combat.\nEach turn you'll move, aim, and fire!",
+        clickToContinue: true,
+      },
+      {
+        id: 'movement',
+        title: '🏃 Movement',
+        body: t
+          ? 'Use the on-screen D-pad (← →) to move your worm.'
+          : 'Use the ← → arrow keys to move your worm.\nOn mobile, use the on-screen D-pad.',
+        hint: t ? 'Tap ← or → to move' : 'Move left or right to continue',
+        condition: () => this.playerMoved,
+      },
+      {
+        id: 'jumping',
+        title: '🦘 Jumping',
+        body: t
+          ? 'Tap the ↑ button to jump over obstacles.\nYou can move in the air too!'
+          : 'Press W to jump over obstacles.\nYou can move in the air too!',
+        hint: t ? 'Tap ↑ to jump' : 'Press W to jump',
+        condition: () => this.playerJumped,
+      },
+      {
+        id: 'weapon-switch',
+        title: '🔫 Switching Weapons',
+        body: t
+          ? 'You have 9 weapons! Tap the ◀ / ▶ buttons to cycle through them, or tap the weapon grid on the left panel.'
+          : 'You have 9 weapons! Press Q/E to cycle through them, use number keys 1-9, or click the weapon grid on the left panel.',
+        hint: t ? 'Tap ◀ or ▶ to switch' : 'Switch to a different weapon',
+        condition: () => this.playerSwitchedWeapon,
+        getHighlight: () => this.hud?.getWeaponGridBounds() ?? null,
+      },
+      {
+        id: 'aiming',
+        title: '🎯 Aiming',
+        body: t
+          ? 'Tap the 🎯 button to enter aiming mode. Drag on the battlefield to aim — a trajectory preview will appear.'
+          : 'Click on the battlefield (or press SPACE) to enter aiming mode. Move your mouse to aim — a trajectory preview will appear.',
+        hint: t ? 'Tap 🎯 to aim' : 'Click or press SPACE to aim',
+        condition: () => this.weapons.currentState === 'aiming',
+      },
+      {
+        id: 'fire',
+        title: '💥 Fire!',
+        body: t
+          ? 'Use the +/− buttons to adjust power, then tap 🎯 again to fire! Watch your projectile fly.'
+          : 'Scroll (or press R/T) to adjust power, then click (or press SPACE again) to fire! Watch your projectile fly.',
+        hint: t ? 'Tap 🎯 to fire' : 'Click or press SPACE to fire',
+        condition: () =>
+          this.weapons.currentState === 'firing' ||
+          this.weapons.currentState === 'resolved',
+        getHighlight: () => this.hud?.getPowerBarBounds() ?? null,
+      },
+      {
+        id: 'parachute',
+        title: '🪂 Parachute',
+        body: t
+          ? 'Tap the 🪂 button to deploy a parachute while in the air.\nThis slows your descent and prevents fall damage. Tap again to close it.'
+          : 'Press P to deploy a parachute while in the air.\nThis slows your descent and prevents fall damage. Press P again to close it.',
+        hint: t ? 'Jump (↑) then tap 🪂' : 'Jump (W) then press P to open a parachute',
+        condition: () => this.parachuteUsed,
+        onEnter: () => {
+          this.weapons.reset();
+        },
+      },
+      {
+        id: 'ninja-rope',
+        title: '🪝 Ninja Rope',
+        body: t
+          ? 'The Ninja Rope lets you swing across the map!\nTap 🎯 to aim and fire to attach. Use ↑/↓ to adjust length.\nTap 🎯 to detach.'
+          : 'The Ninja Rope lets you swing across the map!\nAim and fire to attach. Use ↑/↓ to adjust length.\nPress SPACE or click to detach.',
+        hint: t ? 'Aim and tap 🎯 to attach' : 'Aim and fire to attach the rope',
+        condition: () => this.ropeUsed,
+        onEnter: () => {
+          this.weapons.reset();
+          this.weapons.selectWeaponById('ninja-rope');
+        },
+      },
+      {
+        id: 'teleport',
+        title: '⚡ Teleport',
+        body: t
+          ? 'Teleport lets you instantly warp to any location!\nAim where you want to go, adjust power with +/−, then tap 🎯 to fire.'
+          : 'Teleport lets you instantly warp to any location!\nAim where you want to go, adjust power, then fire.',
+        hint: t ? 'Aim and tap 🎯 to teleport' : 'Aim and fire to teleport',
+        condition: () => this.teleportUsed,
+        onEnter: () => {
+          this.weapons.reset();
+          this.weapons.selectWeaponById('teleport');
+        },
+      },
+      {
+        id: 'turn-flow',
+        title: '🔄 Turn Flow',
+        body: t
+          ? "After your shot resolves, tap the ⏭ button to end your turn. Then it's the opponent's turn!"
+          : "After your shot resolves, press ENTER (or tap ⏭) to end your turn. Then it's the opponent's turn!",
+        hint: t ? 'Tap ⏭ to end turn' : 'Press ENTER to end your turn',
+        condition: () => this.turnAdvanced,
+      },
+      {
+        id: 'complete',
+        title: '🎉 Tutorial Complete!',
+        body: "You're ready for battle! Try Single Player to practice against the CPU, or jump into Online Play for real competition.",
+        clickToContinue: true,
+      },
+    ];
+  }
+
+  private buildUI(): void {
+    const cam = this.scene.cameras.main;
+    this.container = this.scene.add
+      .container(0, 0)
+      .setDepth(400)
+      .setScrollFactor(0);
+
+    this.backdropGfx = this.scene.add.graphics();
+    this.container.add(this.backdropGfx);
+
+    this.highlightGfx = this.scene.add.graphics();
+    this.container.add(this.highlightGfx);
+
+    this.boxGfx = this.scene.add.graphics();
+    this.container.add(this.boxGfx);
+
+    const boxW = Math.min(BOX_W, cam.width - 24);
+
+    this.titleText = this.scene.add
+      .text(cam.width / 2, 0, '', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '18px',
+        fontStyle: 'bold',
+        color: '#00e5ff',
+        stroke: '#000000',
+        strokeThickness: 2,
+        wordWrap: { width: boxW - BOX_PAD * 2 },
+        align: 'center',
+      })
+      .setOrigin(0.5, 0);
+    this.container.add(this.titleText);
+
+    this.bodyText = this.scene.add
+      .text(cam.width / 2, 0, '', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '13px',
+        color: '#e6edf3',
+        wordWrap: { width: boxW - BOX_PAD * 2 },
+        align: 'center',
+        lineSpacing: 4,
+      })
+      .setOrigin(0.5, 0);
+    this.container.add(this.bodyText);
+
+    this.hintText = this.scene.add
+      .text(cam.width / 2, 0, '', {
+        fontFamily: 'monospace',
+        fontSize: '10px',
+        color: '#6e7681',
+        align: 'center',
+      })
+      .setOrigin(0.5, 0);
+    this.container.add(this.hintText);
+
+    this.scene.tweens.add({
+      targets: this.hintText,
+      alpha: 0.3,
+      yoyo: true,
+      repeat: -1,
+      duration: 900,
+    });
+
+    this.progressText = this.scene.add
+      .text(cam.width / 2, 0, '', {
+        fontFamily: 'monospace',
+        fontSize: '10px',
+        color: '#6e7681',
+        align: 'center',
+      })
+      .setOrigin(0.5, 0);
+    this.container.add(this.progressText);
+
+    this.skipText = this.scene.add
+      .text(0, 0, 'SKIP ▸', {
+        fontFamily: 'Segoe UI, system-ui, sans-serif',
+        fontSize: '12px',
+        fontStyle: 'bold',
+        color: '#6e7681',
+        padding: { x: 8, y: 4 },
+      })
+      .setOrigin(1, 0)
+      .setInteractive({ useHandCursor: true });
+    this.container.add(this.skipText);
+
+    this.skipText.on('pointerover', () => this.skipText.setColor('#00e5ff'));
+    this.skipText.on('pointerout', () => this.skipText.setColor('#6e7681'));
+    this.skipText.on('pointerdown', () => this.complete());
+
+    this.scene.input.on('pointerdown', () => {
+      if (this.waitingForClick && this.active) {
+        this.advanceStep();
+      }
+    });
+
+    if (this.scene.input.keyboard) {
+      this.scene.input.keyboard.on('keydown-ENTER', () => {
+        if (this.waitingForClick && this.active) {
+          this.advanceStep();
+        }
+      });
+    }
+  }
+
+  private showStep(index: number): void {
+    if (index >= this.steps.length) {
+      this.complete();
+      return;
+    }
+
+    this.stepIndex = index;
+    const step = this.steps[index]!;
+    const cam = this.scene.cameras.main;
+    const boxW = Math.min(BOX_W, cam.width - 24);
+
+    this.titleText.setText(step.title);
+    this.bodyText.setText(step.body);
+
+    const titleH = this.titleText.height;
+    const bodyH = this.bodyText.height;
+    const hintH = step.clickToContinue || step.hint ? 20 : 0;
+    const boxH = BOX_PAD + titleH + 8 + bodyH + (hintH > 0 ? 10 + hintH : 0) + BOX_PAD;
+
+    const boxX = (cam.width - boxW) / 2;
+    const boxY = cam.height * 0.15;
+
+    this.backdropGfx.clear();
+    this.boxGfx.clear();
+    this.highlightGfx.clear();
+    if (this.highlightTween) {
+      this.highlightTween.stop();
+      this.highlightTween = null;
+    }
+
+    if (step.clickToContinue) {
+      this.backdropGfx.fillStyle(0x000000, OVERLAY_ALPHA);
+      this.backdropGfx.fillRect(0, 0, cam.width, cam.height);
+    }
+
+    const hl = step.getHighlight?.();
+    if (hl) {
+      this.drawHighlight(hl);
+    }
+
+    this.boxGfx.fillStyle(BOX_BG, 0.92);
+    this.boxGfx.fillRoundedRect(boxX, boxY, boxW, boxH, 10);
+    this.boxGfx.lineStyle(2, ACCENT, 0.6);
+    this.boxGfx.strokeRoundedRect(boxX, boxY, boxW, boxH, 10);
+
+    this.titleText.setPosition(cam.width / 2, boxY + BOX_PAD);
+    this.bodyText.setPosition(cam.width / 2, boxY + BOX_PAD + titleH + 8);
+
+    if (step.clickToContinue) {
+      this.hintText.setText(
+        this.isTouch ? 'Tap to continue' : 'Click or press ENTER to continue',
+      );
+      this.hintText.setPosition(cam.width / 2, boxY + boxH - BOX_PAD - 6);
+      this.hintText.setVisible(true);
+      this.waitingForClick = true;
+    } else if (step.hint) {
+      this.hintText.setText(step.hint);
+      this.hintText.setPosition(cam.width / 2, boxY + boxH - BOX_PAD - 6);
+      this.hintText.setVisible(true);
+      this.waitingForClick = false;
+    } else {
+      this.hintText.setVisible(false);
+      this.waitingForClick = false;
+    }
+
+    const progressY = boxY + boxH + 8;
+    this.progressText.setText(`Step ${index + 1} / ${this.steps.length}`);
+    this.progressText.setPosition(cam.width / 2, progressY);
+
+    this.skipText.setPosition(boxX + boxW - 4, boxY + 4);
+
+    step.onEnter?.();
+
+    this.container.setVisible(true);
+  }
+
+  private advanceStep(): void {
+    const nextIndex = this.stepIndex + 1;
+    if (nextIndex >= this.steps.length) {
+      this.complete();
+      return;
+    }
+    this.showStep(nextIndex);
+  }
+
+  private complete(): void {
+    this.active = false;
+    this.container.setVisible(false);
+    try {
+      localStorage.setItem(STORAGE_KEY, '1');
+    } catch {
+      // localStorage may be unavailable in some contexts
+    }
+    this.onComplete();
+  }
+
+  notifyMove(): void {
+    this.playerMoved = true;
+  }
+
+  notifyJump(): void {
+    this.playerJumped = true;
+  }
+
+  notifyWeaponSwitch(newIndex: number): void {
+    if (newIndex !== this.initialWeaponIndex) {
+      this.playerSwitchedWeapon = true;
+    }
+  }
+
+  notifyTurnAdvanced(): void {
+    this.turnAdvanced = true;
+  }
+
+  notifyParachute(): void {
+    this.parachuteUsed = true;
+  }
+
+  notifyRopeAttached(): void {
+    this.ropeUsed = true;
+  }
+
+  notifyTeleportUsed(): void {
+    this.teleportUsed = true;
+  }
+
+  setInitialWeaponIndex(idx: number): void {
+    this.initialWeaponIndex = idx;
+  }
+
+  /** Returns true when tutorial overlay is blocking input. */
+  isBlocking(): boolean {
+    return this.active && this.waitingForClick;
+  }
+
+  isActive(): boolean {
+    return this.active;
+  }
+
+  getCurrentStepId(): string {
+    return this.steps[this.stepIndex]?.id ?? '';
+  }
+
+  update(): void {
+    if (!this.active) return;
+
+    if (this.weapons.weaponIndex !== this.initialWeaponIndex) {
+      this.playerSwitchedWeapon = true;
+    }
+
+    const step = this.steps[this.stepIndex];
+    if (!step || step.clickToContinue) return;
+
+    if (step.condition && step.condition()) {
+      this.advanceStep();
+    }
+  }
+
+  private drawHighlight(rect: HighlightRect): void {
+    const pad = 4;
+    this.highlightGfx.lineStyle(3, ACCENT, 0.9);
+    this.highlightGfx.strokeRoundedRect(
+      rect.x - pad,
+      rect.y - pad,
+      rect.w + pad * 2,
+      rect.h + pad * 2,
+      8,
+    );
+    this.highlightGfx.setAlpha(1);
+
+    this.highlightTween = this.scene.tweens.add({
+      targets: this.highlightGfx,
+      alpha: 0.2,
+      yoyo: true,
+      repeat: -1,
+      duration: 600,
+      ease: 'Sine.easeInOut',
+    });
+  }
+
+  getContainer(): Phaser.GameObjects.Container {
+    return this.container;
+  }
+
+  destroy(): void {
+    if (this.highlightTween) this.highlightTween.stop();
+    this.container?.destroy();
+  }
+}

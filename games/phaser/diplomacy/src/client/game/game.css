@@ -1,0 +1,853 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #0b1416;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+#app {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+}
+
+#game-container canvas {
+  display: block;
+}
+
+/* ── Orders panel overlay ───────────────────── */
+#orders-panel {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 240px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: rgba(20, 20, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  color: rgba(255, 255, 255, 0.87);
+  z-index: 10;
+}
+
+.orders-turn {
+  font-size: 11px;
+  color: #e6c200;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.orders-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.orders-timer {
+  font-size: 12px;
+  color: #4488aa;
+  font-weight: 700;
+  margin-bottom: 4px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+.orders-timer.timer-warning {
+  color: #e74c3c;
+  animation: timer-pulse 1s ease-in-out infinite;
+}
+
+.orders-timer.timer-expired {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.orders-mode-row {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.orders-mode-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 4px 2px;
+  font-size: 10px;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.orders-mode-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.orders-mode-btn.active {
+  background: rgba(46, 204, 113, 0.3);
+  color: #2ecc71;
+  border-color: #2ecc71;
+  font-weight: 700;
+}
+
+.orders-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
+.orders-row {
+  font-size: 12px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.orders-row-remove {
+  cursor: pointer;
+  color: rgba(255, 100, 100, 0.7);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+  font-weight: 700;
+}
+
+.orders-row-remove:hover {
+  color: #ff4444;
+}
+
+.retreat-row {
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.orders-empty {
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+.orders-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.orders-btn {
+  flex: 1 1 calc(50% - 4px);
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.orders-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.orders-submit {
+  background: rgba(46, 204, 113, 0.2);
+  border-color: rgba(46, 204, 113, 0.4);
+}
+.orders-submit:hover:not(:disabled) {
+  background: rgba(46, 204, 113, 0.35);
+}
+
+.orders-status {
+  font-size: 11px;
+  opacity: 0.7;
+  font-weight: 700;
+}
+
+.orders-select {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 11px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.orders-log {
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.orders-log-entry {
+  font-size: 11px;
+  padding: 2px 4px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.4;
+}
+
+.orders-log-header {
+  color: #e6c200;
+  font-weight: 700;
+  margin-top: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 2px;
+}
+
+.orders-log-success {
+  color: #2ecc71;
+}
+
+.orders-log-fail {
+  color: #e74c3c;
+}
+
+/* ── Province tooltip ───────────────────────── */
+#province-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 20;
+  background: rgba(11, 20, 22, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  display: none;
+  transform: translate(12px, 12px);
+}
+
+#province-tooltip .tooltip-name {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+#province-tooltip .tooltip-detail {
+  opacity: 0.7;
+  font-size: 11px;
+}
+
+/* ── Chat panel ─────────────────────────────── */
+#chat-toggle {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  background: rgba(20, 20, 20, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: rgba(255, 255, 255, 0.87);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.15s;
+}
+
+#chat-toggle:hover {
+  background: rgba(40, 40, 40, 0.95);
+}
+
+.chat-badge {
+  background: #e74c3c;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 50%;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: top;
+}
+
+#chat-panel {
+  position: absolute;
+  left: 16px;
+  bottom: 56px;
+  width: 260px;
+  max-height: 320px;
+  background: rgba(20, 20, 20, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 8px;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  color: rgba(255, 255, 255, 0.87);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 240px;
+  margin-bottom: 8px;
+}
+
+.chat-msg {
+  font-size: 11px;
+  padding: 3px 0;
+  line-height: 1.4;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.chat-msg-author {
+  font-weight: 700;
+  margin-right: 6px;
+}
+
+.chat-msg-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 4px;
+}
+
+.chat-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  outline: none;
+}
+
+.chat-input:focus {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.chat-send-btn {
+  background: rgba(46, 204, 113, 0.2);
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  border-radius: 4px;
+  color: #2ecc71;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 10px;
+}
+
+.chat-send-btn:hover {
+  background: rgba(46, 204, 113, 0.35);
+}
+
+/* ── Chat tabs ──────────────────────────────── */
+.chat-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 6px;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.chat-tab {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 9px;
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+.chat-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.chat-tab.active {
+  background: rgba(46, 204, 113, 0.25);
+  color: #2ecc71;
+  border-color: #2ecc71;
+  font-weight: 700;
+}
+
+.chat-tab-badge {
+  background: #e74c3c;
+  color: white;
+  font-size: 8px;
+  font-weight: 700;
+  border-radius: 50%;
+  padding: 0 3px;
+  margin-left: 3px;
+  vertical-align: top;
+}
+
+.chat-empty {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  padding: 16px 0;
+  font-style: italic;
+}
+
+/* ── Coast picker ──────────────────────────── */
+#coast-picker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 15, 26, 0.96);
+  border: 2px solid rgba(230, 194, 0, 0.6);
+  border-radius: 10px;
+  padding: 16px 20px;
+  z-index: 30;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.coast-picker-label {
+  color: #e6c200;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.coast-picker-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.coast-picker-btn {
+  background: rgba(46, 204, 113, 0.15);
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  border-radius: 6px;
+  color: #2ecc71;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.coast-picker-btn:hover {
+  background: rgba(46, 204, 113, 0.3);
+}
+
+.coast-picker-cancel {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.coast-picker-cancel:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ── Sound toggle ──────────────────────────── */
+#sound-toggle {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.15s;
+}
+
+#sound-toggle:hover {
+  background: rgba(40, 40, 40, 0.95);
+}
+
+/* ── My Games button ──────────────────────────── */
+#my-games-btn {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  background: rgba(20, 20, 20, 0.88);
+  border: 1px solid rgba(68, 136, 170, 0.5);
+  border-radius: 6px;
+  padding: 6px 14px;
+  color: #4488aa;
+  font-family: Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+#my-games-btn:hover {
+  background: rgba(30, 40, 50, 0.95);
+  color: #66aacc;
+  border-color: #66aacc;
+}
+
+/* ── History panel ─────────────────────────────── */
+#history-panel {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 260px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: rgba(15, 15, 26, 0.95);
+  border: 2px solid rgba(230, 194, 0, 0.5);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  color: rgba(255, 255, 255, 0.87);
+  z-index: 15;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.history-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #e6c200;
+  letter-spacing: 1px;
+}
+
+.history-close-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.history-close-btn:hover {
+  color: #fff;
+}
+
+.history-turn-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.history-turn-label::after {
+  content: attr(data-index);
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 2px;
+}
+
+.history-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.history-nav-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: background 0.15s;
+}
+
+.history-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.history-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  outline: none;
+}
+
+.history-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e6c200;
+  cursor: pointer;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+}
+
+.history-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e6c200;
+  cursor: pointer;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+}
+
+.history-live-btn {
+  width: 100%;
+  background: rgba(46, 204, 113, 0.15);
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  border-radius: 6px;
+  color: #2ecc71;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.history-live-btn:hover {
+  background: rgba(46, 204, 113, 0.3);
+}
+
+.history-log {
+  max-height: 180px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.history-log-entry {
+  font-size: 11px;
+  padding: 2px 4px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+.history-log-header {
+  color: #e6c200;
+  font-weight: 700;
+  margin-top: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 2px;
+}
+
+.history-log-success { color: #2ecc71; }
+.history-log-fail { color: #e74c3c; }
+
+.history-log-empty {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  padding: 8px 0;
+  font-style: italic;
+}
+
+#history-btn {
+  position: absolute;
+  left: 16px;
+  top: 48px;
+  background: rgba(20, 20, 20, 0.88);
+  border: 1px solid rgba(230, 194, 0, 0.5);
+  border-radius: 6px;
+  padding: 6px 14px;
+  color: #e6c200;
+  font-family: Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+#history-btn:hover {
+  background: rgba(30, 30, 20, 0.95);
+  color: #f0d020;
+  border-color: #f0d020;
+}
+
+/* ── Tutorial button (GamePlay scene) ─────────── */
+#tutorial-btn {
+  position: absolute;
+  left: 16px;
+  top: 80px;
+  background: rgba(20, 20, 20, 0.88);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 6px;
+  padding: 6px 14px;
+  color: #2ecc71;
+  font-family: Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+#tutorial-btn:hover {
+  background: rgba(20, 30, 20, 0.95);
+  color: #3ddc84;
+  border-color: #3ddc84;
+}
+
+/* ── Tutorial overlay ─────────────────────────── */
+#tutorial-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.tutorial-message {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 32px));
+  background: rgba(15, 15, 26, 0.96);
+  border: 2px solid rgba(230, 194, 0, 0.7);
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}
+
+.tutorial-step-counter {
+  font-size: 10px;
+  color: rgba(230, 194, 0, 0.6);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.tutorial-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e6c200;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.tutorial-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 12px;
+}
+
+.tutorial-body b {
+  color: #e6c200;
+  font-weight: 700;
+}
+
+.tutorial-next-btn {
+  display: block;
+  width: 100%;
+  background: rgba(46, 204, 113, 0.2);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 6px;
+  color: #2ecc71;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tutorial-next-btn:hover {
+  background: rgba(46, 204, 113, 0.35);
+}
+
+.tutorial-skip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: color 0.15s, border-color 0.15s;
+  z-index: 26;
+}
+
+.tutorial-skip:hover {
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tutorial-pointed {
+  box-shadow: 0 0 12px rgba(230, 194, 0, 0.6);
+  border-color: rgba(230, 194, 0, 0.8) !important;
+}
+
+/* Chat country colors */
+:root {
+  --chat-austria: #C87EC8;
+  --chat-england: #D08888;
+  --chat-france: #6888D0;
+  --chat-germany: #AAAAAA;
+  --chat-italy: #D0A868;
+  --chat-russia: #D0D060;
+  --chat-turkey: #58B878;
+  --chat-spectator: #888888;
+}

@@ -15,6 +15,15 @@ dist
 
 # Playwright MCP artifacts
 .playwright-mcp/
+/*.png
+
+# Large database files and tool temp output
+**/tools/rush.txt
+**/tools/rush.txt.gz
+**/tools/rush1000.txt
+**/tools/generated-*.ts
+**/tools/generated-*.txt
+**/tools/*.tmp
 
 # Devvit testing (browser profiles, screenshots)
 .devvit-testing/profiles/
