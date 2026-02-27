@@ -184,6 +184,9 @@ export class Game extends Scene {
         case 'gravity_well':
           this.obstacles.addGravityWell(obs);
           break;
+        case 'invisible_wall':
+          this.obstacles.addInvisibleWall(obs);
+          break;
       }
     }
 
@@ -389,6 +392,7 @@ export class Game extends Scene {
       this.handleWaterHazard();
       return;
     }
+    this.obstacles.updateInvisibleWalls(delta, this.state === 'simulating' ? this.ball : undefined);
 
     this.ball.update();
     this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);

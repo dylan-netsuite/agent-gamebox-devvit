@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.0.3.159 - Hole 16: The Invisible Maze (2026-02-27)
+
+### Added
+- **Hole 16: The Invisible Maze** — psychologically taxing par 4 with hidden walls
+- New `invisible_wall` obstacle type: fully transparent static wall segments
+- **Flash-on-impact mechanic**: invisible walls flash white for ~330ms when the ball collides, then fade back to full transparency
+- Serpentine maze layout with alternating horizontal barriers (gaps left/right) and vertical dividers
+- Dead-end trap walls to punish blind shots
+- Matter.js engine collision pair detection for reliable flash triggering
+
 ## v0.0.7.11 - Hole 15: The Cascading Plinko Board (2026-02-27)
 
 ### Added

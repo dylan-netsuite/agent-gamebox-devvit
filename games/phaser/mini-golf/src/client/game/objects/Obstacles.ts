@@ -26,7 +26,8 @@ export type ObstacleType =
   | 'block'
   | 'licorice_wall'
   | 'gumdrop_bumper'
-  | 'claw';
+  | 'claw'
+  | 'invisible_wall';
 
 export interface ObstacleDef {
   type: ObstacleType;
@@ -173,6 +174,17 @@ interface ClawData {
   currentShadowY: number;
 }
 
+interface InvisibleWallData {
+  body: MatterJS.BodyType;
+  graphics: Phaser.GameObjects.Graphics;
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+  angle: number;
+  flashAlpha: number;
+}
+
 export class Obstacles {
   scene: Phaser.Scene;
   private zones: ActiveZone[] = [];
@@ -184,6 +196,7 @@ export class Obstacles {
   private conveyors: ConveyorData[] = [];
   private claws: ClawData[] = [];
   private gravityWells: GravityWellData[] = [];
+  private invisibleWalls: InvisibleWallData[] = [];
   private bodies: MatterJS.BodyType[] = [];
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
@@ -1753,6 +1766,84 @@ export class Obstacles {
     return { inWater, teleported };
   }
 
+  addInvisibleWall(def: ObstacleDef): void {
+    const pos = toScreen(this.scene, def.x, def.y);
+    const w = scaleValue(this.scene, def.width ?? 60);
+    const h = scaleValue(this.scene, def.height ?? 8);
+    const angle = def.angle ?? 0;
+
+    const body = this.scene.matter.add.rectangle(pos.x, pos.y, w, h, {
+      isStatic: true,
+      angle,
+      restitution: 0.6,
+      friction: 0.05,
+      label: 'invisible_wall',
+    });
+    this.bodies.push(body);
+
+    const gfx = this.scene.add.graphics();
+    gfx.setDepth(10);
+    gfx.setAlpha(0);
+
+    this.invisibleWalls.push({
+      body,
+      graphics: gfx,
+      cx: pos.x,
+      cy: pos.y,
+      w,
+      h,
+      angle,
+      flashAlpha: 0,
+    });
+  }
+
+  updateInvisibleWalls(delta: number, ball?: GolfBall): void {
+    const FADE_SPEED = 3.0;
+
+    if (ball && this.invisibleWalls.length > 0) {
+      const engine = (this.scene.matter.world as unknown as { engine: { pairs: { list: { bodyA: MatterJS.BodyType; bodyB: MatterJS.BodyType; isActive: boolean }[] } } }).engine;
+      const pairs = engine?.pairs?.list;
+      if (pairs) {
+        for (const pair of pairs) {
+          if (!pair.isActive) continue;
+          const a = pair.bodyA;
+          const b = pair.bodyB;
+          for (const iw of this.invisibleWalls) {
+            if (iw.flashAlpha > 0) continue;
+            const hitsBall =
+              (a === iw.body && b === ball.body) ||
+              (b === iw.body && a === ball.body);
+            if (hitsBall) {
+              iw.flashAlpha = 1.0;
+            }
+          }
+        }
+      }
+    }
+
+    for (const iw of this.invisibleWalls) {
+      if (iw.flashAlpha > 0) {
+        iw.graphics.clear();
+        iw.graphics.setAlpha(iw.flashAlpha);
+        iw.graphics.save();
+        iw.graphics.translateCanvas(iw.cx, iw.cy);
+        iw.graphics.rotateCanvas(iw.angle);
+        iw.graphics.fillStyle(0xffffff, 0.9);
+        iw.graphics.fillRect(-iw.w / 2, -iw.h / 2, iw.w, iw.h);
+        iw.graphics.lineStyle(1, 0xaaddff, 0.7);
+        iw.graphics.strokeRect(-iw.w / 2, -iw.h / 2, iw.w, iw.h);
+        iw.graphics.restore();
+
+        iw.flashAlpha -= FADE_SPEED * (delta / 1000);
+        if (iw.flashAlpha <= 0) {
+          iw.flashAlpha = 0;
+          iw.graphics.clear();
+          iw.graphics.setAlpha(0);
+        }
+      }
+    }
+  }
+
   destroy(): void {
     for (const body of this.bodies) {
       this.scene.matter.world.remove(body);
@@ -1776,6 +1867,10 @@ export class Obstacles {
     this.cannons = [];
     this.conveyors = [];
     this.gravityWells = [];
+    for (const iw of this.invisibleWalls) {
+      iw.graphics.destroy();
+    }
+    this.invisibleWalls = [];
     for (const obj of this.gameObjects) {
       obj.destroy();
     }

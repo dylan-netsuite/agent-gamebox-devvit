@@ -53,6 +53,18 @@ Surreal space-themed par 4 with an irregular angular boundary and three powerful
 ### Hole 15: The Cascading Plinko Board (Par 4)
 Chaotic plinko/pachinko-inspired par 4. Tee at top-center (250,80), cup at bottom-center (250,720). The entire fairway is a tall narrow rectangle (80-420, 40-770) with a constant downward ramp force (forceY=4) simulating a steep vertical slope. The peg field consists of 12 staggered rows of small (radius 5) high-restitution bumper pegs — even rows have 6 pegs, odd (offset) rows have 7 pegs. Rows alternate in rainbow candy colors: gold, orange, red, pink, purple, blue, teal, lime, then repeating. At the bottom, funnel walls (80,660→180,700 and 420,660→320,700) guide the ball toward the cup zone. Deep sand traps flank the cup on both sides (left: 82-190,700-768; right: 310-418,700-768), punishing balls that don't land dead center. Once struck, the ball cascades violently and unpredictably through the dense peg field. Deterministic physics means a precise starting angle/power will reliably navigate the pegs — players must observe bounce patterns and micro-adjust angle on subsequent strokes.
 
+### Hole 16: The Invisible Maze (Par 4)
+Psychologically taxing par 4 presenting a deceptively open, empty green. Tee at top-left (120,120), cup at bottom-right (380,680). The large rectangular boundary (50-450, 50-750) looks completely open, but a complex labyrinth of invisible walls blocks direct paths. The maze uses horizontal barriers with alternating gaps (left/right) that force a serpentine path. Vertical dividers between rows prevent shortcuts. Dead-end trap walls punish blind shots. When the ball strikes an invisible wall, the wall **flashes white** for a fraction of a second to reveal its geometry, then fades back to full transparency. Players must intentionally bounce the ball to map the hidden maze through spatial memory and trial/error. This hole deliberately drives up stroke counts, emphasizing the importance of low scores on easier holes.
+
+## Invisible Wall Physics
+
+| Property | Value |
+|----------|-------|
+| Collision | Standard Matter.js static rectangle, restitution 0.6 |
+| Visual | Fully transparent; flashes white (alpha 1.0) on ball contact |
+| Fade Speed | 3.0 alpha/second — visible for ~330ms |
+| Detection | Matter.js engine collision pairs checked per frame |
+
 ## Gravity Well Physics
 
 | Property | Value |

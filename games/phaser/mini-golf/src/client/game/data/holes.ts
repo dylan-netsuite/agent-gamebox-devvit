@@ -1036,4 +1036,75 @@ export const HOLES: HoleDefinition[] = [
       { x: 310, y: 700, width: 108, height: 68 },    // Right sand
     ],
   },
+
+  // ---- HOLE 16: The Invisible Maze ----
+  // Psychologically taxing par 4. Appears as a wide-open, empty green.
+  // Hidden inside: a labyrinth of invisible walls that flash white on impact.
+  // Player must map the maze through trial, error, and spatial memory.
+  //
+  // Maze solution path (for reference — player discovers by bouncing):
+  //   Tee (120,120) → go RIGHT along top corridor to (380,120)
+  //   → go DOWN right corridor to (380,320)
+  //   → go LEFT through middle gap to (120,320)
+  //   → go DOWN left corridor to (120,520)
+  //   → go RIGHT through lower gap to (380,520)
+  //   → go DOWN right corridor to cup (380,680)
+  {
+    id: 16,
+    name: 'The Invisible Maze',
+    par: 4,
+    tee: { x: 120, y: 120 },
+    cup: { x: 380, y: 680 },
+    walls: [
+      // Outer boundary — large open rectangle
+      [{ x: 50, y: 50 }, { x: 450, y: 50 }],     // Top
+      [{ x: 50, y: 50 }, { x: 50, y: 750 }],      // Left
+      [{ x: 450, y: 50 }, { x: 450, y: 750 }],    // Right
+      [{ x: 50, y: 750 }, { x: 450, y: 750 }],    // Bottom
+    ],
+    obstacles: [
+      // === INVISIBLE MAZE WALLS ===
+      // All walls are horizontal or vertical segments, thickness 8
+
+      // --- Row 1 barrier (y=180): blocks direct south from tee area ---
+      // Gap on the RIGHT side at x=350-450 to allow passage down
+      { type: 'invisible_wall', x: 200, y: 180, width: 260, height: 8 },
+
+      // --- Row 2 barrier (y=260): blocks passage from right corridor ---
+      // Gap on the LEFT side at x=50-150 to allow passage left
+      { type: 'invisible_wall', x: 330, y: 260, width: 240, height: 8 },
+
+      // --- Row 3 barrier (y=380): blocks direct south from left side ---
+      // Gap on the RIGHT side at x=350-450 to allow passage right
+      { type: 'invisible_wall', x: 200, y: 380, width: 260, height: 8 },
+
+      // --- Row 4 barrier (y=460): blocks passage from right corridor ---
+      // Gap on the LEFT side at x=50-150 to allow passage left
+      { type: 'invisible_wall', x: 330, y: 460, width: 240, height: 8 },
+
+      // --- Row 5 barrier (y=570): blocks direct south to cup ---
+      // Gap on the RIGHT side at x=320-450 to allow final approach
+      { type: 'invisible_wall', x: 175, y: 570, width: 210, height: 8 },
+
+      // --- Vertical dividers to create corridors ---
+      // Left vertical wall between rows 1-2 (forces right-side travel)
+      { type: 'invisible_wall', x: 250, y: 220, width: 8, height: 80 },
+
+      // Right vertical wall between rows 2-3 (forces left-side travel)
+      { type: 'invisible_wall', x: 250, y: 320, width: 8, height: 60 },
+
+      // Left vertical wall between rows 3-4 (forces right-side travel)
+      { type: 'invisible_wall', x: 250, y: 420, width: 8, height: 60 },
+
+      // Center vertical wall between rows 4-5 (forces left-side travel)
+      { type: 'invisible_wall', x: 250, y: 520, width: 8, height: 50 },
+
+      // --- Dead-end traps to punish blind shots ---
+      // Small pocket wall near top-left
+      { type: 'invisible_wall', x: 120, y: 140, width: 8, height: 50 },
+
+      // Small pocket wall near bottom-center
+      { type: 'invisible_wall', x: 250, y: 640, width: 130, height: 8 },
+    ],
+  },
 ];
