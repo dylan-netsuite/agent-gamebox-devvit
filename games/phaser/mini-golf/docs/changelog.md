@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.0.7.1 - Hole 14: Gravity Wells and Black Holes (2026-02-27)
+
+### Added
+- **Hole 14: Gravity Wells** — space-themed par 4 with three spinning gravity vortexes
+- **Gravity well obstacle type** (`'gravity_well'`) — new obstacle with inverse-square attraction physics
+  - Attracts ball within configurable outer radius using `F = strength / dist²`
+  - Dead zone at center (18% of radius) swallows ball, triggering +1 penalty and tee reset
+  - Spinning purple vortex visual with 4 spiral arms, orbiting dots, dark center, and outer glow
+  - Configurable strength per well for difficulty tuning
+- **S-curve layout** — two horizontal walls block the direct path, forcing navigation around gravity wells
+  - First turn requires passing Well A (r=55) to reach right-side gap
+  - Second turn requires passing Well B (r=50) to reach left-side gap
+  - Cup approach guarded by Well C (r=45)
+- **Slingshot mechanic** — skilled players can use the outer edges of gravity wells to curve the ball past walls
+
 ## v0.0.3.144 - Hole 13: Ball Immune When Stopped (2026-02-27)
 
 ### Fixed

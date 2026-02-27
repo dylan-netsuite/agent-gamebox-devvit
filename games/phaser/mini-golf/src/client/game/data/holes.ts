@@ -843,4 +843,58 @@ export const HOLES: HoleDefinition[] = [
       { type: 'gumdrop_bumper', x: 220, y: 680, radius: 12 },   // Bottom platform, near tee
     ],
   },
+
+  // ---- HOLE 14: Gravity Wells and Black Holes ----
+  // Surreal space-themed par 4 with spinning gravity vortexes.
+  // Three gravity wells placed at key turns in an S-curve fairway.
+  // Walls block the direct path — players must slingshot around the wells.
+  // Wells attract the ball with inverse-square force; crossing dead center = swallowed.
+  //
+  // Layout (bottom to top):
+  //   Tee alcove at bottom-left (80-180, 650-750)
+  //   Lower corridor going right (80-420, 550-650) with Well A at (170, 500)
+  //   Mid wall blocks direct upward path at y=450
+  //   Upper-right corridor (280-420, 300-450) with Well B at (340, 370)
+  //   Top passage going left (80-420, 150-300) with Well C at (200, 200)
+  //   Cup at top-left (120, 120)
+  {
+    id: 14,
+    name: 'Gravity Wells',
+    par: 4,
+    tee: { x: 130, y: 700 },
+    cup: { x: 120, y: 120 },
+    walls: [
+      // === Outer boundary ===
+      [{ x: 60, y: 60 }, { x: 440, y: 60 }],    // Top
+      [{ x: 60, y: 60 }, { x: 60, y: 770 }],     // Left
+      [{ x: 440, y: 60 }, { x: 440, y: 770 }],   // Right
+      [{ x: 60, y: 770 }, { x: 440, y: 770 }],   // Bottom
+
+      // === Tee alcove right wall — forces upward/right exit ===
+      [{ x: 200, y: 650 }, { x: 200, y: 770 }],
+
+      // === Mid horizontal wall — blocks direct upward path ===
+      // Gap on the RIGHT side (350..440) for passage
+      [{ x: 60, y: 450 }, { x: 350, y: 450 }],
+
+      // === Upper horizontal wall — creates top corridor ===
+      // Gap on the LEFT side (60..150) for passage into cup area
+      [{ x: 150, y: 280 }, { x: 440, y: 280 }],
+
+      // === Small wall near cup — forces approach from above ===
+      [{ x: 60, y: 180 }, { x: 170, y: 180 }],
+    ],
+    obstacles: [
+      // Well A — lower area, must slingshot right to reach gap in mid wall
+      { type: 'gravity_well', x: 170, y: 530, radius: 55, speed: 0.0012 },
+      // Well B — right corridor, must slingshot left through upper gap
+      { type: 'gravity_well', x: 380, y: 370, radius: 50, speed: 0.0010 },
+      // Well C — top area, guards approach to cup
+      { type: 'gravity_well', x: 300, y: 170, radius: 45, speed: 0.0008 },
+    ],
+    frictionZones: [
+      // Cup approach — deceleration zone
+      { x: 70, y: 70, width: 120, height: 100 },
+    ],
+  },
 ];

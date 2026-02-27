@@ -145,6 +145,16 @@ interface CannonData {
   exitGraceMs: number;
 }
 
+interface GravityWellData {
+  graphics: Phaser.GameObjects.Graphics;
+  centerX: number;
+  centerY: number;
+  attractRadius: number;
+  deadRadius: number;
+  strength: number;
+  phase: number;
+}
+
 interface ClawData {
   shadowGraphics: Phaser.GameObjects.Graphics;
   clawGraphics: Phaser.GameObjects.Graphics;
@@ -173,6 +183,7 @@ export class Obstacles {
   private cannons: CannonData[] = [];
   private conveyors: ConveyorData[] = [];
   private claws: ClawData[] = [];
+  private gravityWells: GravityWellData[] = [];
   private bodies: MatterJS.BodyType[] = [];
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
@@ -692,6 +703,108 @@ export class Obstacles {
 
   isClawGrabbing(): boolean {
     return this.claws.some(c => c.grabbing);
+  }
+
+  addGravityWell(obs: ObstacleDef): void {
+    const pos = toScreen(this.scene, obs.x, obs.y);
+    const attractRadius = scaleValue(this.scene, obs.radius ?? 50);
+    const deadRadius = scaleValue(this.scene, (obs.radius ?? 50) * 0.18);
+    const strength = obs.speed ?? 0.0012;
+
+    const graphics = this.scene.add.graphics();
+    graphics.setDepth(2);
+    this.gameObjects.push(graphics);
+
+    this.gravityWells.push({
+      graphics,
+      centerX: pos.x,
+      centerY: pos.y,
+      attractRadius,
+      deadRadius,
+      strength,
+      phase: 0,
+    });
+  }
+
+  updateGravityWells(delta: number, ball?: GolfBall): { swallowed: boolean } {
+    let swallowed = false;
+
+    for (const well of this.gravityWells) {
+      well.phase += (delta / 1000) * 2.5;
+
+      const g = well.graphics;
+      g.clear();
+
+      const ar = well.attractRadius;
+      const dr = well.deadRadius;
+
+      // Outer glow
+      g.fillStyle(0x2200aa, 0.08);
+      g.fillCircle(well.centerX, well.centerY, ar * 1.2);
+      g.fillStyle(0x3300bb, 0.12);
+      g.fillCircle(well.centerX, well.centerY, ar);
+
+      // Spiral arms
+      const armCount = 4;
+      for (let a = 0; a < armCount; a++) {
+        const baseAngle = well.phase + (a * Math.PI * 2) / armCount;
+        g.lineStyle(2, 0x9944ff, 0.5);
+        g.beginPath();
+        for (let t = 0; t < 1; t += 0.02) {
+          const spiralR = dr + (ar - dr) * t;
+          const spiralAngle = baseAngle + t * Math.PI * 2.5;
+          const sx = well.centerX + Math.cos(spiralAngle) * spiralR;
+          const sy = well.centerY + Math.sin(spiralAngle) * spiralR;
+          if (t === 0) g.moveTo(sx, sy);
+          else g.lineTo(sx, sy);
+        }
+        g.strokePath();
+      }
+
+      // Mid-ring
+      g.lineStyle(1.5, 0x7733dd, 0.3);
+      g.strokeCircle(well.centerX, well.centerY, ar * 0.6);
+
+      // Inner vortex
+      g.fillStyle(0x110033, 0.7);
+      g.fillCircle(well.centerX, well.centerY, dr * 2);
+      g.fillStyle(0x000000, 0.9);
+      g.fillCircle(well.centerX, well.centerY, dr);
+
+      // Orbiting dots
+      for (let i = 0; i < 6; i++) {
+        const orbitR = dr * 1.5 + (ar - dr) * (i / 6) * 0.7;
+        const dotAngle = well.phase * (1.5 - i * 0.15) + (i * Math.PI) / 3;
+        const dotX = well.centerX + Math.cos(dotAngle) * orbitR;
+        const dotY = well.centerY + Math.sin(dotAngle) * orbitR;
+        const alpha = 0.4 + 0.3 * Math.sin(well.phase * 3 + i);
+        g.fillStyle(0xbb77ff, alpha);
+        g.fillCircle(dotX, dotY, 2);
+      }
+
+      if (!ball) continue;
+
+      const bx = ball.body.position.x;
+      const by = ball.body.position.y;
+      const dx = well.centerX - bx;
+      const dy = well.centerY - by;
+      const distSq = dx * dx + dy * dy;
+      const dist = Math.sqrt(distSq);
+
+      if (dist < dr) {
+        swallowed = true;
+        continue;
+      }
+
+      if (dist < ar) {
+        const forceMag = well.strength / Math.max(distSq, dr * dr);
+        const fx = (dx / dist) * forceMag;
+        const fy = (dy / dist) * forceMag;
+        this.scene.matter.body.applyForce(ball.body, ball.body.position, { x: fx, y: fy });
+      }
+    }
+
+    return { swallowed };
   }
 
   private generateTangledPath(
@@ -1662,6 +1775,7 @@ export class Obstacles {
     }
     this.cannons = [];
     this.conveyors = [];
+    this.gravityWells = [];
     for (const obj of this.gameObjects) {
       obj.destroy();
     }

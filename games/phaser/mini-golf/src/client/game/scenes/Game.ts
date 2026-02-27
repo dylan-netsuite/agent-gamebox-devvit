@@ -181,6 +181,9 @@ export class Game extends Scene {
         case 'claw':
           this.obstacles.addClaw(obs);
           break;
+        case 'gravity_well':
+          this.obstacles.addGravityWell(obs);
+          break;
       }
     }
 
@@ -381,6 +384,11 @@ export class Game extends Scene {
       return;
     }
     if (this.obstacles.isClawGrabbing()) return;
+    const wellResult = this.obstacles.updateGravityWells(delta, this.state === 'simulating' ? this.ball : undefined);
+    if (wellResult.swallowed) {
+      this.handleWaterHazard();
+      return;
+    }
 
     this.ball.update();
     this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);
