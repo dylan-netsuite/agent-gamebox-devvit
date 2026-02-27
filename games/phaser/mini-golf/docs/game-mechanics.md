@@ -45,19 +45,19 @@ L-shaped dogleg course with a narrow cannon obstacle in the vertical section. Te
 Rectangular corridor (x:80-420, y:55-730) with a wall-guided snake path of mint-green candy-themed conveyor belts. Four horizontal legs (A-D, each 320×80 design units spanning x:90-410) alternate pushing RIGHT and LEFT with gentle force magnitude 2. Internal walls between each leg have gaps at alternating ends — right side for rightward-pushing legs, left side for leftward-pushing legs — forcing the ball to zigzag through the course. Vertical corridor barrier walls separate each gap from its adjacent water hazard, creating safe passages between legs. Tee at (250,690) above the HUD with an open green approach. Cup at (140,160) within Leg D on the left side. Water hazards (pink) fill the channels between legs on the non-gap side, contrasting clearly with the mint-green conveyors. The player must aim against each leg's gentle lateral push to control where the ball exits through the gap. The walls do the turning; the conveyors provide the challenge.veyors are the sole challenge mechanic. **Visuals**: Dark conveyor squares with animated orange directional chevron arrows scrolling in the force direction, clipped to cell boundaries via geometry masks. **Strategy**: Requires intuitive vector addition — aim opposite to belt direction to achieve a straight-line result, or use belt momentum to curve around obstacles.
 
 ### Hole 13: The Flavour Grabber (Par 4)
-Stepping-stone island layout with candy-cane walled platforms over a dark void (no water hazard zones — void is conveyed by the dark background alone). Three platforms connected by narrow bridges: bottom platform (170-330, 600-700) with tee at (250,670), middle staging platform (150-350, 340-460), and cup island (190-310, 150-220) with cup at (250,185). Each platform's walls have gaps at the bridge connection points (x=220..280), allowing the ball to pass through freely. Narrow 60-unit-wide bridges with side rails connect the platforms. An overhead **claw** patrols the middle area in a continuous figure-eight (lemniscate) pattern centered at (250,390) with amplitude 130x170. The claw casts a 32-unit-radius shadow on the ground. If the ball enters the shadow zone during simulation, the claw grabs it — freezing the ball, playing a grab animation (1.8s), then triggering a +1 penalty and tee reset. A 1.5-second grace period after each shot prevents immediate grabs. Strategy requires short, timed shots to advance through the bridges while dodging the sweeping claw shadow. The psychological pressure of an overhead threat shatters the established 2D-plane rules.
+Zigzag stepping-stone layout with candy-cane walled platforms over a dark void. Three platforms connected by offset bridges that force doglegs — no straight line from tee to cup. Bottom platform (150-350, 600-700) with tee at (250,670), LEFT bridge (160-220, 460-600) connects to the wider middle staging platform (120-380, 340-460), then a RIGHT bridge (300-360, 220-340) connects to the cup island (140-380, 150-220) with cup at LEFT (190,185). Each platform's walls have gaps at bridge connection points, allowing the ball to pass through freely. An overhead **claw** patrols the middle platform in a fast figure-eight (lemniscate) pattern centered at (250,400) with amplitude 160x130. The claw casts a 45-unit-radius shadow (with reddish tint) on the ground. If the ball enters the shadow zone during simulation, the claw grabs it — freezing the ball, playing a grab animation (1.8s), then triggering a +1 penalty and tee reset. An 800ms grace period after each shot prevents immediate grabs. Strategy requires navigating two doglegs while timing shots to avoid the fast-moving claw shadow on the middle platform.
 
 ## Claw Physics
 
 | Property | Value |
 |----------|-------|
 | Path | Figure-eight (lemniscate): x = A·sin(t), y = B·sin(t)·cos(t) |
-| Center | (250, 390) design units |
-| Amplitude | 130 × 170 design units |
-| Shadow Radius | 32 design units |
-| Speed | 0.17 cycles/second (~5.9s per full figure-eight) |
+| Center | (250, 400) design units |
+| Amplitude | 160 × 130 design units |
+| Shadow Radius | 45 design units |
+| Speed | 0.35 cycles/second (~2.9s per full figure-eight) |
 | Grab Animation | 1.8 seconds (claw closes, lifts, penalty applied) |
-| Grace Period | 1.5 seconds after each shot (ball immune to grab) |
+| Grace Period | 0.8 seconds after each shot (ball immune to grab) |
 | Penalty | +1 stroke, ball reset to tee |
 | Visual | 3-pronged metallic claw with shadow circle, connected by vertical line |
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.3.129 - Hole 13: Zigzag Layout & Aggressive Claw (2026-02-27)
+
+### Changed
+- **Zigzag layout** — bridges now offset (left bridge x=160-220, right bridge x=300-360) forcing two doglegs; no straight line from tee to cup
+- **Cup moved** to left side of cup island (190, 185) to increase distance after the right bridge exit
+- **Middle platform widened** (120-380) to accommodate offset bridge gaps
+- **Claw speed doubled** from 0.17 to 0.35 (~2.9s per full figure-eight vs ~5.9s)
+- **Shadow radius increased** from 32 to 45 design units — covers more of the bridge width
+- **Grace period halved** from 1500ms to 800ms — ball is vulnerable much sooner after each shot
+- **Shadow visual** — now has a reddish tint (3-layer gradient) instead of plain black, making it more noticeable and threatening
+
 ## v0.0.3.126 - Hole 13: Fix Barriers & Remove Taffy (2026-02-27)
 
 ### Fixed

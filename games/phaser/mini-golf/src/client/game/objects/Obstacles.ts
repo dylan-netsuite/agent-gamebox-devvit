@@ -592,7 +592,7 @@ export class Obstacles {
       phase: 0,
       grabbing: false,
       grabProgress: 0,
-      graceMs: 1500,
+      graceMs: 800,
       currentShadowX: cx.x,
       currentShadowY: cx.y,
     });
@@ -612,9 +612,11 @@ export class Obstacles {
       claw.currentShadowY = sy;
 
       claw.shadowGraphics.clear();
-      claw.shadowGraphics.fillStyle(0x000000, 0.18);
+      claw.shadowGraphics.fillStyle(0x220000, 0.15);
+      claw.shadowGraphics.fillCircle(sx, sy, claw.shadowRadius * 1.5);
+      claw.shadowGraphics.fillStyle(0x440000, 0.25);
       claw.shadowGraphics.fillCircle(sx, sy, claw.shadowRadius * 1.2);
-      claw.shadowGraphics.fillStyle(0x000000, 0.3);
+      claw.shadowGraphics.fillStyle(0x660000, 0.35);
       claw.shadowGraphics.fillCircle(sx, sy, claw.shadowRadius);
 
       const clawHoverOffset = claw.grabbing
@@ -684,7 +686,7 @@ export class Obstacles {
 
   resetClawGrace(): void {
     for (const claw of this.claws) {
-      claw.graceMs = 1500;
+      claw.graceMs = 800;
     }
   }
 

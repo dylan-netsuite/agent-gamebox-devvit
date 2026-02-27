@@ -778,71 +778,63 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 13: The Flavour Grabber (The Claw) ----
-  // Open stepping-stone layout. Platforms have wall gaps where bridges attach.
-  // No water/taffy — the void is just empty space beyond the fairway fill.
-  // The claw patrols in a figure-eight over the middle area.
+  // Zigzag stepping-stone layout — no straight line from tee to cup.
+  // Bottom bridge is LEFT-offset, top bridge is RIGHT-offset, forcing doglegs.
+  // Claw patrols the middle platform area fast with a large shadow.
   //
   // Layout (bottom to top):
-  //   Bottom platform (170-330, 600-700) with tee at (250, 670)
-  //     gap at top: x=220..280 for bridge
-  //   Bottom bridge (220-280, 460-600) — narrow corridor
-  //   Middle platform (150-350, 340-460) — wide staging area
-  //     gap at bottom: x=220..280 for bottom bridge
-  //     gap at top: x=220..280 for top bridge
-  //   Top bridge (220-280, 220-340) — narrow corridor
-  //   Cup island (190-310, 150-220) with cup at (250, 185)
-  //     gap at bottom: x=220..280 for top bridge
+  //   Bottom platform (150-350, 600-700) with tee at (250, 670)
+  //     gap at top-left: x=160..220 for left bridge
+  //   Left bridge (160-220, 460-600) — narrow corridor (left side)
+  //   Middle platform (120-380, 340-460) — wide staging area
+  //     gap at bottom-left: x=160..220 for left bridge
+  //     gap at top-right: x=300..360 for right bridge
+  //   Right bridge (300-360, 220-340) — narrow corridor (right side)
+  //   Cup island (140-380, 150-220) with cup at (190, 185) on the LEFT
+  //     gap at bottom-right: x=300..360 for right bridge
   {
     id: 13,
     name: 'The Flavour Grabber',
     par: 4,
     tee: { x: 250, y: 670 },
-    cup: { x: 250, y: 185 },
+    cup: { x: 190, y: 185 },
     walls: [
-      // === Bottom platform (170-330, 600-700) ===
-      // Bottom edge (solid)
-      [{ x: 170, y: 700 }, { x: 330, y: 700 }],
-      // Left edge
-      [{ x: 170, y: 600 }, { x: 170, y: 700 }],
-      // Right edge
-      [{ x: 330, y: 600 }, { x: 330, y: 700 }],
-      // Top edge — split for bridge gap (220..280)
-      [{ x: 170, y: 600 }, { x: 220, y: 600 }],
-      [{ x: 280, y: 600 }, { x: 330, y: 600 }],
+      // === Bottom platform (150-350, 600-700) ===
+      [{ x: 150, y: 700 }, { x: 350, y: 700 }],
+      [{ x: 150, y: 600 }, { x: 150, y: 700 }],
+      [{ x: 350, y: 600 }, { x: 350, y: 700 }],
+      // Top edge — split for LEFT bridge gap (160..220)
+      [{ x: 150, y: 600 }, { x: 160, y: 600 }],
+      [{ x: 220, y: 600 }, { x: 350, y: 600 }],
 
-      // === Bottom bridge (220-280, 460-600) ===
+      // === Left bridge (160-220, 460-600) ===
+      [{ x: 160, y: 460 }, { x: 160, y: 600 }],
       [{ x: 220, y: 460 }, { x: 220, y: 600 }],
-      [{ x: 280, y: 460 }, { x: 280, y: 600 }],
 
-      // === Middle platform (150-350, 340-460) ===
-      // Left edge
-      [{ x: 150, y: 340 }, { x: 150, y: 460 }],
-      // Right edge
-      [{ x: 350, y: 340 }, { x: 350, y: 460 }],
-      // Bottom edge — split for bottom bridge gap (220..280)
-      [{ x: 150, y: 460 }, { x: 220, y: 460 }],
-      [{ x: 280, y: 460 }, { x: 350, y: 460 }],
-      // Top edge — split for top bridge gap (220..280)
-      [{ x: 150, y: 340 }, { x: 220, y: 340 }],
-      [{ x: 280, y: 340 }, { x: 350, y: 340 }],
+      // === Middle platform (120-380, 340-460) ===
+      [{ x: 120, y: 340 }, { x: 120, y: 460 }],
+      [{ x: 380, y: 340 }, { x: 380, y: 460 }],
+      // Bottom edge — split for LEFT bridge gap (160..220)
+      [{ x: 120, y: 460 }, { x: 160, y: 460 }],
+      [{ x: 220, y: 460 }, { x: 380, y: 460 }],
+      // Top edge — split for RIGHT bridge gap (300..360)
+      [{ x: 120, y: 340 }, { x: 300, y: 340 }],
+      [{ x: 360, y: 340 }, { x: 380, y: 340 }],
 
-      // === Top bridge (220-280, 220-340) ===
-      [{ x: 220, y: 220 }, { x: 220, y: 340 }],
-      [{ x: 280, y: 220 }, { x: 280, y: 340 }],
+      // === Right bridge (300-360, 220-340) ===
+      [{ x: 300, y: 220 }, { x: 300, y: 340 }],
+      [{ x: 360, y: 220 }, { x: 360, y: 340 }],
 
-      // === Cup island (190-310, 150-220) ===
-      // Top edge (solid)
-      [{ x: 190, y: 150 }, { x: 310, y: 150 }],
-      // Left edge
-      [{ x: 190, y: 150 }, { x: 190, y: 220 }],
-      // Right edge
-      [{ x: 310, y: 150 }, { x: 310, y: 220 }],
-      // Bottom edge — split for top bridge gap (220..280)
-      [{ x: 190, y: 220 }, { x: 220, y: 220 }],
-      [{ x: 280, y: 220 }, { x: 310, y: 220 }],
+      // === Cup island (140-380, 150-220), cup at LEFT (190, 185) ===
+      [{ x: 140, y: 150 }, { x: 380, y: 150 }],
+      [{ x: 140, y: 150 }, { x: 140, y: 220 }],
+      [{ x: 380, y: 150 }, { x: 380, y: 220 }],
+      // Bottom edge — split for RIGHT bridge gap (300..360)
+      [{ x: 140, y: 220 }, { x: 300, y: 220 }],
+      [{ x: 360, y: 220 }, { x: 380, y: 220 }],
     ],
     obstacles: [
-      { type: 'claw', x: 250, y: 390, width: 130, height: 170, radius: 32, speed: 0.17 },
+      { type: 'claw', x: 250, y: 400, width: 160, height: 130, radius: 45, speed: 0.35 },
     ],
   },
 ];
