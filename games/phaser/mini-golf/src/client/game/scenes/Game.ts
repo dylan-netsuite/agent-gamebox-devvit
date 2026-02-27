@@ -30,6 +30,7 @@ export class Game extends Scene {
   private strokes: number = 0;
   private scores: number[] = [];
   private lastBallPos: { x: number; y: number } = { x: 0, y: 0 };
+  private clawVulnerableMs: number = 0;
 
   private hud!: Phaser.GameObjects.Container;
   private strokeLabel!: Phaser.GameObjects.Text;
@@ -374,7 +375,9 @@ export class Game extends Scene {
     const cannonBall = (this.state === 'simulating' || this.obstacles.isCannonAnimating()) ? this.ball : undefined;
     this.obstacles.updateCannons(delta, cannonBall);
     this.obstacles.updateWindmills(delta, this.state === 'simulating' ? this.ball : undefined);
-    const clawResult = this.obstacles.updateClaws(delta, this.ball);
+    if (this.clawVulnerableMs > 0) this.clawVulnerableMs -= delta;
+    const clawBall = (this.state === 'simulating' || this.clawVulnerableMs > 0) ? this.ball : undefined;
+    const clawResult = this.obstacles.updateClaws(delta, clawBall);
     if (clawResult.grabbed) {
       this.handleWaterHazard();
       return;
@@ -411,6 +414,7 @@ export class Game extends Scene {
 
       if (this.ball.isStopped() && !this.obstacles.isCannonAnimating()) {
         this.state = 'aiming';
+        this.clawVulnerableMs = 1500;
         this.arrow.setVisible(true);
         this.arrow.updatePosition(this.ball.body.position.x, this.ball.body.position.y);
       }

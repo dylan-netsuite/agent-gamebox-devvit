@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.0.3.140 - Hole 13: Bumper Placement & Claw Vulnerability Window (2026-02-27)
+
+### Added
+- **5 gumdrop bumpers** placed per user screenshot at strategic positions:
+  - Cup island right side (300, 170)
+  - Middle platform left (200, 400)
+  - Middle platform right (335, 375)
+  - Bottom platform near bridge (250, 610)
+  - Bottom platform near tee (220, 680)
+
+### Changed
+- **Claw vulnerability window** — ball is only grabbable during simulation and for 1.5s after stopping; once the player starts lining up their shot, the ball is immune to the claw
+- This replaces the "always vulnerable" behavior which felt too punishing
+
 ## v0.0.3.137 - Hole 13: Instant Claw Grab & Remove Bumpers (2026-02-27)
 
 ### Changed

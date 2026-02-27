@@ -835,6 +835,12 @@ export const HOLES: HoleDefinition[] = [
     ],
     obstacles: [
       { type: 'claw', x: 250, y: 400, width: 160, height: 130, radius: 45, speed: 0.35 },
+      // Bumpers placed per user screenshot (green stars)
+      { type: 'gumdrop_bumper', x: 300, y: 170, radius: 12 },   // Cup island, right side
+      { type: 'gumdrop_bumper', x: 200, y: 400, radius: 12 },   // Middle platform, left
+      { type: 'gumdrop_bumper', x: 335, y: 375, radius: 12 },   // Middle platform, right
+      { type: 'gumdrop_bumper', x: 250, y: 610, radius: 12 },   // Bottom platform, near bridge
+      { type: 'gumdrop_bumper', x: 220, y: 680, radius: 12 },   // Bottom platform, near tee
     ],
   },
 ];
