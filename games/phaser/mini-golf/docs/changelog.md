@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.0.3.96 - Hole 12: The Conveyor Belt Matrix (2026-02-27)
+
+### Added
+- **Hole 12: The Conveyor Belt Matrix** — par 4 with a 4×5 checkerboard of conveyor belt zones
+  - 10 active conveyors in alternating checkerboard pattern, each 80×80 design units
+  - Forces alternate between horizontal (→/←) and vertical (↓/↑) with magnitude 4
+  - Ball traces curved parabolic arcs through the grid as impulse velocity combines with conveyor forces
+  - Water hazards flank both sides and behind the cup to punish mis-aimed shots
+  - Tee at (250,740), cup at (380,95) — ball must navigate the full grid to reach the cup
+- **Enhanced conveyor belt visuals**: Animated orange chevron arrows scrolling in the force direction
+  - Dark background tiles (0x333340, 85% opacity) with animated directional arrows
+  - Geometry mask per cell prevents arrow bleed beyond cell boundaries
+  - `updateConveyors(delta)` method for smooth arrow scroll animation
+- **Conveyor animation in game loop**: `updateConveyors` called every frame from Game.ts
+
 ## v0.0.3.93 - Bumper Alignment + Exit Velocity (2026-02-27)
 
 ### Changed

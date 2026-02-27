@@ -365,6 +365,7 @@ export class Game extends Scene {
     if (this.state === 'sinking') return;
 
     this.obstacles.updateBridges(delta);
+    this.obstacles.updateConveyors(delta);
     this.obstacles.updateTongues(delta, this.state === 'simulating' ? this.ball : undefined);
     const cannonBall = (this.state === 'simulating' || this.obstacles.isCannonAnimating()) ? this.ball : undefined;
     this.obstacles.updateCannons(delta, cannonBall);

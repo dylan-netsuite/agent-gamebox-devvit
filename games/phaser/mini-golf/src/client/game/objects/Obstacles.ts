@@ -113,6 +113,17 @@ interface TongueData {
   hitCooldown: number;
 }
 
+interface ConveyorData {
+  graphics: Phaser.GameObjects.Graphics;
+  screenX: number;
+  screenY: number;
+  screenW: number;
+  screenH: number;
+  forceX: number;
+  forceY: number;
+  phase: number;
+}
+
 interface CannonData {
   bodyGraphics: Phaser.GameObjects.Graphics;
   spiralGraphics: Phaser.GameObjects.Graphics;
@@ -141,6 +152,7 @@ export class Obstacles {
   private bridges: MovingBridgeData[] = [];
   private tongues: TongueData[] = [];
   private cannons: CannonData[] = [];
+  private conveyors: ConveyorData[] = [];
   private bodies: MatterJS.BodyType[] = [];
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
@@ -446,8 +458,75 @@ export class Obstacles {
     const rect = new Phaser.Geom.Rectangle(tl.x, tl.y, w, h);
     this.zones.push({ type: 'conveyor', rect, forceX, forceY });
 
-    this.zoneGraphics.fillStyle(zone.color ?? 0x808080, 0.5);
+    this.zoneGraphics.fillStyle(0x333340, 0.85);
     this.zoneGraphics.fillRect(tl.x, tl.y, w, h);
+    this.zoneGraphics.lineStyle(1, 0x555566, 0.6);
+    this.zoneGraphics.strokeRect(tl.x, tl.y, w, h);
+
+    const g = this.scene.add.graphics();
+    g.setDepth(2);
+    this.gameObjects.push(g);
+
+    const maskGraphics = this.scene.add.graphics();
+    maskGraphics.fillStyle(0xffffff);
+    maskGraphics.fillRect(tl.x, tl.y, w, h);
+    maskGraphics.setVisible(false);
+    g.setMask(maskGraphics.createGeometryMask());
+    this.gameObjects.push(maskGraphics);
+
+    this.conveyors.push({
+      graphics: g,
+      screenX: tl.x,
+      screenY: tl.y,
+      screenW: w,
+      screenH: h,
+      forceX,
+      forceY,
+      phase: 0,
+    });
+  }
+
+  updateConveyors(delta: number): void {
+    for (const c of this.conveyors) {
+      c.phase += delta * 0.004;
+      if (c.phase > 1) c.phase -= 1;
+
+      const g = c.graphics;
+      g.clear();
+
+      const mag = Math.sqrt(c.forceX * c.forceX + c.forceY * c.forceY);
+      if (mag === 0) continue;
+      const dx = c.forceX / mag;
+      const dy = c.forceY / mag;
+
+      const isHoriz = Math.abs(dx) > Math.abs(dy);
+      const spacing = isHoriz ? c.screenW * 0.28 : c.screenH * 0.28;
+      const arrowSize = Math.min(c.screenW, c.screenH) * 0.22;
+      const count = Math.ceil((isHoriz ? c.screenW : c.screenH) / spacing) + 2;
+      const offset = c.phase * spacing;
+
+      for (let i = -1; i < count; i++) {
+        let cx: number, cy: number;
+        if (isHoriz) {
+          cx = c.screenX + i * spacing + offset * (dx > 0 ? 1 : -1);
+          cy = c.screenY + c.screenH * 0.5;
+        } else {
+          cx = c.screenX + c.screenW * 0.5;
+          cy = c.screenY + i * spacing + offset * (dy > 0 ? 1 : -1);
+        }
+
+        if (cx < c.screenX - arrowSize || cx > c.screenX + c.screenW + arrowSize) continue;
+        if (cy < c.screenY - arrowSize || cy > c.screenY + c.screenH + arrowSize) continue;
+
+        g.fillStyle(0xff9900, 0.7);
+        g.beginPath();
+        g.moveTo(cx + dx * arrowSize, cy + dy * arrowSize);
+        g.lineTo(cx - dy * arrowSize * 0.5 - dx * arrowSize * 0.4, cy + dx * arrowSize * 0.5 - dy * arrowSize * 0.4);
+        g.lineTo(cx + dy * arrowSize * 0.5 - dx * arrowSize * 0.4, cy - dx * arrowSize * 0.5 - dy * arrowSize * 0.4);
+        g.closePath();
+        g.fillPath();
+      }
+    }
   }
 
   private generateTangledPath(
@@ -1417,6 +1496,7 @@ export class Obstacles {
       c.spiralGraphics.destroy();
     }
     this.cannons = [];
+    this.conveyors = [];
     for (const obj of this.gameObjects) {
       obj.destroy();
     }
