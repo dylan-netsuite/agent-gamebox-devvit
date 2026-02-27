@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.0.3.99 - Splash Screen Redesign (2026-02-27)
+
+### Changed
+- **Complete splash screen visual overhaul** to match the Sugar Rush candy mini-golf theme
+- **Gold title banner**: "MINI GOLF" displayed in metallic gold gradient text on an ornate gold ribbon with wing extensions
+- **Candy cane border frame**: Red/white striped border around the entire splash card
+- **Peppermint swirl decorations**: Four spinning peppermint candies in the corners with red/white wedge pattern and glassy center
+- **Gumdrop candy decorations**: Six colorful gumdrops (pink, gold, teal, green, purple, red) scattered around edges with bounce animation
+- **Candy cane stick decorations**: Two striped candy cane sticks flanking the title area
+- **Golf fairway scene at bottom**: Green elliptical fairway with mowing stripes, a golf hole with flag, and a rolling golf ball with trail effect
+- **"SUGAR RUSH RETRO INVITATIONAL"** sub-brand in pink gradient, "18 HOLES OF CANDY CHAOS" tagline
+- **Enhanced PLAY button**: Wider padding, stronger glow, shimmer sweep, and pulse ring animation
+- **Brighter background**: More vibrant green with pink/gold/teal radial gradient accents
+
 ## v0.0.3.96 - Hole 12: The Conveyor Belt Matrix (2026-02-27)
 
 ### Added

@@ -11,28 +11,65 @@
   </head>
   <body class="app">
     <div class="splash-bg">
+      <div class="candy-border"></div>
       <div class="rays"></div>
       <div class="vignette"></div>
 
-      <div class="candy-pieces">
-        <div class="candy piece-1"></div>
-        <div class="candy piece-2"></div>
-        <div class="candy piece-3"></div>
-        <div class="candy piece-4"></div>
-        <div class="candy piece-5"></div>
-        <div class="candy piece-6"></div>
-        <div class="candy piece-7"></div>
-        <div class="candy piece-8"></div>
+      <!-- Peppermint swirl decorations -->
+      <div class="peppermint pep-1"></div>
+      <div class="peppermint pep-2"></div>
+      <div class="peppermint pep-3"></div>
+      <div class="peppermint pep-4"></div>
+
+      <!-- Gumdrop decorations -->
+      <div class="gumdrop gd-1"></div>
+      <div class="gumdrop gd-2"></div>
+      <div class="gumdrop gd-3"></div>
+      <div class="gumdrop gd-4"></div>
+      <div class="gumdrop gd-5"></div>
+      <div class="gumdrop gd-6"></div>
+
+      <!-- Floating candy canes -->
+      <div class="candy-cane cc-1"></div>
+      <div class="candy-cane cc-2"></div>
+
+      <!-- Fairway at the bottom -->
+      <div class="fairway">
+        <div class="fairway-stripe"></div>
+        <div class="fairway-stripe"></div>
+        <div class="fairway-stripe"></div>
+        <div class="golf-hole">
+          <div class="hole-shadow"></div>
+          <div class="hole-circle"></div>
+          <div class="flag-pole"></div>
+          <div class="flag"></div>
+        </div>
+        <div class="golf-ball">
+          <div class="ball-highlight"></div>
+        </div>
+        <div class="ball-trail trail-1"></div>
+        <div class="ball-trail trail-2"></div>
+        <div class="ball-trail trail-3"></div>
       </div>
 
       <div class="splash-content">
-        <div class="title-glow"></div>
-        <h1 class="splash-title">MINI GOLF</h1>
-        <p class="splash-subtitle" id="subtitle">Sugar Rush Retro Invitational</p>
+        <div class="title-banner">
+          <div class="banner-wing banner-left"></div>
+          <div class="banner-center">
+            <div class="title-glow"></div>
+            <h1 class="splash-title">MINI GOLF</h1>
+          </div>
+          <div class="banner-wing banner-right"></div>
+        </div>
+
+        <p class="splash-edition">Sugar Rush Retro Invitational</p>
+        <p class="splash-subtitle" id="subtitle">Tap to play!</p>
 
         <button class="play-button" id="start-button">
           <span class="play-label">PLAY</span>
         </button>
+
+        <div class="hole-count">18 HOLES OF CANDY CHAOS</div>
       </div>
     </div>
     <script type="module" src="splash/splash.ts" defer></script>
