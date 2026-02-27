@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.3.105 - Hole 12: Winding Conveyor Path Redesign (2026-02-27)
+
+### Fixed
+- **Cup no longer covered by water hazard** — cup moved from (380,95) to (140,90), safely within the final conveyor leg
+
+### Changed
+- **Replaced checkerboard grid with winding snake path** — 6 horizontal conveyor legs zigzag from bottom to top, connected by 5 vertical turn connectors at alternating sides
+- **Force magnitude increased** from 4 to 5 for stronger lateral push on each leg
+- **Water hazards repositioned** to fill gaps between legs on the non-connector side, forcing players to follow the snake route
+- **Tee moved** from (250,740) to (250,745) with clear green approach to first leg
+- **Removed water strip** between tee and first conveyor leg that was causing immediate water penalties
+
 ## v0.0.3.99 - Splash Screen Redesign (2026-02-27)
 
 ### Changed

@@ -6,7 +6,7 @@ All hole coordinates are defined in a 500x800 portrait design space, optimized f
 
 ## Course Structure
 
-Currently 11 holes. Holes are added iteratively with high visual and gameplay quality.
+Currently 12 holes. Holes are added iteratively with high visual and gameplay quality.
 
 ### Hole 1: The Vanilla Straightaway (Par 2)
 Simple straight vertical rectangle (x:150-350, y:60-740). No obstacles. Full-power straight shot = hole-in-one. Slight miss = easy tap-in par 2. Designed as a calibration hole for the power meter.
@@ -42,7 +42,7 @@ Narrow corridor gauntlet inspired by Candystand's "Sours" course. Tee at (250,72
 L-shaped dogleg course with a narrow cannon obstacle in the vertical section. Tee at (200,730), cup at (410,155). The vertical corridor (x:140-270) runs from the tee up through the cannon. After the cannon exit, the corridor turns 90° right into a horizontal section (x:270-460, y:110-230) where the cup sits at the far end. An ice slick zone (y:550-760) builds speed on approach. A **pre-cannon gumdrop bumper** (radius 14) at (220,620) forces aim adjustment before the cannon. The **narrow cannon** (38 width, down from 55) at y:500 requires minimum upward velocity (~2.8 design units) to pass through; too slow and the ball is rejected. After the cannon, two gumdrop bumpers create a satisfying ricochet chain: one aligned directly with the cannon exit (197,150, radius 18) guarantees impact and deflects the ball RIGHT into the horizontal corridor, and a second (330,165, radius 14) bounces it toward the cup. A small sand trap on the inside of the corner (x:270, y:180, 55x48) punishes cutting the turn. Water hazards surround the entire course and lie behind the cup. No sand bunker around the cup — pure skill-based putting. Exit velocity is 60% of entry speed to provide strong energy for the bumper ricochet chain, and a flared barrel mouth with a glow ring at the top. A sand friction zone on the green (y:70-180) decelerates for putting. Water hazards surround the green and flank the corridor. **Strategy**: ~60-75% power for a clean cannon transit with controlled stop on the green.
 
 ### Hole 12: The Conveyor Belt Matrix (Par 4)
-Wide rectangular corridor (x:80-420, y:60-770) with a 4-column × 5-row checkerboard of conveyor belt zones occupying the center (x:90-410, y:180-580). Each conveyor cell is 80×80 design units. Only the "dark squares" of the checkerboard are active conveyors; alternating cells are neutral ground. Conveyor forces push the ball laterally or vertically with magnitude 4, creating a chaotic grid of competing forces. Tee at (250,740) below the grid, cup at (380,95) above it in the top-right. The player must aim against the conveyor flows to navigate the ball through the grid — the ball traces curved parabolic arcs as the initial impulse velocity combines with the continuous conveyor force (vector addition). Rows alternate between horizontal (→/←) and vertical (↓/↑) forces, requiring the player to constantly adjust aim compensation. Water hazards flank both sides (x:20-78 left, x:422-480 right) and a water trap behind the cup (x:340-418, y:62-112) punishes overshoot. No sand or ice zones — conveyors are the sole challenge mechanic. **Visuals**: Dark conveyor squares with animated orange directional chevron arrows scrolling in the force direction, clipped to cell boundaries via geometry masks. **Strategy**: Requires intuitive vector addition — aim opposite to belt direction to achieve a straight-line result, or use belt momentum to curve around obstacles.
+Rectangular corridor (x:80-420, y:55-770) featuring a winding snake path of conveyor belts zigzagging from bottom to top. Six horizontal legs (A-F, each 320×60 design units spanning x:90-410) alternate pushing RIGHT and LEFT with force magnitude 5. Five turn connectors (60×60 each) at alternating sides link the legs vertically with upward force magnitude 5. Tee at (250,745) below the path with an open green approach to Leg A. Cup at (140,90) within the final leg (F) on the left side. Water hazards fill the gaps between legs on the opposite side from each turn connector, forcing the player to follow the snake route. The player must aim against each leg's lateral push while timing their shots to navigate around the turns. Missing a turn sends the ball into water. The path creates a demanding but learnable route where mastery comes from understanding how the conveyor forces deflect each shot.veyors are the sole challenge mechanic. **Visuals**: Dark conveyor squares with animated orange directional chevron arrows scrolling in the force direction, clipped to cell boundaries via geometry masks. **Strategy**: Requires intuitive vector addition — aim opposite to belt direction to achieve a straight-line result, or use belt momentum to curve around obstacles.
 
 ## Conveyor Belt Physics
 
@@ -50,9 +50,10 @@ Wide rectangular corridor (x:80-420, y:60-770) with a 4-column × 5-row checkerb
 |----------|-------|
 | Force Application | Continuous `applyForce` each physics frame while ball overlaps zone |
 | Force Multiplier | 0.00005 × forceX/forceY (design units) |
-| Force Magnitude | 4 design units (strong lateral/vertical push) |
-| Grid Layout | 4 columns × 5 rows, 80×80 cells, checkerboard pattern |
-| Directions | Row 0: →/← horizontal, Row 1: ↓/↑ vertical, alternating |
+| Force Magnitude | 5 design units (strong lateral/vertical push) |
+| Layout | 6 horizontal legs (320×60) + 5 vertical turn connectors (60×60), snake path |
+| Leg Directions | A→, B←, C→, D←, E→, F← (alternating right/left) |
+| Turn Directions | All ↑ (upward force linking legs) |
 | Visual | Dark background (0x333340, 85% opacity), animated orange chevron arrows |
 | Animation | Arrows scroll at 0.004× delta per frame, cycling every 28% of cell width |
 | Clipping | Geometry mask per conveyor cell prevents arrow bleed |

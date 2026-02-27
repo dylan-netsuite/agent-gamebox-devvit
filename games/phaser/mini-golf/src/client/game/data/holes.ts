@@ -666,70 +666,97 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 12: The Conveyor Belt Matrix ----
-  // A 4x4 checkerboard of conveyor belts pushing in alternating directions.
-  // The ball curves wildly across the grid — aim against the flow to survive.
+  // A winding snake path of conveyors zigzagging across the field.
+  // Each leg pushes the ball sideways — aim against the flow to advance.
+  // Water fills the gaps between legs, forcing the player to stay on the path.
+  //
+  // Path layout (bottom to top):
+  //   Tee (250,740) → open approach
+  //   Leg A (y=660-720, x=90-410) → RIGHT
+  //   Turn R (x=350-410, y=600-660)  → UP
+  //   Leg B (y=540-600, x=90-410) → LEFT
+  //   Turn L (x=90-150, y=480-540)   → UP
+  //   Leg C (y=420-480, x=90-410) → RIGHT
+  //   Turn R (x=350-410, y=360-420)  → UP
+  //   Leg D (y=300-360, x=90-410) → LEFT
+  //   Turn L (x=90-150, y=240-300)   → UP
+  //   Leg E (y=180-240, x=90-410) → RIGHT
+  //   Turn R (x=350-410, y=120-180)  → UP
+  //   Leg F (y=62-120, x=90-410)  → LEFT toward cup
+  //   Cup (140, 90)
   {
     id: 12,
     name: 'The Conveyor Belt Matrix',
     par: 4,
-    tee: { x: 250, y: 740 },
-    cup: { x: 380, y: 95 },
+    tee: { x: 250, y: 745 },
+    cup: { x: 140, y: 90 },
     walls: [
-      // Left wall
       [
-        { x: 80, y: 60 },
+        { x: 80, y: 55 },
         { x: 80, y: 770 },
       ],
-      // Right wall
       [
-        { x: 420, y: 60 },
+        { x: 420, y: 55 },
         { x: 420, y: 770 },
       ],
-      // Top wall
       [
-        { x: 80, y: 60 },
-        { x: 420, y: 60 },
+        { x: 80, y: 55 },
+        { x: 420, y: 55 },
       ],
-      // Bottom wall
       [
         { x: 80, y: 770 },
         { x: 420, y: 770 },
       ],
     ],
     obstacles: [
-      // === CONVEYOR BELT CHECKERBOARD ===
-      // Grid: 4 columns x 5 rows, each cell 80x80
-      // Grid area: x=90..410, y=180..580
-      // Checkerboard pattern: conveyors on "dark squares" only
-      // Force magnitude ~3-5 for strong lateral push
+      // === WINDING CONVEYOR SNAKE PATH ===
+      // Legs span x=90..410 (width=320). Turns are 60x60 at alternating sides.
+      // Each gap between legs is exactly 60 high, filled by turn connector on one
+      // side and water on the other.
 
-      // Row 0 (y=180): cols 0,2 are conveyors
-      { type: 'conveyor', x: 90, y: 180, width: 80, height: 80, forceX: 4, forceY: 0 },
-      { type: 'conveyor', x: 250, y: 180, width: 80, height: 80, forceX: -4, forceY: 0 },
+      // Leg A: y=660..720, pushes RIGHT →
+      { type: 'conveyor', x: 90, y: 660, width: 320, height: 60, forceX: 5, forceY: 0 },
+      // Turn A→B (right side): x=350..410, y=600..660, pushes UP ↑
+      { type: 'conveyor', x: 350, y: 600, width: 60, height: 60, forceX: 0, forceY: -5 },
 
-      // Row 1 (y=260): cols 1,3 are conveyors
-      { type: 'conveyor', x: 170, y: 260, width: 80, height: 80, forceX: 0, forceY: 4 },
-      { type: 'conveyor', x: 330, y: 260, width: 80, height: 80, forceX: 0, forceY: -4 },
+      // Leg B: y=540..600, pushes LEFT ←
+      { type: 'conveyor', x: 90, y: 540, width: 320, height: 60, forceX: -5, forceY: 0 },
+      // Turn B→C (left side): x=90..150, y=480..540, pushes UP ↑
+      { type: 'conveyor', x: 90, y: 480, width: 60, height: 60, forceX: 0, forceY: -5 },
 
-      // Row 2 (y=340): cols 0,2 are conveyors
-      { type: 'conveyor', x: 90, y: 340, width: 80, height: 80, forceX: -4, forceY: 0 },
-      { type: 'conveyor', x: 250, y: 340, width: 80, height: 80, forceX: 4, forceY: 0 },
+      // Leg C: y=420..480, pushes RIGHT →
+      { type: 'conveyor', x: 90, y: 420, width: 320, height: 60, forceX: 5, forceY: 0 },
+      // Turn C→D (right side): x=350..410, y=360..420, pushes UP ↑
+      { type: 'conveyor', x: 350, y: 360, width: 60, height: 60, forceX: 0, forceY: -5 },
 
-      // Row 3 (y=420): cols 1,3 are conveyors
-      { type: 'conveyor', x: 170, y: 420, width: 80, height: 80, forceX: 0, forceY: -4 },
-      { type: 'conveyor', x: 330, y: 420, width: 80, height: 80, forceX: 0, forceY: 4 },
+      // Leg D: y=300..360, pushes LEFT ←
+      { type: 'conveyor', x: 90, y: 300, width: 320, height: 60, forceX: -5, forceY: 0 },
+      // Turn D→E (left side): x=90..150, y=240..300, pushes UP ↑
+      { type: 'conveyor', x: 90, y: 240, width: 60, height: 60, forceX: 0, forceY: -5 },
 
-      // Row 4 (y=500): cols 0,2 are conveyors
-      { type: 'conveyor', x: 90, y: 500, width: 80, height: 80, forceX: 4, forceY: 0 },
-      { type: 'conveyor', x: 250, y: 500, width: 80, height: 80, forceX: -4, forceY: 0 },
+      // Leg E: y=180..240, pushes RIGHT →
+      { type: 'conveyor', x: 90, y: 180, width: 320, height: 60, forceX: 5, forceY: 0 },
+      // Turn E→F (right side): x=350..410, y=120..180, pushes UP ↑
+      { type: 'conveyor', x: 350, y: 120, width: 60, height: 60, forceX: 0, forceY: -5 },
+
+      // Leg F: y=62..120, final leg pushes LEFT ← toward cup at (140,90)
+      { type: 'conveyor', x: 90, y: 62, width: 320, height: 58, forceX: -5, forceY: 0 },
     ],
     waterZones: [
-      // Water left of corridor
-      { x: 20, y: 50, width: 58, height: 730, color: 0x69b4ff },
-      // Water right of corridor
-      { x: 422, y: 50, width: 58, height: 730, color: 0x69b4ff },
-      // Water behind cup (overshoot penalty)
-      { x: 340, y: 62, width: 78, height: 50, color: 0x69b4ff },
+      // Gap A→B (y=600..660): water on LEFT side (turn is on right)
+      { x: 82, y: 600, width: 266, height: 60, color: 0x69b4ff },
+
+      // Gap B→C (y=480..540): water on RIGHT side (turn is on left)
+      { x: 152, y: 480, width: 266, height: 60, color: 0x69b4ff },
+
+      // Gap C→D (y=360..420): water on LEFT side (turn is on right)
+      { x: 82, y: 360, width: 266, height: 60, color: 0x69b4ff },
+
+      // Gap D→E (y=240..300): water on RIGHT side (turn is on left)
+      { x: 152, y: 240, width: 266, height: 60, color: 0x69b4ff },
+
+      // Gap E→F (y=120..180): water on LEFT side (turn is on right)
+      { x: 82, y: 120, width: 266, height: 60, color: 0x69b4ff },
     ],
   },
 ];
