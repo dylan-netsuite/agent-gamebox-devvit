@@ -670,94 +670,89 @@ export const HOLES: HoleDefinition[] = [
   // Internal walls with gaps at alternating ends force the ball to zigzag.
   // No vertical conveyors — walls do the turning, conveyors do the pushing.
   //
-  // Layout (bottom to top):
-  //   Tee (250,740) → open approach
-  //   Leg A (y=620-700, x=90-410) → RIGHT    gap on RIGHT
-  //   Leg B (y=460-540, x=90-410) → LEFT     gap on LEFT
-  //   Leg C (y=300-380, x=90-410) → RIGHT    gap on RIGHT
-  //   Leg D (y=140-220, x=90-410) → LEFT     toward cup
-  //   Cup (140, 180)
+  // Layout (bottom to top, tee clear of HUD at y=690):
+  //   Tee (250,690) → open approach
+  //   Leg A (y=570-650, x=90-410) → RIGHT    gap on RIGHT
+  //   Leg B (y=420-500, x=90-410) → LEFT     gap on LEFT
+  //   Leg C (y=270-350, x=90-410) → RIGHT    gap on RIGHT
+  //   Leg D (y=120-200, x=90-410) → LEFT     toward cup
+  //   Cup (140, 160)
   {
     id: 12,
     name: 'The Conveyor Belt Matrix',
     par: 4,
-    tee: { x: 250, y: 740 },
-    cup: { x: 140, y: 180 },
+    tee: { x: 250, y: 690 },
+    cup: { x: 140, y: 160 },
     walls: [
       // Outer boundary
       [
         { x: 80, y: 55 },
-        { x: 80, y: 770 },
+        { x: 80, y: 730 },
       ],
       [
         { x: 420, y: 55 },
-        { x: 420, y: 770 },
+        { x: 420, y: 730 },
       ],
       [
         { x: 80, y: 55 },
         { x: 420, y: 55 },
       ],
       [
-        { x: 80, y: 770 },
-        { x: 420, y: 770 },
+        { x: 80, y: 730 },
+        { x: 420, y: 730 },
       ],
 
       // Internal divider walls between legs (with gaps at alternating sides)
 
       // Between Leg A (→) and Leg B (←): gap on RIGHT (x=350..420)
       [
-        { x: 80, y: 540 },
-        { x: 350, y: 540 },
+        { x: 80, y: 500 },
+        { x: 350, y: 500 },
       ],
 
       // Between Leg B (←) and Leg C (→): gap on LEFT (x=80..150)
       [
-        { x: 150, y: 380 },
-        { x: 420, y: 380 },
+        { x: 150, y: 350 },
+        { x: 420, y: 350 },
       ],
 
       // Between Leg C (→) and Leg D (←): gap on RIGHT (x=350..420)
       [
-        { x: 80, y: 220 },
-        { x: 350, y: 220 },
+        { x: 80, y: 200 },
+        { x: 350, y: 200 },
       ],
 
       // Top wall above Leg D
       [
-        { x: 80, y: 130 },
-        { x: 420, y: 130 },
+        { x: 80, y: 110 },
+        { x: 420, y: 110 },
       ],
     ],
     obstacles: [
       // === WALL-GUIDED CONVEYOR SNAKE PATH ===
-      // 4 horizontal legs with moderate force. Walls redirect the ball at each end.
+      // 4 horizontal legs with gentle force. Walls redirect the ball at each end.
 
-      // Leg A: y=620..700, pushes RIGHT →
-      { type: 'conveyor', x: 90, y: 620, width: 320, height: 80, forceX: 3, forceY: 0 },
+      // Leg A: y=570..650, pushes RIGHT →
+      { type: 'conveyor', x: 90, y: 570, width: 320, height: 80, forceX: 2, forceY: 0 },
 
-      // Leg B: y=460..540, pushes LEFT ←
-      { type: 'conveyor', x: 90, y: 460, width: 320, height: 80, forceX: -3, forceY: 0 },
+      // Leg B: y=420..500, pushes LEFT ←
+      { type: 'conveyor', x: 90, y: 420, width: 320, height: 80, forceX: -2, forceY: 0 },
 
-      // Leg C: y=300..380, pushes RIGHT →
-      { type: 'conveyor', x: 90, y: 300, width: 320, height: 80, forceX: 3, forceY: 0 },
+      // Leg C: y=270..350, pushes RIGHT →
+      { type: 'conveyor', x: 90, y: 270, width: 320, height: 80, forceX: 2, forceY: 0 },
 
-      // Leg D: y=140..220, pushes LEFT ← toward cup
-      { type: 'conveyor', x: 90, y: 140, width: 320, height: 80, forceX: -3, forceY: 0 },
+      // Leg D: y=120..200, pushes LEFT ← toward cup
+      { type: 'conveyor', x: 90, y: 120, width: 320, height: 80, forceX: -2, forceY: 0 },
     ],
     waterZones: [
-      // Water in the gap channels between legs (where the ball transitions)
+      // Channel A→B (y=500..570): gap on RIGHT (x=350..420), water on LEFT
+      { x: 82, y: 502, width: 268, height: 66, color: 0x69b4ff },
 
-      // Channel A→B (y=540..620): between Leg A bottom and divider wall
-      // Right side gap is open (x=350..420), water fills the left portion
-      { x: 82, y: 542, width: 268, height: 76, color: 0x69b4ff },
+      // Channel B→C (y=350..420): gap on LEFT (x=80..150), water on RIGHT
+      { x: 152, y: 352, width: 266, height: 66, color: 0x69b4ff },
 
-      // Channel B→C (y=380..460): between divider wall and Leg B top
-      // Left side gap is open (x=80..150), water fills the right portion
-      { x: 152, y: 382, width: 266, height: 76, color: 0x69b4ff },
-
-      // Channel C→D (y=220..300): between Leg C bottom and divider wall
-      // Right side gap is open (x=350..420), water fills the left portion
-      { x: 82, y: 222, width: 268, height: 76, color: 0x69b4ff },
+      // Channel C→D (y=200..270): gap on RIGHT (x=350..420), water on LEFT
+      { x: 82, y: 202, width: 268, height: 66, color: 0x69b4ff },
     ],
   },
 ];

@@ -464,7 +464,7 @@ export class Obstacles {
     const stripeH = isHoriz ? h : h / stripeCount;
 
     for (let i = 0; i < stripeCount; i++) {
-      const color = i % 2 === 0 ? 0xff8ec6 : 0xffb6d9;
+      const color = i % 2 === 0 ? 0x7fdfbb : 0xa8e8ce;
       this.zoneGraphics.fillStyle(color, 0.9);
       if (isHoriz) {
         this.zoneGraphics.fillRect(tl.x + i * stripeW, tl.y, stripeW + 1, h);
@@ -472,7 +472,7 @@ export class Obstacles {
         this.zoneGraphics.fillRect(tl.x, tl.y + i * stripeH, w, stripeH + 1);
       }
     }
-    this.zoneGraphics.lineStyle(2, 0xe75480, 0.8);
+    this.zoneGraphics.lineStyle(2, 0x2e8b57, 0.8);
     this.zoneGraphics.strokeRect(tl.x, tl.y, w, h);
 
     const g = this.scene.add.graphics();
@@ -500,7 +500,7 @@ export class Obstacles {
 
   updateConveyors(delta: number): void {
     for (const c of this.conveyors) {
-      c.phase += delta * 0.004;
+      c.phase += delta * 0.0015;
       if (c.phase > 1) c.phase -= 1;
 
       const g = c.graphics;
@@ -530,11 +530,11 @@ export class Obstacles {
         if (cx < c.screenX - dotRadius || cx > c.screenX + c.screenW + dotRadius) continue;
         if (cy < c.screenY - dotRadius || cy > c.screenY + c.screenH + dotRadius) continue;
 
-        const colors = [0xffffff, 0xffe4f0, 0xffffff];
+        const colors = [0xffffff, 0xd4f5e3, 0xffffff];
         const color = colors[i % 3 < 0 ? (i % 3) + 3 : i % 3];
         g.fillStyle(color, 0.85);
         g.fillCircle(cx, cy, dotRadius);
-        g.fillStyle(0xe75480, 0.6);
+        g.fillStyle(0x2e8b57, 0.5);
         g.fillCircle(cx + dx * dotRadius * 0.8, cy + dy * dotRadius * 0.8, dotRadius * 0.45);
       }
     }
@@ -1425,8 +1425,8 @@ export class Obstacles {
         case 'conveyor':
           if (zone.forceX !== undefined && zone.forceY !== undefined) {
             this.scene.matter.body.applyForce(ball.body, ball.body.position, {
-              x: zone.forceX * 0.00005,
-              y: zone.forceY * 0.00005,
+              x: zone.forceX * 0.00003,
+              y: zone.forceY * 0.00003,
             });
           }
           break;

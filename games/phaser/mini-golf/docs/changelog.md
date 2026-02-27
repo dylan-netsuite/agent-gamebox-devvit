@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.3.111 - Hole 12 Polish: Tee, Speed, Color (2026-02-27)
+
+### Fixed
+- **Tee box no longer hidden by HUD** — moved tee from y=740 to y=690, entire layout shifted up so ball is clearly visible above the bottom banner
+- **Bottom wall raised** from y=770 to y=730 to match new layout
+
+### Changed
+- **Conveyor force reduced** from magnitude 3 to 2, multiplier from 0.00005 to 0.00003 — gentler push for more controllable gameplay
+- **Animation speed halved** from 0.004 to 0.0015 — dots scroll slower for a calmer visual
+- **Conveyor color changed from pink to mint green** — stripes now 0x7fdfbb/0xa8e8ce (mint) with 0x2e8b57 (sea green) borders and dot accents, clearly distinct from the pink water hazards
+
 ## v0.0.3.108 - Hole 12: Wall-Guided Turns + Candy Theme (2026-02-27)
 
 ### Fixed
