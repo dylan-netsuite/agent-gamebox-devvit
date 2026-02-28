@@ -1,5 +1,21 @@
 # Reddit Royale - Changelog
 
+## [v0.0.20.1] - 2026-02-28 — Fix Game Over Screen Not Showing (wf-1772267000)
+
+### Fixed
+- **Game over screen invisible**: After winning a single player game, no game over screen appeared. The "GAME OVER" overlay, winner text, "Play Again", and "Main Menu" buttons were all invisible.
+
+### Root Cause
+`showGameOver()` created child objects using `this.add.graphics()` and `this.add.text()`, which added them to the scene's display list and triggered the `addedtoscene` event handler. The handler called `uiCamera.ignore(obj)` on each child because they weren't in `uiContainers`. Even though the children were inside the `gameOverOverlay` container (which IS a UI container), Phaser's container renderer checks each child's `willRender(camera)` individually — so the ignored children were invisible on the UI camera. The main camera also couldn't render them because it ignores the container itself.
+
+### Fix
+Changed all `this.add.*()` calls in `showGameOver()` to `new Phaser.GameObjects.*()` constructors. Objects created with `new` are not added to the scene's display list, so the `addedtoscene` handler doesn't fire and the children render correctly through the container. This is the same pattern used in `showPauseMenu()` and `buildHomeButton()`.
+
+Also changed the initial `gameOverOverlay` creation in `create()` to use `addUIObject()` for consistency.
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts`
+
 ## [v0.0.18.23] - 2026-02-27 — Pause Menu, Play Again, Lifecycle Audit (wf-1772181000)
 
 ### Added

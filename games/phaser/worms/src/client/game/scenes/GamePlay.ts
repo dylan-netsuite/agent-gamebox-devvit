@@ -343,7 +343,9 @@ export class GamePlay extends Scene {
       getState: () => this.weaponSystem.currentState,
     });
 
-    this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);
+    this.gameOverOverlay = this.addUIObject(
+      new Phaser.GameObjects.Container(this, 0, 0),
+    ).setDepth(500).setScrollFactor(0);
     this.gameOverOverlay.setVisible(false);
 
     if (data?.tutorial) {
@@ -992,7 +994,7 @@ export class GamePlay extends Scene {
     this.gameOverOverlay.removeAll(true);
     this.gameOverOverlay.setVisible(true);
 
-    const bg = this.add.graphics();
+    const bg = new Phaser.GameObjects.Graphics(this);
     bg.fillStyle(0x000000, 0.7);
     bg.fillRect(0, 0, cam.width, cam.height);
     bg.setInteractive(
@@ -1014,28 +1016,28 @@ export class GamePlay extends Scene {
       winnerLabel = 'Draw!';
     }
 
-    const title = this.add
-      .text(cam.width / 2, cam.height * 0.32, 'GAME OVER', {
+    const title = new Phaser.GameObjects.Text(
+      this, cam.width / 2, cam.height * 0.32, 'GAME OVER', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '48px',
         fontStyle: 'bold',
         color: '#ffffff',
         stroke: '#000000',
         strokeThickness: 4,
-      })
-      .setOrigin(0.5);
+      },
+    ).setOrigin(0.5);
     this.gameOverOverlay.add(title);
 
-    const winner = this.add
-      .text(cam.width / 2, cam.height * 0.45, winnerLabel, {
+    const winner = new Phaser.GameObjects.Text(
+      this, cam.width / 2, cam.height * 0.45, winnerLabel, {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '28px',
         fontStyle: 'bold',
         color: teamColor,
         stroke: '#000000',
         strokeThickness: 3,
-      })
-      .setOrigin(0.5);
+      },
+    ).setOrigin(0.5);
     this.gameOverOverlay.add(winner);
 
     const goToMenu = () => {
@@ -1054,26 +1056,24 @@ export class GamePlay extends Scene {
       this.scene.start('GamePlay', this.lastConfig ?? undefined);
     };
 
-    const newGameText = this.add
-      .text(cam.width / 2, cam.height * 0.58, '[ Play Again ]', {
+    const newGameText = new Phaser.GameObjects.Text(
+      this, cam.width / 2, cam.height * 0.58, '[ Play Again ]', {
         fontFamily: 'monospace',
         fontSize: '18px',
         fontStyle: 'bold',
         color: '#4ade80',
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+      },
+    ).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.gameOverOverlay.add(newGameText);
     newGameText.on('pointerdown', playAgain);
 
-    const menuText = this.add
-      .text(cam.width / 2, cam.height * 0.66, '[ Main Menu ]', {
+    const menuText = new Phaser.GameObjects.Text(
+      this, cam.width / 2, cam.height * 0.66, '[ Main Menu ]', {
         fontFamily: 'monospace',
         fontSize: '16px',
         color: '#aaaaaa',
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+      },
+    ).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.gameOverOverlay.add(menuText);
     menuText.on('pointerdown', goToMenu);
 
@@ -1086,15 +1086,14 @@ export class GamePlay extends Scene {
     });
 
     if (this.isOnline && this.mp) {
-      const rematchText = this.add
-        .text(cam.width / 2, cam.height * 0.76, '[ REMATCH ]', {
+      const rematchText = new Phaser.GameObjects.Text(
+        this, cam.width / 2, cam.height * 0.76, '[ REMATCH ]', {
           fontFamily: 'monospace',
           fontSize: '16px',
           fontStyle: 'bold',
           color: '#3fb950',
-        })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true });
+        },
+      ).setOrigin(0.5).setInteractive({ useHandCursor: true });
       this.gameOverOverlay!.add(rematchText);
 
       rematchText.on('pointerdown', () => {
