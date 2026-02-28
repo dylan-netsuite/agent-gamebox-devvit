@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.0.7.34 - Hole 17: Redesigned with 5 Islands (2026-02-28)
+
+### Changed
+- **Expanded to 5 islands** (was 3): green (0.35), blue (0.45), orange (0.55), pink (0.65), purple (0.75) — progressively faster and narrower
+- **Fixed inaccessible green**: removed top wall that fully enclosed the cup area, now open from above
+- **Narrower green platform**: reduced from 170px to 110px wide (x:350-460)
+- **Wider water hazards**: left (x:30, w:90) and right (x:390, w:80) for more danger
+- Cup moved to (400, 730) to center in narrower green
+
 ## v0.0.7.29 - Hole 17: The Moving Island Sequence (2026-02-27)
 
 ### Added
