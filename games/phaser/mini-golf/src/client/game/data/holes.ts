@@ -1186,4 +1186,56 @@ export const HOLES: HoleDefinition[] = [
       { x: 390, y: 130, width: 80, height: 570 },
     ],
   },
+
+  // ---- HOLE 18: The Jawbreaker Centrifuge ----
+  // The final boss. A narrow bridge over a massive void.
+  // A high-speed spinning centrifuge blocks the path, followed by
+  // crusher gates that slam shut on a timer. Thread the needle
+  // and a super bumper rockets the ball into the cup.
+  //
+  // Layout (500x800 design space):
+  //   Narrow bridge corridor: x:195-305, y:60-770
+  //   Tee at top center (250, 100)
+  //   Centrifuge (2-blade windmill) at (250, 320), speed 2.5
+  //   Crusher gates (two tongues) at y=480, thrusting from both sides
+  //   Super bumper at (250, 600)
+  //   Cup at (250, 710)
+  //   Water voids on both sides of the bridge
+  {
+    id: 18,
+    name: 'The Jawbreaker Centrifuge',
+    par: 4,
+    tee: { x: 250, y: 100 },
+    cup: { x: 250, y: 710 },
+    walls: [
+      // Outer boundary
+      [{ x: 30, y: 40 }, { x: 470, y: 40 }],
+      [{ x: 30, y: 40 }, { x: 30, y: 770 }],
+      [{ x: 470, y: 40 }, { x: 470, y: 770 }],
+      [{ x: 30, y: 770 }, { x: 470, y: 770 }],
+      // Bridge left wall
+      [{ x: 195, y: 60 }, { x: 195, y: 770 }],
+      // Bridge right wall
+      [{ x: 305, y: 60 }, { x: 305, y: 770 }],
+    ],
+    obstacles: [
+      // The Centrifuge: 2-blade fast spinner blocking the bridge
+      { type: 'windmill', x: 250, y: 320, bladeCount: 2, bladeLength: 95, speed: 2.5 },
+      // Crusher Gate Left: tongue thrusting from left wall into the corridor
+      { type: 'tongue', x: 195, y: 480, width: 55, height: 16, forceX: 1, speed: 0.7, angle: 0 },
+      // Crusher Gate Right: tongue thrusting from right wall, offset phase
+      { type: 'tongue', x: 250, y: 480, width: 55, height: 16, forceX: -1, speed: 0.7, angle: Math.PI },
+      // Super Bumper: high-restitution pinball bumper that rockets ball toward cup
+      { type: 'bumper', x: 250, y: 600, radius: 14, color: 0xff2266 },
+      // Secondary bumpers flanking the corridor for ricochet fun
+      { type: 'bumper', x: 215, y: 650, radius: 10, color: 0xffaa00 },
+      { type: 'bumper', x: 285, y: 650, radius: 10, color: 0xffaa00 },
+    ],
+    waterZones: [
+      // Left void — massive water hazard
+      { x: 30, y: 60, width: 165, height: 710 },
+      // Right void — massive water hazard
+      { x: 305, y: 60, width: 165, height: 710 },
+    ],
+  },
 ];

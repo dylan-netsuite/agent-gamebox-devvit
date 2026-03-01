@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.0.7.37 - Hole 18: The Jawbreaker Centrifuge (2026-02-28)
+
+### Added
+- **Hole 18: The Jawbreaker Centrifuge** — the final boss hole, a narrow bridge gauntlet over a massive water void
+- **The Centrifuge**: 2-blade windmill (speed 2.5, blade length 95) spinning at the corridor center, deflecting poorly-timed shots
+- **The Crusher Gates**: Two opposing tongues thrusting from both walls with opposite phase offsets, slamming shut on a timer
+- **The Kinetic Bumper Finish**: Central super bumper (red) flanked by two smaller bumpers (orange) that ricochet the ball toward the cup
+- No new obstacle types — composed entirely from existing `windmill`, `tongue`, and `bumper` mechanics
+- Completes the full 18-hole Sugar Rush course
+
 ## v0.0.7.34 - Hole 17: Redesigned with 5 Islands (2026-02-28)
 
 ### Changed
