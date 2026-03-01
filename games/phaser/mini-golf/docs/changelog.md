@@ -1,6 +1,18 @@
 # Changelog
 
-## v0.0.7.37 - Hole 18: The Jawbreaker Centrifuge (2026-02-28)
+## v0.0.7.39 - Hole 18: Redesigned with Two Routes (2026-02-28)
+
+### Changed
+- **Two-route design**: Route A (safe, left corridor) and Route B (risky, skinny bridge on right)
+- **Route A**: Wide corridor with centrifuge windmill (speed 2.0) and crusher gates — 3-4 shot path
+- **Route B**: Ultra-narrow 40-unit bridge over taffy void with a moving bridge — possible hole-in-one
+- **Tee moved to top-left** (100, 90), **cup to bottom-right** (380, 700) for a longer course
+- **Green area expanded**: full width at bottom (x:50-460, y:550-760) with bumper obstacles for kinetic finishes
+- Added `moving_bridge` obstacle (x:370, y:380→550) connecting skinny bridge to green
+- Added `gumdrop_bumper` at (200, 630) to redirect Route A shots toward cup
+- Water hazards: central void (x:200-370, y:60-550), right void (x:410-470, y:60-550)
+
+## v0.0.7.37 - Hole 18: The Jawbreaker Centrifuge — Initial (2026-02-28)
 
 ### Added
 - **Hole 18: The Jawbreaker Centrifuge** — the final boss hole, a narrow bridge gauntlet over a massive water void

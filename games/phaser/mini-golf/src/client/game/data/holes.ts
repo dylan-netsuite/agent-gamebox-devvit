@@ -1188,54 +1188,68 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 18: The Jawbreaker Centrifuge ----
-  // The final boss. A narrow bridge over a massive void.
-  // A high-speed spinning centrifuge blocks the path, followed by
-  // crusher gates that slam shut on a timer. Thread the needle
-  // and a super bumper rockets the ball into the cup.
+  // The final boss — two routes, one destiny.
+  //
+  // Route A (Safe, left): Wide corridor through a centrifuge spinner
+  //   and crusher gates, then across to the green. 3-4 shots.
+  // Route B (Risky, right): Ultra-narrow bridge over taffy void with
+  //   a moving bridge. Nail the timing for a possible hole-in-one.
   //
   // Layout (500x800 design space):
-  //   Narrow bridge corridor: x:195-305, y:60-770
-  //   Tee at top center (250, 100)
-  //   Centrifuge (2-blade windmill) at (250, 320), speed 2.5
-  //   Crusher gates (two tongues) at y=480, thrusting from both sides
-  //   Super bumper at (250, 600)
-  //   Cup at (250, 710)
-  //   Water voids on both sides of the bridge
+  //   Tee: top-left (100, 90)
+  //   Route A: left corridor x:50-200, y:60-550
+  //     - Centrifuge at (125, 280)
+  //     - Crusher gates at y=420
+  //   Route B: skinny bridge x:370-410, y:60-380
+  //     - Moving bridge y:380→550
+  //   Green: x:50-460, y:550-760
+  //   Cup: (380, 700)
   {
     id: 18,
     name: 'The Jawbreaker Centrifuge',
     par: 4,
-    tee: { x: 250, y: 100 },
-    cup: { x: 250, y: 710 },
+    tee: { x: 100, y: 90 },
+    cup: { x: 380, y: 700 },
     walls: [
       // Outer boundary
       [{ x: 30, y: 40 }, { x: 470, y: 40 }],
       [{ x: 30, y: 40 }, { x: 30, y: 770 }],
       [{ x: 470, y: 40 }, { x: 470, y: 770 }],
       [{ x: 30, y: 770 }, { x: 470, y: 770 }],
-      // Bridge left wall
-      [{ x: 195, y: 60 }, { x: 195, y: 770 }],
-      // Bridge right wall
-      [{ x: 305, y: 60 }, { x: 305, y: 770 }],
+      // Route A — left corridor walls
+      [{ x: 200, y: 60 }, { x: 200, y: 550 }],
+      // Skinny Bridge — Route B walls
+      [{ x: 370, y: 60 }, { x: 370, y: 380 }],
+      [{ x: 410, y: 60 }, { x: 410, y: 380 }],
+      // Green bottom enclosure
+      [{ x: 30, y: 550 }, { x: 370, y: 550 }],
+      [{ x: 410, y: 550 }, { x: 470, y: 550 }],
     ],
     obstacles: [
-      // The Centrifuge: 2-blade fast spinner blocking the bridge
-      { type: 'windmill', x: 250, y: 320, bladeCount: 2, bladeLength: 95, speed: 2.5 },
-      // Crusher Gate Left: tongue thrusting from left wall into the corridor
-      { type: 'tongue', x: 195, y: 480, width: 55, height: 16, forceX: 1, speed: 0.7, angle: 0 },
-      // Crusher Gate Right: tongue thrusting from right wall, offset phase
-      { type: 'tongue', x: 250, y: 480, width: 55, height: 16, forceX: -1, speed: 0.7, angle: Math.PI },
-      // Super Bumper: high-restitution pinball bumper that rockets ball toward cup
-      { type: 'bumper', x: 250, y: 600, radius: 14, color: 0xff2266 },
-      // Secondary bumpers flanking the corridor for ricochet fun
-      { type: 'bumper', x: 215, y: 650, radius: 10, color: 0xffaa00 },
-      { type: 'bumper', x: 285, y: 650, radius: 10, color: 0xffaa00 },
+      // === ROUTE A GAUNTLET ===
+      // The Centrifuge: 2-blade spinner blocking the left corridor
+      { type: 'windmill', x: 125, y: 280, bladeCount: 2, bladeLength: 80, speed: 2.0 },
+      // Crusher Gate Left: tongue from left wall
+      { type: 'tongue', x: 50, y: 420, width: 70, height: 16, forceX: 1, speed: 0.7, angle: 0 },
+      // Crusher Gate Right: tongue from right wall, offset phase
+      { type: 'tongue', x: 130, y: 420, width: 70, height: 16, forceX: -1, speed: 0.7, angle: Math.PI },
+      // === ROUTE B BRIDGE ===
+      // Moving bridge connects skinny bridge to the green
+      { type: 'moving_bridge', x: 370, y: 380, width: 40, height: 18, targetY: 540, speed: 0.6 },
+      // === GREEN AREA ===
+      // Gumdrop bumper — redirects Route A balls toward cup
+      { type: 'gumdrop_bumper', x: 200, y: 630, radius: 16, color: 0xff44cc },
+      // Bumpers near the cup for kinetic fun
+      { type: 'bumper', x: 340, y: 660, radius: 10, color: 0xff2266 },
+      { type: 'bumper', x: 420, y: 660, radius: 10, color: 0xffaa00 },
+      // Bumper to redirect center shots
+      { type: 'bumper', x: 300, y: 620, radius: 12, color: 0x44ff66 },
     ],
     waterZones: [
-      // Left void — massive water hazard
-      { x: 30, y: 60, width: 165, height: 710 },
-      // Right void — massive water hazard
-      { x: 305, y: 60, width: 165, height: 710 },
+      // Central void between Route A and Route B
+      { x: 200, y: 60, width: 170, height: 490 },
+      // Right void — right of skinny bridge
+      { x: 410, y: 60, width: 60, height: 490 },
     ],
   },
 ];
