@@ -1240,7 +1240,7 @@ export const HOLES: HoleDefinition[] = [
     obstacles: [
       // === CORNER BUMPERS ===
       { type: 'bumper', x: 50, y: 60, radius: 12, color: 0x4488ff },
-      { type: 'bumper', x: 450, y: 60, radius: 12, color: 0x4488ff },
+      { type: 'bumper', x: 360, y: 60, radius: 12, color: 0x4488ff },
       { type: 'bumper', x: 50, y: 335, radius: 12, color: 0x4488ff },
       { type: 'bumper', x: 50, y: 730, radius: 12, color: 0x4488ff },
 
@@ -1255,7 +1255,7 @@ export const HOLES: HoleDefinition[] = [
       // 140px wide × 60px tall, fills the corridor width.
       // Starts at y:260 (bottom of dry platform) and rides to y:580 (near green).
       // Speed 0.35 — slow enough for the ball to ride safely.
-      { type: 'moving_bridge', x: 290, y: 260, width: 140, height: 60, targetY: 580, speed: 0.35 },
+      { type: 'moving_bridge', x: 290, y: 260, width: 140, height: 80, targetY: 580, speed: 0.45 },
 
       // === GREEN — bumpers guard Route A's left approach ===
       { type: 'gumdrop_bumper', x: 250, y: 650, radius: 16, color: 0xff44cc },

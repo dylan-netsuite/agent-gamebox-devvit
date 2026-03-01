@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.7.66 - Hole 18: Bumper Alignment + Taller Faster Bridge (2026-03-01)
+
+### Changed
+- **Top-right bumper repositioned** from (450, 60) to (360, 60) — now inline with the center of the Route B shortcut corridor instead of tucked in the corner.
+- **Bridge made taller**: height increased from 60px to 80px, providing a more generous landing surface.
+- **Bridge speed increased** from 0.35 to 0.45 — slightly faster traversal for better gameplay pacing.
+
 ## v0.0.7.63 - Quality of Life: Water Reset, Bridge Carry, Bumper (2026-03-01)
 
 ### Changed
