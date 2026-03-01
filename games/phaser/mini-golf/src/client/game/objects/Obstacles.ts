@@ -101,6 +101,7 @@ interface MovingBridgeData {
   speed: number;
   progress: number;
   direction: 1 | -1;
+  velocityY: number;
 }
 
 interface TongueData {
@@ -1060,11 +1061,14 @@ export class Obstacles {
       speed: def.speed ?? 0.8,
       progress: 0,
       direction: -1,
+      velocityY: 0,
     });
   }
 
   updateBridges(delta: number): void {
     for (const bridge of this.bridges) {
+      const prevY = bridge.currentY;
+
       bridge.progress += (bridge.speed * bridge.direction * delta) / 1000;
 
       if (bridge.progress >= 1) {
@@ -1079,6 +1083,7 @@ export class Obstacles {
       const eased = t * t * (3 - 2 * t);
       const cy = bridge.startY + (bridge.endY - bridge.startY) * eased;
       bridge.currentY = cy;
+      bridge.velocityY = cy - prevY;
 
       const g = bridge.graphics;
       g.clear();
@@ -1783,6 +1788,57 @@ export class Obstacles {
       wm.graphics.fillStyle(0xffffff, 0.25);
       wm.graphics.fillCircle(wm.cx - hubR * 0.25, wm.cy - hubR * 0.25, hubR * 0.3);
     }
+  }
+
+  carryBallOnBridge(ball: GolfBall): void {
+    const speed = ball.getSpeed();
+    const bx = ball.body.position.x;
+    const by = ball.body.position.y;
+
+    for (const bridge of this.bridges) {
+      const halfW = bridge.width / 2;
+      const halfH = bridge.height / 2;
+      const onBridge =
+        bx >= bridge.cx - halfW &&
+        bx <= bridge.cx + halfW &&
+        by >= bridge.currentY - halfH &&
+        by <= bridge.currentY + halfH;
+
+      if (!onBridge) continue;
+
+      const relativeSpeed = Math.abs(speed - Math.abs(bridge.velocityY));
+      if (relativeSpeed > 0.5) continue;
+
+      this.scene.matter.body.setPosition(ball.body, {
+        x: bx,
+        y: by + bridge.velocityY,
+      });
+      this.scene.matter.body.setVelocity(ball.body, {
+        x: ball.body.velocity.x,
+        y: bridge.velocityY,
+      });
+      return;
+    }
+  }
+
+  isBallRidingBridge(ball: GolfBall): boolean {
+    const bx = ball.body.position.x;
+    const by = ball.body.position.y;
+    const speed = ball.getSpeed();
+    for (const bridge of this.bridges) {
+      const halfW = bridge.width / 2;
+      const halfH = bridge.height / 2;
+      if (
+        bx >= bridge.cx - halfW &&
+        bx <= bridge.cx + halfW &&
+        by >= bridge.currentY - halfH &&
+        by <= bridge.currentY + halfH
+      ) {
+        const relativeSpeed = Math.abs(speed - Math.abs(bridge.velocityY));
+        if (relativeSpeed < 0.5) return true;
+      }
+    }
+    return false;
   }
 
   private isBallOnBridge(ball: GolfBall): boolean {

@@ -400,6 +400,7 @@ export class Game extends Scene {
 
     this.ball.update();
     this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);
+    this.obstacles.carryBallOnBridge(this.ball);
     this.powerMeter.update(delta);
 
     if (this.state === 'aiming') {
@@ -426,7 +427,7 @@ export class Game extends Scene {
         return;
       }
 
-      if (this.ball.isStopped() && !this.obstacles.isCannonAnimating()) {
+      if (this.ball.isStopped() && !this.obstacles.isCannonAnimating() && !this.obstacles.isBallRidingBridge(this.ball)) {
         this.state = 'aiming';
         this.arrow.setVisible(true);
         this.arrow.updatePosition(this.ball.body.position.x, this.ball.body.position.y);
@@ -452,6 +453,9 @@ export class Game extends Scene {
     this.matter.body.setVelocity(this.ball.body, { x: 0, y: 0 });
     this.matter.body.setStatic(this.ball.body, true);
 
+    const resetX = this.lastBallPos.x;
+    const resetY = this.lastBallPos.y;
+
     this.tweens.add({
       targets: this.ball.graphics,
       scaleX: 0.3,
@@ -464,13 +468,11 @@ export class Game extends Scene {
         this.ball.graphics.setScale(1);
         this.ball.graphics.setAlpha(1);
 
-        const def = HOLES[this.currentHoleIndex]!;
-        const teePos = toScreen(this, def.tee.x, def.tee.y);
-        this.ball.setPosition(teePos.x, teePos.y);
+        this.ball.setPosition(resetX, resetY);
 
         this.state = 'aiming';
         this.arrow.setVisible(true);
-        this.arrow.updatePosition(teePos.x, teePos.y);
+        this.arrow.updatePosition(resetX, resetY);
       },
     });
   }

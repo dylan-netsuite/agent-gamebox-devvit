@@ -56,8 +56,8 @@ Chaotic plinko/pachinko-inspired par 4. Tee at top-center (250,80), cup at botto
 ### Hole 18: The Jawbreaker Centrifuge (Par 4)
 The final boss — a two-route choice-based design. Tee at top-center (250,90), cup at bottom-right (380,720). An open tee area (y:40-130) gives access to both routes via gaps in a divider wall.
 **Route A — "The Dogleg Gauntlet" (left, x:30-280):** A two-leg zigzag corridor. Leg 1 (x:30-180, y:130-350) features a centrifuge windmill (speed 1.8, blade length 65). A dogleg at y:350 redirects the ball right into Leg 2 (x:120-280, y:350-620) with opposing crusher gates (tongues, speed 0.6) and bumpers. Leg 2 opens to the green at y:620. Requires 4-5 shots. Bumpers on the green block the left approach to the cup.
-**Route B — "The Bridge Over Water" (right, x:340-420):** A walled corridor whose entire floor is water. A massive moving bridge (140px wide, 80px tall, speed 0.3) oscillates vertically between y:200-560 inside the corridor. The ball must land on the bridge to survive — miss the timing and it's a water hazard. The bridge carries the ball across the full length of the water to the green. Cup at (380,720) is aligned directly below the bridge center for a clear shot after crossing. High risk, possible 2-3 shot completion.
-The green (x:30-470, y:620-760) features bumpers (gumdrop + 2 standard) positioned to block Route A's approach to the cup, making Route B the easier finishing path if you survive the bridge. Three blue corner bumpers at wall intersections add ricochet opportunities on Route A.
+**Route B — "The Bridge Over Water" (right, x:290-430):** A 140px-wide walled corridor with a dry entry platform (y:130-260) and water floor below (y:260-600). A moving bridge (140px wide, 60px tall, speed 0.35) oscillates vertically between y:260-580 inside the corridor. The ball enters the dry platform safely, then must land on the bridge to survive the water hazard. When the ball comes to rest on the bridge, it rides with the bridge — the bridge's momentum at direction changes pushes the ball off toward the green. Cup at (360,680) is aligned below the bridge center. High risk, possible 2-3 shot completion.
+The green (x:30-470, y:600-750) features bumpers (gumdrop + 2 standard) positioned to block Route A's approach to the cup. Four blue corner bumpers at wall intersections (including top-right near the corridor entrance) add ricochet opportunities.
 
 ### Hole 17: The Moving Island Sequence (Par 5)
 Grueling par 5 across a vast water void. Tee at top-left (110,90), cup at bottom-right (400,730). Five small rectangular platforms oscillate laterally at different unsynchronized speeds. The ball must land on each moving island's static physics body, which physically supports it and drags it laterally via per-frame position delta. Wide water zones on the left (x:30, w:90) and right (x:390, w:80) edges penalize balls that drift off-screen. The green platform is narrow (x:350-460, open top for entry). Island 1 (green, speed 0.35, 90×40) moves x:120↔380. Island 2 (blue, speed 0.45, 85×38) moves x:370↔130. Island 3 (orange, speed 0.55, 80×35) moves x:140↔360. Island 4 (pink, speed 0.65, 75×35) moves x:360↔140. Island 5 (purple, speed 0.75, 70×32) moves x:150↔350. The player must time shots to land on moving targets and shoot from moving platforms before being carried into edge water hazards.
@@ -252,6 +252,7 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 | Speed | 0.8 (progress units per second) |
 | Easing | Hermite smoothstep: t²(3-2t) |
 | Behavior | Visual-only safe zone oscillating between startY and endY. No physics body — ball passes through freely. Water hazard is suppressed when ball position overlaps bridge bounds. Updates every frame in all game states. |
+| Carry | When the ball comes to rest on the bridge (speed relative to bridge < 0.5), the ball's position and velocity are locked to the bridge each frame. The ball rides with the bridge until the bridge's direction-change momentum pushes it off naturally. While riding, the ball stays in 'simulating' state (not 'aiming'). |
 | Visual | Brown plank bridge with dividing lines, top highlight, bottom shadow, and side rails |
 
 ## Water Hazard (Taffy River) Physics
@@ -259,7 +260,7 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 | Property | Value |
 |----------|-------|
 | Penalty | +1 stroke |
-| Reset | Ball returns to the tee box |
+| Reset | Ball returns to the position where the shot was taken (not the tee) |
 | Animation | Ball shrinks to 30% scale and fades to 0 alpha over 500ms before reset |
 | Visual | Rounded-rect shape (30% corner radius), tileable 256x256 pink taffy texture with flowing sine-wave patterns, glossy sheen, sugar crystal sparkle, subtle white wave ripple lines, and a gloss highlight in the top-left corner |
 | Behavior | Overlap trigger zone — triggers penalty and reset unless ball is on a bridge body. Bridge collision check uses body position + ball radius for tolerance. |

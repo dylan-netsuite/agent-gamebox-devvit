@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.7.63 - Quality of Life: Water Reset, Bridge Carry, Bumper (2026-03-01)
+
+### Changed
+- **Water hazard reset**: Ball now returns to the position where the shot was taken, not the tee. This makes water penalties less punishing and more fair.
+- **Bridge carry mechanic**: When the ball comes to rest on a moving bridge, it now moves with the bridge. The ball only exits the bridge when the bridge's momentum (from direction changes at endpoints) pushes it off naturally. Ball won't transition to 'aiming' state while riding the bridge.
+- **New bumper**: Added a blue corner bumper at (450, 60) in the top-right of the tee area on Hole 18, creating a ricochet point near the Route B corridor entrance.
+
 ## v0.0.7.57 - Hole 18: Bridge Over Real Water Hazard (2026-03-01)
 
 ### Changed
