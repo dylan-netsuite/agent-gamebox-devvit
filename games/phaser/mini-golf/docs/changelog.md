@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.0.7.57 - Hole 18: Bridge Over Real Water Hazard (2026-03-01)
+
+### Changed
+- **Bridge corridor floor is now water** — the entire corridor (x:340-420, y:130-620) has water underneath. The moving bridge is the only safe surface.
+- **Bridge made much larger**: 140px wide × 80px tall (was 80×20), filling most of the corridor and providing a generous landing surface.
+- **Bridge oscillates y:200-560** across the full corridor length at slow speed (0.3).
+- **Cup moved to (380, 720)** directly below the bridge center — clear shot after crossing.
+- **Bumpers repositioned** to block Route A's left approach to the cup, making Route B the easier finishing path if you survive the bridge.
+- Water visually fills the corridor, making it obvious the bridge is crossing a real hazard.
+
 ## v0.0.7.49 - Hole 18: Add Corner Bumpers (2026-03-01)
 
 ### Added

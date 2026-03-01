@@ -1192,14 +1192,20 @@ export const HOLES: HoleDefinition[] = [
   //
   // Top area (y:40-130): Open, no water. Tee at center. Ball can go left or right.
   // Route A (left, x:30-180): Dogleg corridor with windmill + tongues + bumpers.
-  // Route B (right, x:360-400): Skinny bridge drops to a moving bridge over water.
-  // Green (y:620-760): Both routes converge. Cup at center-bottom.
+  //   Bumpers block the left approach to the cup, making it harder.
+  // Route B (right, x:340-420): Corridor over a massive water hazard.
+  //   Corridor walls contain the ball physically, but the entire corridor
+  //   floor IS water. The moving bridge (140px wide, 80px tall) oscillates
+  //   vertically inside the corridor. The ball is only safe when ON the bridge.
+  //   Miss the bridge timing = water hazard. Ride it to the green.
+  //   Cup at (380, 720) directly below the bridge — clear shot in.
+  // Green (y:620-760): Both routes converge. Cup aligned with bridge center.
   {
     id: 18,
     name: 'The Jawbreaker Centrifuge',
     par: 4,
     tee: { x: 250, y: 90 },
-    cup: { x: 250, y: 720 },
+    cup: { x: 380, y: 720 },
     walls: [
       // Outer boundary
       [{ x: 30, y: 40 }, { x: 470, y: 40 }],
@@ -1208,22 +1214,20 @@ export const HOLES: HoleDefinition[] = [
       [{ x: 30, y: 770 }, { x: 470, y: 770 }],
 
       // === TEE AREA DIVIDER at y:130 ===
-      // Blocks center; gaps on left (x:30-180) and right (x:360-400)
-      [{ x: 180, y: 130 }, { x: 360, y: 130 }],
-      [{ x: 400, y: 130 }, { x: 470, y: 130 }],
+      [{ x: 180, y: 130 }, { x: 340, y: 130 }],
+      [{ x: 420, y: 130 }, { x: 470, y: 130 }],
 
       // === ROUTE A: Dogleg Gauntlet (left) ===
-      // Leg 1 right wall
       [{ x: 180, y: 130 }, { x: 180, y: 350 }],
-      // Dogleg: bottom wall with gap at x:120-180 to enter Leg 2
       [{ x: 30, y: 350 }, { x: 120, y: 350 }],
-      // Leg 2 walls (shifted right: x:120-280)
       [{ x: 120, y: 390 }, { x: 120, y: 530 }],
       [{ x: 280, y: 350 }, { x: 280, y: 620 }],
 
-      // === ROUTE B: Skinny Bridge (right) ===
-      [{ x: 360, y: 130 }, { x: 360, y: 400 }],
-      [{ x: 400, y: 130 }, { x: 400, y: 400 }],
+      // === ROUTE B: Bridge corridor (x:340-420, y:130-620) ===
+      // Walls contain the ball physically. The floor is water — bridge
+      // oscillates inside, providing the only safe surface.
+      [{ x: 340, y: 130 }, { x: 340, y: 620 }],
+      [{ x: 420, y: 130 }, { x: 420, y: 620 }],
     ],
     obstacles: [
       // === CORNER BUMPERS ===
@@ -1238,21 +1242,26 @@ export const HOLES: HoleDefinition[] = [
       { type: 'bumper', x: 160, y: 500, radius: 12, color: 0xff2266 },
       { type: 'bumper', x: 240, y: 490, radius: 10, color: 0xffaa00 },
 
-      // === ROUTE B: Moving Bridge ===
-      { type: 'moving_bridge', x: 340, y: 400, width: 80, height: 20, targetY: 610, speed: 0.5 },
+      // === ROUTE B: Moving Bridge across water hazard ===
+      // 140px wide × 80px tall — fills most of the 80px corridor and is
+      // tall enough to comfortably catch the ball. Oscillates from y:200
+      // (near corridor top) to y:560 (near corridor bottom).
+      // Speed 0.3 = slow, giving the ball time to land and ride safely.
+      // The ball must be on the bridge to survive the water below.
+      { type: 'moving_bridge', x: 310, y: 200, width: 140, height: 80, targetY: 560, speed: 0.3 },
 
-      // === GREEN ===
-      { type: 'gumdrop_bumper', x: 200, y: 670, radius: 14, color: 0xff44cc },
-      { type: 'bumper', x: 310, y: 680, radius: 10, color: 0x44ff66 },
-      { type: 'bumper', x: 370, y: 700, radius: 10, color: 0xffaa00 },
+      // === GREEN — bumpers block Route A's approach to the cup ===
+      { type: 'gumdrop_bumper', x: 280, y: 690, radius: 16, color: 0xff44cc },
+      { type: 'bumper', x: 220, y: 710, radius: 12, color: 0xff2266 },
+      { type: 'bumper', x: 320, y: 720, radius: 12, color: 0xffaa00 },
     ],
     waterZones: [
-      // Between Route A and Route B (below tee divider)
-      { x: 180, y: 130, width: 180, height: 270 },
-      // Right of skinny bridge
-      { x: 400, y: 130, width: 70, height: 270 },
-      // Below skinny bridge — moving bridge crosses this
-      { x: 280, y: 400, width: 190, height: 220 },
+      // Water between Route A wall and Route B (can't cross center)
+      { x: 180, y: 130, width: 160, height: 490 },
+      // Water INSIDE the bridge corridor — the bridge provides immunity
+      { x: 340, y: 130, width: 80, height: 490 },
+      // Water right of corridor
+      { x: 420, y: 130, width: 50, height: 490 },
     ],
   },
 ];
