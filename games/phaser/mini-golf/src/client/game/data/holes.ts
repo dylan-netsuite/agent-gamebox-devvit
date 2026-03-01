@@ -1188,68 +1188,66 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 18: The Jawbreaker Centrifuge ----
-  // The final boss — two routes, one destiny.
+  // Two routes from a shared tee area at the top.
   //
-  // Route A (Safe, left): Wide corridor through a centrifuge spinner
-  //   and crusher gates, then across to the green. 3-4 shots.
-  // Route B (Risky, right): Ultra-narrow bridge over taffy void with
-  //   a moving bridge. Nail the timing for a possible hole-in-one.
-  //
-  // Layout (500x800 design space):
-  //   Tee: top-left (100, 90)
-  //   Route A: left corridor x:50-200, y:60-550
-  //     - Centrifuge at (125, 280)
-  //     - Crusher gates at y=420
-  //   Route B: skinny bridge x:370-410, y:60-380
-  //     - Moving bridge y:380→550
-  //   Green: x:50-460, y:550-760
-  //   Cup: (380, 700)
+  // Top area (y:40-130): Open, no water. Tee at center. Ball can go left or right.
+  // Route A (left, x:30-180): Dogleg corridor with windmill + tongues + bumpers.
+  // Route B (right, x:360-400): Skinny bridge drops to a moving bridge over water.
+  // Green (y:620-760): Both routes converge. Cup at center-bottom.
   {
     id: 18,
     name: 'The Jawbreaker Centrifuge',
     par: 4,
-    tee: { x: 100, y: 90 },
-    cup: { x: 380, y: 700 },
+    tee: { x: 250, y: 90 },
+    cup: { x: 250, y: 720 },
     walls: [
       // Outer boundary
       [{ x: 30, y: 40 }, { x: 470, y: 40 }],
       [{ x: 30, y: 40 }, { x: 30, y: 770 }],
       [{ x: 470, y: 40 }, { x: 470, y: 770 }],
       [{ x: 30, y: 770 }, { x: 470, y: 770 }],
-      // Route A — left corridor walls
-      [{ x: 200, y: 60 }, { x: 200, y: 550 }],
-      // Skinny Bridge — Route B walls
-      [{ x: 370, y: 60 }, { x: 370, y: 380 }],
-      [{ x: 410, y: 60 }, { x: 410, y: 380 }],
-      // Green bottom enclosure
-      [{ x: 30, y: 550 }, { x: 370, y: 550 }],
-      [{ x: 410, y: 550 }, { x: 470, y: 550 }],
+
+      // === TEE AREA DIVIDER at y:130 ===
+      // Blocks center; gaps on left (x:30-180) and right (x:360-400)
+      [{ x: 180, y: 130 }, { x: 360, y: 130 }],
+      [{ x: 400, y: 130 }, { x: 470, y: 130 }],
+
+      // === ROUTE A: Dogleg Gauntlet (left) ===
+      // Leg 1 right wall
+      [{ x: 180, y: 130 }, { x: 180, y: 350 }],
+      // Dogleg: bottom wall with gap at x:120-180 to enter Leg 2
+      [{ x: 30, y: 350 }, { x: 120, y: 350 }],
+      // Leg 2 walls (shifted right: x:120-280)
+      [{ x: 120, y: 390 }, { x: 120, y: 530 }],
+      [{ x: 280, y: 350 }, { x: 280, y: 620 }],
+
+      // === ROUTE B: Skinny Bridge (right) ===
+      [{ x: 360, y: 130 }, { x: 360, y: 400 }],
+      [{ x: 400, y: 130 }, { x: 400, y: 400 }],
     ],
     obstacles: [
-      // === ROUTE A GAUNTLET ===
-      // The Centrifuge: 2-blade spinner blocking the left corridor
-      { type: 'windmill', x: 125, y: 280, bladeCount: 2, bladeLength: 80, speed: 2.0 },
-      // Crusher Gate Left: tongue from left wall
-      { type: 'tongue', x: 50, y: 420, width: 70, height: 16, forceX: 1, speed: 0.7, angle: 0 },
-      // Crusher Gate Right: tongue from right wall, offset phase
-      { type: 'tongue', x: 130, y: 420, width: 70, height: 16, forceX: -1, speed: 0.7, angle: Math.PI },
-      // === ROUTE B BRIDGE ===
-      // Moving bridge connects skinny bridge to the green
-      { type: 'moving_bridge', x: 370, y: 380, width: 40, height: 18, targetY: 540, speed: 0.6 },
-      // === GREEN AREA ===
-      // Gumdrop bumper — redirects Route A balls toward cup
-      { type: 'gumdrop_bumper', x: 200, y: 630, radius: 16, color: 0xff44cc },
-      // Bumpers near the cup for kinetic fun
-      { type: 'bumper', x: 340, y: 660, radius: 10, color: 0xff2266 },
-      { type: 'bumper', x: 420, y: 660, radius: 10, color: 0xffaa00 },
-      // Bumper to redirect center shots
-      { type: 'bumper', x: 300, y: 620, radius: 12, color: 0x44ff66 },
+      // === ROUTE A ===
+      { type: 'windmill', x: 105, y: 240, bladeCount: 2, bladeLength: 65, speed: 1.8 },
+      { type: 'tongue', x: 120, y: 450, width: 70, height: 14, forceX: 1, speed: 0.6, angle: 0 },
+      { type: 'tongue', x: 200, y: 450, width: 70, height: 14, forceX: -1, speed: 0.6, angle: Math.PI },
+      { type: 'bumper', x: 160, y: 500, radius: 12, color: 0xff2266 },
+      { type: 'bumper', x: 240, y: 490, radius: 10, color: 0xffaa00 },
+
+      // === ROUTE B: Moving Bridge ===
+      { type: 'moving_bridge', x: 340, y: 400, width: 80, height: 20, targetY: 610, speed: 0.5 },
+
+      // === GREEN ===
+      { type: 'gumdrop_bumper', x: 200, y: 670, radius: 14, color: 0xff44cc },
+      { type: 'bumper', x: 310, y: 680, radius: 10, color: 0x44ff66 },
+      { type: 'bumper', x: 370, y: 700, radius: 10, color: 0xffaa00 },
     ],
     waterZones: [
-      // Central void between Route A and Route B
-      { x: 200, y: 60, width: 170, height: 490 },
-      // Right void — right of skinny bridge
-      { x: 410, y: 60, width: 60, height: 490 },
+      // Between Route A and Route B (below tee divider)
+      { x: 180, y: 130, width: 180, height: 270 },
+      // Right of skinny bridge
+      { x: 400, y: 130, width: 70, height: 270 },
+      // Below skinny bridge — moving bridge crosses this
+      { x: 280, y: 400, width: 190, height: 220 },
     ],
   },
 ];

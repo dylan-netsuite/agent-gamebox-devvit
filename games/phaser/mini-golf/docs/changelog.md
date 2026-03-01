@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.7.47 - Hole 18: Complete Redesign with Proper Two Routes (2026-03-01)
+
+### Changed
+- **Shared tee area** at top-center (250, 90) with open space and divider wall with gaps for both routes
+- **Route A ("Dogleg Gauntlet")**: Two-leg zigzag on the left with windmill, tongues, and bumpers. Fully playtested — completable in 4-5 shots
+- **Route B ("Skinny Bridge")**: 40-unit-wide bridge on the right dropping to a moving bridge that crosses water to the green. High risk, possible 2-3 shot completion
+- Fixed Route A being blocked by sealed walls — clear dogleg openings now verified
+- Fixed Route B being inaccessible from tee — both routes now share an open tee area
+- Cup moved to center-bottom (250, 720) for balanced convergence from both routes
+- Iterated 3 times to ensure both routes are structurally sound and playable
+
 ## v0.0.7.39 - Hole 18: Redesigned with Two Routes (2026-02-28)
 
 ### Changed
