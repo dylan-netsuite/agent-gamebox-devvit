@@ -1226,6 +1226,11 @@ export const HOLES: HoleDefinition[] = [
       [{ x: 400, y: 130 }, { x: 400, y: 400 }],
     ],
     obstacles: [
+      // === CORNER BUMPERS ===
+      { type: 'bumper', x: 50, y: 60, radius: 12, color: 0x4488ff },
+      { type: 'bumper', x: 50, y: 335, radius: 12, color: 0x4488ff },
+      { type: 'bumper', x: 50, y: 750, radius: 12, color: 0x4488ff },
+
       // === ROUTE A ===
       { type: 'windmill', x: 105, y: 240, bladeCount: 2, bladeLength: 65, speed: 1.8 },
       { type: 'tongue', x: 120, y: 450, width: 70, height: 14, forceX: 1, speed: 0.6, angle: 0 },

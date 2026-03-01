@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.0.7.49 - Hole 18: Add Corner Bumpers (2026-03-01)
+
+### Added
+- Three blue corner bumpers at key wall intersections on Hole 18:
+  - Top-left corner (50, 60) — ricochet off the outer boundary corner
+  - Dogleg corner (50, 335) — bounce off the Leg 1→Leg 2 turn
+  - Bottom-left corner (50, 750) — ricochet near the green exit
+- Adds fun ricochet opportunities at Route A's turns
+
 ## v0.0.7.47 - Hole 18: Complete Redesign with Proper Two Routes (2026-03-01)
 
 ### Changed
