@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.3.234 - Fix H2 Bunker Alignment + H4 Narrow Channel (2026-03-02)
+
+### Fixed
+- **Hole 2**: Moved bunker from x:230 to x:180 so it aligns exactly with the licorice wall barrier (both span x:180-280). Previously the bunker extended 50px past the corridor's right wall.
+- **Hole 4**: Narrowed the needle channel from 50px (x:70-120) to 30px (x:100-130) to restore the original difficulty. Shifted the whole layout right (outer wall x:100, island x:130, tee/cup x:115) so the channel is visible but genuinely challenging.
+
 ## v0.0.7.95 - Final Hole Fixes: H2, H4, H15, H16 (2026-03-02)
 
 ### Fixed

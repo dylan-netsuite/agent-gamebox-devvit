@@ -88,8 +88,8 @@ export const HOLES: HoleDefinition[] = [
       },
     ],
     frictionZones: [
-      // Bunker directly below the licorice wall — same width as the barrier
-      { x: 230, y: 330, width: 100, height: 50 },
+      // Bunker directly below the licorice wall — aligned to barrier span (x:180-280)
+      { x: 180, y: 330, width: 100, height: 50 },
     ],
   },
 
@@ -149,29 +149,29 @@ export const HOLES: HoleDefinition[] = [
     id: 4,
     name: 'The Graham Cracker Divide',
     par: 2,
-    tee: { x: 105, y: 660 },
-    cup: { x: 100, y: 110 },
+    tee: { x: 115, y: 660 },
+    cup: { x: 115, y: 110 },
     walls: [
-      // Outer boundary — shifted right slightly so needle channel is visible
+      // Outer boundary
       [
-        { x: 70, y: 60 },
+        { x: 100, y: 60 },
         { x: 430, y: 60 },
         { x: 430, y: 700 },
-        { x: 70, y: 700 },
-        { x: 70, y: 60 },
+        { x: 100, y: 700 },
+        { x: 100, y: 60 },
       ],
-      // Island — needle channel on left (x:70-120, ~50px design / ~30px effective)
+      // Island — needle channel on left (x:100-130, 30px design / ~12px effective)
       [
-        { x: 120, y: 150 },
+        { x: 130, y: 150 },
         { x: 320, y: 150 },
         { x: 320, y: 620 },
-        { x: 120, y: 620 },
-        { x: 120, y: 150 },
+        { x: 130, y: 620 },
+        { x: 130, y: 150 },
       ],
     ],
     obstacles: [
       // Bumper above the hole
-      { type: 'gumdrop_bumper', x: 98, y: 80, radius: 10, color: 0xff3333 },
+      { type: 'gumdrop_bumper', x: 113, y: 80, radius: 10, color: 0xff3333 },
       // Top-right corner bumper: 45° block
       {
         type: 'block',
@@ -193,7 +193,7 @@ export const HOLES: HoleDefinition[] = [
     ],
     frictionZones: [
       // Graham cracker sand trap covering the center island
-      { x: 122, y: 152, width: 196, height: 466 },
+      { x: 132, y: 152, width: 186, height: 466 },
     ],
   },
 
