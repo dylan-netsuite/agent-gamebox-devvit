@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.0.7.67 - Fix Bridge Carry Physics (2026-03-02)
+
+### Fixed
+- **Ball no longer flies off the bridge** — Previously, the carry logic set the ball's velocity to the bridge's per-frame position delta, which doubled the movement and caused the ball to race ahead and fall off. Now the ball's position is pinned to the bridge center with zero velocity while riding, keeping it perfectly in sync.
+- **Bridge endpoint release** — When the bridge reaches the bottom of its travel (progress >= 97%), the ball receives a gentle downward push (2.5 scaled units) to roll it off toward the cup, simulating the deceleration "throw" effect.
+- **Carry threshold** uses relative velocity (ball vs bridge) rather than absolute speed, so the ball correctly enters carry mode regardless of the bridge's current speed.
+
 ## v0.0.7.66 - Hole 18: Bumper Alignment + Taller Faster Bridge (2026-03-01)
 
 ### Changed

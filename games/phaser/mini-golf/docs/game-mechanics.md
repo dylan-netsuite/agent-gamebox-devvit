@@ -252,7 +252,7 @@ Select any individual hole from the MainMenu to play it as a single-hole round.
 | Speed | 0.8 (progress units per second) |
 | Easing | Hermite smoothstep: t²(3-2t) |
 | Behavior | Visual-only safe zone oscillating between startY and endY. No physics body — ball passes through freely. Water hazard is suppressed when ball position overlaps bridge bounds. Updates every frame in all game states. |
-| Carry | When the ball comes to rest on the bridge (speed relative to bridge < 0.5), the ball's position and velocity are locked to the bridge each frame. The ball rides with the bridge until the bridge's direction-change momentum pushes it off naturally. While riding, the ball stays in 'simulating' state (not 'aiming'). |
+| Carry | When the ball's velocity relative to the bridge is low (< 1.5), the ball's position is pinned to the bridge center each frame with zero velocity. The ball rides perfectly in sync until the bridge reaches the bottom endpoint (progress >= 97%), at which point it receives a gentle downward push (2.5 scaled units) to roll toward the cup. While riding, the ball stays in 'simulating' state (not 'aiming'). |
 | Visual | Brown plank bridge with dividing lines, top highlight, bottom shadow, and side rails |
 
 ## Water Hazard (Taffy River) Physics

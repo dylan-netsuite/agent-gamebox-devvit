@@ -1791,9 +1791,10 @@ export class Obstacles {
   }
 
   carryBallOnBridge(ball: GolfBall): void {
-    const speed = ball.getSpeed();
     const bx = ball.body.position.x;
     const by = ball.body.position.y;
+    const vx = ball.body.velocity.x;
+    const vy = ball.body.velocity.y;
 
     for (const bridge of this.bridges) {
       const halfW = bridge.width / 2;
@@ -1806,17 +1807,20 @@ export class Obstacles {
 
       if (!onBridge) continue;
 
-      const relativeSpeed = Math.abs(speed - Math.abs(bridge.velocityY));
-      if (relativeSpeed > 0.5) continue;
+      const relativeVy = Math.abs(vy - bridge.velocityY);
+      if (relativeVy > 1.5 || Math.abs(vx) > 1.5) continue;
+
+      if (bridge.progress >= 0.97 && bridge.direction === 1) {
+        const pushSpeed = scaleValue(this.scene, 2.5);
+        this.scene.matter.body.setVelocity(ball.body, { x: 0, y: pushSpeed });
+        return;
+      }
 
       this.scene.matter.body.setPosition(ball.body, {
         x: bx,
-        y: by + bridge.velocityY,
+        y: bridge.currentY,
       });
-      this.scene.matter.body.setVelocity(ball.body, {
-        x: ball.body.velocity.x,
-        y: bridge.velocityY,
-      });
+      this.scene.matter.body.setVelocity(ball.body, { x: 0, y: 0 });
       return;
     }
   }
@@ -1824,7 +1828,8 @@ export class Obstacles {
   isBallRidingBridge(ball: GolfBall): boolean {
     const bx = ball.body.position.x;
     const by = ball.body.position.y;
-    const speed = ball.getSpeed();
+    const vx = ball.body.velocity.x;
+    const vy = ball.body.velocity.y;
     for (const bridge of this.bridges) {
       const halfW = bridge.width / 2;
       const halfH = bridge.height / 2;
@@ -1834,8 +1839,8 @@ export class Obstacles {
         by >= bridge.currentY - halfH &&
         by <= bridge.currentY + halfH
       ) {
-        const relativeSpeed = Math.abs(speed - Math.abs(bridge.velocityY));
-        if (relativeSpeed < 0.5) return true;
+        const relativeVy = Math.abs(vy - bridge.velocityY);
+        if (relativeVy < 1.5 && Math.abs(vx) < 1.5) return true;
       }
     }
     return false;
