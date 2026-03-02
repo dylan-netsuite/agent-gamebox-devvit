@@ -102,6 +102,7 @@ interface MovingBridgeData {
   progress: number;
   direction: 1 | -1;
   velocityY: number;
+  reversedDir: 1 | -1 | 0;
 }
 
 interface TongueData {
@@ -1062,21 +1063,26 @@ export class Obstacles {
       progress: 0,
       direction: -1,
       velocityY: 0,
+      reversedDir: 0,
     });
   }
 
   updateBridges(delta: number): void {
     for (const bridge of this.bridges) {
       const prevY = bridge.currentY;
+      const prevDir = bridge.direction;
 
       bridge.progress += (bridge.speed * bridge.direction * delta) / 1000;
+      bridge.reversedDir = 0;
 
       if (bridge.progress >= 1) {
         bridge.progress = 1;
         bridge.direction = -1;
+        if (prevDir === 1) bridge.reversedDir = 1;
       } else if (bridge.progress <= 0) {
         bridge.progress = 0;
         bridge.direction = 1;
+        if (prevDir === -1) bridge.reversedDir = -1;
       }
 
       const t = bridge.progress;
@@ -1805,6 +1811,16 @@ export class Obstacles {
         by <= bridge.currentY + halfH + ballR;
 
       if (!onBridge) continue;
+
+      if (bridge.reversedDir !== 0) {
+        const kickSpeed = scaleValue(this.scene, 3.5);
+        const kickDir = bridge.reversedDir === 1 ? 1 : -1;
+        this.scene.matter.body.setVelocity(ball.body, {
+          x: ball.body.velocity.x,
+          y: kickDir * kickSpeed,
+        });
+        return;
+      }
 
       this.scene.matter.body.setPosition(ball.body, {
         x: bx,
