@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.7.69 - Free-Rolling Bridge Carry (2026-03-02)
+
+### Fixed
+- **Ball now rolls freely on the bridge** instead of being pinned/stuck. The carry logic now mirrors the moving island pattern: each frame, the ball's position is shifted by the bridge's Y delta without touching velocity. The ball retains its own physics (rolling, friction) and naturally slides off when the bridge reverses direction at endpoints, carried by its own inertia.
+
 ## v0.0.7.67 - Fix Bridge Carry Physics (2026-03-02)
 
 ### Fixed

@@ -1793,34 +1793,23 @@ export class Obstacles {
   carryBallOnBridge(ball: GolfBall): void {
     const bx = ball.body.position.x;
     const by = ball.body.position.y;
-    const vx = ball.body.velocity.x;
-    const vy = ball.body.velocity.y;
+    const ballR = scaleValue(this.scene, 6);
 
     for (const bridge of this.bridges) {
       const halfW = bridge.width / 2;
       const halfH = bridge.height / 2;
       const onBridge =
-        bx >= bridge.cx - halfW &&
-        bx <= bridge.cx + halfW &&
-        by >= bridge.currentY - halfH &&
-        by <= bridge.currentY + halfH;
+        bx >= bridge.cx - halfW - ballR &&
+        bx <= bridge.cx + halfW + ballR &&
+        by >= bridge.currentY - halfH - ballR * 2 &&
+        by <= bridge.currentY + halfH + ballR;
 
       if (!onBridge) continue;
 
-      const relativeVy = Math.abs(vy - bridge.velocityY);
-      if (relativeVy > 1.5 || Math.abs(vx) > 1.5) continue;
-
-      if (bridge.progress >= 0.97 && bridge.direction === 1) {
-        const pushSpeed = scaleValue(this.scene, 2.5);
-        this.scene.matter.body.setVelocity(ball.body, { x: 0, y: pushSpeed });
-        return;
-      }
-
       this.scene.matter.body.setPosition(ball.body, {
         x: bx,
-        y: bridge.currentY,
+        y: by + bridge.velocityY,
       });
-      this.scene.matter.body.setVelocity(ball.body, { x: 0, y: 0 });
       return;
     }
   }
@@ -1828,19 +1817,17 @@ export class Obstacles {
   isBallRidingBridge(ball: GolfBall): boolean {
     const bx = ball.body.position.x;
     const by = ball.body.position.y;
-    const vx = ball.body.velocity.x;
-    const vy = ball.body.velocity.y;
+    const ballR = scaleValue(this.scene, 6);
     for (const bridge of this.bridges) {
       const halfW = bridge.width / 2;
       const halfH = bridge.height / 2;
       if (
-        bx >= bridge.cx - halfW &&
-        bx <= bridge.cx + halfW &&
-        by >= bridge.currentY - halfH &&
-        by <= bridge.currentY + halfH
+        bx >= bridge.cx - halfW - ballR &&
+        bx <= bridge.cx + halfW + ballR &&
+        by >= bridge.currentY - halfH - ballR * 2 &&
+        by <= bridge.currentY + halfH + ballR
       ) {
-        const relativeVy = Math.abs(vy - bridge.velocityY);
-        if (relativeVy < 1.5 && Math.abs(vx) < 1.5) return true;
+        return true;
       }
     }
     return false;
