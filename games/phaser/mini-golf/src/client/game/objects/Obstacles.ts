@@ -1814,9 +1814,10 @@ export class Obstacles {
 
       if (bridge.reversedDir === 1) {
         const kickSpeed = scaleValue(this.scene, 2);
+        const kickDir = Math.sign(bridge.endY - bridge.startY);
         this.scene.matter.body.setVelocity(ball.body, {
           x: ball.body.velocity.x,
-          y: kickSpeed,
+          y: kickDir * kickSpeed,
         });
         return;
       }

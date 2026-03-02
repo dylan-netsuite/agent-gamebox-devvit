@@ -227,7 +227,7 @@ export class MainMenu extends Scene {
       transitionTo(
         this,
         'Game',
-        { holeIndex: startIdx, endHoleIndex: endIdx, scores: [] },
+        { holeIndex: startIdx, endHoleIndex: endIdx, startHoleIndex: startIdx, scores: [] },
         SCENE_COLORS.dark
       );
     };

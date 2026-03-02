@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.7.87 - Fix Scorecard Hole Mapping + Direction-Aware Bridge Kick (2026-03-02)
+
+### Fixed
+- **Scorecard now shows scores on the correct hole row** when playing single holes, Front 9, or Back 9. Previously, scores always appeared starting from Hole 1 regardless of which hole was played. A `startHoleIndex` is now threaded through Game -> HoleComplete -> Scorecard to correctly offset the scores array.
+- **HoleComplete par totals** now use the correct hole definitions when computing running totals for partial rounds.
+- **Bridge reversal kick direction** is now derived from `Math.sign(endY - startY)` instead of being hardcoded downward. This fixes Hole 6's bridge (which moves upward) where the kick was pushing the ball the wrong way.
+- **Bridge carry no longer blocks ball entry** — removed the speed governor that was clamping ball velocity to near-zero at bridge endpoints (where smoothstep easing produces minimal movement). The carry now uses pure position-shifting like moving islands.
+
 ## v0.0.7.69 - Free-Rolling Bridge Carry (2026-03-02)
 
 ### Fixed

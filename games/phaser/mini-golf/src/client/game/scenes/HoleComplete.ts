@@ -5,6 +5,7 @@ import { fadeIn, transitionTo, SCENE_COLORS } from '../utils/transitions';
 export class HoleComplete extends Scene {
   private holeIndex: number = 0;
   private endHoleIndex: number = 0;
+  private startHoleIndex: number = 0;
   private strokes: number = 0;
   private par: number = 0;
   private scores: number[] = [];
@@ -16,12 +17,14 @@ export class HoleComplete extends Scene {
   init(data: {
     holeIndex: number;
     endHoleIndex?: number;
+    startHoleIndex?: number;
     strokes: number;
     par: number;
     scores: number[];
   }) {
     this.holeIndex = data.holeIndex;
     this.endHoleIndex = data.endHoleIndex ?? HOLES.length - 1;
+    this.startHoleIndex = data.startHoleIndex ?? 0;
     this.strokes = data.strokes;
     this.par = data.par;
     this.scores = data.scores;
@@ -117,7 +120,7 @@ export class HoleComplete extends Scene {
       .setDepth(2);
 
     const totalStrokes = this.scores.reduce((a, b) => a + b, 0);
-    const totalPar = this.scores.reduce((sum, _s, idx) => sum + HOLES[idx]!.par, 0);
+    const totalPar = this.scores.reduce((sum, _s, idx) => sum + HOLES[this.startHoleIndex + idx]!.par, 0);
     const totalDiff = totalStrokes - totalPar;
     const totalLabel = totalDiff === 0 ? 'E' : totalDiff > 0 ? `+${totalDiff}` : `${totalDiff}`;
 
@@ -161,7 +164,7 @@ export class HoleComplete extends Scene {
 
     hitArea.on('pointerdown', () => {
       if (isLastHole) {
-        transitionTo(this, 'Scorecard', { scores: this.scores }, SCENE_COLORS.dark);
+        transitionTo(this, 'Scorecard', { scores: this.scores, startHoleIndex: this.startHoleIndex }, SCENE_COLORS.dark);
       } else {
         transitionTo(
           this,
@@ -169,6 +172,7 @@ export class HoleComplete extends Scene {
           {
             holeIndex: this.holeIndex + 1,
             endHoleIndex: this.endHoleIndex,
+            startHoleIndex: this.startHoleIndex,
             scores: this.scores,
           },
           SCENE_COLORS.dark

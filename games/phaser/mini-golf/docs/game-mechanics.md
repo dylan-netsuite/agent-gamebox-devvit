@@ -156,13 +156,16 @@ Psychologically taxing par 4 presenting a deceptively open, empty green. Tee at 
 ## Play Modes
 
 ### Full 18
-Play all holes in sequence from Hole 1 to the last available hole.
+Play all holes in sequence from Hole 1 to the last available hole. Score is submitted to the leaderboard upon completion.
 
 ### Front 9 / Back 9
-Play holes 1-9 or 10-18 as separate rounds (available when 10+ holes exist).
+Play holes 1-9 or 10-18 as separate rounds (available when 10+ holes exist). Scores are not submitted to the leaderboard.
 
 ### Practice
-Select any individual hole from the MainMenu to play it as a single-hole round.
+Select any individual hole from the MainMenu to play it as a single-hole round. Scores are not submitted to the leaderboard.
+
+### Scorecard
+All play modes display a scorecard after the final hole. The scorecard shows all 18 holes with scores mapped to the correct hole rows via a `startHoleIndex` offset — e.g., playing Hole 6 in Practice mode shows the score on Hole 6's row, not Hole 1's. Unplayed holes show a dash.
 
 ## Controls
 
