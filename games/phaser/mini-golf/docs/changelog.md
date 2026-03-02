@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.3.242 - Shift H4 Bumper Left for Stronger Ricochet (2026-03-02)
+
+### Changed
+- **Hole 4**: Moved ricochet bumper from x:120 to x:105 (left of channel center at x:115). Ball now hits the right side of the bumper, producing a stronger rightward deflection toward the cup.
+
 ## v0.0.3.239 - Lower H4 Cup for Better Ricochet Alignment (2026-03-02)
 
 ### Changed

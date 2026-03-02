@@ -170,9 +170,9 @@ export const HOLES: HoleDefinition[] = [
       ],
     ],
     obstacles: [
-      // Ricochet bumper — positioned at the channel exit so a ball traveling
-      // straight up from the needle channel deflects right toward the cup
-      { type: 'gumdrop_bumper', x: 120, y: 100, radius: 14, color: 0xff3333 },
+      // Ricochet bumper — offset left of channel center so the ball hits the
+      // right side of the bumper and deflects more aggressively toward the cup
+      { type: 'gumdrop_bumper', x: 105, y: 100, radius: 14, color: 0xff3333 },
       // Top-right corner bumper: 45° block
       {
         type: 'block',
