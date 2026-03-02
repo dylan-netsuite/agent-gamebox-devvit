@@ -87,6 +87,10 @@ export const HOLES: HoleDefinition[] = [
         angle: 0,
       },
     ],
+    frictionZones: [
+      // Bunker directly below the licorice wall — same width as the barrier
+      { x: 230, y: 330, width: 100, height: 50 },
+    ],
   },
 
   // ---- HOLE 3: The Gumdrop Bumper Pinball ----
@@ -145,33 +149,33 @@ export const HOLES: HoleDefinition[] = [
     id: 4,
     name: 'The Graham Cracker Divide',
     par: 2,
-    tee: { x: 160, y: 660 },
-    cup: { x: 155, y: 110 },
+    tee: { x: 105, y: 660 },
+    cup: { x: 100, y: 110 },
     walls: [
-      // Outer boundary
+      // Outer boundary — shifted right slightly so needle channel is visible
       [
-        { x: 80, y: 60 },
-        { x: 450, y: 60 },
-        { x: 450, y: 700 },
-        { x: 80, y: 700 },
-        { x: 80, y: 60 },
+        { x: 70, y: 60 },
+        { x: 430, y: 60 },
+        { x: 430, y: 700 },
+        { x: 70, y: 700 },
+        { x: 70, y: 60 },
       ],
-      // Island — needle channel on left (x:80-175, ~95px visible) and wide path on right
+      // Island — needle channel on left (x:70-120, ~50px design / ~30px effective)
       [
-        { x: 175, y: 150 },
-        { x: 340, y: 150 },
-        { x: 340, y: 620 },
-        { x: 175, y: 620 },
-        { x: 175, y: 150 },
+        { x: 120, y: 150 },
+        { x: 320, y: 150 },
+        { x: 320, y: 620 },
+        { x: 120, y: 620 },
+        { x: 120, y: 150 },
       ],
     ],
     obstacles: [
       // Bumper above the hole
-      { type: 'gumdrop_bumper', x: 153, y: 80, radius: 10, color: 0xff3333 },
+      { type: 'gumdrop_bumper', x: 98, y: 80, radius: 10, color: 0xff3333 },
       // Top-right corner bumper: 45° block
       {
         type: 'block',
-        x: 415,
+        x: 395,
         y: 95,
         width: 70,
         height: 30,
@@ -180,7 +184,7 @@ export const HOLES: HoleDefinition[] = [
       // Bottom-right corner bumper: 45° block
       {
         type: 'block',
-        x: 415,
+        x: 395,
         y: 705,
         width: 70,
         height: 30,
@@ -189,7 +193,7 @@ export const HOLES: HoleDefinition[] = [
     ],
     frictionZones: [
       // Graham cracker sand trap covering the center island
-      { x: 177, y: 152, width: 161, height: 466 },
+      { x: 122, y: 152, width: 196, height: 466 },
     ],
   },
 
@@ -933,8 +937,8 @@ export const HOLES: HoleDefinition[] = [
       [{ x: 420, y: 580 }, { x: 320, y: 620 }],   // Right funnel
     ],
     obstacles: [
-      // Downward slope — covers the entire peg field
-      { type: 'ramp', x: 80, y: 140, width: 340, height: 480, forceX: 0, forceY: 4 },
+      // Downward slope — covers the peg field (stops before funnel)
+      { type: 'ramp', x: 80, y: 140, width: 340, height: 400, forceX: 0, forceY: 4 },
 
       // === PEG FIELD — staggered grid ===
       // Pegs are small (radius 5), high restitution bumpers
@@ -1017,29 +1021,6 @@ export const HOLES: HoleDefinition[] = [
       { type: 'bumper', x: 330, y: 520, radius: 5, color: 0xffcc00 },
       { type: 'bumper', x: 380, y: 520, radius: 5, color: 0xffcc00 },
 
-      // Row 10 (y=565) — offset
-      { type: 'bumper', x: 105, y: 565, radius: 5, color: 0xff9933 },
-      { type: 'bumper', x: 155, y: 565, radius: 5, color: 0xff9933 },
-      { type: 'bumper', x: 205, y: 565, radius: 5, color: 0xff9933 },
-      { type: 'bumper', x: 255, y: 565, radius: 5, color: 0xff9933 },
-      { type: 'bumper', x: 305, y: 565, radius: 5, color: 0xff9933 },
-      { type: 'bumper', x: 355, y: 565, radius: 5, color: 0xff9933 },
-      { type: 'bumper', x: 405, y: 565, radius: 5, color: 0xff9933 },
-
-      // Row 11 (y=610)
-      { type: 'bumper', x: 130, y: 610, radius: 5, color: 0xff6666 },
-      { type: 'bumper', x: 180, y: 610, radius: 5, color: 0xff6666 },
-      { type: 'bumper', x: 230, y: 610, radius: 5, color: 0xff6666 },
-      { type: 'bumper', x: 280, y: 610, radius: 5, color: 0xff6666 },
-      { type: 'bumper', x: 330, y: 610, radius: 5, color: 0xff6666 },
-      { type: 'bumper', x: 380, y: 610, radius: 5, color: 0xff6666 },
-
-      // Row 12 (y=650) — last row before funnel, offset
-      { type: 'bumper', x: 155, y: 650, radius: 5, color: 0xff44cc },
-      { type: 'bumper', x: 205, y: 650, radius: 5, color: 0xff44cc },
-      { type: 'bumper', x: 255, y: 650, radius: 5, color: 0xff44cc },
-      { type: 'bumper', x: 305, y: 650, radius: 5, color: 0xff44cc },
-      { type: 'bumper', x: 355, y: 650, radius: 5, color: 0xff44cc },
     ],
     frictionZones: [
       // Sand traps flanking the cup at bottom
@@ -1080,14 +1061,14 @@ export const HOLES: HoleDefinition[] = [
     id: 16,
     name: 'The Invisible Maze',
     par: 3,
-    tee: { x: 120, y: 120 },
-    cup: { x: 380, y: 700 },
+    tee: { x: 120, y: 90 },
+    cup: { x: 380, y: 660 },
     walls: [
       // Outer boundary — large open rectangle with generous bottom padding
-      [{ x: 50, y: 70 }, { x: 450, y: 70 }],     // Top
-      [{ x: 50, y: 70 }, { x: 50, y: 780 }],      // Left
-      [{ x: 450, y: 70 }, { x: 450, y: 780 }],    // Right
-      [{ x: 50, y: 780 }, { x: 450, y: 780 }],    // Bottom
+      [{ x: 50, y: 40 }, { x: 450, y: 40 }],     // Top
+      [{ x: 50, y: 40 }, { x: 50, y: 740 }],      // Left
+      [{ x: 450, y: 40 }, { x: 450, y: 740 }],    // Right
+      [{ x: 50, y: 740 }, { x: 450, y: 740 }],    // Bottom
     ],
     obstacles: [
       // === INVISIBLE MAZE WALLS — VERIFIED SOLVABLE ===
@@ -1099,52 +1080,35 @@ export const HOLES: HoleDefinition[] = [
       // Each H blocks half, gap on the other half.
       // Each V blocks a vertical stretch with a gap to cross.
 
-      // H1 (y=180): RIGHT half blocks, LEFT half is the gap
-      // Spans x:250-450 (width 200, centered at 350)
-      // Gap: x:50-250 (ball can pass on the left)
-      { type: 'invisible_wall', x: 350, y: 180, width: 200, height: 8 },
+      // H1 (y=150): RIGHT half blocks, LEFT half is the gap
+      { type: 'invisible_wall', x: 350, y: 150, width: 200, height: 8 },
 
       // V1 — vertical divider at x=250, between H1 and H2
-      // Blocks y:180-240, gap at y:240-300
-      // Ball in left corridor must cross RIGHT through the gap
-      { type: 'invisible_wall', x: 250, y: 206, width: 8, height: 56 },
+      { type: 'invisible_wall', x: 250, y: 176, width: 8, height: 56 },
 
-      // H2 (y=300): LEFT half blocks, RIGHT half is the gap
-      // Spans x:50-250 (width 200, centered at 150)
-      // Gap: x:250-450 (ball can pass on the right)
-      { type: 'invisible_wall', x: 150, y: 300, width: 200, height: 8 },
+      // H2 (y=270): LEFT half blocks, RIGHT half is the gap
+      { type: 'invisible_wall', x: 150, y: 270, width: 200, height: 8 },
 
       // V2 — vertical divider at x=250, between H2 and H3
-      // Blocks y:300-350, gap at y:350-420
-      // Ball in right corridor must cross LEFT through the gap
-      { type: 'invisible_wall', x: 250, y: 321, width: 8, height: 46 },
+      { type: 'invisible_wall', x: 250, y: 291, width: 8, height: 46 },
 
-      // H3 (y=420): RIGHT half blocks, LEFT half is the gap
-      // Spans x:250-450 (width 200, centered at 350)
-      // Gap: x:50-250 (ball can pass on the left)
-      { type: 'invisible_wall', x: 350, y: 420, width: 200, height: 8 },
+      // H3 (y=390): RIGHT half blocks, LEFT half is the gap
+      { type: 'invisible_wall', x: 350, y: 390, width: 200, height: 8 },
 
       // V3 — vertical divider at x=250, between H3 and H4
-      // Blocks y:420-470, gap at y:470-540
-      // Ball in left corridor must cross RIGHT through the gap
-      { type: 'invisible_wall', x: 250, y: 441, width: 8, height: 46 },
+      { type: 'invisible_wall', x: 250, y: 411, width: 8, height: 46 },
 
-      // H4 (y=540): LEFT half blocks, RIGHT half is the gap
-      // Spans x:50-250 (width 200, centered at 150)
-      // Gap: x:250-450 (ball can pass on the right)
-      { type: 'invisible_wall', x: 150, y: 540, width: 200, height: 8 },
+      // H4 (y=500): LEFT half blocks, RIGHT half is the gap
+      { type: 'invisible_wall', x: 150, y: 500, width: 200, height: 8 },
 
-      // H5 (y=640): RIGHT side blocks, narrow gap at x:270-310
-      // Spans x:310-450 (width 140, centered at 380)
-      // Combined with the trap wall below, only a 40-unit gap at x:270-310
-      { type: 'invisible_wall', x: 380, y: 640, width: 140, height: 8 },
+      // H5 (y=600): RIGHT side blocks, narrow gap at x:270-310
+      { type: 'invisible_wall', x: 380, y: 600, width: 140, height: 8 },
 
-      // --- Dead-end traps to punish careless shots ---
-      // Blocks direct south through the center (catches straight shots from tee)
-      { type: 'invisible_wall', x: 250, y: 130, width: 8, height: 100 },
-      // Horizontal trap near the cup area (blocks left side of H5 gap approach)
-      // Spans x:130-270 (width 140, centered at 200)
-      { type: 'invisible_wall', x: 200, y: 640, width: 140, height: 8 },
+      // --- Dead-end traps ---
+      // Blocks direct south through the center
+      { type: 'invisible_wall', x: 250, y: 100, width: 8, height: 100 },
+      // Horizontal trap near the cup area
+      { type: 'invisible_wall', x: 200, y: 600, width: 140, height: 8 },
     ],
   },
 

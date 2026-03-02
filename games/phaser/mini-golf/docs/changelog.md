@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.7.95 - Final Hole Fixes: H2, H4, H15, H16 (2026-03-02)
+
+### Fixed
+- **Hole 2**: Added sand bunker back, sized to match the licorice wall width exactly (100px wide, placed at y:330 directly below the barrier).
+- **Hole 4**: Restored the super skinny needle channel (~50px design space, x:70-120) while shifting the outer wall left to x:70 so the channel remains visible. Tee at x:105, cup at x:100.
+- **Hole 15**: Removed bottom 3 peg rows (rows 10-12 at y:565, y:610, y:650) that were overlapping with the funnel and cup area. Shortened the ramp zone to stop before the funnel.
+- **Hole 16**: Shifted the entire invisible maze up by 30-40px (all barriers, dividers, and traps). Moved tee from y:120 to y:90, cup from y:700 to y:660, and adjusted outer walls (top y:70→40, bottom y:780→740) for generous bottom padding.
+
 ## v0.0.3.229 - Fix Hole Feedback: H2, H4, H8, H9, H15, H16 (2026-03-02)
 
 ### Fixed
