@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.3.236 - Move H4 Cup Right for Ricochet Mechanic (2026-03-02)
+
+### Changed
+- **Hole 4**: Moved cup from x:115 (inline with needle channel) to x:200 (right of channel, above the island). Repositioned and enlarged the gumdrop bumper (x:120, y:100, radius:14) at the channel exit to deflect balls rightward toward the cup. Players must now ricochet off the bumper to sink from the narrow path.
+
 ## v0.0.3.234 - Fix H2 Bunker Alignment + H4 Narrow Channel (2026-03-02)
 
 ### Fixed

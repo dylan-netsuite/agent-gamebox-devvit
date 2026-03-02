@@ -141,8 +141,8 @@ export const HOLES: HoleDefinition[] = [
   },
 
   // ---- HOLE 4: The Graham Cracker Divide ----
-  // Tee, needle channel, and cup all at x:95 — straight vertical line.
-  // Needle channel: x:80-110 (30px design, ~12px effective after 9px wall inset).
+  // Narrow needle channel on left (x:100-130). Cup is offset RIGHT of the
+  // channel exit, forcing a ricochet off the bumper to sink the putt.
   // Right: wide safe path with 45° corner bumper blocks (Hole 2 style).
   // Center island is a graham cracker sand trap.
   {
@@ -150,7 +150,7 @@ export const HOLES: HoleDefinition[] = [
     name: 'The Graham Cracker Divide',
     par: 2,
     tee: { x: 115, y: 660 },
-    cup: { x: 115, y: 110 },
+    cup: { x: 200, y: 100 },
     walls: [
       // Outer boundary
       [
@@ -170,8 +170,9 @@ export const HOLES: HoleDefinition[] = [
       ],
     ],
     obstacles: [
-      // Bumper above the hole
-      { type: 'gumdrop_bumper', x: 113, y: 80, radius: 10, color: 0xff3333 },
+      // Ricochet bumper — positioned at the channel exit so a ball traveling
+      // straight up from the needle channel deflects right toward the cup
+      { type: 'gumdrop_bumper', x: 120, y: 100, radius: 14, color: 0xff3333 },
       // Top-right corner bumper: 45° block
       {
         type: 'block',
