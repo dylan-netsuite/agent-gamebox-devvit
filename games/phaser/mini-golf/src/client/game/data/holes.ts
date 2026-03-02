@@ -150,7 +150,7 @@ export const HOLES: HoleDefinition[] = [
     name: 'The Graham Cracker Divide',
     par: 2,
     tee: { x: 115, y: 660 },
-    cup: { x: 200, y: 100 },
+    cup: { x: 200, y: 125 },
     walls: [
       // Outer boundary
       [

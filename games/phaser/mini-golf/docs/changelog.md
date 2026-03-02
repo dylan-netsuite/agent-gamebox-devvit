@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.3.239 - Lower H4 Cup for Better Ricochet Alignment (2026-03-02)
+
+### Changed
+- **Hole 4**: Moved cup from y:100 to y:125 (25 units below bumper center) so it aligns with the natural ricochet trajectory off the bumper. Ball hits bumper from below, deflects right and slightly downward into the cup.
+
 ## v0.0.3.236 - Move H4 Cup Right for Ricochet Mechanic (2026-03-02)
 
 ### Changed
