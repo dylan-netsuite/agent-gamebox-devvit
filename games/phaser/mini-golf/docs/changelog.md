@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.0.7.90 - Par Updates + Per-Hole Improvements (2026-03-02)
+
+### Changed
+- **Par values updated for 12 holes**: H3 (3→2), H4 (3→2), H5 (3→2), H7 (3→2), H8 (3→2), H9 (3→2), H10 (4→3), H11 (3→2), H15 (4→2), H16 (4→3), H17 (5→3), H18 (4→3). Total course par reduced from 58 to 46.
+- **Hole 1**: Added 4 decorative gumdrop bumpers along the edges (not in the ball path).
+- **Hole 2**: Added a sand bunker in front of the licorice barrier to slow approach shots.
+- **Hole 4**: Moved cup slightly left (x:95→90), added a gumdrop bumper top-left above the hole.
+- **Hole 5**: Added a sand bunker behind the hole to catch long shots.
+- **Hole 7**: Windmill speed increased from 1.2 to 1.8 for a faster, more challenging timing window.
+- **Hole 8**: Moved the chocolate block barrier from y:610 to y:635, closer to the tee box.
+- **Hole 9**: Removed the friction zone near the cup. Added a second bumper at (370,390) and an angled block at (210,440) for a more interesting approach.
+- **Hole 10**: Removed the cup approach friction zone — no more easy deceleration.
+- **Hole 11**: Cannon now preserves 30% of entry X velocity on exit, so approach angle slightly affects the exit trajectory.
+- **Hole 13**: Claw shadow radius increased (45→55) and speed increased (0.35→0.4) for more aggressive captures. When captured, ball resets to the tee instead of last shot position.
+- **Hole 15**: Added bottom padding (walls extended from y:770 to y:790).
+- **Hole 16**: Added bottom padding (walls extended from y:750 to y:790).
+
 ## v0.0.7.87 - Fix Scorecard Hole Mapping + Direction-Aware Bridge Kick (2026-03-02)
 
 ### Fixed

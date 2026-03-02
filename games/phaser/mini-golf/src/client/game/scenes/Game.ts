@@ -388,6 +388,11 @@ export class Game extends Scene {
     const clawBall = this.state === 'simulating' ? this.ball : undefined;
     const clawResult = this.obstacles.updateClaws(delta, clawBall);
     if (clawResult.grabbed) {
+      const def = HOLES[this.currentHoleIndex]!;
+      if (def.clawResetToTee) {
+        const teePos = toScreen(this, def.tee.x, def.tee.y);
+        this.lastBallPos = { x: teePos.x, y: teePos.y };
+      }
       this.handleWaterHazard();
       return;
     }

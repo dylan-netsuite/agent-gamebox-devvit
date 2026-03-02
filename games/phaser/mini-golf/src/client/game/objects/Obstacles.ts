@@ -145,6 +145,7 @@ interface CannonData {
   animProgress: number;
   animDuration: number;
   entrySpeed: number;
+  entryVx: number;
   rejected: boolean;
   exitGraceMs: number;
 }
@@ -1399,6 +1400,7 @@ export class Obstacles {
       animProgress: 0,
       animDuration: 800,
       entrySpeed: 0,
+      entryVx: 0,
       rejected: false,
       exitGraceMs: 0,
     });
@@ -1539,7 +1541,7 @@ export class Obstacles {
           ball.body.collisionFilter.mask = 0xffffffff;
 
           const exitSpeed = c.entrySpeed * c.exitVelocityScale;
-          this.scene.matter.body.setVelocity(ball.body, { x: 0, y: -exitSpeed });
+          this.scene.matter.body.setVelocity(ball.body, { x: c.entryVx * 0.3, y: -exitSpeed });
 
           ball.graphics.setScale(1);
           ball.graphics.setDepth(10);
@@ -1621,6 +1623,7 @@ export class Obstacles {
         c.animating = true;
         c.animProgress = 0;
         c.entrySpeed = speed;
+        c.entryVx = vx;
 
         ball.body.collisionFilter.mask = 0;
         this.scene.matter.body.setStatic(ball.body, true);

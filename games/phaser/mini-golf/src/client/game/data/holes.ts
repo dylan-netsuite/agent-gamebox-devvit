@@ -12,6 +12,7 @@ export interface HoleDefinition {
   slickZones?: ZoneDef[];
   waterZones?: ZoneDef[];
   teleporters?: TeleporterDef[];
+  clawResetToTee?: boolean;
 }
 
 // All coordinates in design space (500x800)
@@ -35,7 +36,12 @@ export const HOLES: HoleDefinition[] = [
         { x: 150, y: 60 },
       ],
     ],
-    obstacles: [],
+    obstacles: [
+      { type: 'gumdrop_bumper', x: 165, y: 200, radius: 8, color: 0xff3333 },
+      { type: 'gumdrop_bumper', x: 335, y: 350, radius: 8, color: 0x33cc33 },
+      { type: 'gumdrop_bumper', x: 170, y: 500, radius: 8, color: 0x3399ff },
+      { type: 'gumdrop_bumper', x: 340, y: 600, radius: 8, color: 0xff69b4 },
+    ],
   },
 
   // ---- HOLE 2: The Licorice Dogleg ----
@@ -81,6 +87,9 @@ export const HOLES: HoleDefinition[] = [
         angle: 0,
       },
     ],
+    frictionZones: [
+      { x: 160, y: 340, width: 110, height: 60 },
+    ],
   },
 
   // ---- HOLE 3: The Gumdrop Bumper Pinball ----
@@ -90,7 +99,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 3,
     name: 'The Gumdrop Bumper Pinball',
-    par: 3,
+    par: 2,
     tee: { x: 250, y: 650 },
     cup: { x: 250, y: 140 },
     walls: [
@@ -138,9 +147,9 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 4,
     name: 'The Graham Cracker Divide',
-    par: 3,
+    par: 2,
     tee: { x: 95, y: 660 },
-    cup: { x: 95, y: 110 },
+    cup: { x: 90, y: 110 },
     walls: [
       // Outer boundary
       [
@@ -160,6 +169,8 @@ export const HOLES: HoleDefinition[] = [
       ],
     ],
     obstacles: [
+      // Bumper top-left above the hole
+      { type: 'gumdrop_bumper', x: 88, y: 80, radius: 10, color: 0xff3333 },
       // Top-right corner bumper: 45° block tucked into the (420, 60) corner.
       // Same style as Hole 2's chocolate block (70x30).
       // Redirects upward-traveling ball leftward toward the cup.
@@ -196,7 +207,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 5,
     name: 'The Jawbreaker Wedge',
-    par: 3,
+    par: 2,
     tee: { x: 250, y: 650 },
     cup: { x: 250, y: 140 },
     walls: [
@@ -224,6 +235,9 @@ export const HOLES: HoleDefinition[] = [
         forceX: 0,
         forceY: 2.25,
       },
+    ],
+    frictionZones: [
+      { x: 195, y: 70, width: 110, height: 60 },
     ],
   },
 
@@ -280,7 +294,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 7,
     name: 'The Wafer Windmill',
-    par: 3,
+    par: 2,
     tee: { x: 250, y: 650 },
     cup: { x: 250, y: 110 },
     walls: [
@@ -299,7 +313,7 @@ export const HOLES: HoleDefinition[] = [
         y: 380,
         bladeCount: 4,
         bladeLength: 180,
-        speed: 1.2,
+        speed: 1.8,
       },
     ],
   },
@@ -314,7 +328,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 8,
     name: 'The Teleportation Tunnels',
-    par: 3,
+    par: 2,
     tee: { x: 250, y: 650 },
     cup: { x: 250, y: 160 },
     walls: [
@@ -340,7 +354,7 @@ export const HOLES: HoleDefinition[] = [
       {
         type: 'block',
         x: 250,
-        y: 610,
+        y: 635,
         width: 40,
         height: 20,
         angle: 0,
@@ -402,7 +416,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 9,
     name: 'The Ice Cream Glide',
-    par: 3,
+    par: 2,
     tee: { x: 100, y: 700 },
     cup: { x: 400, y: 350 },
     walls: [
@@ -437,16 +451,29 @@ export const HOLES: HoleDefinition[] = [
         radius: 16,
         color: 0xff69b4,
       },
+      // Second bumper — creates a bumper gate near the cup
+      {
+        type: 'gumdrop_bumper',
+        x: 370,
+        y: 390,
+        radius: 14,
+        color: 0x33cc33,
+      },
+      // Block near the gap to make the hero shot riskier
+      {
+        type: 'block',
+        x: 210,
+        y: 440,
+        width: 30,
+        height: 15,
+        angle: 0.4,
+      },
     ],
     slickZones: [
       // Left lane ice — ball glides upward from tee toward diagonal wall (stops before horizontal wall)
       { x: 52, y: 200, width: 146, height: 248, color: 0xffecd2 },
       // Top lane ice — ball glides rightward across the top after wall bank
       { x: 200, y: 62, width: 100, height: 140, color: 0xffc0cb },
-    ],
-    frictionZones: [
-      // Cup approach — ball decelerates for a puttable stop
-      { x: 340, y: 300, width: 108, height: 120 },
     ],
     waterZones: [
       // Water hazard — right side below the wall, punishes shots that miss the gap rightward
@@ -469,7 +496,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 10,
     name: 'The Sour Tongues',
-    par: 4,
+    par: 3,
     tee: { x: 250, y: 720 },
     cup: { x: 250, y: 130 },
     walls: [
@@ -562,8 +589,6 @@ export const HOLES: HoleDefinition[] = [
       { x: 72, y: 62, width: 101, height: 706 },
       // Right sand gutter
       { x: 327, y: 62, width: 101, height: 706 },
-      // Cup approach — ball decelerates near the hole
-      { x: 200, y: 100, width: 100, height: 60 },
     ],
   },
 
@@ -574,7 +599,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 11,
     name: 'The Corkscrew Cannon',
-    par: 3,
+    par: 2,
     tee: { x: 200, y: 730 },
     cup: { x: 410, y: 155 },
     walls: [
@@ -798,6 +823,7 @@ export const HOLES: HoleDefinition[] = [
     par: 4,
     tee: { x: 250, y: 670 },
     cup: { x: 190, y: 185 },
+    clawResetToTee: true,
     walls: [
       // === Bottom platform (150-350, 600-700) ===
       [{ x: 150, y: 700 }, { x: 350, y: 700 }],
@@ -834,7 +860,7 @@ export const HOLES: HoleDefinition[] = [
       [{ x: 360, y: 220 }, { x: 380, y: 220 }],
     ],
     obstacles: [
-      { type: 'claw', x: 250, y: 400, width: 160, height: 130, radius: 45, speed: 0.35 },
+      { type: 'claw', x: 250, y: 400, width: 160, height: 130, radius: 55, speed: 0.4 },
       // Bumpers placed per user screenshot (green stars)
       { type: 'gumdrop_bumper', x: 300, y: 170, radius: 12 },   // Cup island, right side
       { type: 'gumdrop_bumper', x: 200, y: 400, radius: 12 },   // Middle platform, left
@@ -908,15 +934,15 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 15,
     name: 'The Plinko Board',
-    par: 4,
+    par: 2,
     tee: { x: 250, y: 80 },
     cup: { x: 250, y: 720 },
     walls: [
-      // Outer boundary — tall narrow rectangle
+      // Outer boundary — tall narrow rectangle with extra bottom padding
       [{ x: 80, y: 40 }, { x: 420, y: 40 }],    // Top
-      [{ x: 80, y: 40 }, { x: 80, y: 770 }],     // Left
-      [{ x: 420, y: 40 }, { x: 420, y: 770 }],   // Right
-      [{ x: 80, y: 770 }, { x: 420, y: 770 }],   // Bottom
+      [{ x: 80, y: 40 }, { x: 80, y: 790 }],     // Left
+      [{ x: 420, y: 40 }, { x: 420, y: 790 }],   // Right
+      [{ x: 80, y: 790 }, { x: 420, y: 790 }],   // Bottom
       // Funnel walls at the bottom to guide ball toward cup/traps
       [{ x: 80, y: 660 }, { x: 180, y: 700 }],   // Left funnel
       [{ x: 420, y: 660 }, { x: 320, y: 700 }],   // Right funnel
@@ -1068,15 +1094,15 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 16,
     name: 'The Invisible Maze',
-    par: 4,
+    par: 3,
     tee: { x: 120, y: 100 },
     cup: { x: 380, y: 680 },
     walls: [
-      // Outer boundary — large open rectangle
+      // Outer boundary — large open rectangle with extra bottom padding
       [{ x: 50, y: 50 }, { x: 450, y: 50 }],     // Top
-      [{ x: 50, y: 50 }, { x: 50, y: 750 }],      // Left
-      [{ x: 450, y: 50 }, { x: 450, y: 750 }],    // Right
-      [{ x: 50, y: 750 }, { x: 450, y: 750 }],    // Bottom
+      [{ x: 50, y: 50 }, { x: 50, y: 790 }],      // Left
+      [{ x: 450, y: 50 }, { x: 450, y: 790 }],    // Right
+      [{ x: 50, y: 790 }, { x: 450, y: 790 }],    // Bottom
     ],
     obstacles: [
       // === INVISIBLE MAZE WALLS — VERIFIED SOLVABLE ===
@@ -1151,7 +1177,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 17,
     name: 'Moving Islands',
-    par: 5,
+    par: 3,
     tee: { x: 110, y: 90 },
     cup: { x: 400, y: 730 },
     walls: [
@@ -1207,7 +1233,7 @@ export const HOLES: HoleDefinition[] = [
   {
     id: 18,
     name: 'The Jawbreaker Centrifuge',
-    par: 4,
+    par: 3,
     tee: { x: 250, y: 90 },
     cup: { x: 360, y: 680 },
     walls: [
