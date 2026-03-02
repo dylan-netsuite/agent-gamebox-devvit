@@ -1246,8 +1246,8 @@ export const HOLES: HoleDefinition[] = [
 
       // === ROUTE A ===
       { type: 'windmill', x: 105, y: 240, bladeCount: 2, bladeLength: 65, speed: 1.8 },
-      { type: 'tongue', x: 120, y: 450, width: 70, height: 14, forceX: 1, speed: 0.6, angle: 0 },
-      { type: 'tongue', x: 200, y: 450, width: 70, height: 14, forceX: -1, speed: 0.6, angle: Math.PI },
+      { type: 'tongue', x: 120, y: 450, width: 70, height: 14, forceX: 1, speed: 1.2, angle: 0 },
+      { type: 'tongue', x: 200, y: 450, width: 70, height: 14, forceX: -1, speed: 1.2, angle: Math.PI },
       { type: 'bumper', x: 160, y: 500, radius: 12, color: 0xff2266 },
       { type: 'bumper', x: 240, y: 490, radius: 10, color: 0xffaa00 },
 
