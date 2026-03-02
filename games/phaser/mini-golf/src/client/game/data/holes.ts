@@ -87,9 +87,6 @@ export const HOLES: HoleDefinition[] = [
         angle: 0,
       },
     ],
-    frictionZones: [
-      { x: 160, y: 340, width: 110, height: 60 },
-    ],
   },
 
   // ---- HOLE 3: The Gumdrop Bumper Pinball ----
@@ -148,45 +145,42 @@ export const HOLES: HoleDefinition[] = [
     id: 4,
     name: 'The Graham Cracker Divide',
     par: 2,
-    tee: { x: 95, y: 660 },
-    cup: { x: 90, y: 110 },
+    tee: { x: 160, y: 660 },
+    cup: { x: 155, y: 110 },
     walls: [
       // Outer boundary
       [
         { x: 80, y: 60 },
-        { x: 420, y: 60 },
-        { x: 420, y: 700 },
+        { x: 450, y: 60 },
+        { x: 450, y: 700 },
         { x: 80, y: 700 },
         { x: 80, y: 60 },
       ],
-      // Island — needle channel on left (x:80-110, 30px) and wide path on right (x:310-420)
+      // Island — needle channel on left (x:80-175, ~95px visible) and wide path on right
       [
-        { x: 110, y: 150 },
-        { x: 310, y: 150 },
-        { x: 310, y: 620 },
-        { x: 110, y: 620 },
-        { x: 110, y: 150 },
+        { x: 175, y: 150 },
+        { x: 340, y: 150 },
+        { x: 340, y: 620 },
+        { x: 175, y: 620 },
+        { x: 175, y: 150 },
       ],
     ],
     obstacles: [
-      // Bumper top-left above the hole
-      { type: 'gumdrop_bumper', x: 88, y: 80, radius: 10, color: 0xff3333 },
-      // Top-right corner bumper: 45° block tucked into the (420, 60) corner.
-      // Same style as Hole 2's chocolate block (70x30).
-      // Redirects upward-traveling ball leftward toward the cup.
+      // Bumper above the hole
+      { type: 'gumdrop_bumper', x: 153, y: 80, radius: 10, color: 0xff3333 },
+      // Top-right corner bumper: 45° block
       {
         type: 'block',
-        x: 385,
+        x: 415,
         y: 95,
         width: 70,
         height: 30,
         angle: 0.785,
       },
-      // Bottom-right corner bumper: 45° block tucked into the (420, 740) corner.
-      // Redirects rightward-traveling ball upward into the right path.
+      // Bottom-right corner bumper: 45° block
       {
         type: 'block',
-        x: 385,
+        x: 415,
         y: 705,
         width: 70,
         height: 30,
@@ -195,7 +189,7 @@ export const HOLES: HoleDefinition[] = [
     ],
     frictionZones: [
       // Graham cracker sand trap covering the center island
-      { x: 112, y: 152, width: 196, height: 466 },
+      { x: 177, y: 152, width: 161, height: 466 },
     ],
   },
 
@@ -354,7 +348,7 @@ export const HOLES: HoleDefinition[] = [
       {
         type: 'block',
         x: 250,
-        y: 635,
+        y: 610,
         width: 40,
         height: 20,
         angle: 0,
@@ -458,15 +452,6 @@ export const HOLES: HoleDefinition[] = [
         y: 390,
         radius: 14,
         color: 0x33cc33,
-      },
-      // Block near the gap to make the hero shot riskier
-      {
-        type: 'block',
-        x: 210,
-        y: 440,
-        width: 30,
-        height: 15,
-        angle: 0.4,
       },
     ],
     slickZones: [
@@ -935,21 +920,21 @@ export const HOLES: HoleDefinition[] = [
     id: 15,
     name: 'The Plinko Board',
     par: 2,
-    tee: { x: 250, y: 80 },
-    cup: { x: 250, y: 720 },
+    tee: { x: 250, y: 100 },
+    cup: { x: 250, y: 640 },
     walls: [
-      // Outer boundary — tall narrow rectangle with extra bottom padding
-      [{ x: 80, y: 40 }, { x: 420, y: 40 }],    // Top
-      [{ x: 80, y: 40 }, { x: 80, y: 790 }],     // Left
-      [{ x: 420, y: 40 }, { x: 420, y: 790 }],   // Right
-      [{ x: 80, y: 790 }, { x: 420, y: 790 }],   // Bottom
+      // Outer boundary — tall narrow rectangle with generous bottom padding
+      [{ x: 80, y: 60 }, { x: 420, y: 60 }],    // Top
+      [{ x: 80, y: 60 }, { x: 80, y: 720 }],     // Left
+      [{ x: 420, y: 60 }, { x: 420, y: 720 }],   // Right
+      [{ x: 80, y: 720 }, { x: 420, y: 720 }],   // Bottom
       // Funnel walls at the bottom to guide ball toward cup/traps
-      [{ x: 80, y: 660 }, { x: 180, y: 700 }],   // Left funnel
-      [{ x: 420, y: 660 }, { x: 320, y: 700 }],   // Right funnel
+      [{ x: 80, y: 580 }, { x: 180, y: 620 }],   // Left funnel
+      [{ x: 420, y: 580 }, { x: 320, y: 620 }],   // Right funnel
     ],
     obstacles: [
       // Downward slope — covers the entire peg field
-      { type: 'ramp', x: 80, y: 120, width: 340, height: 540, forceX: 0, forceY: 4 },
+      { type: 'ramp', x: 80, y: 140, width: 340, height: 480, forceX: 0, forceY: 4 },
 
       // === PEG FIELD — staggered grid ===
       // Pegs are small (radius 5), high restitution bumpers
@@ -1058,8 +1043,8 @@ export const HOLES: HoleDefinition[] = [
     ],
     frictionZones: [
       // Sand traps flanking the cup at bottom
-      { x: 82, y: 700, width: 108, height: 68 },    // Left sand
-      { x: 310, y: 700, width: 108, height: 68 },    // Right sand
+      { x: 82, y: 620, width: 108, height: 68 },    // Left sand
+      { x: 310, y: 620, width: 108, height: 68 },    // Right sand
     ],
   },
 
@@ -1095,14 +1080,14 @@ export const HOLES: HoleDefinition[] = [
     id: 16,
     name: 'The Invisible Maze',
     par: 3,
-    tee: { x: 120, y: 100 },
-    cup: { x: 380, y: 680 },
+    tee: { x: 120, y: 120 },
+    cup: { x: 380, y: 700 },
     walls: [
-      // Outer boundary — large open rectangle with extra bottom padding
-      [{ x: 50, y: 50 }, { x: 450, y: 50 }],     // Top
-      [{ x: 50, y: 50 }, { x: 50, y: 790 }],      // Left
-      [{ x: 450, y: 50 }, { x: 450, y: 790 }],    // Right
-      [{ x: 50, y: 790 }, { x: 450, y: 790 }],    // Bottom
+      // Outer boundary — large open rectangle with generous bottom padding
+      [{ x: 50, y: 70 }, { x: 450, y: 70 }],     // Top
+      [{ x: 50, y: 70 }, { x: 50, y: 780 }],      // Left
+      [{ x: 450, y: 70 }, { x: 450, y: 780 }],    // Right
+      [{ x: 50, y: 780 }, { x: 450, y: 780 }],    // Bottom
     ],
     obstacles: [
       // === INVISIBLE MAZE WALLS — VERIFIED SOLVABLE ===

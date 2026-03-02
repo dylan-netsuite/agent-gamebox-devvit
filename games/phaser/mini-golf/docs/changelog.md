@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.0.3.229 - Fix Hole Feedback: H2, H4, H8, H9, H15, H16 (2026-03-02)
+
+### Fixed
+- **Hole 2**: Removed the sand bunker in front of the licorice barrier that was blocking hole-in-one shots.
+- **Hole 4**: Shifted entire layout rightward (tee x:95→160, cup x:90→155, island x:110-310→175-340, outer right wall x:420→450) so the needle channel and cup are fully visible and not hidden behind the left wall.
+- **Hole 8**: Moved the chocolate block barrier back to y:610 (was y:635) — the previous position was too close to the tee box.
+- **Hole 9**: Removed the angled block at (210, 440) that was placed directly over the hero shot gap, making the hole impossible.
+- **Hole 15**: Shifted cup from y:720 to y:640 and compressed the layout upward (walls to y:720, funnels at y:580-620) to provide generous bottom padding so the cup area isn't cut off by the HUD.
+- **Hole 16**: Shifted tee from y:100 to y:120, cup from y:680 to y:700, and adjusted outer walls (top y:50→70, bottom y:790→780) for better bottom padding.
+
 ## v0.0.7.90 - Par Updates + Per-Hole Improvements (2026-03-02)
 
 ### Changed
