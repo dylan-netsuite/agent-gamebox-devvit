@@ -254,8 +254,9 @@ All play modes display a scorecard after the final hole. The scorecard shows all
 | Dimensions | 160x100 design units |
 | Speed | 0.8 (progress units per second) |
 | Easing | Hermite smoothstep: t²(3-2t) |
-| Behavior | Visual-only safe zone oscillating between startY and endY. No physics body — ball passes through freely. Water hazard is suppressed when ball position overlaps bridge bounds. Updates every frame in all game states. |
-| Carry | When the ball overlaps the bridge bounds, its position is shifted by the bridge's per-frame Y delta (same pattern as moving islands). The ball's own velocity and physics are preserved — it rolls freely on the bridge surface. When the bridge reverses direction at endpoints, the smoothstep deceleration means the bridge slows while the ball retains its inertia, naturally sliding off. While on the bridge, the ball stays in 'simulating' state (not 'aiming'). |
+| Behavior | Visual-only safe zone oscillating between startY and endY. No physics body — ball passes through freely. Water hazard is suppressed when ball position overlaps bridge bounds. Bridge initializes with `direction: 1` (moving toward endY). Updates every frame in all game states. |
+| Carry | When the ball overlaps the bridge bounds, its position is shifted by the bridge's per-frame Y delta. The ball's own velocity and physics are preserved — it rolls freely on the bridge surface. A relative-velocity clamp prevents the ball from outrunning the bridge in its current travel direction (max 4 scaled units relative to bridge speed); movement against the bridge direction is unclamped. |
+| Reversal kick | When the bridge reverses at an endpoint, the ball receives a kick in the direction the bridge is **about to travel** (`sign(endY-startY) * bridge.direction`, scaled speed 3.5). This correctly ejects the ball toward the destination on both upward-traveling bridges (Hole 6) and downward-traveling bridges (Hole 18). X velocity is halved during the kick to keep the ball centered. |
 | Visual | Brown plank bridge with dividing lines, top highlight, bottom shadow, and side rails |
 
 ## Water Hazard (Taffy River) Physics

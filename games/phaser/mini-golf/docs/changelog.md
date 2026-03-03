@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.0.8.1 - Fix Bridge Direction & Responsive Menu (2026-03-03)
+
+### Fixed
+- **Bridge physics**: Fixed bridge initial direction (`direction: -1` → `direction: 1`) to eliminate spurious reversal kick on first frame. Bridges now start moving toward their target naturally.
+- **Bridge reversal kick**: Kick now always pushes the ball in the direction the bridge is **about to travel** (`sign(endY-startY) * bridge.direction`), not a hardcoded direction. Fixes Hole 18 where the kick was pushing the ball upward (wrong way) instead of downward toward the green.
+- **Bridge relative velocity clamp**: Only clamps ball speed when it's outrunning the bridge in the bridge's current travel direction. Prevents the ball from sliding off the leading edge while leaving natural movement in all other directions untouched.
+- **Hole button text overlap**: Fixed "HOLE #" and hole name labels overlapping in the main menu by switching to anchor-based positioning (bottom-aligned header, top-aligned subtitle with scaled padding).
+
+### Changed
+- **Main menu responsiveness**: Improved fullscreen layout scaling — reference resolution changed from 1024×768 to 500×800, button widths scale up to 600×sf, hole grid uses 3 columns on wider screens (>700px), section headers and gaps scale with sf.
+
 ## v0.0.3.242 - Shift H4 Bumper Left for Stronger Ricochet (2026-03-02)
 
 ### Changed

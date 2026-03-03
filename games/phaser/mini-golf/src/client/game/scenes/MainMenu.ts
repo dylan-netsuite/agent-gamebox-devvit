@@ -20,7 +20,7 @@ export class MainMenu extends Scene {
   }
 
   private get sf(): number {
-    return Math.min(this.scale.width / 1024, this.scale.height / 768);
+    return Math.min(this.scale.width / 500, this.scale.height / 800);
   }
 
   private wheelPreventDefault = (e: WheelEvent) => e.preventDefault();
@@ -145,11 +145,12 @@ export class MainMenu extends Scene {
 
   private drawTitle(cx: number, h: number, sf: number): void {
     const titleY = h * 0.08;
-    const fontSize = Math.max(24, Math.round(42 * sf));
+    const titleSf = Math.min(sf, 2.5);
+    const fontSize = Math.max(24, Math.round(42 * titleSf));
 
     const glow = this.add.graphics();
     glow.fillStyle(0xff69b4, 0.25);
-    glow.fillEllipse(cx, titleY, 280 * sf, 70 * sf);
+    glow.fillEllipse(cx, titleY, 280 * titleSf, 70 * titleSf);
     glow.setDepth(3);
     this.titleGlow = glow;
     this.allObjects.push(glow);
@@ -161,12 +162,12 @@ export class MainMenu extends Scene {
         color: '#ff69b4',
         align: 'center',
         stroke: '#8b0a50',
-        strokeThickness: 3,
+        strokeThickness: Math.max(3, Math.round(3 * titleSf)),
         shadow: {
           offsetX: 0,
           offsetY: 0,
           color: '#ff1493',
-          blur: 24,
+          blur: Math.round(24 * titleSf),
           fill: false,
           stroke: true,
         },
@@ -178,9 +179,9 @@ export class MainMenu extends Scene {
     this.allObjects.push(title);
 
     const subtitle = this.add
-      .text(cx, titleY + fontSize * 0.6, 'Sugar Rush Retro Invitational', {
+      .text(cx, titleY + fontSize * 0.65, 'Sugar Rush Retro Invitational', {
         fontFamily: 'Arial, sans-serif',
-        fontSize: `${Math.max(10, Math.round(12 * sf))}px`,
+        fontSize: `${Math.max(10, Math.round(14 * titleSf))}px`,
         color: '#8fbfa0',
         fontStyle: 'italic',
         align: 'center',
@@ -216,12 +217,13 @@ export class MainMenu extends Scene {
     container.setMask(new Phaser.Display.Masks.GeometryMask(this, mask));
     this.scrollMask = mask;
 
-    const btnW = Math.min(w * 0.75, 300);
+    const maxContentW = Math.min(w * 0.85, 600 * sf);
+    const btnW = Math.min(maxContentW, w * 0.75);
     const btnH = Math.max(38, Math.round(44 * sf));
-    const gap = Math.max(8, Math.round(10 * sf));
+    const gap = Math.max(8, Math.round(12 * sf));
     const labelSize = Math.max(13, Math.round(16 * sf));
-    const smallLabelSize = Math.max(10, Math.round(11 * sf));
-    let curY = menuTop + 10;
+    const smallLabelSize = Math.max(10, Math.round(12 * sf));
+    let curY = menuTop + Math.round(12 * sf);
 
     const startGame = (startIdx: number, endIdx: number) => {
       transitionTo(
@@ -260,31 +262,19 @@ export class MainMenu extends Scene {
     curY += gap;
     curY = this.addSectionHeader(container, cx, curY, 'PRACTICE', sf);
 
-    const holeBtnW = (btnW - gap) / 2;
-    const holeBtnH = Math.max(48, Math.round(54 * sf));
+    const cols = w > 700 ? 3 : 2;
+    const holeBtnW = (btnW - gap * (cols - 1)) / cols;
+    const holeBtnH = Math.max(48, Math.round(56 * sf));
 
-    for (let i = 0; i < HOLES.length; i += 2) {
-      const leftX = cx - holeBtnW / 2 - gap / 2;
-      const rightX = cx + holeBtnW / 2 + gap / 2;
-
-      this.addHoleButton(container, leftX, curY, holeBtnW, holeBtnH, i, labelSize, smallLabelSize, () =>
-        startGame(i, i)
-      );
-
-      if (i + 1 < HOLES.length) {
-        this.addHoleButton(
-          container,
-          rightX,
-          curY,
-          holeBtnW,
-          holeBtnH,
-          i + 1,
-          labelSize,
-          smallLabelSize,
-          () => startGame(i + 1, i + 1)
+    for (let i = 0; i < HOLES.length; i += cols) {
+      for (let c = 0; c < cols && i + c < HOLES.length; c++) {
+        const idx = i + c;
+        const colOffset = (c - (cols - 1) / 2) * (holeBtnW + gap);
+        const btnX = cx + colOffset;
+        this.addHoleButton(container, btnX, curY, holeBtnW, holeBtnH, idx, labelSize, smallLabelSize, () =>
+          startGame(idx, idx)
         );
       }
-
       curY += holeBtnH + gap;
     }
 
@@ -315,18 +305,19 @@ export class MainMenu extends Scene {
     text: string,
     sf: number
   ): number {
-    const fontSize = Math.max(10, Math.round(11 * sf));
+    const fontSize = Math.max(10, Math.round(13 * sf));
+    const pad = Math.round(10 * sf);
     const label = this.add
-      .text(cx, y + 8, text, {
+      .text(cx, y + pad, text, {
         fontFamily: '"Arial Black", sans-serif',
         fontSize: `${fontSize}px`,
         color: '#8fbfa0',
-        letterSpacing: 3,
+        letterSpacing: Math.round(4 * sf),
       })
       .setOrigin(0.5)
       .setDepth(11);
     container.add(label);
-    return y + 24;
+    return y + pad + fontSize + Math.round(6 * sf);
   }
 
   private addMenuButton(
@@ -414,23 +405,26 @@ export class MainMenu extends Scene {
     bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
     btnContainer.add(bg);
 
+    const pad = Math.max(4, Math.round(4 * this.sf));
     const holeLabel = this.add
-      .text(0, -8, `HOLE ${hole.id}`, {
+      .text(0, -pad, `HOLE ${hole.id}`, {
         fontFamily: '"Arial Black", sans-serif',
         fontSize: `${fontSize}px`,
         color: '#e0e8f0',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5, 1);
     btnContainer.add(holeLabel);
 
     const nameLabel = this.add
-      .text(0, 10, hole.name, {
+      .text(0, pad, hole.name, {
         fontFamily: 'Arial, sans-serif',
         fontSize: `${smallFontSize}px`,
         color: '#8fbfa0',
         fontStyle: 'italic',
+        wordWrap: { width: w - 10 },
+        align: 'center',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5, 0);
     btnContainer.add(nameLabel);
 
     const hitArea = this.add
