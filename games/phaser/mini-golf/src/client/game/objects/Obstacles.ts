@@ -1062,7 +1062,7 @@ export class Obstacles {
       cx: startPos.x,
       speed: def.speed ?? 0.8,
       progress: 0,
-      direction: 1,
+      direction: -1,
       velocityY: 0,
       reversedDir: 0,
     });
@@ -1815,29 +1815,20 @@ export class Obstacles {
 
       if (!onBridge) continue;
 
-      if (bridge.reversedDir !== 0) {
-        const kickSpeed = scaleValue(this.scene, 3.5);
-        const newTravelDir = Math.sign(bridge.endY - bridge.startY) * bridge.direction;
+      if (bridge.reversedDir === 1) {
+        const kickSpeed = scaleValue(this.scene, 4);
+        const kickDir = Math.sign(bridge.endY - bridge.startY);
         this.scene.matter.body.setVelocity(ball.body, {
-          x: ball.body.velocity.x * 0.5,
-          y: newTravelDir * kickSpeed,
+          x: ball.body.velocity.x,
+          y: kickDir * kickSpeed,
         });
         return;
       }
 
-      const vy = ball.body.velocity.y;
-      const travelDir = Math.sign(bridge.endY - bridge.startY) * bridge.direction;
-      const relVy = vy - bridge.velocityY;
-
-      if (relVy * travelDir > 0) {
-        const maxRelSpeed = scaleValue(this.scene, 4);
-        if (Math.abs(relVy) > maxRelSpeed) {
-          this.scene.matter.body.setVelocity(ball.body, {
-            x: ball.body.velocity.x,
-            y: bridge.velocityY + travelDir * maxRelSpeed,
-          });
-        }
-      }
+      this.scene.matter.body.setVelocity(ball.body, {
+        x: ball.body.velocity.x,
+        y: ball.body.velocity.y * 0.995,
+      });
 
       this.scene.matter.body.setPosition(ball.body, {
         x: bx,

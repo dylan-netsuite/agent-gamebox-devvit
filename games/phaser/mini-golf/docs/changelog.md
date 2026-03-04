@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.9 - Simplify Bridge Physics (2026-02-26)
+
+### Fixed
+- **Bridge physics reverted & simplified**: Removed complex direction-aware velocity clamping and reversal kick overhaul. Replaced with a simple per-frame Y-velocity dampening (`0.995` multiplier) to gently slow the ball while preserving momentum. Reversal kick uses `sign(endY - startY)` at scaled speed `4` for a strong, clean ejection. Works correctly on both Hole 6 (upward bridge) and Hole 18 (downward bridge).
+
 ## v0.0.8.1 - Fix Bridge Direction & Responsive Menu (2026-03-03)
 
 ### Fixed
