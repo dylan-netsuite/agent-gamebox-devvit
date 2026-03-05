@@ -1,12 +1,17 @@
 import { Scene } from 'phaser';
 
-const GRAVITY = 1600;
-const JUMP_VELOCITY = -620;
-const INITIAL_SPEED = 320;
-const MAX_SPEED = 900;
-const SPEED_INCREMENT = 25;
-const MIN_OBSTACLE_GAP = 300;
-const NIGHT_TOGGLE_SCORE = 700;
+const GRAVITY = 2200;
+const JUMP_VELOCITY = -780;
+const INITIAL_SPEED = 420;
+const MAX_SPEED = 1200;
+const SPEED_INCREMENT = 45;
+const MIN_OBSTACLE_GAP = 200;
+const NIGHT_TOGGLE_SCORE = 500;
+const COMBO_SPAWN_SCORE = 400;
+const COMBO_SPAWN_CHANCE = 0.3;
+const PTERO_SCORE_THRESHOLD = 100;
+const MILESTONE_INTERVAL = 100;
+const SPEED_LINE_THRESHOLD = 600;
 
 type DinoState = 'running' | 'jumping' | 'ducking' | 'dead';
 type ObstacleType = 'cactus-small' | 'cactus-large' | 'cactus-group' | 'ptero';
@@ -23,8 +28,11 @@ export class DinoGame extends Scene {
   private dinoVy = 0;
   private groundY = 0;
   private dinoX = 0;
+  private wasAirborne = false;
 
   private ground1!: Phaser.GameObjects.TileSprite;
+  private mountains!: Phaser.GameObjects.TileSprite;
+  private moonImage: Phaser.GameObjects.Image | null = null;
 
   private obstacles: Obstacle[] = [];
   private clouds: Phaser.GameObjects.Image[] = [];
@@ -32,13 +40,13 @@ export class DinoGame extends Scene {
 
   private speed = INITIAL_SPEED;
   private score = 0;
+  private lastMilestone = 0;
   private scoreText!: Phaser.GameObjects.Text;
   private highScoreText!: Phaser.GameObjects.Text;
   private highScore = 0;
 
   private isNight = false;
   private nightToggles = 0;
-  private bgColor = 0xf7f7f7;
 
   private runFrame = 0;
   private runTimer = 0;
@@ -52,8 +60,10 @@ export class DinoGame extends Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private spaceKey!: Phaser.Input.Keyboard.Key;
 
-  private allObjects: Phaser.GameObjects.GameObject[] = [];
   private groundLine!: Phaser.GameObjects.Graphics;
+  private dustEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
+  private speedLines: Phaser.GameObjects.Image[] = [];
+  private speedLineTimer = 0;
 
   constructor() {
     super('DinoGame');
@@ -64,9 +74,9 @@ export class DinoGame extends Scene {
     this.dinoVy = 0;
     this.speed = INITIAL_SPEED;
     this.score = 0;
+    this.lastMilestone = 0;
     this.isNight = false;
     this.nightToggles = 0;
-    this.bgColor = 0xf7f7f7;
     this.runFrame = 0;
     this.runTimer = 0;
     this.pteroFrame = 0;
@@ -74,41 +84,60 @@ export class DinoGame extends Scene {
     this.lastObstacleX = 0;
     this.gameStarted = false;
     this.isGameOver = false;
+    this.wasAirborne = false;
     this.obstacles = [];
     this.clouds = [];
     this.stars = [];
-    this.allObjects = [];
+    this.speedLines = [];
+    this.speedLineTimer = 0;
+    this.moonImage = null;
   }
 
   create() {
     const { width, height } = this.scale;
-    this.cameras.main.setBackgroundColor(this.bgColor);
+    this.cameras.main.setBackgroundColor(0xf7f7f7);
 
     this.groundY = height * 0.75;
     this.dinoX = width * 0.12;
+
+    // Parallax mountains
+    this.mountains = this.add.tileSprite(width / 2, this.groundY - 5, width, 80, 'mountains');
+    this.mountains.setOrigin(0.5, 1);
+    this.mountains.setDepth(1);
+    this.mountains.setAlpha(0.6);
 
     // Ground line
     this.groundLine = this.add.graphics();
     this.groundLine.lineStyle(2, 0x535353);
     this.groundLine.lineBetween(0, this.groundY, width, this.groundY);
     this.groundLine.setDepth(5);
-    this.allObjects.push(this.groundLine);
 
-    // Ground tile sprites (two side-by-side for seamless scroll)
+    // Ground texture
     this.ground1 = this.add.tileSprite(width / 2, this.groundY + 7, width, 14, 'ground');
     this.ground1.setDepth(4);
-    this.allObjects.push(this.ground1);
 
     // Initial clouds
     this.spawnCloud(width * 0.3, height * 0.2);
     this.spawnCloud(width * 0.6, height * 0.12);
     this.spawnCloud(width * 0.85, height * 0.28);
 
+    // Dust particle emitter (follows dino feet)
+    this.dustEmitter = this.add.particles(0, 0, 'dust', {
+      speed: { min: 20, max: 60 },
+      angle: { min: 150, max: 210 },
+      scale: { start: 0.8, end: 0 },
+      alpha: { start: 0.6, end: 0 },
+      lifespan: { min: 200, max: 400 },
+      frequency: 60,
+      quantity: 1,
+      emitting: false,
+    });
+    this.dustEmitter.setDepth(6);
+
     // Dino
     this.dino = this.add.image(this.dinoX, this.groundY, 'dino-stand');
     this.dino.setOrigin(0.5, 1);
     this.dino.setDepth(10);
-    this.allObjects.push(this.dino);
 
     // Score display
     const scoreFontSize = Math.max(14, Math.round(height * 0.06));
@@ -121,7 +150,6 @@ export class DinoGame extends Scene {
       })
       .setOrigin(1, 0)
       .setDepth(20);
-    this.allObjects.push(this.highScoreText);
 
     this.scoreText = this.add
       .text(width - 20, 20, '00000', {
@@ -132,11 +160,9 @@ export class DinoGame extends Scene {
       })
       .setOrigin(1, 0)
       .setDepth(20);
-    this.allObjects.push(this.scoreText);
 
-    this.fetchHighScore();
+    void this.fetchHighScore();
 
-    // Input
     if (this.input.keyboard) {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -144,13 +170,10 @@ export class DinoGame extends Scene {
 
     this.input.on('pointerdown', () => {
       if (this.isGameOver) return;
-      if (!this.gameStarted) {
-        this.gameStarted = true;
-      }
+      if (!this.gameStarted) this.gameStarted = true;
       this.tryJump();
     });
 
-    // Prompt to start
     this.showStartPrompt();
 
     this.scale.on('resize', (gameSize: Phaser.Structs.Size) => {
@@ -170,7 +193,6 @@ export class DinoGame extends Scene {
       .setOrigin(0.5)
       .setDepth(20)
       .setName('start-prompt');
-    this.allObjects.push(prompt);
 
     this.tweens.add({
       targets: prompt,
@@ -192,6 +214,9 @@ export class DinoGame extends Scene {
     this.ground1.setPosition(w / 2, this.groundY + 7);
     this.ground1.setSize(w, 14);
 
+    this.mountains.setPosition(w / 2, this.groundY - 5);
+    this.mountains.setSize(w, 80);
+
     if (!this.isGameOver) {
       this.dino.setPosition(this.dinoX, this.dinoState === 'jumping' ? this.dino.y : this.groundY);
     }
@@ -212,38 +237,27 @@ export class DinoGame extends Scene {
       return;
     }
 
-    // Remove start prompt
     const prompt = this.children.getByName('start-prompt');
     if (prompt) prompt.destroy();
 
-    // Update speed
     const scoreHundreds = Math.floor(this.score / 100);
     this.speed = Math.min(INITIAL_SPEED + scoreHundreds * SPEED_INCREMENT, MAX_SPEED);
 
-    // Scroll ground
     this.ground1.tilePositionX += this.speed * dt;
+    this.mountains.tilePositionX += this.speed * dt * 0.08;
 
-    // Update score
     this.score += this.speed * dt * 0.02;
     this.scoreText.setText(String(Math.floor(this.score)).padStart(5, '0'));
 
-    // Day/night cycle
+    this.checkMilestone();
     this.checkNightToggle();
-
-    // Update dino physics
     this.updateDino(dt);
     this.updateDinoAnimation(dt);
-
-    // Spawn / update obstacles
+    this.updateDustEmitter();
     this.updateObstacles(dt);
-
-    // Update clouds
     this.updateClouds(dt);
-
-    // Update ptero animation
     this.updatePteroAnimation(dt);
-
-    // Check collisions
+    this.updateSpeedLines(dt);
     this.checkCollisions();
   }
 
@@ -253,17 +267,13 @@ export class DinoGame extends Scene {
     const jumpPressed = this.spaceKey?.isDown || this.cursors?.up?.isDown;
     const duckPressed = this.cursors?.down?.isDown;
 
-    if (jumpPressed && !this.gameStarted) {
-      this.gameStarted = true;
-    }
+    if (jumpPressed && !this.gameStarted) this.gameStarted = true;
 
-    if (jumpPressed) {
-      this.tryJump();
-    }
+    if (jumpPressed) this.tryJump();
 
     if (duckPressed && this.dinoState !== 'dead') {
       if (this.dinoState === 'jumping') {
-        this.dinoVy = Math.max(this.dinoVy, 400);
+        this.dinoVy = Math.max(this.dinoVy, 500);
       } else {
         this.dinoState = 'ducking';
       }
@@ -276,6 +286,11 @@ export class DinoGame extends Scene {
     if (this.dinoState === 'running' || this.dinoState === 'ducking') {
       this.dinoState = 'jumping';
       this.dinoVy = JUMP_VELOCITY;
+      this.wasAirborne = true;
+      this.dustEmitter.emitting = false;
+
+      // Jump dust burst
+      this.dustEmitter.emitParticleAt(this.dinoX - 5, this.groundY, 5);
     }
   }
 
@@ -288,19 +303,61 @@ export class DinoGame extends Scene {
         this.dino.setY(this.groundY);
         this.dinoVy = 0;
         this.dinoState = 'running';
+
+        if (this.wasAirborne) {
+          this.wasAirborne = false;
+          this.landingImpact();
+        }
       } else {
         this.dino.setY(dinoY);
       }
     }
   }
 
+  private landingImpact(): void {
+    // Squash effect
+    this.tweens.add({
+      targets: this.dino,
+      scaleX: 1.2,
+      scaleY: 0.8,
+      duration: 60,
+      yoyo: true,
+      ease: 'Power2',
+    });
+
+    // Dust burst on landing
+    this.dustEmitter.emitParticleAt(this.dinoX, this.groundY, 8);
+
+    // Impact ring
+    const ring = this.add.image(this.dinoX, this.groundY, 'impact-ring');
+    ring.setDepth(6);
+    ring.setAlpha(0.5);
+    this.tweens.add({
+      targets: ring,
+      scaleX: 2,
+      scaleY: 1.5,
+      alpha: 0,
+      duration: 300,
+      ease: 'Power2',
+      onComplete: () => ring.destroy(),
+    });
+  }
+
+  private updateDustEmitter(): void {
+    if (this.dinoState === 'running' && this.gameStarted) {
+      this.dustEmitter.emitting = true;
+      this.dustEmitter.setPosition(this.dinoX - 10, this.groundY);
+    } else {
+      this.dustEmitter.emitting = false;
+    }
+  }
+
   private updateDinoAnimation(dt: number): void {
     this.runTimer += dt;
 
-    const animSpeed = 0.1 - (this.speed - INITIAL_SPEED) * 0.00005;
-    const clampedSpeed = Math.max(0.05, animSpeed);
+    const animSpeed = Math.max(0.04, 0.1 - (this.speed - INITIAL_SPEED) * 0.00006);
 
-    if (this.runTimer >= clampedSpeed) {
+    if (this.runTimer >= animSpeed) {
       this.runTimer = 0;
       this.runFrame = this.runFrame === 0 ? 1 : 0;
     }
@@ -320,7 +377,6 @@ export class DinoGame extends Scene {
     const { width } = this.scale;
     const scrollDist = this.speed * dt;
 
-    // Move obstacles left
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i]!;
       obs.sprite.x -= scrollDist;
@@ -332,19 +388,25 @@ export class DinoGame extends Scene {
       }
     }
 
-    // Spawn new obstacles
     this.lastObstacleX -= scrollDist;
-    const gap = Math.max(MIN_OBSTACLE_GAP, 600 - this.speed * 0.3);
+    const gap = Math.max(MIN_OBSTACLE_GAP, 500 - this.speed * 0.28);
 
     if (this.lastObstacleX < width - gap) {
       this.spawnObstacle(width + 50);
+
+      // Combo spawn: sometimes two obstacles close together at higher scores
+      if (this.score > COMBO_SPAWN_SCORE && Math.random() < COMBO_SPAWN_CHANCE) {
+        const comboGap = 120 + Math.random() * 80;
+        this.spawnObstacle(width + 50 + comboGap);
+      }
     }
   }
 
   private spawnObstacle(x: number): void {
     const types: ObstacleType[] = ['cactus-small', 'cactus-large', 'cactus-group'];
-    if (this.score > 200) {
+    if (this.score > PTERO_SCORE_THRESHOLD) {
       types.push('ptero');
+      if (this.score > 600) types.push('ptero');
     }
 
     const type = types[Math.floor(Math.random() * types.length)]!;
@@ -358,15 +420,9 @@ export class DinoGame extends Scene {
       sprite = this.add.image(x, pteroY, 'ptero-1');
       sprite.setOrigin(0.5, 1);
       sprite.setDepth(8);
-      hitbox = {
-        x: x - 20,
-        y: pteroY - 30,
-        w: 40,
-        h: 24,
-      };
+      hitbox = { x: x - 20, y: pteroY - 30, w: 40, h: 24 };
     } else {
-      const texKey = type;
-      sprite = this.add.image(x, this.groundY, texKey);
+      sprite = this.add.image(x, this.groundY, type);
       sprite.setOrigin(0.5, 1);
       sprite.setDepth(8);
 
@@ -379,9 +435,10 @@ export class DinoGame extends Scene {
       };
     }
 
+    if (this.isNight) sprite.setTint(0xe0e0e0);
+
     this.obstacles.push({ sprite, type, hitbox });
-    this.allObjects.push(sprite);
-    this.lastObstacleX = x;
+    this.lastObstacleX = Math.max(this.lastObstacleX, x);
   }
 
   private getObstacleDims(type: ObstacleType): { w: number; h: number } {
@@ -411,6 +468,34 @@ export class DinoGame extends Scene {
     }
   }
 
+  private updateSpeedLines(dt: number): void {
+    const { width } = this.scale;
+
+    for (let i = this.speedLines.length - 1; i >= 0; i--) {
+      const line = this.speedLines[i]!;
+      line.x -= this.speed * dt * 1.5;
+      if (line.x < -60) {
+        line.destroy();
+        this.speedLines.splice(i, 1);
+      }
+    }
+
+    if (this.speed < SPEED_LINE_THRESHOLD) return;
+
+    this.speedLineTimer += dt;
+    const freq = Math.max(0.03, 0.15 - (this.speed - SPEED_LINE_THRESHOLD) * 0.0002);
+
+    if (this.speedLineTimer >= freq) {
+      this.speedLineTimer = 0;
+      const y = this.groundY * 0.3 + Math.random() * (this.groundY * 0.6);
+      const line = this.add.image(width + 30, y, 'speed-line');
+      line.setDepth(3);
+      line.setAlpha(0.15 + Math.random() * 0.25);
+      line.setScale(1 + Math.random() * 2, 1);
+      this.speedLines.push(line);
+    }
+  }
+
   private checkCollisions(): void {
     const dh = this.getDinoHitbox();
 
@@ -424,19 +509,9 @@ export class DinoGame extends Scene {
 
   private getDinoHitbox(): { x: number; y: number; w: number; h: number } {
     if (this.dinoState === 'ducking') {
-      return {
-        x: this.dinoX - 28,
-        y: this.groundY - 22,
-        w: 50,
-        h: 18,
-      };
+      return { x: this.dinoX - 28, y: this.groundY - 22, w: 50, h: 18 };
     }
-    return {
-      x: this.dinoX - 16,
-      y: this.dino.y - 44,
-      w: 32,
-      h: 42,
-    };
+    return { x: this.dinoX - 16, y: this.dino.y - 44, w: 32, h: 42 };
   }
 
   private aabbOverlap(
@@ -449,14 +524,75 @@ export class DinoGame extends Scene {
   private gameOver(): void {
     this.isGameOver = true;
     this.dinoState = 'dead';
-    this.updateDinoAnimation(0);
+    this.dustEmitter.emitting = false;
+
+    // Screen shake
+    this.cameras.main.shake(300, 0.012);
+
+    // Flash
+    this.cameras.main.flash(150, 255, 50, 50, false);
+
+    // Death bounce animation
+    this.tweens.add({
+      targets: this.dino,
+      y: this.dino.y - 60,
+      angle: -15,
+      duration: 250,
+      ease: 'Power2',
+      yoyo: true,
+      onComplete: () => {
+        this.dino.setTexture('dino-dead');
+      },
+    });
+
+    // Debris explosion
+    const deathParticles = this.add.particles(this.dinoX, this.dino.y - 24, 'debris', {
+      speed: { min: 80, max: 250 },
+      angle: { min: 200, max: 340 },
+      scale: { start: 1.5, end: 0 },
+      alpha: { start: 1, end: 0 },
+      lifespan: { min: 400, max: 800 },
+      gravityY: 400,
+      quantity: 15,
+      emitting: false,
+    });
+    deathParticles.setDepth(12);
+    deathParticles.explode(15);
 
     const finalScore = Math.floor(this.score);
-    this.submitScore(finalScore);
+    void this.submitScore(finalScore);
 
-    this.scene.launch('GameOver', {
-      score: finalScore,
-      highScore: Math.max(finalScore, this.highScore),
+    this.time.delayedCall(400, () => {
+      this.scene.launch('GameOver', {
+        score: finalScore,
+        highScore: Math.max(finalScore, this.highScore),
+      });
+    });
+  }
+
+  private checkMilestone(): void {
+    const current = Math.floor(this.score / MILESTONE_INTERVAL);
+    if (current > this.lastMilestone) {
+      this.lastMilestone = current;
+      this.flashMilestone();
+    }
+  }
+
+  private flashMilestone(): void {
+    // Score flash: brief scale-up + color change
+    this.tweens.add({
+      targets: this.scoreText,
+      scaleX: 1.4,
+      scaleY: 1.4,
+      duration: 100,
+      yoyo: true,
+      ease: 'Power2',
+    });
+
+    const origColor = this.isNight ? '#e0e0e0' : '#535353';
+    this.scoreText.setColor('#e85d04');
+    this.time.delayedCall(300, () => {
+      if (!this.isGameOver) this.scoreText.setColor(origColor);
     });
   }
 
@@ -465,14 +601,17 @@ export class DinoGame extends Scene {
     if (expectedToggles > this.nightToggles) {
       this.nightToggles = expectedToggles;
       this.isNight = !this.isNight;
-      this.applyTheme();
+      this.transitionTheme();
     }
   }
 
-  private applyTheme(): void {
-    const { width } = this.scale;
+  private transitionTheme(): void {
+    const { width, height } = this.scale;
+
+    // Quick white flash on transition
+    this.cameras.main.flash(200, 255, 255, 255, false);
+
     if (this.isNight) {
-      this.bgColor = 0x1a1a2e;
       this.cameras.main.setBackgroundColor(0x1a1a2e);
       this.scoreText.setColor('#e0e0e0');
       this.highScoreText.setColor('#888');
@@ -481,9 +620,24 @@ export class DinoGame extends Scene {
       this.groundLine.lineBetween(0, this.groundY, width, this.groundY);
       this.ground1.setTint(0xe0e0e0);
       this.dino.setTint(0xe0e0e0);
+      this.mountains.setTint(0x2a2a4e);
+      this.mountains.setAlpha(0.4);
+
+      // Spawn moon
+      if (!this.moonImage) {
+        this.moonImage = this.add.image(width * 0.8, height * 0.12, 'moon');
+        this.moonImage.setDepth(1);
+        this.moonImage.setAlpha(0);
+        this.tweens.add({
+          targets: this.moonImage,
+          alpha: 0.8,
+          duration: 500,
+          ease: 'Power2',
+        });
+      }
+
       this.spawnStars();
     } else {
-      this.bgColor = 0xf7f7f7;
       this.cameras.main.setBackgroundColor(0xf7f7f7);
       this.scoreText.setColor('#535353');
       this.highScoreText.setColor('#999');
@@ -492,6 +646,21 @@ export class DinoGame extends Scene {
       this.groundLine.lineBetween(0, this.groundY, width, this.groundY);
       this.ground1.clearTint();
       this.dino.clearTint();
+      this.mountains.clearTint();
+      this.mountains.setAlpha(0.6);
+
+      if (this.moonImage) {
+        this.tweens.add({
+          targets: this.moonImage,
+          alpha: 0,
+          duration: 300,
+          onComplete: () => {
+            this.moonImage?.destroy();
+            this.moonImage = null;
+          },
+        });
+      }
+
       this.removeStars();
     }
 
@@ -506,19 +675,43 @@ export class DinoGame extends Scene {
 
   private spawnStars(): void {
     const { width } = this.scale;
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 18; i++) {
       const x = Math.random() * width;
-      const y = Math.random() * (this.groundY * 0.6);
+      const y = Math.random() * (this.groundY * 0.5);
       const star = this.add.image(x, y, 'star');
       star.setDepth(1);
-      star.setAlpha(0.5 + Math.random() * 0.5);
+      star.setAlpha(0);
       this.stars.push(star);
-      this.allObjects.push(star);
+
+      // Twinkle-in animation
+      this.tweens.add({
+        targets: star,
+        alpha: { from: 0, to: 0.3 + Math.random() * 0.7 },
+        duration: 200 + Math.random() * 500,
+        delay: Math.random() * 400,
+      });
+
+      // Ongoing twinkle
+      this.tweens.add({
+        targets: star,
+        alpha: { from: 0.3, to: 1 },
+        duration: 800 + Math.random() * 1200,
+        yoyo: true,
+        repeat: -1,
+        delay: 500 + Math.random() * 500,
+      });
     }
   }
 
   private removeStars(): void {
-    for (const s of this.stars) s.destroy();
+    for (const s of this.stars) {
+      this.tweens.add({
+        targets: s,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => s.destroy(),
+      });
+    }
     this.stars = [];
   }
 
@@ -526,12 +719,11 @@ export class DinoGame extends Scene {
     const cloud = this.add.image(x, y, 'cloud');
     cloud.setDepth(2);
     this.clouds.push(cloud);
-    this.allObjects.push(cloud);
   }
 
   private updateClouds(dt: number): void {
     const { width, height } = this.scale;
-    const cloudSpeed = this.speed * 0.15;
+    const cloudSpeed = this.speed * 0.12;
 
     for (let i = this.clouds.length - 1; i >= 0; i--) {
       const c = this.clouds[i]!;
@@ -569,10 +761,7 @@ export class DinoGame extends Scene {
       await fetch('/api/score/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          score: finalScore,
-          distance: Math.floor(this.score * 10),
-        }),
+        body: JSON.stringify({ score: finalScore, distance: Math.floor(this.score * 10) }),
       });
     } catch {
       /* offline */

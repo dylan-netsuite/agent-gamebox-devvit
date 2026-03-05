@@ -21,25 +21,24 @@ export class TextureFactory {
     this.generateCloud(scene);
     this.generateStar(scene);
     this.generateRestartIcon(scene);
+    this.generateDustParticle(scene);
+    this.generateDebrisParticle(scene);
+    this.generateSpeedLine(scene);
+    this.generateMountains(scene);
+    this.generateMoon(scene);
+    this.generateImpactRing(scene);
   }
 
   private static drawDinoBase(g: Phaser.GameObjects.Graphics, legMode: 'stand' | 'left' | 'right'): void {
     g.fillStyle(DINO_COLOR);
-
-    // Body
     g.fillRect(10, 10, 22, 26);
-    // Head
     g.fillRect(20, 0, 24, 18);
-    // Eye socket (cutout)
     g.fillStyle(0xffffff);
     g.fillRect(36, 4, 4, 4);
     g.fillStyle(DINO_COLOR);
-    // Mouth line
     g.fillRect(32, 14, 12, 2);
-    // Arm
     g.fillRect(26, 26, 4, 10);
     g.fillRect(28, 34, 4, 2);
-    // Tail
     g.fillRect(4, 12, 8, 4);
     g.fillRect(0, 10, 6, 4);
 
@@ -82,18 +81,12 @@ export class TextureFactory {
 
   private static drawDinoDuck(g: Phaser.GameObjects.Graphics, legMode: 'left' | 'right'): void {
     g.fillStyle(DINO_COLOR);
-
-    // Elongated body (ducking)
     g.fillRect(0, 4, 36, 14);
-    // Head (forward)
     g.fillRect(36, 0, 24, 16);
-    // Eye
     g.fillStyle(0xffffff);
     g.fillRect(52, 4, 4, 4);
     g.fillStyle(DINO_COLOR);
-    // Mouth
     g.fillRect(48, 12, 12, 2);
-    // Tail nub
     g.fillRect(0, 2, 4, 4);
 
     if (legMode === 'left') {
@@ -124,7 +117,6 @@ export class TextureFactory {
   private static generateDinoDead(scene: Scene): void {
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
     this.drawDinoBase(g, 'stand');
-    // X-eye overlay
     g.fillStyle(0xffffff);
     g.fillRect(34, 2, 8, 8);
     g.lineStyle(2, DINO_COLOR);
@@ -137,12 +129,9 @@ export class TextureFactory {
   private static generateCactusSmall(scene: Scene): void {
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
     g.fillStyle(DINO_COLOR);
-    // Main stem
     g.fillRect(5, 8, 8, 28);
-    // Left arm
     g.fillRect(0, 14, 6, 4);
     g.fillRect(0, 10, 4, 6);
-    // Right arm
     g.fillRect(12, 18, 6, 4);
     g.fillRect(14, 14, 4, 6);
     g.generateTexture('cactus-small', 18, 36);
@@ -152,12 +141,9 @@ export class TextureFactory {
   private static generateCactusLarge(scene: Scene): void {
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
     g.fillStyle(DINO_COLOR);
-    // Main stem
     g.fillRect(8, 0, 10, 50);
-    // Left arm
     g.fillRect(0, 16, 10, 4);
     g.fillRect(0, 10, 4, 10);
-    // Right arm
     g.fillRect(16, 24, 10, 4);
     g.fillRect(22, 18, 4, 10);
     g.generateTexture('cactus-large', 26, 50);
@@ -167,15 +153,12 @@ export class TextureFactory {
   private static generateCactusGroup(scene: Scene): void {
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
     g.fillStyle(DINO_COLOR);
-    // Left cactus
     g.fillRect(2, 10, 8, 26);
     g.fillRect(0, 16, 4, 4);
     g.fillRect(8, 20, 4, 4);
-    // Middle cactus (taller)
     g.fillRect(14, 2, 8, 34);
     g.fillRect(10, 12, 6, 4);
     g.fillRect(20, 8, 6, 4);
-    // Right cactus
     g.fillRect(28, 8, 8, 28);
     g.fillRect(24, 18, 6, 4);
     g.fillRect(34, 14, 4, 4);
@@ -185,23 +168,18 @@ export class TextureFactory {
 
   private static drawPteroBody(g: Phaser.GameObjects.Graphics): void {
     g.fillStyle(DINO_COLOR);
-    // Body
     g.fillRect(8, 16, 28, 8);
-    // Head/beak
     g.fillRect(36, 16, 10, 6);
     g.fillRect(44, 18, 6, 4);
-    // Eye
     g.fillStyle(0xffffff);
     g.fillRect(38, 17, 3, 3);
     g.fillStyle(DINO_COLOR);
-    // Tail
     g.fillRect(2, 18, 8, 4);
   }
 
   private static generatePtero1(scene: Scene): void {
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
     this.drawPteroBody(g);
-    // Wings up
     g.fillRect(14, 4, 18, 4);
     g.fillRect(16, 0, 14, 6);
     g.generateTexture('ptero-1', 50, 40);
@@ -211,7 +189,6 @@ export class TextureFactory {
   private static generatePtero2(scene: Scene): void {
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
     this.drawPteroBody(g);
-    // Wings down
     g.fillRect(14, 24, 18, 4);
     g.fillRect(16, 26, 14, 6);
     g.generateTexture('ptero-2', 50, 40);
@@ -222,12 +199,9 @@ export class TextureFactory {
     const w = 2400;
     const h = 14;
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
-
     g.fillStyle(GROUND_COLOR);
-    // Main ground line
     g.fillRect(0, 0, w, 2);
 
-    // Bumpy texture below the line
     const rng = (seed: number) => {
       let s = seed;
       return () => {
@@ -274,17 +248,84 @@ export class TextureFactory {
     const g = scene.make.graphics({ x: 0, y: 0 }, false);
     const cx = size / 2;
     const cy = size / 2;
-
     g.lineStyle(3, DINO_COLOR);
     g.beginPath();
     g.arc(cx, cy, 12, -Math.PI * 0.8, Math.PI * 0.6, false);
     g.strokePath();
-
-    // Arrow head
     g.fillStyle(DINO_COLOR);
     g.fillTriangle(cx + 10, cy - 8, cx + 16, cy - 2, cx + 6, cy - 2);
-
     g.generateTexture('restart-icon', size, size);
+    g.destroy();
+  }
+
+  private static generateDustParticle(scene: Scene): void {
+    const g = scene.make.graphics({ x: 0, y: 0 }, false);
+    g.fillStyle(0x999999);
+    g.fillCircle(4, 4, 3);
+    g.fillStyle(0xaaaaaa, 0.6);
+    g.fillCircle(4, 4, 4);
+    g.generateTexture('dust', 8, 8);
+    g.destroy();
+  }
+
+  private static generateDebrisParticle(scene: Scene): void {
+    const g = scene.make.graphics({ x: 0, y: 0 }, false);
+    g.fillStyle(DINO_COLOR);
+    g.fillRect(0, 0, 4, 4);
+    g.generateTexture('debris', 4, 4);
+    g.destroy();
+  }
+
+  private static generateSpeedLine(scene: Scene): void {
+    const g = scene.make.graphics({ x: 0, y: 0 }, false);
+    g.fillStyle(0xcccccc, 0.5);
+    g.fillRect(0, 0, 50, 2);
+    g.generateTexture('speed-line', 50, 2);
+    g.destroy();
+  }
+
+  private static generateMountains(scene: Scene): void {
+    const w = 1200;
+    const h = 80;
+    const g = scene.make.graphics({ x: 0, y: 0 }, false);
+
+    g.fillStyle(0xe8e8e8);
+    const peaks = [
+      { x: 0, w: 160, h: 55 },
+      { x: 130, w: 200, h: 70 },
+      { x: 300, w: 140, h: 45 },
+      { x: 420, w: 180, h: 60 },
+      { x: 560, w: 220, h: 75 },
+      { x: 740, w: 150, h: 50 },
+      { x: 870, w: 190, h: 65 },
+      { x: 1020, w: 170, h: 55 },
+    ];
+
+    for (const p of peaks) {
+      g.fillTriangle(p.x, h, p.x + p.w / 2, h - p.h, p.x + p.w, h);
+    }
+
+    g.generateTexture('mountains', w, h);
+    g.destroy();
+  }
+
+  private static generateMoon(scene: Scene): void {
+    const size = 28;
+    const g = scene.make.graphics({ x: 0, y: 0 }, false);
+    g.fillStyle(0xe0e0e0);
+    g.fillCircle(size / 2, size / 2, size / 2 - 2);
+    g.fillStyle(0x1a1a2e);
+    g.fillCircle(size / 2 + 5, size / 2 - 3, size / 2 - 4);
+    g.generateTexture('moon', size, size);
+    g.destroy();
+  }
+
+  private static generateImpactRing(scene: Scene): void {
+    const size = 32;
+    const g = scene.make.graphics({ x: 0, y: 0 }, false);
+    g.lineStyle(2, 0x999999, 0.6);
+    g.strokeCircle(size / 2, size / 2, 12);
+    g.generateTexture('impact-ring', size, size);
     g.destroy();
   }
 }
