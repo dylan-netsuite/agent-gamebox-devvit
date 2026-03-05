@@ -350,9 +350,10 @@ export class Lobby extends Scene {
   private createButtons(cx: number, height: number): void {
     const btnW = 130;
     const btnH = 36;
+    const gap = 10;
 
-    // Ready button
-    this.readyBtn = this.add.container(cx - 75, height - 52);
+    // Ready button (left side)
+    this.readyBtn = this.add.container(cx - btnW - gap / 2, height - 52);
     const readyBg = this.add.graphics();
     readyBg.fillStyle(0x3498db, 1);
     readyBg.fillRoundedRect(0, 0, btnW, btnH, 8);
@@ -383,15 +384,15 @@ export class Lobby extends Scene {
       void this.mp.setReady(this.myReady);
     });
 
-    // Start button (host only)
-    this.startBtn = this.add.container(cx + 75, height - 52);
+    // Start button (right side, host only)
+    this.startBtn = this.add.container(cx + gap / 2, height - 52);
     const startBg = this.add.graphics();
     startBg.fillStyle(0xe94560, 1);
-    startBg.fillRoundedRect(-btnW, 0, btnW, btnH, 8);
+    startBg.fillRoundedRect(0, 0, btnW, btnH, 8);
     this.startBtn.add(startBg);
 
     const startLabel = this.add
-      .text(-btnW / 2, btnH / 2, 'START GAME', {
+      .text(btnW / 2, btnH / 2, 'START GAME', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '13px',
         fontStyle: 'bold',
@@ -401,7 +402,7 @@ export class Lobby extends Scene {
     this.startBtn.add(startLabel);
 
     const startZone = this.add
-      .zone(-btnW / 2, btnH / 2, btnW, btnH)
+      .zone(btnW / 2, btnH / 2, btnW, btnH)
       .setInteractive({ useHandCursor: true });
     this.startBtn.add(startZone);
 
