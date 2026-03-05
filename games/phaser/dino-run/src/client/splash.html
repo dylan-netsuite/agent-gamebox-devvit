@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" type="text/css" href="splash/splash.css" />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width, height=device-height, user-scalable=0"
+    />
+    <title>Dino Run</title>
+  </head>
+  <body class="app">
+    <div class="splash-bg">
+      <div class="ground-line"></div>
+      <div class="dino-track">
+        <div class="dino">
+          <div class="dino-body"></div>
+          <div class="dino-head">
+            <div class="dino-eye"></div>
+          </div>
+          <div class="dino-arm"></div>
+          <div class="dino-leg leg-l"></div>
+          <div class="dino-leg leg-r"></div>
+          <div class="dino-tail"></div>
+        </div>
+      </div>
+      <div class="cactus-track">
+        <div class="cactus c1"></div>
+        <div class="cactus c2"></div>
+        <div class="cactus c3"></div>
+      </div>
+      <div class="cloud-layer">
+        <div class="cloud cl1"></div>
+        <div class="cloud cl2"></div>
+        <div class="cloud cl3"></div>
+      </div>
+      <div class="splash-content">
+        <h1 class="splash-title">DINO RUN</h1>
+        <div class="chrome-badge">T-Rex Runner</div>
+        <div class="score-display" id="score-display">
+          <span class="score-label">HIGH SCORE</span>
+          <span class="score-value" id="high-score">---</span>
+        </div>
+        <button class="play-button" id="start-button">
+          <span class="play-label">PLAY</span>
+        </button>
+        <p class="splash-hint" id="subtitle">Space to jump · Down to duck · Avoid obstacles</p>
+      </div>
+    </div>
+    <script type="module" src="splash/splash.ts" defer></script>
+  </body>
+</html>
