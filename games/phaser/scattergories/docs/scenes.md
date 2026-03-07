@@ -29,6 +29,7 @@ GameOver -> ModeSelect or Lobby (rematch)
 - **File**: `scenes/ModeSelect.ts`
 - **Purpose**: Main menu with 4 options
 - **Options**: Single Player (vs AI, purple), Local Play (pass & play, green), Live Multiplayer (online, blue), Leaderboard (orange)
+- **Features**: Sound mute toggle (🔊/🔇) in top-right corner
 - **Animation**: Camera fade-in on scene enter
 
 ### DifficultySelect
@@ -73,6 +74,8 @@ GameOver -> ModeSelect or Lobby (rematch)
   - Round/timer display with urgency effects (pulse + red flash at ≤10s)
   - 12 category rows with DOM overlay text inputs
   - Submit button (or auto-submit on timer expiry)
+  - Answer progress counter ("X/12 answered") with color feedback
+  - Sound mute toggle in top-left corner
   - Player name badge in top-left for local mode with turn indicator
   - AI answer generation for single player mode
   - Player submission status indicators (multiplayer)
@@ -96,7 +99,7 @@ GameOver -> ModeSelect or Lobby (rematch)
 ### GameOver
 - **File**: `scenes/GameOver.ts`
 - **Purpose**: Final standings after 3 rounds
-- **Features**: Ranked player list with medals, total scores, mode-appropriate buttons (Rematch for online, Play Again for local, Back to Menu for all)
+- **Features**: Ranked player list with medals, total scores, tie detection ("It's a Tie!"), mode-appropriate buttons (Rematch for online, Play Again for single/local, Back to Menu for all)
 - **Animation**: Camera fade-in, title drop from above, winner text fade-in, score rows slide in sequentially, buttons fade in with staggered delays
 
 ### Leaderboard
