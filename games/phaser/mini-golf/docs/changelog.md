@@ -14,6 +14,7 @@
 - **Renamed mask variable in Scorecard**: Replaced `void mask` workaround with a descriptive `maskGraphics` variable name.
 - **Added `.env.example`**: Provides `DEVVIT_SUBREDDIT` and `PLAYWRIGHT_PLAYER` template for developer setup.
 
+
 ## v0.0.10 - Local Multiplayer (2026-03-07)
 
 ### Added
