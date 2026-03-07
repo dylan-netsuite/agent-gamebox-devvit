@@ -4,8 +4,7 @@ import { HOLES } from '../data/holes';
 import {
   PLAYER_COLORS,
   DEFAULT_PLAYER_NAMES,
-  type MultiplayerConfig,
-  type PlayerInfo,
+  createMultiplayerConfig,
   type MultiplayerScores,
 } from '../../../shared/types/multiplayer';
 import { fadeIn, transitionTo, SCENE_COLORS } from '../utils/transitions';
@@ -355,21 +354,11 @@ export class PlayerSetup extends Scene {
       if (val) this.playerNames[i] = val;
     }
 
-    const players: PlayerInfo[] = [];
-    for (let i = 0; i < this.playerCount; i++) {
-      const c = PLAYER_COLORS[i]!;
-      players.push({
-        id: i,
-        name: this.playerNames[i] || DEFAULT_PLAYER_NAMES[i]!,
-        color: c.fill,
-        colorHex: c.hex,
-      });
-    }
-
-    const config: MultiplayerConfig = { players };
+    const names = this.playerNames.slice(0, this.playerCount);
+    const config = createMultiplayerConfig(this.playerCount, names);
 
     const scores: MultiplayerScores = {};
-    for (const p of players) scores[p.id] = [];
+    for (const p of config.players) scores[p.id] = [];
 
     this.removeInputElements();
     transitionTo(
