@@ -90,6 +90,7 @@ export class GamePlay extends Scene {
   private turnStartClickConsumed = false;
   private tutorial: TutorialManager | null = null;
   private addedToSceneHandler: ((obj: Phaser.GameObjects.GameObject) => void) | null = null;
+  private gameRng: () => number = Math.random;
 
   constructor() {
     super('GamePlay');
@@ -141,6 +142,7 @@ export class GamePlay extends Scene {
     this.mapId = 'hills';
     this.turnDuration = DEFAULT_TURN_DURATION;
     this.uiContainers = new Set();
+    this.gameRng = Math.random;
     if (this.panReturnTimer) {
       this.panReturnTimer.destroy();
       this.panReturnTimer = null;
@@ -174,6 +176,7 @@ export class GamePlay extends Scene {
     this.cameras.main.setBackgroundColor('#87CEEB');
 
     const seed = data?.terrainSeed ?? Math.floor(Math.random() * 1_000_000);
+    this.gameRng = this.createSeededRng(seed);
     this.terrain = new TerrainEngine(this, WORLD_WIDTH, WORLD_HEIGHT, seed, this.mapId);
 
     this.drawSky();
@@ -224,6 +227,9 @@ export class GamePlay extends Scene {
                   this.requestNextTurn();
                 }
               });
+            } else if (this.isOnline && !this.isLocalTurn) {
+              // Remote turn online: wait for the active player's turn-advance message.
+              // Do NOT advance locally — that causes double-advance and state desync.
             } else {
               this.time.delayedCall(1200, () => {
                 if (this.weaponSystem.currentState === 'resolved' && !this.gameOver) {
@@ -343,7 +349,9 @@ export class GamePlay extends Scene {
       getState: () => this.weaponSystem.currentState,
     });
 
-    this.gameOverOverlay = this.add.container(0, 0).setDepth(500).setScrollFactor(0);
+    this.gameOverOverlay = this.addUIObject(
+      new Phaser.GameObjects.Container(this, 0, 0),
+    ).setDepth(500).setScrollFactor(0);
     this.gameOverOverlay.setVisible(false);
 
     if (data?.tutorial) {
@@ -367,6 +375,14 @@ export class GamePlay extends Scene {
     }
 
     this.startTurn();
+  }
+
+  private createSeededRng(seed: number): () => number {
+    let s = seed;
+    return () => {
+      s = (s * 16807 + 0) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
   }
 
   private get isOnline(): boolean {
@@ -615,7 +631,7 @@ export class GamePlay extends Scene {
       const charId = this.teamCharacters[t] ?? 'banana-sam';
 
       for (let w = 0; w < this.wormsPerTeam; w++) {
-        const x = baseX + (w - (this.wormsPerTeam - 1) / 2) * 100 + (Math.random() - 0.5) * 50;
+        const x = baseX + (w - (this.wormsPerTeam - 1) / 2) * 100 + (this.gameRng() - 0.5) * 50;
         const name = allNames[nameIdx % allNames.length] ?? `Worm ${nameIdx + 1}`;
         nameIdx++;
         const worm = new Worm(this, this.terrain, x, name, color, t, 100, charId);
@@ -726,7 +742,8 @@ export class GamePlay extends Scene {
   private settleWorms(onDone: () => void): void {
     let settling = true;
     let ticks = 0;
-    const maxTicks = 120;
+    const BASE_MAX_TICKS = 120;
+    const PARACHUTE_MAX_TICKS = 600;
 
     const check = () => {
       if (this.gameOver) {
@@ -735,13 +752,17 @@ export class GamePlay extends Scene {
       }
       ticks++;
       settling = false;
+      let anyParachuting = false;
       for (const w of this.worms) {
         if (w.alive) {
           if (w.isFallingDangerously() && !w.parachuteOpen) {
             w.openParachute();
           }
           w.update();
-          if (!w.isGrounded) settling = true;
+          if (!w.isGrounded) {
+            settling = true;
+            if (w.parachuteOpen) anyParachuting = true;
+          }
         }
       }
 
@@ -754,7 +775,8 @@ export class GamePlay extends Scene {
         return;
       }
 
-      if (settling && ticks < maxTicks) {
+      const effectiveMax = anyParachuting ? PARACHUTE_MAX_TICKS : BASE_MAX_TICKS;
+      if (settling && ticks < effectiveMax) {
         this.time.delayedCall(16, check);
       } else {
         onDone();
@@ -992,7 +1014,7 @@ export class GamePlay extends Scene {
     this.gameOverOverlay.removeAll(true);
     this.gameOverOverlay.setVisible(true);
 
-    const bg = this.add.graphics();
+    const bg = new Phaser.GameObjects.Graphics(this);
     bg.fillStyle(0x000000, 0.7);
     bg.fillRect(0, 0, cam.width, cam.height);
     bg.setInteractive(
@@ -1014,28 +1036,28 @@ export class GamePlay extends Scene {
       winnerLabel = 'Draw!';
     }
 
-    const title = this.add
-      .text(cam.width / 2, cam.height * 0.32, 'GAME OVER', {
+    const title = new Phaser.GameObjects.Text(
+      this, cam.width / 2, cam.height * 0.32, 'GAME OVER', {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '48px',
         fontStyle: 'bold',
         color: '#ffffff',
         stroke: '#000000',
         strokeThickness: 4,
-      })
-      .setOrigin(0.5);
+      },
+    ).setOrigin(0.5);
     this.gameOverOverlay.add(title);
 
-    const winner = this.add
-      .text(cam.width / 2, cam.height * 0.45, winnerLabel, {
+    const winner = new Phaser.GameObjects.Text(
+      this, cam.width / 2, cam.height * 0.45, winnerLabel, {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
         fontSize: '28px',
         fontStyle: 'bold',
         color: teamColor,
         stroke: '#000000',
         strokeThickness: 3,
-      })
-      .setOrigin(0.5);
+      },
+    ).setOrigin(0.5);
     this.gameOverOverlay.add(winner);
 
     const goToMenu = () => {
@@ -1054,26 +1076,24 @@ export class GamePlay extends Scene {
       this.scene.start('GamePlay', this.lastConfig ?? undefined);
     };
 
-    const newGameText = this.add
-      .text(cam.width / 2, cam.height * 0.58, '[ Play Again ]', {
+    const newGameText = new Phaser.GameObjects.Text(
+      this, cam.width / 2, cam.height * 0.58, '[ Play Again ]', {
         fontFamily: 'monospace',
         fontSize: '18px',
         fontStyle: 'bold',
         color: '#4ade80',
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+      },
+    ).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.gameOverOverlay.add(newGameText);
     newGameText.on('pointerdown', playAgain);
 
-    const menuText = this.add
-      .text(cam.width / 2, cam.height * 0.66, '[ Main Menu ]', {
+    const menuText = new Phaser.GameObjects.Text(
+      this, cam.width / 2, cam.height * 0.66, '[ Main Menu ]', {
         fontFamily: 'monospace',
         fontSize: '16px',
         color: '#aaaaaa',
-      })
-      .setOrigin(0.5)
-      .setInteractive({ useHandCursor: true });
+      },
+    ).setOrigin(0.5).setInteractive({ useHandCursor: true });
     this.gameOverOverlay.add(menuText);
     menuText.on('pointerdown', goToMenu);
 
@@ -1086,15 +1106,14 @@ export class GamePlay extends Scene {
     });
 
     if (this.isOnline && this.mp) {
-      const rematchText = this.add
-        .text(cam.width / 2, cam.height * 0.76, '[ REMATCH ]', {
+      const rematchText = new Phaser.GameObjects.Text(
+        this, cam.width / 2, cam.height * 0.76, '[ REMATCH ]', {
           fontFamily: 'monospace',
           fontSize: '16px',
           fontStyle: 'bold',
           color: '#3fb950',
-        })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true });
+        },
+      ).setOrigin(0.5).setInteractive({ useHandCursor: true });
       this.gameOverOverlay!.add(rematchText);
 
       rematchText.on('pointerdown', () => {

@@ -1,5 +1,36 @@
 # Reddit Royale - Changelog
 
+## [v0.0.20.2] - 2026-03-05 — Fix Multiplayer Desync, Lobby Overlap, Parachute Settling (wf-mp-bugfix-1772736381)
+
+### Fixed
+- **Lobby button overlap**: The READY and START GAME buttons in the multiplayer lobby overlapped by 110px. Repositioned both buttons with consistent `(0,0)` drawing origin and a 10px gap between them.
+- **Multiplayer state desync (worm positions)**: `Math.random()` was used for worm spawn position offsets in `spawnWorms()`, causing each client to place worms at different x-coordinates. Replaced with a seeded RNG derived from the shared `terrainSeed`, ensuring identical worm positions on all clients.
+- **Multiplayer turn advance desync (game not resolving)**: When a remote player fired and the weapon resolved on the local client, the code fell through to a generic `else` branch that called `advanceTurn()` locally. The remote player also sent a `turn-advance` message, causing the non-active client to advance twice with mismatched wind values. Added an explicit `else if (this.isOnline && !this.isLocalTurn)` branch that waits for the authoritative `turn-advance` message instead of locally advancing.
+- **Parachute settling timeout**: The `settleWorms()` loop had a fixed `maxTicks = 120` (~1.92s), but parachuting worms descend at only 0.8px/tick, covering just 96px before timeout. Increased to 600 ticks (~9.6s) dynamically when any worm has an active parachute, allowing 480px of descent.
+
+### Root Cause Summary
+The multiplayer desync had two compounding causes: (1) non-deterministic worm spawning via `Math.random()` placed worms at different positions on each client, and (2) the remote client's turn-advance logic fell through to the local-only `else` branch, double-advancing turns with unsynchronized wind values. Together these caused escalating state divergence that made games unresolvable.
+
+### Files Changed
+- `src/client/game/scenes/Lobby.ts` — button positioning fix
+- `src/client/game/scenes/GamePlay.ts` — seeded RNG, turn advance fix, parachute settling
+
+## [v0.0.20.1] - 2026-02-28 — Fix Game Over Screen Not Showing (wf-1772267000)
+
+### Fixed
+- **Game over screen invisible**: After winning a single player game, no game over screen appeared. The "GAME OVER" overlay, winner text, "Play Again", and "Main Menu" buttons were all invisible.
+
+### Root Cause
+`showGameOver()` created child objects using `this.add.graphics()` and `this.add.text()`, which added them to the scene's display list and triggered the `addedtoscene` event handler. The handler called `uiCamera.ignore(obj)` on each child because they weren't in `uiContainers`. Even though the children were inside the `gameOverOverlay` container (which IS a UI container), Phaser's container renderer checks each child's `willRender(camera)` individually — so the ignored children were invisible on the UI camera. The main camera also couldn't render them because it ignores the container itself.
+
+### Fix
+Changed all `this.add.*()` calls in `showGameOver()` to `new Phaser.GameObjects.*()` constructors. Objects created with `new` are not added to the scene's display list, so the `addedtoscene` handler doesn't fire and the children render correctly through the container. This is the same pattern used in `showPauseMenu()` and `buildHomeButton()`.
+
+Also changed the initial `gameOverOverlay` creation in `create()` to use `addUIObject()` for consistency.
+
+### Files Changed
+- `src/client/game/scenes/GamePlay.ts`
+
 ## [v0.0.18.23] - 2026-02-27 — Pause Menu, Play Again, Lifecycle Audit (wf-1772181000)
 
 ### Added

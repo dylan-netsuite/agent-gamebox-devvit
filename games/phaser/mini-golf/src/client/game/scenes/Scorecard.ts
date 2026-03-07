@@ -4,13 +4,15 @@ import { fadeIn, transitionTo, SCENE_COLORS } from '../utils/transitions';
 
 export class Scorecard extends Scene {
   private scores: number[] = [];
+  private startHoleIndex: number = 0;
 
   constructor() {
     super('Scorecard');
   }
 
-  init(data: { scores: number[]; viewOnly?: boolean }) {
+  init(data: { scores: number[]; startHoleIndex?: number; viewOnly?: boolean }) {
     this.scores = data.scores ?? [];
+    this.startHoleIndex = data.startHoleIndex ?? 0;
   }
 
   create() {
@@ -89,7 +91,8 @@ export class Scorecard extends Scene {
     for (let i = 0; i < HOLES.length; i++) {
       const hole = HOLES[i]!;
       const y = startY + (i + 1) * rowH;
-      const score = this.scores[i];
+      const scoreIdx = i - this.startHoleIndex;
+      const score = scoreIdx >= 0 && scoreIdx < this.scores.length ? this.scores[scoreIdx] : undefined;
       const hasScore = score !== undefined;
 
       if (i % 2 === 0) {

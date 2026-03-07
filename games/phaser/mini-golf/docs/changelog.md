@@ -1,5 +1,248 @@
 # Changelog
 
+## v0.0.9 - Simplify Bridge Physics (2026-02-26)
+
+### Fixed
+- **Bridge physics reverted & simplified**: Removed complex direction-aware velocity clamping and reversal kick overhaul. Replaced with a simple per-frame Y-velocity dampening (`0.995` multiplier) to gently slow the ball while preserving momentum. Reversal kick uses `sign(endY - startY)` at scaled speed `4` for a strong, clean ejection. Works correctly on both Hole 6 (upward bridge) and Hole 18 (downward bridge).
+
+## v0.0.8.1 - Fix Bridge Direction & Responsive Menu (2026-03-03)
+
+### Fixed
+- **Bridge physics**: Fixed bridge initial direction (`direction: -1` → `direction: 1`) to eliminate spurious reversal kick on first frame. Bridges now start moving toward their target naturally.
+- **Bridge reversal kick**: Kick now always pushes the ball in the direction the bridge is **about to travel** (`sign(endY-startY) * bridge.direction`), not a hardcoded direction. Fixes Hole 18 where the kick was pushing the ball upward (wrong way) instead of downward toward the green.
+- **Bridge relative velocity clamp**: Only clamps ball speed when it's outrunning the bridge in the bridge's current travel direction. Prevents the ball from sliding off the leading edge while leaving natural movement in all other directions untouched.
+- **Hole button text overlap**: Fixed "HOLE #" and hole name labels overlapping in the main menu by switching to anchor-based positioning (bottom-aligned header, top-aligned subtitle with scaled padding).
+
+### Changed
+- **Main menu responsiveness**: Improved fullscreen layout scaling — reference resolution changed from 1024×768 to 500×800, button widths scale up to 600×sf, hole grid uses 3 columns on wider screens (>700px), section headers and gaps scale with sf.
+
+## v0.0.3.242 - Shift H4 Bumper Left for Stronger Ricochet (2026-03-02)
+
+### Changed
+- **Hole 4**: Moved ricochet bumper from x:120 to x:105 (left of channel center at x:115). Ball now hits the right side of the bumper, producing a stronger rightward deflection toward the cup.
+
+## v0.0.3.239 - Lower H4 Cup for Better Ricochet Alignment (2026-03-02)
+
+### Changed
+- **Hole 4**: Moved cup from y:100 to y:125 (25 units below bumper center) so it aligns with the natural ricochet trajectory off the bumper. Ball hits bumper from below, deflects right and slightly downward into the cup.
+
+## v0.0.3.236 - Move H4 Cup Right for Ricochet Mechanic (2026-03-02)
+
+### Changed
+- **Hole 4**: Moved cup from x:115 (inline with needle channel) to x:200 (right of channel, above the island). Repositioned and enlarged the gumdrop bumper (x:120, y:100, radius:14) at the channel exit to deflect balls rightward toward the cup. Players must now ricochet off the bumper to sink from the narrow path.
+
+## v0.0.3.234 - Fix H2 Bunker Alignment + H4 Narrow Channel (2026-03-02)
+
+### Fixed
+- **Hole 2**: Moved bunker from x:230 to x:180 so it aligns exactly with the licorice wall barrier (both span x:180-280). Previously the bunker extended 50px past the corridor's right wall.
+- **Hole 4**: Narrowed the needle channel from 50px (x:70-120) to 30px (x:100-130) to restore the original difficulty. Shifted the whole layout right (outer wall x:100, island x:130, tee/cup x:115) so the channel is visible but genuinely challenging.
+
+## v0.0.7.95 - Final Hole Fixes: H2, H4, H15, H16 (2026-03-02)
+
+### Fixed
+- **Hole 2**: Added sand bunker back, sized to match the licorice wall width exactly (100px wide, placed at y:330 directly below the barrier).
+- **Hole 4**: Restored the super skinny needle channel (~50px design space, x:70-120) while shifting the outer wall left to x:70 so the channel remains visible. Tee at x:105, cup at x:100.
+- **Hole 15**: Removed bottom 3 peg rows (rows 10-12 at y:565, y:610, y:650) that were overlapping with the funnel and cup area. Shortened the ramp zone to stop before the funnel.
+- **Hole 16**: Shifted the entire invisible maze up by 30-40px (all barriers, dividers, and traps). Moved tee from y:120 to y:90, cup from y:700 to y:660, and adjusted outer walls (top y:70→40, bottom y:780→740) for generous bottom padding.
+
+## v0.0.3.229 - Fix Hole Feedback: H2, H4, H8, H9, H15, H16 (2026-03-02)
+
+### Fixed
+- **Hole 2**: Removed the sand bunker in front of the licorice barrier that was blocking hole-in-one shots.
+- **Hole 4**: Shifted entire layout rightward (tee x:95→160, cup x:90→155, island x:110-310→175-340, outer right wall x:420→450) so the needle channel and cup are fully visible and not hidden behind the left wall.
+- **Hole 8**: Moved the chocolate block barrier back to y:610 (was y:635) — the previous position was too close to the tee box.
+- **Hole 9**: Removed the angled block at (210, 440) that was placed directly over the hero shot gap, making the hole impossible.
+- **Hole 15**: Shifted cup from y:720 to y:640 and compressed the layout upward (walls to y:720, funnels at y:580-620) to provide generous bottom padding so the cup area isn't cut off by the HUD.
+- **Hole 16**: Shifted tee from y:100 to y:120, cup from y:680 to y:700, and adjusted outer walls (top y:50→70, bottom y:790→780) for better bottom padding.
+
+## v0.0.7.90 - Par Updates + Per-Hole Improvements (2026-03-02)
+
+### Changed
+- **Par values updated for 12 holes**: H3 (3→2), H4 (3→2), H5 (3→2), H7 (3→2), H8 (3→2), H9 (3→2), H10 (4→3), H11 (3→2), H15 (4→2), H16 (4→3), H17 (5→3), H18 (4→3). Total course par reduced from 58 to 46.
+- **Hole 1**: Added 4 decorative gumdrop bumpers along the edges (not in the ball path).
+- **Hole 2**: Added a sand bunker in front of the licorice barrier to slow approach shots.
+- **Hole 4**: Moved cup slightly left (x:95→90), added a gumdrop bumper top-left above the hole.
+- **Hole 5**: Added a sand bunker behind the hole to catch long shots.
+- **Hole 7**: Windmill speed increased from 1.2 to 1.8 for a faster, more challenging timing window.
+- **Hole 8**: Moved the chocolate block barrier from y:610 to y:635, closer to the tee box.
+- **Hole 9**: Removed the friction zone near the cup. Added a second bumper at (370,390) and an angled block at (210,440) for a more interesting approach.
+- **Hole 10**: Removed the cup approach friction zone — no more easy deceleration.
+- **Hole 11**: Cannon now preserves 30% of entry X velocity on exit, so approach angle slightly affects the exit trajectory.
+- **Hole 13**: Claw shadow radius increased (45→55) and speed increased (0.35→0.4) for more aggressive captures. When captured, ball resets to the tee instead of last shot position.
+- **Hole 15**: Added bottom padding (walls extended from y:770 to y:790).
+- **Hole 16**: Added bottom padding (walls extended from y:750 to y:790).
+
+## v0.0.7.87 - Fix Scorecard Hole Mapping + Direction-Aware Bridge Kick (2026-03-02)
+
+### Fixed
+- **Scorecard now shows scores on the correct hole row** when playing single holes, Front 9, or Back 9. Previously, scores always appeared starting from Hole 1 regardless of which hole was played. A `startHoleIndex` is now threaded through Game -> HoleComplete -> Scorecard to correctly offset the scores array.
+- **HoleComplete par totals** now use the correct hole definitions when computing running totals for partial rounds.
+- **Bridge reversal kick direction** is now derived from `Math.sign(endY - startY)` instead of being hardcoded downward. This fixes Hole 6's bridge (which moves upward) where the kick was pushing the ball the wrong way.
+- **Bridge carry no longer blocks ball entry** — removed the speed governor that was clamping ball velocity to near-zero at bridge endpoints (where smoothstep easing produces minimal movement). The carry now uses pure position-shifting like moving islands.
+
+## v0.0.7.69 - Free-Rolling Bridge Carry (2026-03-02)
+
+### Fixed
+- **Ball now rolls freely on the bridge** instead of being pinned/stuck. The carry logic now mirrors the moving island pattern: each frame, the ball's position is shifted by the bridge's Y delta without touching velocity. The ball retains its own physics (rolling, friction) and naturally slides off when the bridge reverses direction at endpoints, carried by its own inertia.
+
+## v0.0.7.67 - Fix Bridge Carry Physics (2026-03-02)
+
+### Fixed
+- **Ball no longer flies off the bridge** — Previously, the carry logic set the ball's velocity to the bridge's per-frame position delta, which doubled the movement and caused the ball to race ahead and fall off. Now the ball's position is pinned to the bridge center with zero velocity while riding, keeping it perfectly in sync.
+- **Bridge endpoint release** — When the bridge reaches the bottom of its travel (progress >= 97%), the ball receives a gentle downward push (2.5 scaled units) to roll it off toward the cup, simulating the deceleration "throw" effect.
+- **Carry threshold** uses relative velocity (ball vs bridge) rather than absolute speed, so the ball correctly enters carry mode regardless of the bridge's current speed.
+
+## v0.0.7.66 - Hole 18: Bumper Alignment + Taller Faster Bridge (2026-03-01)
+
+### Changed
+- **Top-right bumper repositioned** from (450, 60) to (360, 60) — now inline with the center of the Route B shortcut corridor instead of tucked in the corner.
+- **Bridge made taller**: height increased from 60px to 80px, providing a more generous landing surface.
+- **Bridge speed increased** from 0.35 to 0.45 — slightly faster traversal for better gameplay pacing.
+
+## v0.0.7.63 - Quality of Life: Water Reset, Bridge Carry, Bumper (2026-03-01)
+
+### Changed
+- **Water hazard reset**: Ball now returns to the position where the shot was taken, not the tee. This makes water penalties less punishing and more fair.
+- **Bridge carry mechanic**: When the ball comes to rest on a moving bridge, it now moves with the bridge. The ball only exits the bridge when the bridge's momentum (from direction changes at endpoints) pushes it off naturally. Ball won't transition to 'aiming' state while riding the bridge.
+- **New bumper**: Added a blue corner bumper at (450, 60) in the top-right of the tee area on Hole 18, creating a ricochet point near the Route B corridor entrance.
+
+## v0.0.7.57 - Hole 18: Bridge Over Real Water Hazard (2026-03-01)
+
+### Changed
+- **Bridge corridor floor is now water** — the entire corridor (x:340-420, y:130-620) has water underneath. The moving bridge is the only safe surface.
+- **Bridge made much larger**: 140px wide × 80px tall (was 80×20), filling most of the corridor and providing a generous landing surface.
+- **Bridge oscillates y:200-560** across the full corridor length at slow speed (0.3).
+- **Cup moved to (380, 720)** directly below the bridge center — clear shot after crossing.
+- **Bumpers repositioned** to block Route A's left approach to the cup, making Route B the easier finishing path if you survive the bridge.
+- Water visually fills the corridor, making it obvious the bridge is crossing a real hazard.
+
+## v0.0.7.49 - Hole 18: Add Corner Bumpers (2026-03-01)
+
+### Added
+- Three blue corner bumpers at key wall intersections on Hole 18:
+  - Top-left corner (50, 60) — ricochet off the outer boundary corner
+  - Dogleg corner (50, 335) — bounce off the Leg 1→Leg 2 turn
+  - Bottom-left corner (50, 750) — ricochet near the green exit
+- Adds fun ricochet opportunities at Route A's turns
+
+## v0.0.7.47 - Hole 18: Complete Redesign with Proper Two Routes (2026-03-01)
+
+### Changed
+- **Shared tee area** at top-center (250, 90) with open space and divider wall with gaps for both routes
+- **Route A ("Dogleg Gauntlet")**: Two-leg zigzag on the left with windmill, tongues, and bumpers. Fully playtested — completable in 4-5 shots
+- **Route B ("Skinny Bridge")**: 40-unit-wide bridge on the right dropping to a moving bridge that crosses water to the green. High risk, possible 2-3 shot completion
+- Fixed Route A being blocked by sealed walls — clear dogleg openings now verified
+- Fixed Route B being inaccessible from tee — both routes now share an open tee area
+- Cup moved to center-bottom (250, 720) for balanced convergence from both routes
+- Iterated 3 times to ensure both routes are structurally sound and playable
+
+## v0.0.7.39 - Hole 18: Redesigned with Two Routes (2026-02-28)
+
+### Changed
+- **Two-route design**: Route A (safe, left corridor) and Route B (risky, skinny bridge on right)
+- **Route A**: Wide corridor with centrifuge windmill (speed 2.0) and crusher gates — 3-4 shot path
+- **Route B**: Ultra-narrow 40-unit bridge over taffy void with a moving bridge — possible hole-in-one
+- **Tee moved to top-left** (100, 90), **cup to bottom-right** (380, 700) for a longer course
+- **Green area expanded**: full width at bottom (x:50-460, y:550-760) with bumper obstacles for kinetic finishes
+- Added `moving_bridge` obstacle (x:370, y:380→550) connecting skinny bridge to green
+- Added `gumdrop_bumper` at (200, 630) to redirect Route A shots toward cup
+- Water hazards: central void (x:200-370, y:60-550), right void (x:410-470, y:60-550)
+
+## v0.0.7.37 - Hole 18: The Jawbreaker Centrifuge — Initial (2026-02-28)
+
+### Added
+- **Hole 18: The Jawbreaker Centrifuge** — the final boss hole, a narrow bridge gauntlet over a massive water void
+- **The Centrifuge**: 2-blade windmill (speed 2.5, blade length 95) spinning at the corridor center, deflecting poorly-timed shots
+- **The Crusher Gates**: Two opposing tongues thrusting from both walls with opposite phase offsets, slamming shut on a timer
+- **The Kinetic Bumper Finish**: Central super bumper (red) flanked by two smaller bumpers (orange) that ricochet the ball toward the cup
+- No new obstacle types — composed entirely from existing `windmill`, `tongue`, and `bumper` mechanics
+- Completes the full 18-hole Sugar Rush course
+
+## v0.0.7.34 - Hole 17: Redesigned with 5 Islands (2026-02-28)
+
+### Changed
+- **Expanded to 5 islands** (was 3): green (0.35), blue (0.45), orange (0.55), pink (0.65), purple (0.75) — progressively faster and narrower
+- **Fixed inaccessible green**: removed top wall that fully enclosed the cup area, now open from above
+- **Narrower green platform**: reduced from 170px to 110px wide (x:350-460)
+- **Wider water hazards**: left (x:30, w:90) and right (x:390, w:80) for more danger
+- Cup moved to (400, 730) to center in narrower green
+
+## v0.0.7.29 - Hole 17: The Moving Island Sequence (2026-02-27)
+
+### Added
+- **Hole 17: The Moving Island Sequence** — grueling par 5 across a vast water void
+- New `moving_island` obstacle type: laterally oscillating platforms with Matter.js static bodies
+- **Velocity inheritance**: ball physically rests on island bodies and inherits lateral movement via per-frame position delta
+- Three color-coded islands at different speeds (green 0.4, blue 0.55, pink 0.7) with hermite smoothstep easing
+- `isBallOnIsland()` method integrates with water zone safety checks (ball on island = immune to water)
+- Islands rendered with candy-themed rounded rectangles, highlights, shadows, and stroke borders
+- Water zones on left/right edges penalize balls carried off-screen by island movement
+
+## v0.0.7.22 - Hole 16: Added H5 barrier near cup (2026-02-27)
+
+### Changed
+- **Added H5 invisible barrier near the cup** at y=640, blocking x:310-450
+- Combined with existing trap wall (x:130-270), creates a tight 40-unit gap at x:270-310
+- Requires an extra precise shot to thread the needle before reaching the hole
+- Verified playable: completed in 4 strokes (par) during testing
+
+## v0.0.3.159 - Hole 16: The Invisible Maze (2026-02-27)
+
+### Added
+- **Hole 16: The Invisible Maze** — psychologically taxing par 4 with hidden walls
+- New `invisible_wall` obstacle type: fully transparent static wall segments
+- **Flash-on-impact mechanic**: invisible walls flash white for ~330ms when the ball collides, then fade back to full transparency
+- Serpentine maze layout with alternating horizontal barriers (gaps left/right) and vertical dividers
+- Dead-end trap walls to punish blind shots
+- Matter.js engine collision pair detection for reliable flash triggering
+
+## v0.0.7.11 - Hole 15: The Cascading Plinko Board (2026-02-27)
+
+### Added
+- **Hole 15: The Cascading Plinko Board** — chaotic plinko/pachinko-inspired par 4
+- Tee at top, cup at bottom — ball cascades down through a dense field of staggered pegs
+- 12 rows of small high-restitution pegs in a rainbow candy color gradient (gold, orange, red, pink, purple, blue, teal, lime)
+- Constant downward ramp force across the entire fairway simulates a steep vertical slope
+- Funnel walls at the bottom guide the ball toward the cup zone
+- Deep sand traps flank the cup on both sides, punishing imprecise cascades
+- Deterministic physics ensures a specific angle/power combo can navigate the pegs perfectly
+
+## v0.0.7.8 - Hole 14: Rewrote Gravity Force Model (2026-02-27)
+
+### Fixed
+- **Completely rewrote gravity force formula** — old inverse-square model (`F = strength / dist²`) produced near-zero forces because screen-pixel distances made the denominator enormous. New model normalizes distance to 0-1 within the attract radius and applies `F = strength × t²` where t=0 at the edge and t=1 at the dead zone. Forces are now resolution-independent and genuinely powerful.
+- **Increased well radii** (55/50/50 → 60/55/55) for a larger zone of influence
+- Ball now visibly curves when passing near a well's edge and gets sucked in if moving too slowly
+
+## v0.0.7.4 - Hole 14: Even Stronger Gravity + Colored Bumpers (2026-02-27)
+
+### Changed
+- **Gravity strength doubled again** (0.006–0.008 → 0.012–0.016) — wells are now extremely aggressive
+- **Bumpers now have distinct colors** — cyan, hot pink, lime, and orange for visual clarity and personality
+
+## v0.0.3.147 - Hole 14: Layout Overhaul + Stronger Gravity (2026-02-27)
+
+### Changed
+- **Gravity strength increased 5-8x** (0.0008–0.0012 → 0.006–0.008) — wells now aggressively pull the ball and frequently swallow it
+- **Completely redesigned layout** — replaced rectangular boundary and horizontal walls with an irregular angular polygon and three diagonal chicane walls, making Hole 14 visually distinct from Hole 13
+- **Added 4 gumdrop bumpers** at key turning points to create ricochet opportunities
+- **Removed friction zone** (bunker) around the cup — no more easy deceleration on approach
+
+## v0.0.7.1 - Hole 14: Gravity Wells and Black Holes (2026-02-27)
+
+### Added
+- **Hole 14: Gravity Wells** — space-themed par 4 with three spinning gravity vortexes
+- **Gravity well obstacle type** (`'gravity_well'`) — new obstacle with inverse-square attraction physics
+  - Attracts ball within configurable outer radius using `F = strength / dist²`
+  - Dead zone at center (18% of radius) swallows ball, triggering +1 penalty and tee reset
+  - Spinning purple vortex visual with 4 spiral arms, orbiting dots, dark center, and outer glow
+  - Configurable strength per well for difficulty tuning
+- **S-curve layout** — two horizontal walls block the direct path, forcing navigation around gravity wells
+  - First turn requires passing Well A (r=55) to reach right-side gap
+  - Second turn requires passing Well B (r=50) to reach left-side gap
+  - Cup approach guarded by Well C (r=45)
+- **Slingshot mechanic** — skilled players can use the outer edges of gravity wells to curve the ball past walls
+
 ## v0.0.3.144 - Hole 13: Ball Immune When Stopped (2026-02-27)
 
 ### Fixed

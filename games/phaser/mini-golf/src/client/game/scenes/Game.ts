@@ -27,6 +27,7 @@ export class Game extends Scene {
   private state: GameState = 'aiming';
   private currentHoleIndex: number = 0;
   private endHoleIndex: number = HOLES.length - 1;
+  private startHoleIndex: number = 0;
   private strokes: number = 0;
   private scores: number[] = [];
   private lastBallPos: { x: number; y: number } = { x: 0, y: 0 };
@@ -42,9 +43,10 @@ export class Game extends Scene {
     super('Game');
   }
 
-  init(data?: { holeIndex?: number; endHoleIndex?: number; scores?: number[] }) {
+  init(data?: { holeIndex?: number; endHoleIndex?: number; startHoleIndex?: number; scores?: number[] }) {
     this.currentHoleIndex = data?.holeIndex ?? 0;
     this.endHoleIndex = data?.endHoleIndex ?? HOLES.length - 1;
+    this.startHoleIndex = data?.startHoleIndex ?? this.currentHoleIndex;
     this.scores = data?.scores ?? [];
     this.strokes = 0;
     this.state = 'aiming';
@@ -180,6 +182,15 @@ export class Game extends Scene {
           break;
         case 'claw':
           this.obstacles.addClaw(obs);
+          break;
+        case 'gravity_well':
+          this.obstacles.addGravityWell(obs);
+          break;
+        case 'invisible_wall':
+          this.obstacles.addInvisibleWall(obs);
+          break;
+        case 'moving_island':
+          this.obstacles.addMovingIsland(obs);
           break;
       }
     }
@@ -377,13 +388,26 @@ export class Game extends Scene {
     const clawBall = this.state === 'simulating' ? this.ball : undefined;
     const clawResult = this.obstacles.updateClaws(delta, clawBall);
     if (clawResult.grabbed) {
+      const def = HOLES[this.currentHoleIndex]!;
+      if (def.clawResetToTee) {
+        const teePos = toScreen(this, def.tee.x, def.tee.y);
+        this.lastBallPos = { x: teePos.x, y: teePos.y };
+      }
       this.handleWaterHazard();
       return;
     }
     if (this.obstacles.isClawGrabbing()) return;
+    const wellResult = this.obstacles.updateGravityWells(delta, this.state === 'simulating' ? this.ball : undefined);
+    if (wellResult.swallowed) {
+      this.handleWaterHazard();
+      return;
+    }
+    this.obstacles.updateInvisibleWalls(delta, this.state === 'simulating' ? this.ball : undefined);
+    this.obstacles.updateMovingIslands(delta, this.state === 'simulating' ? this.ball : undefined);
 
     this.ball.update();
     this.ball.clampSpeed(MAX_SHOT_VELOCITY * getScaleFactor(this).s * 1.5);
+    this.obstacles.carryBallOnBridge(this.ball);
     this.powerMeter.update(delta);
 
     if (this.state === 'aiming') {
@@ -410,7 +434,7 @@ export class Game extends Scene {
         return;
       }
 
-      if (this.ball.isStopped() && !this.obstacles.isCannonAnimating()) {
+      if (this.ball.isStopped() && !this.obstacles.isCannonAnimating() && !this.obstacles.isBallRidingBridge(this.ball)) {
         this.state = 'aiming';
         this.arrow.setVisible(true);
         this.arrow.updatePosition(this.ball.body.position.x, this.ball.body.position.y);
@@ -436,6 +460,9 @@ export class Game extends Scene {
     this.matter.body.setVelocity(this.ball.body, { x: 0, y: 0 });
     this.matter.body.setStatic(this.ball.body, true);
 
+    const resetX = this.lastBallPos.x;
+    const resetY = this.lastBallPos.y;
+
     this.tweens.add({
       targets: this.ball.graphics,
       scaleX: 0.3,
@@ -448,13 +475,11 @@ export class Game extends Scene {
         this.ball.graphics.setScale(1);
         this.ball.graphics.setAlpha(1);
 
-        const def = HOLES[this.currentHoleIndex]!;
-        const teePos = toScreen(this, def.tee.x, def.tee.y);
-        this.ball.setPosition(teePos.x, teePos.y);
+        this.ball.setPosition(resetX, resetY);
 
         this.state = 'aiming';
         this.arrow.setVisible(true);
-        this.arrow.updatePosition(teePos.x, teePos.y);
+        this.arrow.updatePosition(resetX, resetY);
       },
     });
   }
@@ -505,12 +530,13 @@ export class Game extends Scene {
         this.scene.start('HoleComplete', {
           holeIndex: this.currentHoleIndex,
           endHoleIndex: this.endHoleIndex,
+          startHoleIndex: this.startHoleIndex,
           strokes: this.strokes,
           par: HOLES[this.currentHoleIndex]!.par,
           scores: this.scores,
         });
       } else {
-        this.scene.start('Scorecard', { scores: this.scores });
+        this.scene.start('Scorecard', { scores: this.scores, startHoleIndex: this.startHoleIndex });
       }
     });
   }

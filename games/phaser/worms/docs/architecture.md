@@ -157,5 +157,7 @@ games/phaser/worms/
 ### MultiplayerManager
 - Connects to Devvit Realtime API channels
 - Static methods for lobby CRUD (create, join, find open)
+- Turn synchronization: only the active player's client sends `turn-advance` after weapon resolution; all other clients wait for this message
+- Seeded RNG (`gameRng`) derived from `terrainSeed` ensures deterministic worm spawning across all clients
 - Instance methods for in-game actions (sendAction, sendTurnResult, etc.)
 - All API calls include `lobbyCode` in the request body

@@ -26,7 +26,9 @@ export type ObstacleType =
   | 'block'
   | 'licorice_wall'
   | 'gumdrop_bumper'
-  | 'claw';
+  | 'claw'
+  | 'invisible_wall'
+  | 'moving_island';
 
 export interface ObstacleDef {
   type: ObstacleType;
@@ -99,6 +101,8 @@ interface MovingBridgeData {
   speed: number;
   progress: number;
   direction: 1 | -1;
+  velocityY: number;
+  reversedDir: 1 | -1 | 0;
 }
 
 interface TongueData {
@@ -141,8 +145,19 @@ interface CannonData {
   animProgress: number;
   animDuration: number;
   entrySpeed: number;
+  entryVx: number;
   rejected: boolean;
   exitGraceMs: number;
+}
+
+interface GravityWellData {
+  graphics: Phaser.GameObjects.Graphics;
+  centerX: number;
+  centerY: number;
+  attractRadius: number;
+  deadRadius: number;
+  strength: number;
+  phase: number;
 }
 
 interface ClawData {
@@ -163,6 +178,32 @@ interface ClawData {
   currentShadowY: number;
 }
 
+interface InvisibleWallData {
+  body: MatterJS.BodyType;
+  graphics: Phaser.GameObjects.Graphics;
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+  angle: number;
+  flashAlpha: number;
+}
+
+interface MovingIslandData {
+  body: MatterJS.BodyType;
+  graphics: Phaser.GameObjects.Graphics;
+  startX: number;
+  endX: number;
+  currentX: number;
+  cy: number;
+  width: number;
+  height: number;
+  speed: number;
+  progress: number;
+  direction: 1 | -1;
+  color: number;
+}
+
 export class Obstacles {
   scene: Phaser.Scene;
   private zones: ActiveZone[] = [];
@@ -173,6 +214,9 @@ export class Obstacles {
   private cannons: CannonData[] = [];
   private conveyors: ConveyorData[] = [];
   private claws: ClawData[] = [];
+  private gravityWells: GravityWellData[] = [];
+  private invisibleWalls: InvisibleWallData[] = [];
+  private movingIslands: MovingIslandData[] = [];
   private bodies: MatterJS.BodyType[] = [];
   private gameObjects: Phaser.GameObjects.GameObject[] = [];
   private graphics: Phaser.GameObjects.Graphics;
@@ -694,6 +738,108 @@ export class Obstacles {
     return this.claws.some(c => c.grabbing);
   }
 
+  addGravityWell(obs: ObstacleDef): void {
+    const pos = toScreen(this.scene, obs.x, obs.y);
+    const attractRadius = scaleValue(this.scene, obs.radius ?? 50);
+    const deadRadius = scaleValue(this.scene, (obs.radius ?? 50) * 0.18);
+    const strength = obs.speed ?? 0.0012;
+
+    const graphics = this.scene.add.graphics();
+    graphics.setDepth(2);
+    this.gameObjects.push(graphics);
+
+    this.gravityWells.push({
+      graphics,
+      centerX: pos.x,
+      centerY: pos.y,
+      attractRadius,
+      deadRadius,
+      strength,
+      phase: 0,
+    });
+  }
+
+  updateGravityWells(delta: number, ball?: GolfBall): { swallowed: boolean } {
+    let swallowed = false;
+
+    for (const well of this.gravityWells) {
+      well.phase += (delta / 1000) * 2.5;
+
+      const g = well.graphics;
+      g.clear();
+
+      const ar = well.attractRadius;
+      const dr = well.deadRadius;
+
+      // Outer glow
+      g.fillStyle(0x2200aa, 0.08);
+      g.fillCircle(well.centerX, well.centerY, ar * 1.2);
+      g.fillStyle(0x3300bb, 0.12);
+      g.fillCircle(well.centerX, well.centerY, ar);
+
+      // Spiral arms
+      const armCount = 4;
+      for (let a = 0; a < armCount; a++) {
+        const baseAngle = well.phase + (a * Math.PI * 2) / armCount;
+        g.lineStyle(2, 0x9944ff, 0.5);
+        g.beginPath();
+        for (let t = 0; t < 1; t += 0.02) {
+          const spiralR = dr + (ar - dr) * t;
+          const spiralAngle = baseAngle + t * Math.PI * 2.5;
+          const sx = well.centerX + Math.cos(spiralAngle) * spiralR;
+          const sy = well.centerY + Math.sin(spiralAngle) * spiralR;
+          if (t === 0) g.moveTo(sx, sy);
+          else g.lineTo(sx, sy);
+        }
+        g.strokePath();
+      }
+
+      // Mid-ring
+      g.lineStyle(1.5, 0x7733dd, 0.3);
+      g.strokeCircle(well.centerX, well.centerY, ar * 0.6);
+
+      // Inner vortex
+      g.fillStyle(0x110033, 0.7);
+      g.fillCircle(well.centerX, well.centerY, dr * 2);
+      g.fillStyle(0x000000, 0.9);
+      g.fillCircle(well.centerX, well.centerY, dr);
+
+      // Orbiting dots
+      for (let i = 0; i < 6; i++) {
+        const orbitR = dr * 1.5 + (ar - dr) * (i / 6) * 0.7;
+        const dotAngle = well.phase * (1.5 - i * 0.15) + (i * Math.PI) / 3;
+        const dotX = well.centerX + Math.cos(dotAngle) * orbitR;
+        const dotY = well.centerY + Math.sin(dotAngle) * orbitR;
+        const alpha = 0.4 + 0.3 * Math.sin(well.phase * 3 + i);
+        g.fillStyle(0xbb77ff, alpha);
+        g.fillCircle(dotX, dotY, 2);
+      }
+
+      if (!ball) continue;
+
+      const bx = ball.body.position.x;
+      const by = ball.body.position.y;
+      const dx = well.centerX - bx;
+      const dy = well.centerY - by;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < dr) {
+        swallowed = true;
+        continue;
+      }
+
+      if (dist < ar) {
+        const t = 1 - (dist - dr) / (ar - dr);
+        const pull = well.strength * t * t;
+        const fx = (dx / dist) * pull;
+        const fy = (dy / dist) * pull;
+        this.scene.matter.body.applyForce(ball.body, ball.body.position, { x: fx, y: fy });
+      }
+    }
+
+    return { swallowed };
+  }
+
   private generateTangledPath(
     entry: { x: number; y: number },
     exit: { x: number; y: number },
@@ -917,25 +1063,34 @@ export class Obstacles {
       speed: def.speed ?? 0.8,
       progress: 0,
       direction: -1,
+      velocityY: 0,
+      reversedDir: 0,
     });
   }
 
   updateBridges(delta: number): void {
     for (const bridge of this.bridges) {
+      const prevY = bridge.currentY;
+      const prevDir = bridge.direction;
+
       bridge.progress += (bridge.speed * bridge.direction * delta) / 1000;
+      bridge.reversedDir = 0;
 
       if (bridge.progress >= 1) {
         bridge.progress = 1;
         bridge.direction = -1;
+        if (prevDir === 1) bridge.reversedDir = 1;
       } else if (bridge.progress <= 0) {
         bridge.progress = 0;
         bridge.direction = 1;
+        if (prevDir === -1) bridge.reversedDir = -1;
       }
 
       const t = bridge.progress;
       const eased = t * t * (3 - 2 * t);
       const cy = bridge.startY + (bridge.endY - bridge.startY) * eased;
       bridge.currentY = cy;
+      bridge.velocityY = cy - prevY;
 
       const g = bridge.graphics;
       g.clear();
@@ -974,6 +1129,124 @@ export class Obstacles {
       g.fillRect(x, y - railH, bridge.width, railH);
       g.fillRect(x, y + bridge.height, bridge.width, railH);
     }
+  }
+
+  addMovingIsland(def: ObstacleDef): void {
+    const startPos = toScreen(this.scene, def.x, def.y);
+    const endPos = toScreen(this.scene, def.targetX ?? def.x, def.y);
+    const w = scaleValue(this.scene, def.width ?? 80);
+    const h = scaleValue(this.scene, def.height ?? 35);
+
+    const body = this.scene.matter.add.rectangle(startPos.x, startPos.y, w, h, {
+      isStatic: true,
+      label: 'moving_island',
+      friction: 1,
+      restitution: 0.2,
+    });
+    this.bodies.push(body);
+
+    const g = this.scene.add.graphics();
+    g.setDepth(7);
+
+    this.movingIslands.push({
+      body,
+      graphics: g,
+      startX: startPos.x,
+      endX: endPos.x,
+      currentX: startPos.x,
+      cy: startPos.y,
+      width: w,
+      height: h,
+      speed: def.speed ?? 0.6,
+      progress: 0,
+      direction: 1,
+      color: def.color ?? 0x66cc66,
+    });
+  }
+
+  updateMovingIslands(delta: number, ball?: GolfBall): void {
+    for (const island of this.movingIslands) {
+      const prevX = island.currentX;
+
+      island.progress += (island.speed * island.direction * delta) / 1000;
+
+      if (island.progress >= 1) {
+        island.progress = 1;
+        island.direction = -1;
+      } else if (island.progress <= 0) {
+        island.progress = 0;
+        island.direction = 1;
+      }
+
+      const t = island.progress;
+      const eased = t * t * (3 - 2 * t);
+      const cx = island.startX + (island.endX - island.startX) * eased;
+      island.currentX = cx;
+
+      const dx = cx - prevX;
+
+      this.scene.matter.body.setPosition(island.body, { x: cx, y: island.cy });
+
+      if (ball) {
+        const bx = ball.body.position.x;
+        const by = ball.body.position.y;
+        const ballR = scaleValue(this.scene, 6);
+        const halfW = island.width / 2;
+        const halfH = island.height / 2;
+
+        const onIsland =
+          bx >= cx - halfW - ballR &&
+          bx <= cx + halfW + ballR &&
+          by >= island.cy - halfH - ballR * 2 &&
+          by <= island.cy + halfH + ballR;
+
+        if (onIsland) {
+          this.scene.matter.body.setPosition(ball.body, {
+            x: ball.body.position.x + dx,
+            y: ball.body.position.y,
+          });
+        }
+      }
+
+      const g = island.graphics;
+      g.clear();
+
+      const halfW = island.width / 2;
+      const halfH = island.height / 2;
+      const x = cx - halfW;
+      const y = island.cy - halfH;
+
+      g.fillStyle(island.color, 1);
+      g.fillRoundedRect(x, y, island.width, island.height, 4);
+
+      g.fillStyle(0xffffff, 0.25);
+      g.fillRoundedRect(x + 2, y + 2, island.width - 4, halfH * 0.6, 3);
+
+      g.fillStyle(0x000000, 0.15);
+      g.fillRect(x + 2, y + island.height - halfH * 0.4, island.width - 4, halfH * 0.4);
+
+      g.lineStyle(2, 0xffffff, 0.5);
+      g.strokeRoundedRect(x, y, island.width, island.height, 4);
+    }
+  }
+
+  isBallOnIsland(ball: GolfBall): boolean {
+    const bx = ball.body.position.x;
+    const by = ball.body.position.y;
+    const ballR = scaleValue(this.scene, 6);
+    for (const island of this.movingIslands) {
+      const halfW = island.width / 2;
+      const halfH = island.height / 2;
+      if (
+        bx >= island.currentX - halfW - ballR &&
+        bx <= island.currentX + halfW + ballR &&
+        by >= island.cy - halfH - ballR * 2 &&
+        by <= island.cy + halfH + ballR
+      ) {
+        return true;
+      }
+    }
+    return false;
   }
 
   addTongue(def: ObstacleDef): void {
@@ -1127,6 +1400,7 @@ export class Obstacles {
       animProgress: 0,
       animDuration: 800,
       entrySpeed: 0,
+      entryVx: 0,
       rejected: false,
       exitGraceMs: 0,
     });
@@ -1267,7 +1541,7 @@ export class Obstacles {
           ball.body.collisionFilter.mask = 0xffffffff;
 
           const exitSpeed = c.entrySpeed * c.exitVelocityScale;
-          this.scene.matter.body.setVelocity(ball.body, { x: 0, y: -exitSpeed });
+          this.scene.matter.body.setVelocity(ball.body, { x: c.entryVx * 0.3, y: -exitSpeed });
 
           ball.graphics.setScale(1);
           ball.graphics.setDepth(10);
@@ -1349,6 +1623,7 @@ export class Obstacles {
         c.animating = true;
         c.animProgress = 0;
         c.entrySpeed = speed;
+        c.entryVx = vx;
 
         ball.body.collisionFilter.mask = 0;
         this.scene.matter.body.setStatic(ball.body, true);
@@ -1524,6 +1799,64 @@ export class Obstacles {
     }
   }
 
+  carryBallOnBridge(ball: GolfBall): void {
+    const bx = ball.body.position.x;
+    const by = ball.body.position.y;
+    const ballR = scaleValue(this.scene, 6);
+
+    for (const bridge of this.bridges) {
+      const halfW = bridge.width / 2;
+      const halfH = bridge.height / 2;
+      const onBridge =
+        bx >= bridge.cx - halfW - ballR &&
+        bx <= bridge.cx + halfW + ballR &&
+        by >= bridge.currentY - halfH - ballR * 2 &&
+        by <= bridge.currentY + halfH + ballR;
+
+      if (!onBridge) continue;
+
+      if (bridge.reversedDir === 1) {
+        const kickSpeed = scaleValue(this.scene, 4);
+        const kickDir = Math.sign(bridge.endY - bridge.startY);
+        this.scene.matter.body.setVelocity(ball.body, {
+          x: ball.body.velocity.x,
+          y: kickDir * kickSpeed,
+        });
+        return;
+      }
+
+      this.scene.matter.body.setVelocity(ball.body, {
+        x: ball.body.velocity.x,
+        y: ball.body.velocity.y * 0.995,
+      });
+
+      this.scene.matter.body.setPosition(ball.body, {
+        x: bx,
+        y: by + bridge.velocityY,
+      });
+      return;
+    }
+  }
+
+  isBallRidingBridge(ball: GolfBall): boolean {
+    const bx = ball.body.position.x;
+    const by = ball.body.position.y;
+    const ballR = scaleValue(this.scene, 6);
+    for (const bridge of this.bridges) {
+      const halfW = bridge.width / 2;
+      const halfH = bridge.height / 2;
+      if (
+        bx >= bridge.cx - halfW - ballR &&
+        bx <= bridge.cx + halfW + ballR &&
+        by >= bridge.currentY - halfH - ballR * 2 &&
+        by <= bridge.currentY + halfH + ballR
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private isBallOnBridge(ball: GolfBall): boolean {
     const bx = ball.body.position.x;
     const by = ball.body.position.y;
@@ -1549,7 +1882,7 @@ export class Obstacles {
     const bx = ball.body.position.x;
     const by = ball.body.position.y;
 
-    const onBridge = this.isBallOnBridge(ball);
+    const onBridge = this.isBallOnBridge(ball) || this.isBallOnIsland(ball);
 
     for (const zone of this.zones) {
       if (!zone.rect.contains(bx, by)) continue;
@@ -1640,6 +1973,84 @@ export class Obstacles {
     return { inWater, teleported };
   }
 
+  addInvisibleWall(def: ObstacleDef): void {
+    const pos = toScreen(this.scene, def.x, def.y);
+    const w = scaleValue(this.scene, def.width ?? 60);
+    const h = scaleValue(this.scene, def.height ?? 8);
+    const angle = def.angle ?? 0;
+
+    const body = this.scene.matter.add.rectangle(pos.x, pos.y, w, h, {
+      isStatic: true,
+      angle,
+      restitution: 0.6,
+      friction: 0.05,
+      label: 'invisible_wall',
+    });
+    this.bodies.push(body);
+
+    const gfx = this.scene.add.graphics();
+    gfx.setDepth(10);
+    gfx.setAlpha(0);
+
+    this.invisibleWalls.push({
+      body,
+      graphics: gfx,
+      cx: pos.x,
+      cy: pos.y,
+      w,
+      h,
+      angle,
+      flashAlpha: 0,
+    });
+  }
+
+  updateInvisibleWalls(delta: number, ball?: GolfBall): void {
+    const FADE_SPEED = 3.0;
+
+    if (ball && this.invisibleWalls.length > 0) {
+      const engine = (this.scene.matter.world as unknown as { engine: { pairs: { list: { bodyA: MatterJS.BodyType; bodyB: MatterJS.BodyType; isActive: boolean }[] } } }).engine;
+      const pairs = engine?.pairs?.list;
+      if (pairs) {
+        for (const pair of pairs) {
+          if (!pair.isActive) continue;
+          const a = pair.bodyA;
+          const b = pair.bodyB;
+          for (const iw of this.invisibleWalls) {
+            if (iw.flashAlpha > 0) continue;
+            const hitsBall =
+              (a === iw.body && b === ball.body) ||
+              (b === iw.body && a === ball.body);
+            if (hitsBall) {
+              iw.flashAlpha = 1.0;
+            }
+          }
+        }
+      }
+    }
+
+    for (const iw of this.invisibleWalls) {
+      if (iw.flashAlpha > 0) {
+        iw.graphics.clear();
+        iw.graphics.setAlpha(iw.flashAlpha);
+        iw.graphics.save();
+        iw.graphics.translateCanvas(iw.cx, iw.cy);
+        iw.graphics.rotateCanvas(iw.angle);
+        iw.graphics.fillStyle(0xffffff, 0.9);
+        iw.graphics.fillRect(-iw.w / 2, -iw.h / 2, iw.w, iw.h);
+        iw.graphics.lineStyle(1, 0xaaddff, 0.7);
+        iw.graphics.strokeRect(-iw.w / 2, -iw.h / 2, iw.w, iw.h);
+        iw.graphics.restore();
+
+        iw.flashAlpha -= FADE_SPEED * (delta / 1000);
+        if (iw.flashAlpha <= 0) {
+          iw.flashAlpha = 0;
+          iw.graphics.clear();
+          iw.graphics.setAlpha(0);
+        }
+      }
+    }
+  }
+
   destroy(): void {
     for (const body of this.bodies) {
       this.scene.matter.world.remove(body);
@@ -1662,6 +2073,15 @@ export class Obstacles {
     }
     this.cannons = [];
     this.conveyors = [];
+    this.gravityWells = [];
+    for (const iw of this.invisibleWalls) {
+      iw.graphics.destroy();
+    }
+    this.invisibleWalls = [];
+    for (const mi of this.movingIslands) {
+      mi.graphics.destroy();
+    }
+    this.movingIslands = [];
     for (const obj of this.gameObjects) {
       obj.destroy();
     }
