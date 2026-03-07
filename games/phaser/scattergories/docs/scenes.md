@@ -75,7 +75,7 @@ GameOver -> ModeSelect or Lobby (rematch)
   - 12 category rows with DOM overlay text inputs
   - Submit button (or auto-submit on timer expiry)
   - Answer progress counter ("X/12 answered") with color feedback
-  - Sound mute toggle in top-left corner
+  - Sound mute toggle in top-left corner (repositioned below player tag in local mode)
   - Player name badge in top-left for local mode with turn indicator
   - AI answer generation for single player mode
   - Player submission status indicators (multiplayer)

@@ -1,5 +1,14 @@
 # Scattergories - Changelog
 
+## [0.8.1] - 2026-03-07
+
+### Fixed
+- **Mute Button Overlap in Local Mode** — In local pass-and-play mode, the mute toggle was positioned at the same coordinates as the player name badge, rendering it invisible. Mute button now repositions below the player tag in local mode.
+- **Tie Label Text Overflow** — GameOver tie label (showing all tied player names) now has word wrapping to prevent overflow on narrow screens.
+
+### Changed
+- **Mute Button Audio Feedback** — GamePlay mute toggle now plays a select sound when unmuting, consistent with ModeSelect behavior.
+
 ## [0.8.0] - 2026-03-07
 
 ### Fixed

@@ -173,7 +173,8 @@ export class GamePlay extends Scene {
 
     this.animateLetterRoll(cx);
 
-    const muteText = this.add.text(16, 10, SoundManager.isMuted() ? '🔇' : '🔊', {
+    const muteY = this.mode === 'local' ? 30 : 10;
+    const muteText = this.add.text(16, muteY, SoundManager.isMuted() ? '🔇' : '🔊', {
       fontSize: '16px',
     }).setOrigin(0, 0);
     const muteZone = this.add.zone(muteText.x + 10, muteText.y + 10, 28, 28)
@@ -182,6 +183,7 @@ export class GamePlay extends Scene {
       const newMuted = !SoundManager.isMuted();
       SoundManager.mute(newMuted);
       muteText.setText(newMuted ? '🔇' : '🔊');
+      if (!newMuted) SoundManager.play('select');
     });
 
     const roundLabel = `Round ${this.roundNumber}/${TOTAL_ROUNDS}`;
