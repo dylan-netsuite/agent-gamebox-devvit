@@ -1,0 +1,138 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.splash-bg {
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.floating-icons {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.float-icon {
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0.15;
+  animation: float 6s ease-in-out infinite;
+}
+
+.fi-1 { top: 10%; left: 8%; animation-delay: 0s; }
+.fi-2 { top: 15%; right: 12%; animation-delay: 1s; }
+.fi-3 { bottom: 20%; left: 15%; animation-delay: 2s; }
+.fi-4 { top: 40%; right: 8%; animation-delay: 3s; }
+.fi-5 { bottom: 30%; right: 20%; animation-delay: 4s; }
+.fi-6 { bottom: 15%; left: 30%; animation-delay: 5s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(5deg); }
+}
+
+.splash-content {
+  text-align: center;
+  z-index: 1;
+  padding: 2rem;
+}
+
+.logo-area {
+  margin-bottom: 1rem;
+}
+
+.logo-icon {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.splash-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #e2e2e2, #a8d8ea);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+.splash-tagline {
+  color: #a8d8ea;
+  font-size: 1rem;
+  margin: 0.5rem 0 0.25rem;
+  font-weight: 500;
+}
+
+.splash-subtitle {
+  color: #7a8ba6;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.open-button {
+  background: linear-gradient(135deg, #e94560, #c23152);
+  border: none;
+  border-radius: 50px;
+  padding: 14px 48px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4);
+}
+
+.open-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(233, 69, 96, 0.5);
+}
+
+.open-button:active {
+  transform: translateY(0);
+}
+
+.btn-label {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.category-pills {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  color: #b0bec5;
+}
+
+.pill-watch { border-color: rgba(233, 69, 96, 0.3); }
+.pill-read { border-color: rgba(76, 175, 80, 0.3); }
+.pill-listen { border-color: rgba(33, 150, 243, 0.3); }

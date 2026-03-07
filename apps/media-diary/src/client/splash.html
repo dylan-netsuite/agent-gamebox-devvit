@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" type="text/css" href="splash/splash.css" />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, width=device-width, height=device-height, user-scalable=0"
+    />
+    <title>Media Diary</title>
+  </head>
+  <body class="app">
+    <div class="splash-bg">
+      <div class="floating-icons">
+        <span class="float-icon fi-1">🎬</span>
+        <span class="float-icon fi-2">📚</span>
+        <span class="float-icon fi-3">🎵</span>
+        <span class="float-icon fi-4">🎧</span>
+        <span class="float-icon fi-5">📖</span>
+        <span class="float-icon fi-6">🎞️</span>
+      </div>
+
+      <div class="splash-content">
+        <div class="logo-area">
+          <div class="logo-icon">📓</div>
+          <h1 class="splash-title">Media Diary</h1>
+        </div>
+
+        <p class="splash-tagline">Track everything you watch, read &amp; listen to</p>
+        <p class="splash-subtitle" id="subtitle">Tap to open your diary</p>
+
+        <button class="open-button" id="start-button">
+          <span class="btn-label">Open Diary</span>
+        </button>
+
+        <div class="category-pills">
+          <span class="pill pill-watch">🎬 Watch</span>
+          <span class="pill pill-read">📚 Read</span>
+          <span class="pill pill-listen">🎵 Listen</span>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="splash/splash.ts" defer></script>
+  </body>
+</html>
