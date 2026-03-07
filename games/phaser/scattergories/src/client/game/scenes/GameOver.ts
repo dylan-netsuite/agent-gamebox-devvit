@@ -67,6 +67,8 @@ export class GameOver extends Scene {
         fontSize: '18px',
         fontStyle: 'bold',
         color: '#f39c12',
+        wordWrap: { width: width - 32 },
+        align: 'center',
       })
       .setOrigin(0.5);
     winnerText.setAlpha(0);
