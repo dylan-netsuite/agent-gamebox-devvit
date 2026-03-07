@@ -3,6 +3,7 @@ import { SoundManager } from '../systems/SoundManager';
 import type { MultiplayerManager } from '../systems/MultiplayerManager';
 import type { PlayerScore } from '../../../shared/types/game';
 import type { GameMode } from './GamePlay';
+import type { AIDifficulty } from '../systems/AIOpponent';
 
 export interface GameOverData {
   scores: PlayerScore[];
@@ -11,6 +12,7 @@ export interface GameOverData {
   mp?: MultiplayerManager | null;
   mode?: GameMode;
   localPlayers?: string[];
+  aiDifficulty?: AIDifficulty;
 }
 
 export class GameOver extends Scene {
@@ -46,9 +48,19 @@ export class GameOver extends Scene {
     });
 
     const sorted = [...scores].sort((a, b) => b.totalScore - a.totalScore);
+    const topScore = sorted[0]?.totalScore ?? 0;
+    const isTie = sorted.length > 1 && sorted[1]!.totalScore === topScore;
     const winnerName = sorted[0]?.username ?? 'Nobody';
 
-    const winnerLabel = sorted.length > 1 ? `Winner: ${winnerName}` : `Final Score: ${sorted[0]?.totalScore ?? 0}`;
+    let winnerLabel: string;
+    if (sorted.length <= 1) {
+      winnerLabel = `Final Score: ${topScore}`;
+    } else if (isTie) {
+      const tiedPlayers = sorted.filter((s) => s.totalScore === topScore);
+      winnerLabel = `It's a Tie! (${tiedPlayers.map((p) => p.username).join(' & ')})`;
+    } else {
+      winnerLabel = `Winner: ${winnerName}`;
+    }
     const winnerText = this.add
       .text(cx, 60, winnerLabel, {
         fontFamily: 'Segoe UI, system-ui, sans-serif',
@@ -139,7 +151,15 @@ export class GameOver extends Scene {
       });
     }
 
-    const extraOffset = mp || (mode === 'local' && data.localPlayers) ? 50 : 0;
+    if (mode === 'single') {
+      this.createAnimatedButton(cx, btnY, 'PLAY AGAIN', 0x2ecc71, btnDelay, () => {
+        SoundManager.play('select');
+        this.scene.start('DifficultySelect');
+      });
+    }
+
+    const hasReplayBtn = mp || (mode === 'local' && data.localPlayers) || mode === 'single';
+    const extraOffset = hasReplayBtn ? 50 : 0;
     this.createAnimatedButton(cx, btnY + extraOffset, 'BACK TO MENU', 0x3498db, btnDelay + 150, () => {
       SoundManager.play('select');
       this.scene.start('ModeSelect');
