@@ -4,13 +4,14 @@
 
 ### Fixed
 - **Turn transition now shows for first player**: Previously the "Pass device" overlay was skipped for player 1, so they'd start playing without knowing it was their turn. Now all players see the transition overlay at the start of each hole.
-- **Tie handling in Scorecard**: Winner announcement now displays "TIE!" in gold when multiple players share the best score, instead of arbitrarily picking one winner.
-- **Robust holesPlayed calculation**: Both HoleComplete standings and Scorecard now derive holes played from all players' scores (using `Math.max`) instead of assuming player 0 exists, preventing potential errors with non-contiguous player IDs.
+- **Tie handling in Scorecard**: Winner announcement now displays "TIE!" in gold when multiple players share the best score, instead of arbitrarily picking one winner. Tied players also share the same rank position in standings.
+- **Robust holesPlayed calculation**: Both HoleComplete standings and Scorecard now derive holes played from all players' scores (using `Math.max`) instead of assuming player 0 exists, with a safe fallback to 0 for empty score maps.
 - **Safe guard instead of non-null assertion**: `handleMultiplayerSink` now uses an explicit null check on the next player instead of a non-null assertion (`!`), preventing potential runtime crashes.
 
 ### Changed
 - **PlayerSetup uses `createMultiplayerConfig` helper**: Replaced manual player config construction with the shared helper function, eliminating duplicate code.
 - **Scorecard respects `viewOnly` flag**: The `viewOnly` parameter (passed from MainMenu's leaderboard button) is now stored and used to skip score submission in view-only mode.
+- **Scorecard standings use competition ranking**: Tied players share the same rank number (e.g., two 1st places skip to 3rd).
 - **Renamed mask variable in Scorecard**: Replaced `void mask` workaround with a descriptive `maskGraphics` variable name.
 - **Added `.env.example`**: Provides `DEVVIT_SUBREDDIT` and `PLAYWRIGHT_PLAYER` template for developer setup.
 

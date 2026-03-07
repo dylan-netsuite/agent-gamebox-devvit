@@ -56,7 +56,7 @@
 - Full 18-hole scorecard table
 - Per-hole: name, par, score, +/- relative to par
 - Color-coded scores (gold for HIO, green for under par, red for over)
-- **Multiplayer**: Multi-column results per player; winner announcement with tie detection at completion
+- **Multiplayer**: Multi-column results per player; winner announcement with tie detection; competition-style rankings (tied players share rank)
 - Total row with overall score
 - Submits score to server on completion (single player, non-viewOnly mode only)
 - Supports `viewOnly` mode from MainMenu leaderboard (skips score submission)
