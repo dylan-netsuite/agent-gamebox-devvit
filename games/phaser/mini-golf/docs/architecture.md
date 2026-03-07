@@ -15,7 +15,7 @@ src/
   client/
     splash.html / splash/     -- Inline post card (splash page)
     game.html / game/         -- Fullscreen Phaser game
-      scenes/                 -- Boot, Preloader, MainMenu, Game, HoleComplete, Scorecard
+      scenes/                 -- Boot, Preloader, MainMenu, PlayerSetup, Game, HoleComplete, Scorecard
       objects/                -- GolfBall, AimArrow, PowerMeter, Hole, Walls, Obstacles
       data/                   -- 18-hole course definitions
       utils/                  -- Physics constants, transitions, coordinate helpers
@@ -24,6 +24,7 @@ src/
     core/post.ts              -- Reddit post creation
   shared/
     types/api.ts              -- Shared request/response types
+    types/multiplayer.ts      -- PlayerInfo, MultiplayerConfig, MultiplayerScores, player colors
 ```
 
 ## Data Flow
@@ -31,9 +32,10 @@ src/
 1. User sees splash card in Reddit feed
 2. Clicks PLAY -> `requestExpandedMode` switches to game.html
 3. Phaser boots: Boot -> Preloader -> MainMenu
-4. Player starts 18-hole round: Game scene loads hole data
-5. On round completion, Scorecard submits score via `POST /api/stats/submit`
-6. Server persists to Redis, updates leaderboard sorted sets
+4. **Single player**: Player starts round from MainMenu -> Game scene loads hole data
+5. **Multiplayer**: Player selects "LOCAL MULTIPLAYER" -> PlayerSetup scene (configure 2-4 players, names, colors) -> Game scene with turn-based pass-and-play
+6. On round completion, Scorecard submits score via `POST /api/stats/submit` (single player only)
+7. Server persists to Redis, updates leaderboard sorted sets
 
 ## Physics Engine
 

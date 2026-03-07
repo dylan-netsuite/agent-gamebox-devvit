@@ -280,6 +280,22 @@ export class MainMenu extends Scene {
 
     curY += gap;
 
+    curY += gap;
+    curY = this.addSectionHeader(container, cx, curY, 'MULTIPLAYER', sf);
+
+    curY = this.addMenuButton(
+      container,
+      cx,
+      curY,
+      btnW,
+      btnH,
+      'LOCAL MULTIPLAYER',
+      labelSize,
+      0x4ecdc4,
+      () => transitionTo(this, 'PlayerSetup', undefined, SCENE_COLORS.dark)
+    );
+    curY += gap * 2;
+
     curY = this.addMenuButton(
       container,
       cx,

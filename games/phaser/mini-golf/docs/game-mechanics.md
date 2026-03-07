@@ -155,6 +155,17 @@ Psychologically taxing par 4 presenting a deceptively open, empty green. Tee at 
 
 ## Play Modes
 
+### Local Multiplayer
+2–4 players on the same device, pass-and-play. Accessed via "LOCAL MULTIPLAYER" from the MainMenu.
+
+- **Player setup**: PlayerSetup scene lets players choose 2, 3, or 4 players; enter custom names; and assigns colors (red, teal, yellow, purple).
+- **Turn-based play**: Each player completes the hole before advancing. A "Pass device" transition overlay appears between turns.
+- **HUD**: Player color-coded banner shows the current player during their turn.
+- **HoleComplete**: Shows all players' scores for the hole, sorted by score.
+- **Scorecard**: Multi-column layout with one column per player; winner announcement at the top.
+- **Course options**: Full 18, Front 9, and Back 9 are available in multiplayer mode.
+- Scores are not submitted to the leaderboard.
+
 ### Full 18
 Play all holes in sequence from Hole 1 to the last available hole. Score is submitted to the leaderboard upon completion.
 
