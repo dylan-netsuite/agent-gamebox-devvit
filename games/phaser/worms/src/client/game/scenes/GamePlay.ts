@@ -1060,8 +1060,11 @@ export class GamePlay extends Scene {
     const teamColor = winningTeam >= 0 ? (teamColorMap[winningTeam] ?? '#ffffff') : '#ffffff';
 
     let winnerLabel: string;
-    if (this.isOnline && winningTeam >= 0 && this.onlinePlayers[winningTeam]) {
-      winnerLabel = `${this.onlinePlayers[winningTeam]!.username} Wins!`;
+    const onlineWinner = this.isOnline && winningTeam >= 0
+      ? this.onlinePlayers.find((p) => p.teamIndex === winningTeam)
+      : undefined;
+    if (onlineWinner) {
+      winnerLabel = `${onlineWinner.username} Wins!`;
     } else if (winningTeam >= 0) {
       winnerLabel = `Team ${teamLabels[winningTeam] ?? winningTeam} Wins!`;
     } else {
