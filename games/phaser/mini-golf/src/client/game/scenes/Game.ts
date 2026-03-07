@@ -13,8 +13,19 @@ import {
   getScaleFactor,
 } from '../utils/physics';
 import { fadeIn, SCENE_COLORS } from '../utils/transitions';
+import type { MultiplayerConfig, MultiplayerScores } from '../../../shared/types/multiplayer';
 
-type GameState = 'aiming' | 'power' | 'simulating' | 'sinking' | 'water_reset';
+type GameState = 'aiming' | 'power' | 'simulating' | 'sinking' | 'water_reset' | 'turn_transition';
+
+interface GameSceneData {
+  holeIndex?: number;
+  endHoleIndex?: number;
+  startHoleIndex?: number;
+  scores?: number[];
+  multiplayer?: MultiplayerConfig;
+  multiplayerScores?: MultiplayerScores;
+  currentPlayerIndex?: number;
+}
 
 export class Game extends Scene {
   private ball!: GolfBall;
@@ -34,22 +45,41 @@ export class Game extends Scene {
 
   private hud!: Phaser.GameObjects.Container;
   private strokeLabel!: Phaser.GameObjects.Text;
+  private playerBanner: Phaser.GameObjects.Container | undefined = undefined;
 
   private bgTile!: Phaser.GameObjects.TileSprite;
   private vignetteImg!: Phaser.GameObjects.Image;
   private sparkleSprites: Phaser.GameObjects.Image[] = [];
 
+  private multiplayer: MultiplayerConfig | undefined = undefined;
+  private multiplayerScores: MultiplayerScores | undefined = undefined;
+  private currentPlayerIndex: number = 0;
+  private playerHoleStrokes: number[] = [];
+
   constructor() {
     super('Game');
   }
 
-  init(data?: { holeIndex?: number; endHoleIndex?: number; startHoleIndex?: number; scores?: number[] }) {
+  get isMultiplayer(): boolean {
+    return !!this.multiplayer;
+  }
+
+  get currentPlayer() {
+    return this.multiplayer?.players[this.currentPlayerIndex];
+  }
+
+  init(data?: GameSceneData) {
     this.currentHoleIndex = data?.holeIndex ?? 0;
     this.endHoleIndex = data?.endHoleIndex ?? HOLES.length - 1;
     this.startHoleIndex = data?.startHoleIndex ?? this.currentHoleIndex;
     this.scores = data?.scores ?? [];
     this.strokes = 0;
     this.state = 'aiming';
+
+    this.multiplayer = data?.multiplayer;
+    this.multiplayerScores = data?.multiplayerScores;
+    this.currentPlayerIndex = data?.currentPlayerIndex ?? 0;
+    this.playerHoleStrokes = [];
   }
 
   create() {
@@ -61,6 +91,10 @@ export class Game extends Scene {
     this.createHUD();
     this.setupInput();
 
+    if (this.isMultiplayer && this.currentPlayerIndex === 0) {
+      this.showTurnTransition();
+    }
+
     this.scale.on('resize', () => {
       this.cleanupHole();
       this.destroyBackground();
@@ -69,6 +103,7 @@ export class Game extends Scene {
       this.createSparkles();
       this.loadHole(HOLES[this.currentHoleIndex]!);
       this.hud.destroy();
+      this.playerBanner?.destroy();
       this.createHUD();
     });
   }
@@ -251,7 +286,6 @@ export class Game extends Scene {
 
     this.hud.add(hudBg);
 
-    // Peppermint swirls from corner texture
     const swirlL = this.add.image(cx - 95, hudY + hudH / 2, 'candy-cane-corner');
     swirlL.setScale(22 / swirlL.width);
     swirlL.setDepth(201);
@@ -325,6 +359,59 @@ export class Game extends Scene {
       })
       .setOrigin(1, 0.5);
     this.hud.add(parLabel);
+
+    if (this.isMultiplayer) {
+      this.createPlayerBanner();
+    }
+  }
+
+  private createPlayerBanner(): void {
+    this.playerBanner?.destroy();
+
+    const player = this.currentPlayer;
+    if (!player) return;
+
+    const { width } = this.scale;
+    const bannerH = 36;
+
+    this.playerBanner = this.add.container(0, 0);
+    this.playerBanner.setDepth(210);
+
+    const bg = this.add.graphics();
+    bg.fillStyle(player.color, 0.85);
+    bg.fillRect(0, 0, width, bannerH);
+    bg.fillStyle(0x000000, 0.2);
+    bg.fillRect(0, bannerH - 2, width, 2);
+    this.playerBanner.add(bg);
+
+    const nameText = this.add
+      .text(width / 2, bannerH / 2, `${player.name}'s Turn`, {
+        fontFamily: '"Arial Black", sans-serif',
+        fontSize: '16px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5);
+    this.playerBanner.add(nameText);
+
+    if (this.multiplayer) {
+      const dotR = 6;
+      const dotGap = 20;
+      const totalW = (this.multiplayer.players.length - 1) * dotGap;
+      const dotStartX = width / 2 - totalW / 2;
+      const dotY = bannerH - 6;
+
+      for (let i = 0; i < this.multiplayer.players.length; i++) {
+        const p = this.multiplayer.players[i]!;
+        const dx = dotStartX + i * dotGap;
+        const isCurrentOrDone = i <= this.currentPlayerIndex;
+        const dot = this.add.graphics();
+        dot.fillStyle(p.color, isCurrentOrDone ? 1 : 0.3);
+        dot.fillCircle(dx, dotY, i === this.currentPlayerIndex ? dotR : dotR - 2);
+        this.playerBanner.add(dot);
+      }
+    }
   }
 
   private drawGumdrop(cx: number, cy: number, r: number, color: number): void {
@@ -377,7 +464,7 @@ export class Game extends Scene {
   }
 
   override update(_time: number, delta: number): void {
-    if (this.state === 'sinking') return;
+    if (this.state === 'sinking' || this.state === 'turn_transition') return;
 
     this.obstacles.updateBridges(delta);
     this.obstacles.updateConveyors(delta);
@@ -523,7 +610,43 @@ export class Game extends Scene {
     this.createSinkParticles();
 
     this.time.delayedCall(1500, () => {
-      this.scores.push(this.strokes);
+      if (this.isMultiplayer) {
+        this.handleMultiplayerSink();
+      } else {
+        this.handleSinglePlayerSink();
+      }
+    });
+  }
+
+  private handleSinglePlayerSink(): void {
+    this.scores.push(this.strokes);
+    this.cleanupHole();
+
+    if (this.currentHoleIndex < this.endHoleIndex) {
+      this.scene.start('HoleComplete', {
+        holeIndex: this.currentHoleIndex,
+        endHoleIndex: this.endHoleIndex,
+        startHoleIndex: this.startHoleIndex,
+        strokes: this.strokes,
+        par: HOLES[this.currentHoleIndex]!.par,
+        scores: this.scores,
+      });
+    } else {
+      this.scene.start('Scorecard', { scores: this.scores, startHoleIndex: this.startHoleIndex });
+    }
+  }
+
+  private handleMultiplayerSink(): void {
+    this.playerHoleStrokes.push(this.strokes);
+
+    if (this.multiplayerScores && this.currentPlayer) {
+      this.multiplayerScores[this.currentPlayer.id]!.push(this.strokes);
+    }
+
+    const nextPlayerIdx = this.currentPlayerIndex + 1;
+    const allPlayersDone = nextPlayerIdx >= (this.multiplayer?.players.length ?? 0);
+
+    if (allPlayersDone) {
       this.cleanupHole();
 
       if (this.currentHoleIndex < this.endHoleIndex) {
@@ -531,13 +654,129 @@ export class Game extends Scene {
           holeIndex: this.currentHoleIndex,
           endHoleIndex: this.endHoleIndex,
           startHoleIndex: this.startHoleIndex,
-          strokes: this.strokes,
+          strokes: this.playerHoleStrokes[0],
           par: HOLES[this.currentHoleIndex]!.par,
-          scores: this.scores,
+          scores: [],
+          multiplayer: this.multiplayer,
+          multiplayerScores: this.multiplayerScores,
+          playerHoleStrokes: this.playerHoleStrokes,
         });
       } else {
-        this.scene.start('Scorecard', { scores: this.scores, startHoleIndex: this.startHoleIndex });
+        this.scene.start('Scorecard', {
+          scores: [],
+          startHoleIndex: this.startHoleIndex,
+          multiplayer: this.multiplayer,
+          multiplayerScores: this.multiplayerScores,
+        });
       }
+    } else {
+      this.cleanupHole();
+      this.state = 'turn_transition';
+
+      const nextPlayer = this.multiplayer!.players[nextPlayerIdx]!;
+      this.showPassDeviceOverlay(nextPlayer.name, nextPlayer.color, () => {
+        this.scene.start('Game', {
+          holeIndex: this.currentHoleIndex,
+          endHoleIndex: this.endHoleIndex,
+          startHoleIndex: this.startHoleIndex,
+          scores: this.scores,
+          multiplayer: this.multiplayer,
+          multiplayerScores: this.multiplayerScores,
+          currentPlayerIndex: nextPlayerIdx,
+        });
+      });
+    }
+  }
+
+  private showTurnTransition(): void {
+    const player = this.currentPlayer;
+    if (!player) return;
+
+    if (this.currentPlayerIndex === 0) return;
+
+    this.state = 'turn_transition';
+    this.showPassDeviceOverlay(player.name, player.color, () => {
+      this.state = 'aiming';
+    });
+  }
+
+  private showPassDeviceOverlay(playerName: string, playerColor: number, onDismiss: () => void): void {
+    const { width, height } = this.scale;
+    const overlay = this.add.container(0, 0);
+    overlay.setDepth(1000);
+
+    const dimBg = this.add.graphics();
+    dimBg.fillStyle(0x000000, 0.75);
+    dimBg.fillRect(0, 0, width, height);
+    overlay.add(dimBg);
+
+    const bannerH = 200;
+    const bannerY = height / 2 - bannerH / 2;
+    const bannerBg = this.add.graphics();
+    bannerBg.fillStyle(playerColor, 0.9);
+    bannerBg.fillRoundedRect(20, bannerY, width - 40, bannerH, 16);
+    bannerBg.fillStyle(0x000000, 0.15);
+    bannerBg.fillRoundedRect(20, bannerY + bannerH - 4, width - 40, 4, { tl: 0, tr: 0, bl: 16, br: 16 });
+    overlay.add(bannerBg);
+
+    const passText = this.add
+      .text(width / 2, bannerY + 40, 'PASS THE DEVICE TO', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '14px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 1,
+      })
+      .setOrigin(0.5);
+    overlay.add(passText);
+
+    const nameText = this.add
+      .text(width / 2, bannerY + 80, playerName, {
+        fontFamily: '"Arial Black", "Impact", sans-serif',
+        fontSize: '36px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5);
+    overlay.add(nameText);
+
+    const tapText = this.add
+      .text(width / 2, bannerY + 140, 'TAP TO START', {
+        fontFamily: '"Arial Black", sans-serif',
+        fontSize: '16px',
+        color: '#ffffff',
+      })
+      .setOrigin(0.5)
+      .setAlpha(0);
+    overlay.add(tapText);
+
+    this.tweens.add({
+      targets: tapText,
+      alpha: { from: 0.3, to: 1 },
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    const hitArea = this.add
+      .rectangle(width / 2, height / 2, width, height)
+      .setInteractive({ useHandCursor: true })
+      .setAlpha(0.001);
+    overlay.add(hitArea);
+
+    hitArea.on('pointerdown', () => {
+      this.tweens.add({
+        targets: overlay,
+        alpha: 0,
+        duration: 300,
+        ease: 'Power2',
+        onComplete: () => {
+          overlay.destroy();
+          onDismiss();
+        },
+      });
     });
   }
 
@@ -568,13 +807,20 @@ export class Game extends Scene {
     }
 
     const { width, height } = this.scale;
+
+    let displayLabel = label;
+    if (this.isMultiplayer && this.currentPlayer) {
+      displayLabel = `${this.currentPlayer.name}\n${label}`;
+    }
+
     const text = this.add
-      .text(width / 2, height / 2, label, {
+      .text(width / 2, height / 2, displayLabel, {
         fontFamily: '"Arial Black", "Impact", sans-serif',
         fontSize: '48px',
         color,
         stroke: '#000000',
         strokeThickness: 4,
+        align: 'center',
         shadow: { offsetX: 0, offsetY: 0, color, blur: 20, fill: false, stroke: true },
       })
       .setOrigin(0.5)
@@ -605,7 +851,9 @@ export class Game extends Scene {
   private createSinkParticles(): void {
     const cx = this.hole.x;
     const cy = this.hole.y;
-    const colors = [0xff69b4, 0xffd700, 0x32cd32, 0x00ced1, 0xff6347];
+    const colors = this.isMultiplayer && this.currentPlayer
+      ? [this.currentPlayer.color, 0xffd700, 0xffffff]
+      : [0xff69b4, 0xffd700, 0x32cd32, 0x00ced1, 0xff6347];
 
     for (let i = 0; i < 20; i++) {
       const angle = (i / 20) * Math.PI * 2;

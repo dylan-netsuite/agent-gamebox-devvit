@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.0.10 - Local Multiplayer (2026-03-07)
+
+### Added
+- **Local multiplayer mode**: 2-4 players on the same device, pass-and-play
+- **PlayerSetup scene**: Configure player count (2-4), custom names, and assigned colors (red, teal, yellow, purple)
+- **Turn-based gameplay**: Each player completes the hole before advancing; "Pass device" transition overlay between turns
+- **Player color-coded HUD banner**: Shows current player during their turn
+- **Multiplayer HoleComplete**: Displays all players' scores for the hole, sorted by score
+- **Multiplayer Scorecard**: Multi-column results per player with winner announcement
+- **Course options in multiplayer**: Full 18, Front 9, Back 9
+- **Shared types**: `multiplayer.ts` with `PlayerInfo`, `MultiplayerConfig`, `MultiplayerScores`, `PLAYER_COLORS`, `DEFAULT_PLAYER_NAMES`
+
 ## v0.0.9 - Simplify Bridge Physics (2026-02-26)
 
 ### Fixed
