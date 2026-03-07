@@ -1,0 +1,60 @@
+---
+description: Branching and PR strategy for pull request review automations
+globs:
+alwaysApply: true
+---
+
+## PR Review Automation — Branch Strategy
+
+When this agent is triggered by a `pull_request` event (e.g., `ready_for_review`, `opened`), follow this branching strategy:
+
+### 1. Identify the Feature Branch
+
+Read the trigger context to find the PR's **head branch** (the feature branch being reviewed).
+This is the branch the original author created their changes on.
+
+### 2. Create a Review Branch FROM the Feature Branch
+
+```bash
+# Fetch the latest feature branch
+git fetch origin <head-branch>
+
+# Create a new review branch from it
+git checkout -b review/<head-branch> origin/<head-branch>
+```
+
+The review branch name should follow the pattern: `review/<original-branch-name>`
+
+### 3. Make Changes on the Review Branch
+
+All code review fixes, improvements, and suggestions should be committed to the review branch.
+
+### 4. Create a PR Targeting the Feature Branch
+
+When using `OpenGitPr` or creating a PR, the **base branch** (destination) must be the original feature branch — NOT `main`.
+
+If `OpenGitPr` does not support setting a custom base branch, create the PR manually using the GitHub CLI:
+
+```bash
+gh pr create \
+  --base <head-branch> \
+  --head review/<head-branch> \
+  --title "review: <description of fixes>" \
+  --body "<summary of review changes>"
+```
+
+### 5. Why This Matters
+
+This strategy keeps review fixes scoped to the feature branch:
+- The original author merges the review PR into their feature branch
+- Then the feature branch is merged into `main` as a single unit
+- Avoids polluting `main` with incremental review fix commits
+- Keeps the feature branch as the single source of truth for that feature
+
+### Summary
+
+| Step | Action |
+|------|--------|
+| Source branch | `origin/<head-branch>` (the PR's feature branch) |
+| Review branch | `review/<head-branch>` |
+| PR destination | `<head-branch>` (the feature branch, NOT main) |

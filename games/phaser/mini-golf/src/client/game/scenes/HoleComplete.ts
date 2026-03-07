@@ -324,7 +324,8 @@ export class HoleComplete extends Scene {
       .setDepth(2);
 
     const standingsY = totalsY + 22;
-    const holesPlayed = Math.max(...Object.values(this.multiplayerScores).map(s => s.length));
+    const scoreLengths = Object.values(this.multiplayerScores).map(s => s.length);
+    const holesPlayed = scoreLengths.length > 0 ? Math.max(...scoreLengths) : 0;
 
     const standings = players.map(p => {
       const playerScores = this.multiplayerScores![p.id]!;

@@ -262,7 +262,8 @@ export class Scorecard extends Scene {
     const cx = width / 2;
     const players = this.multiplayer.players;
     const numPlayers = players.length;
-    const holesPlayed = Math.max(...Object.values(this.multiplayerScores).map(s => s.length));
+    const scoreLengths = Object.values(this.multiplayerScores).map(s => s.length);
+    const holesPlayed = scoreLengths.length > 0 ? Math.max(...scoreLengths) : 0;
 
     this.add
       .text(cx, 20, 'SCORECARD', {
@@ -498,14 +499,18 @@ export class Scorecard extends Scene {
     );
 
     const rankY = winnerY + 30;
+    let currentRank = 1;
     for (let i = 0; i < standings.length; i++) {
       const s = standings[i]!;
       const diff = s.total - totalPar;
       const diffStr = diff === 0 ? 'E' : diff > 0 ? `+${diff}` : `${diff}`;
+      if (i > 0 && standings[i - 1]!.total !== s.total) {
+        currentRank = i + 1;
+      }
 
       container.add(
         this.add
-          .text(cx - 80, rankY + i * 20, `${i + 1}. ${s.player.name}`, {
+          .text(cx - 80, rankY + i * 20, `${currentRank}. ${s.player.name}`, {
             fontFamily: 'Arial, sans-serif',
             fontSize: '12px',
             color: s.player.colorHex,
