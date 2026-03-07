@@ -9,13 +9,22 @@
 - "MINI GOLF" title with loading bar animation
 - Transitions to MainMenu after 500ms
 
+## PlayerSetup
+- `grass-bg` TileSprite background with `vignette` Image overlay
+- "LOCAL MULTIPLAYER" title with "Set up your players" subtitle
+- Player count selector (2, 3, or 4 players)
+- Per-player name inputs with assigned colors (red, teal, yellow, purple)
+- Course selection: Full 18, Front 9, Back 9
+- "BACK TO MENU" button
+- Transitions to Game scene with MultiplayerConfig and MultiplayerScores
+
 ## MainMenu
 - `grass-bg` TileSprite background with `vignette` Image overlay
 - Peppermint swirl decorations (`candy-cane-corner` sprites)
 - Sparkle sprites with tween animations (scale + alpha pulse)
 - "MINI GOLF" title with glow effect and float animation
 - "Sugar Rush Retro Invitational" subtitle
-- Two buttons: PLAY 18 HOLES, LEADERBOARD
+- Buttons: PLAY 18 HOLES, LOCAL MULTIPLAYER, LEADERBOARD
 - Button hover/press animations
 
 ## Game (Core Gameplay)
@@ -26,9 +35,11 @@
 - Clean green fairway fill with stroke border
 - Manages game state machine: aiming -> power -> simulating -> sinking
 - HUD overlay: hole number, peppermint swirl accents, par, stroke count
+- **Multiplayer**: Player color-coded banner in HUD shows current player; "Pass device" transition overlay between turns
 - Handles water hazard resets with penalty
 - Ball capture with sink animation and particle effects
 - Score display (Hole-in-One, Eagle, Birdie, Par, Bogey)
+- In multiplayer: turn-based — each player completes the hole before advancing; "Pass device" overlay between turns
 - Transitions to HoleComplete or Scorecard
 
 ## HoleComplete
@@ -37,6 +48,7 @@
 - Large animated score label
 - Stroke count vs par
 - Running total score
+- **Multiplayer**: Displays all players' scores for the hole, sorted by score
 - "NEXT HOLE" button (or "VIEW SCORECARD" on hole 18)
 
 ## Scorecard
@@ -44,6 +56,7 @@
 - Full 18-hole scorecard table
 - Per-hole: name, par, score, +/- relative to par
 - Color-coded scores (gold for HIO, green for under par, red for over)
+- **Multiplayer**: Multi-column results per player; winner announcement at completion
 - Total row with overall score
-- Submits score to server on completion
+- Submits score to server on completion (single player only)
 - "MAIN MENU" button

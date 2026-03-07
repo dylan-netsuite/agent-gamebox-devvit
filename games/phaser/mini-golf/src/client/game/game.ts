@@ -1,6 +1,7 @@
 import { Boot } from './scenes/Boot';
 import { Preloader } from './scenes/Preloader';
 import { MainMenu } from './scenes/MainMenu';
+import { PlayerSetup } from './scenes/PlayerSetup';
 import { Game as MainGame } from './scenes/Game';
 import { HoleComplete } from './scenes/HoleComplete';
 import { Scorecard } from './scenes/Scorecard';
@@ -24,7 +25,7 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
-  scene: [Boot, Preloader, MainMenu, MainGame, HoleComplete, Scorecard],
+  scene: [Boot, Preloader, MainMenu, PlayerSetup, MainGame, HoleComplete, Scorecard],
 };
 
 const StartGame = (parent: string) => {
