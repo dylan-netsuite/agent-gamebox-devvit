@@ -10,6 +10,7 @@ import { scoreLocalMultiplayer } from './localScoring';
 import type { AIPlayer } from '../systems/AIOpponent';
 import type { AIDifficulty } from '../systems/AIOpponent';
 import { createAIPlayers, generateAIAnswers } from '../systems/AIOpponent';
+import { createMuteToggle } from '../systems/MuteToggle';
 
 export type GameMode = 'single' | 'multiplayer' | 'local';
 
@@ -173,18 +174,8 @@ export class GamePlay extends Scene {
 
     this.animateLetterRoll(cx);
 
-    const muteY = this.mode === 'local' ? 30 : 10;
-    const muteText = this.add.text(16, muteY, SoundManager.isMuted() ? '🔇' : '🔊', {
-      fontSize: '16px',
-    }).setOrigin(0, 0);
-    const muteZone = this.add.zone(muteText.x + 10, muteText.y + 10, 28, 28)
-      .setInteractive({ useHandCursor: true });
-    muteZone.on('pointerdown', () => {
-      const newMuted = !SoundManager.isMuted();
-      SoundManager.mute(newMuted);
-      muteText.setText(newMuted ? '🔇' : '🔊');
-      if (!newMuted) SoundManager.play('select');
-    });
+    const muteY = this.mode === 'local' ? 32 : 10;
+    createMuteToggle(this, { x: 16, y: muteY, fontSize: '16px' });
 
     const roundLabel = `Round ${this.roundNumber}/${TOTAL_ROUNDS}`;
     this.add

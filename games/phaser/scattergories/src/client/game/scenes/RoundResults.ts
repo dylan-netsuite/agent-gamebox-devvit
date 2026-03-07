@@ -1,6 +1,7 @@
 import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
 import { SoundManager } from '../systems/SoundManager';
+import { createMuteToggle } from '../systems/MuteToggle';
 import type { MultiplayerManager } from '../systems/MultiplayerManager';
 import type { RoundResult, PlayerScore } from '../../../shared/types/game';
 import type { ScatterMessage } from '../../../shared/types/multiplayer';
@@ -53,6 +54,7 @@ export class RoundResults extends Scene {
     this.tweens.add({ targets: this.cameras.main, alpha: 1, duration: 300, ease: 'Sine.easeOut' });
 
     SoundManager.play('roundEnd');
+    createMuteToggle(this, { x: width - 16, y: 16, fontSize: '16px', originX: 1 });
 
     const titleText = this.add
       .text(cx, 16, `ROUND ${roundNumber} RESULTS`, {

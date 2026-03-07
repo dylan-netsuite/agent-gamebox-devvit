@@ -36,7 +36,7 @@ GameOver -> ModeSelect or Lobby (rematch)
 - **File**: `scenes/DifficultySelect.ts`
 - **Purpose**: AI difficulty selection for single player mode
 - **Options**: Easy (1 AI, skill 0.25-0.45), Medium (2 AI, skill 0.45-0.65), Hard (3 AI, skill 0.70-0.90)
-- **Features**: Color-coded buttons (green/yellow/red), AI count badges, descriptive text
+- **Features**: Color-coded buttons (green/yellow/red), AI count badges, descriptive text, sound mute toggle (🔊/🔇) in top-right corner
 - **Navigation**: ESC or back button returns to ModeSelect
 - **Animation**: Camera fade-in on scene enter
 
@@ -91,6 +91,7 @@ GameOver -> ModeSelect or Lobby (rematch)
   - Green for unique valid answers, red/strikethrough for duplicates
   - Per-row sound effects (correct chime or duplicate buzz)
   - Round score and running total (animate in after rows)
+  - Sound mute toggle (🔊/🔇) in top-right corner
   - Next Round button for single player, local, AND multiplayer
   - Multiplayer: buffers `round-start` message, shows "Reviewing..." until ready, then enables "NEXT ROUND ▶"
   - Local: passes player names, scores, and used lists/letters to next round
@@ -99,7 +100,7 @@ GameOver -> ModeSelect or Lobby (rematch)
 ### GameOver
 - **File**: `scenes/GameOver.ts`
 - **Purpose**: Final standings after 3 rounds
-- **Features**: Ranked player list with medals, total scores, tie detection ("It's a Tie!"), mode-appropriate buttons (Rematch for online, Play Again for single/local, Back to Menu for all)
+- **Features**: Ranked player list with medals, total scores, tie detection ("It's a Tie!"), sound mute toggle (🔊/🔇) in top-right corner, mode-appropriate buttons (Rematch for online, Play Again for single/local, Back to Menu for all). Play Again in single player preserves AI difficulty.
 - **Animation**: Camera fade-in, title drop from above, winner text fade-in, score rows slide in sequentially, buttons fade in with staggered delays
 
 ### Leaderboard

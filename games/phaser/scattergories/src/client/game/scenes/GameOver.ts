@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import { SoundManager } from '../systems/SoundManager';
+import { createMuteToggle } from '../systems/MuteToggle';
 import type { MultiplayerManager } from '../systems/MultiplayerManager';
 import type { PlayerScore } from '../../../shared/types/game';
 import type { GameMode } from './GamePlay';
@@ -31,6 +32,7 @@ export class GameOver extends Scene {
     this.tweens.add({ targets: this.cameras.main, alpha: 1, duration: 400, ease: 'Sine.easeOut' });
 
     SoundManager.play('gameOver');
+    createMuteToggle(this, { x: width - 16, y: 10, fontSize: '16px', originX: 1 });
 
     const titleText = this.add
       .text(cx, -30, 'GAME OVER', {
@@ -156,7 +158,11 @@ export class GameOver extends Scene {
     if (mode === 'single') {
       this.createAnimatedButton(cx, btnY, 'PLAY AGAIN', 0x2ecc71, btnDelay, () => {
         SoundManager.play('select');
-        this.scene.start('DifficultySelect');
+        if (data.aiDifficulty) {
+          this.scene.start('GamePlay', { mode: 'single', aiDifficulty: data.aiDifficulty });
+        } else {
+          this.scene.start('DifficultySelect');
+        }
       });
     }
 

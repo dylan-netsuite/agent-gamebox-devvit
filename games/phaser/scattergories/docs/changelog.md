@@ -1,5 +1,13 @@
 # Scattergories - Changelog
 
+## [0.8.2] - 2026-03-07
+
+### Improved
+- **Mute Toggle Shared Utility** — Extracted mute toggle into a reusable `MuteToggle.ts` helper, eliminating duplicated code between ModeSelect and GamePlay scenes.
+- **Mute Toggle on All Scenes** — Sound mute toggle (🔊/🔇) now available on DifficultySelect, RoundResults, and GameOver screens for consistent access to sound control.
+- **Play Again Preserves Difficulty** — Single player "PLAY AGAIN" in GameOver now starts a new game at the same AI difficulty instead of returning to DifficultySelect.
+- **Local Mode Mute Spacing** — Increased mute button y-offset in local mode (30→32px) for better visual separation from the player tag.
+
 ## [0.8.1] - 2026-03-07
 
 ### Fixed

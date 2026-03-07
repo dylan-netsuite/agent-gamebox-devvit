@@ -1,5 +1,6 @@
 import { Scene } from 'phaser';
 import { SoundManager } from '../systems/SoundManager';
+import { createMuteToggle } from '../systems/MuteToggle';
 import type { AIDifficulty } from '../systems/AIOpponent';
 
 interface DiffOption {
@@ -23,6 +24,8 @@ export class DifficultySelect extends Scene {
     this.cameras.main.setBackgroundColor('#1a1a2e');
     this.cameras.main.setAlpha(0);
     this.tweens.add({ targets: this.cameras.main, alpha: 1, duration: 300, ease: 'Sine.easeOut' });
+
+    createMuteToggle(this, { x: width - 16, y: 16, fontSize: '18px', originX: 1 });
 
     this.add
       .text(cx, 24, 'SINGLE PLAYER', {
