@@ -999,8 +999,12 @@ export class GamePlay extends Scene {
     buildMenuBtn(curY, '🔄  Restart', 0x3498db, () => {
       this.tutorial?.destroy();
       this.tutorial = null;
+      const wasOnline = !!this.mp;
       if (this.mp) { void this.mp.disconnect(); this.mp = null; }
-      this.scene.start('GamePlay', this.lastConfig ?? undefined);
+      const config = this.lastConfig
+        ? wasOnline ? { ...this.lastConfig, multiplayerManager: undefined, onlinePlayers: undefined } : this.lastConfig
+        : undefined;
+      this.scene.start('GamePlay', config);
     });
     curY += btnH + 10;
 
@@ -1108,7 +1112,10 @@ export class GamePlay extends Scene {
         void this.mp.disconnect();
         this.mp = null;
       }
-      this.scene.start('GamePlay', this.lastConfig ?? undefined);
+      const localConfig = this.lastConfig
+        ? { ...this.lastConfig, multiplayerManager: undefined, onlinePlayers: undefined }
+        : undefined;
+      this.scene.start('GamePlay', localConfig);
     };
 
     const newGameText = new Phaser.GameObjects.Text(
