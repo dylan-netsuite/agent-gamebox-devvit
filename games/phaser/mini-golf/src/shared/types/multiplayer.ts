@@ -22,6 +22,11 @@ export const PLAYER_COLORS: { fill: number; hex: string }[] = [
 
 export const DEFAULT_PLAYER_NAMES = ['Player 1', 'Player 2', 'Player 3', 'Player 4'];
 
+export function getHolesPlayed(scores: MultiplayerScores): number {
+  const lengths = Object.values(scores).map(s => s.length);
+  return lengths.length > 0 ? Math.max(...lengths) : 0;
+}
+
 export function createMultiplayerConfig(playerCount: number, names?: string[]): MultiplayerConfig {
   const players: PlayerInfo[] = [];
   for (let i = 0; i < playerCount; i++) {

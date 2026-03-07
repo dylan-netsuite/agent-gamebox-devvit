@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.0.12 - Review: DRY Utilities & HoleComplete Tie Fixes (2026-03-07)
+
+### Changed
+- **Extracted `getHolesPlayed` shared utility**: Deduplicated the safe `Math.max(...lengths)` fallback logic from both `HoleComplete.ts` and `Scorecard.ts` into a single `getHolesPlayed(scores)` function in `shared/types/multiplayer.ts`.
+- **HoleComplete crown for tied first-place players**: Previously only the first player in the sorted list received the crown emoji. Now all players who tie for the best score on a hole receive crowns and the indented name positioning.
+
 ## v0.0.11 - Multiplayer Polish & Bug Fixes (2026-03-07)
 
 ### Fixed

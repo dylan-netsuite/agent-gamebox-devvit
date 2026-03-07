@@ -1,6 +1,7 @@
 import { Scene } from 'phaser';
 import { HOLES } from '../data/holes';
 import { fadeIn, transitionTo, SCENE_COLORS } from '../utils/transitions';
+import { getHolesPlayed } from '../../../shared/types/multiplayer';
 import type { MultiplayerConfig, MultiplayerScores } from '../../../shared/types/multiplayer';
 
 interface HoleCompleteData {
@@ -230,10 +231,13 @@ export class HoleComplete extends Scene {
       strokes: this.playerHoleStrokes[i] ?? 0,
     })).sort((a, b) => a.strokes - b.strokes);
 
+    const bestStrokes = sortedPlayers[0]?.strokes ?? 0;
+
     for (let i = 0; i < sortedPlayers.length; i++) {
       const { player, strokes } = sortedPlayers[i]!;
       const y = startY + i * rowH;
       const diff = strokes - this.par;
+      const isTiedFirst = strokes === bestStrokes;
 
       const cardBg = this.add.graphics();
       cardBg.fillStyle(player.color, 0.15);
@@ -242,7 +246,7 @@ export class HoleComplete extends Scene {
       cardBg.strokeRoundedRect(cx - cardW / 2, y, cardW, rowH - 6, 10);
       cardBg.setDepth(2);
 
-      if (i === 0) {
+      if (isTiedFirst) {
         const crown = this.add
           .text(cx - cardW / 2 + 16, y + (rowH - 6) / 2, '👑', {
             fontSize: '16px',
@@ -259,7 +263,7 @@ export class HoleComplete extends Scene {
         });
       }
 
-      const nameX = cx - cardW / 2 + (i === 0 ? 40 : 16);
+      const nameX = cx - cardW / 2 + (isTiedFirst ? 40 : 16);
       this.add
         .text(nameX, y + (rowH - 6) / 2, player.name, {
           fontFamily: '"Arial Black", sans-serif',
@@ -324,8 +328,7 @@ export class HoleComplete extends Scene {
       .setDepth(2);
 
     const standingsY = totalsY + 22;
-    const scoreLengths = Object.values(this.multiplayerScores).map(s => s.length);
-    const holesPlayed = scoreLengths.length > 0 ? Math.max(...scoreLengths) : 0;
+    const holesPlayed = getHolesPlayed(this.multiplayerScores);
 
     const standings = players.map(p => {
       const playerScores = this.multiplayerScores![p.id]!;

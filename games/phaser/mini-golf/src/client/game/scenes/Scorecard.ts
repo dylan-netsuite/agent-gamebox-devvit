@@ -2,6 +2,7 @@ import { Scene } from 'phaser';
 import * as Phaser from 'phaser';
 import { HOLES } from '../data/holes';
 import { fadeIn, transitionTo, SCENE_COLORS } from '../utils/transitions';
+import { getHolesPlayed } from '../../../shared/types/multiplayer';
 import type { MultiplayerConfig, MultiplayerScores } from '../../../shared/types/multiplayer';
 
 interface ScorecardData {
@@ -262,8 +263,7 @@ export class Scorecard extends Scene {
     const cx = width / 2;
     const players = this.multiplayer.players;
     const numPlayers = players.length;
-    const scoreLengths = Object.values(this.multiplayerScores).map(s => s.length);
-    const holesPlayed = scoreLengths.length > 0 ? Math.max(...scoreLengths) : 0;
+    const holesPlayed = getHolesPlayed(this.multiplayerScores);
 
     this.add
       .text(cx, 20, 'SCORECARD', {
