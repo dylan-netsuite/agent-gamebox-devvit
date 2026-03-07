@@ -27,6 +27,7 @@ export interface GamePlayData {
   localAllAnswers?: string[][];
   localScores?: number[];
   nextPlayerName?: string;
+  aiPreviousTotals?: number[];
 }
 
 export class GamePlay extends Scene {
@@ -46,6 +47,7 @@ export class GamePlay extends Scene {
   private submitBtn!: Phaser.GameObjects.Container;
   private submitLabel!: Phaser.GameObjects.Text;
   private statusText!: Phaser.GameObjects.Text;
+  private progressText!: Phaser.GameObjects.Text;
   private timerEvent: Phaser.Time.TimerEvent | null = null;
   private inputContainer: HTMLDivElement | null = null;
   private inputElements: HTMLInputElement[] = [];
@@ -62,6 +64,7 @@ export class GamePlay extends Scene {
   private localPlayerIndex = 0;
   private localAllAnswers: string[][] = [];
   private localScores: number[] = [];
+  private aiPreviousTotals: number[] = [];
 
   constructor() {
     super('GamePlay');
@@ -106,6 +109,7 @@ export class GamePlay extends Scene {
       if (data.roundNumber != null) this.roundNumber = data.roundNumber;
       this.aiDifficulty = data.aiDifficulty ?? 'medium';
       this.aiPlayers = createAIPlayers(undefined, this.aiDifficulty);
+      this.aiPreviousTotals = data.aiPreviousTotals ?? new Array(this.aiPlayers.length).fill(0);
       this.pickSinglePlayerRound();
     }
 
@@ -169,6 +173,17 @@ export class GamePlay extends Scene {
 
     this.animateLetterRoll(cx);
 
+    const muteText = this.add.text(16, 10, SoundManager.isMuted() ? '🔇' : '🔊', {
+      fontSize: '16px',
+    }).setOrigin(0, 0);
+    const muteZone = this.add.zone(muteText.x + 10, muteText.y + 10, 28, 28)
+      .setInteractive({ useHandCursor: true });
+    muteZone.on('pointerdown', () => {
+      const newMuted = !SoundManager.isMuted();
+      SoundManager.mute(newMuted);
+      muteText.setText(newMuted ? '🔇' : '🔊');
+    });
+
     const roundLabel = `Round ${this.roundNumber}/${TOTAL_ROUNDS}`;
     this.add
       .text(width - 16, 10, roundLabel, {
@@ -199,6 +214,14 @@ export class GamePlay extends Scene {
         color: '#8899aa',
       })
       .setOrigin(0, 0);
+
+    this.progressText = this.add
+      .text(width - 16, 52, `0/${CATEGORIES_PER_LIST} answered`, {
+        fontFamily: 'monospace',
+        fontSize: '9px',
+        color: '#8899aa',
+      })
+      .setOrigin(1, 0);
 
     if (this.mode === 'local') {
       const playerTag = this.add
@@ -325,6 +348,7 @@ export class GamePlay extends Scene {
       const idx = i;
       input.addEventListener('input', () => {
         this.answers[idx] = input.value;
+        this.updateProgress();
       });
 
       input.addEventListener('keydown', (e) => {
@@ -353,6 +377,18 @@ export class GamePlay extends Scene {
       this.inputContainer = null;
     }
     this.inputElements = [];
+  }
+
+  private updateProgress(): void {
+    const filled = this.answers.filter((a) => a.trim().length > 0).length;
+    this.progressText.setText(`${filled}/${CATEGORIES_PER_LIST} answered`);
+    if (filled === CATEGORIES_PER_LIST) {
+      this.progressText.setColor('#2ecc71');
+    } else if (filled > 0) {
+      this.progressText.setColor('#f39c12');
+    } else {
+      this.progressText.setColor('#8899aa');
+    }
   }
 
   private animateLetterRoll(_cx: number): void {
@@ -471,7 +507,7 @@ export class GamePlay extends Scene {
       generateAIAnswers(ai, this.categories, this.currentLetter),
     );
 
-    const { result, totalScore: newTotal } = scoreSinglePlayer(
+    const { result, totalScore: newTotal, aiTotals } = scoreSinglePlayer(
       this.roundNumber,
       this.currentLetter,
       this.categoryListId,
@@ -480,8 +516,10 @@ export class GamePlay extends Scene {
       this.totalScore,
       this.aiPlayers,
       aiAnswerSets,
+      this.aiPreviousTotals,
     );
     this.totalScore = newTotal;
+    this.aiPreviousTotals = aiTotals;
 
     this.time.delayedCall(1000, () => {
       this.cleanupDOM();
@@ -495,6 +533,7 @@ export class GamePlay extends Scene {
         usedLetters: this.usedLetters,
         totalScore: this.totalScore,
         aiDifficulty: this.aiDifficulty,
+        aiPreviousTotals: this.aiPreviousTotals,
       });
     });
   }

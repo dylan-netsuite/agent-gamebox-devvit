@@ -18,7 +18,8 @@ Based on the classic Hasbro board game (2003 edition).
 
 ### Scoring
 - **Multiplayer**: Duplicate answers between any players score 0 for both. Each unique valid answer scores 1 point.
-- **Single Player (vs AI)**: Valid answers score 1 point. Duplicate answers between human and AI score 0 for both.
+- **Single Player (vs AI)**: Valid answers score 1 point. Duplicate answers between human and AI score 0 for both. AI opponents accumulate scores across all rounds just like the human player.
+- **Tie Handling**: When two or more players end with the same top score, a tie is declared and all tied players are recognized.
 
 ### Answer Validation
 Answers go through two validation layers:
