@@ -428,6 +428,10 @@ export class GamePlay extends Scene {
         case 'game-over':
           if (!this.gameOver) {
             this.gameOver = true;
+            this.isSettling = false;
+            this.stopTurnTimer();
+            this.weaponSystem.reset();
+            this.projectileManager.cleanupRopes();
             this.showGameOver(msg.winningTeam);
           }
           break;
@@ -510,20 +514,35 @@ export class GamePlay extends Scene {
     for (const crater of result.craters) {
       this.terrain.addCrater(crater.x, crater.y, crater.radius);
     }
+
+    this.checkWinCondition();
   }
 
   private onRemoteTurnAdvance(turnOrderIndex: number, wind: number): void {
     if (this.gameOver) return;
 
-    SoundManager.play('turn');
     this.turnOrderIndex = turnOrderIndex;
     this.windSystem.setWind(wind);
     this.weaponSystem.reset();
     this.userPanning = false;
-    this.centerCameraOnWorm();
 
     const worm = this.activeWorm;
-    this.isRemoteTurn = worm ? worm.team !== this.localTeamIndex : true;
+    if (!worm || !worm.alive) {
+      this.checkWinCondition();
+      if (this.gameOver) return;
+      const fallback = this.findNextAliveIndex();
+      if (fallback < 0) {
+        this.checkWinCondition();
+        return;
+      }
+      this.turnOrderIndex = fallback;
+    }
+
+    SoundManager.play('turn');
+    this.centerCameraOnWorm();
+
+    const activeWorm = this.activeWorm;
+    this.isRemoteTurn = activeWorm ? activeWorm.team !== this.localTeamIndex : true;
     this.isAITurn = false;
 
     this.startTurn();
@@ -597,8 +616,13 @@ export class GamePlay extends Scene {
   }
 
   private requestNextTurn(): void {
+    if (this.gameOver) return;
     if (this.isOnline) {
       const next = this.findNextAliveIndex();
+      if (next < 0) {
+        this.checkWinCondition();
+        return;
+      }
       this.windSystem.randomize();
       const wind = this.windSystem.getWind();
       void this.mp!.sendEndTurn(next, wind);
@@ -612,11 +636,11 @@ export class GamePlay extends Scene {
     let attempts = 0;
     while (attempts < this.turnOrder.length) {
       const worm = this.worms[this.turnOrder[next]!];
-      if (worm?.alive) break;
+      if (worm?.alive) return next;
       next = (next + 1) % this.turnOrder.length;
       attempts++;
     }
-    return next;
+    return -1;
   }
 
   private spawnWorms(): void {
@@ -669,10 +693,15 @@ export class GamePlay extends Scene {
   private startTurn(): void {
     if (this.gameOver) return;
 
-    const worm = this.activeWorm;
+    let worm = this.activeWorm;
     if (!worm || !worm.alive) {
       this.checkWinCondition();
-      return;
+      if (this.gameOver) return;
+      const nextIdx = this.findNextAliveIndex();
+      if (nextIdx < 0) return;
+      this.turnOrderIndex = nextIdx;
+      worm = this.activeWorm;
+      if (!worm || !worm.alive) return;
     }
 
     this.startTurnTimer();
@@ -796,6 +825,9 @@ export class GamePlay extends Scene {
     if (teamsAlive.size <= 1) {
       this.gameOver = true;
       this.isSettling = false;
+      this.stopTurnTimer();
+      this.weaponSystem.reset();
+      this.projectileManager.cleanupRopes();
       const winningTeam = teamsAlive.size === 1 ? [...teamsAlive][0]! : -1;
       if (this.isOnline && this.isLocalTurn) {
         void this.mp!.sendGameOver(winningTeam);
@@ -1151,7 +1183,11 @@ export class GamePlay extends Scene {
     this.projectileManager.cleanupRopes();
     this.time.delayedCall(800, () => {
       if (!this.gameOver) {
-        this.advanceTurn();
+        if (this.isOnline && this.isLocalTurn) {
+          this.requestNextTurn();
+        } else if (!this.isOnline) {
+          this.advanceTurn();
+        }
       }
     });
   }
@@ -1159,10 +1195,15 @@ export class GamePlay extends Scene {
   private advanceTurn(): void {
     if (this.gameOver) return;
 
+    const next = this.findNextAliveIndex();
+    if (next < 0) {
+      this.checkWinCondition();
+      return;
+    }
+
     SoundManager.play('turn');
     this.tutorial?.notifyTurnAdvanced();
 
-    const next = this.findNextAliveIndex();
     this.turnOrderIndex = next;
 
     this.userPanning = false;

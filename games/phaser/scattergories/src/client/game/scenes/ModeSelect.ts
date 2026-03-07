@@ -93,6 +93,26 @@ export class ModeSelect extends Scene {
       const y = startY + i * (btnH + gap);
       this.createModeButton(cx, y, btnW, btnH, mode);
     });
+
+    this.createMuteToggle(width);
+  }
+
+  private createMuteToggle(width: number): void {
+    const isMuted = SoundManager.isMuted();
+    const muteText = this.add.text(width - 16, 16, isMuted ? '🔇' : '🔊', {
+      fontSize: '20px',
+    }).setOrigin(1, 0);
+
+    const muteZone = this.add
+      .zone(muteText.x - 12, muteText.y + 12, 32, 32)
+      .setInteractive({ useHandCursor: true });
+
+    muteZone.on('pointerdown', () => {
+      const newMuted = !SoundManager.isMuted();
+      SoundManager.mute(newMuted);
+      muteText.setText(newMuted ? '🔇' : '🔊');
+      if (!newMuted) SoundManager.play('select');
+    });
   }
 
   private createModeButton(cx: number, y: number, w: number, h: number, mode: ModeButton): void {

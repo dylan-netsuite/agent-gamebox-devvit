@@ -1,5 +1,19 @@
 # Scattergories - Changelog
 
+## [0.8.0] - 2026-03-07
+
+### Fixed
+- **AI Total Score Accumulation** — AI opponents' total scores now correctly accumulate across all 3 rounds. Previously, AI `totalScore` was set to only the current round's score, making the human player almost always win. AI previous totals are now tracked and passed through the GamePlay → RoundResults → GamePlay scene chain.
+- **GameOver Winner Determination** — Final scores for single player and local modes are now sorted before determining the winner, ensuring the actual highest scorer is recognized (not just the first player in the list).
+
+### Added
+- **Tie Detection** — GameOver screen now detects when two or more players have the same top score and displays "It's a Tie!" with the tied players' names instead of picking an arbitrary winner.
+- **Sound Mute Toggle** — Speaker icon button (🔊/🔇) on both ModeSelect and GamePlay scenes allows toggling sound on/off. Persists while navigating between scenes.
+- **Play Again for Single Player** — GameOver screen now shows a "PLAY AGAIN" button for single player mode (previously only local and multiplayer had replay options).
+- **Answer Progress Indicator** — GamePlay scene now shows an "X/12 answered" counter in the top-right that updates in real-time as the player types. Color changes from gray (0) to orange (partial) to green (all 12 filled).
+
+Workflow: wf-1772918053
+
 ## [0.7.0] - 2026-02-26
 
 ### Added

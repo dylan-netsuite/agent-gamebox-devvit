@@ -11,7 +11,8 @@ export function scoreSinglePlayer(
   previousTotal: number,
   aiPlayers?: AIPlayer[],
   aiAnswerSets?: string[][],
-): { result: RoundResult; roundScore: number; totalScore: number } {
+  aiPreviousTotals?: number[],
+): { result: RoundResult; roundScore: number; totalScore: number; aiTotals: number[] } {
   const allAnswers = [answers, ...(aiAnswerSets ?? [])];
   const allNormalized = allAnswers.map((a) => a.map((s) => s.trim().toLowerCase()));
 
@@ -56,6 +57,11 @@ export function scoreSinglePlayer(
   const humanRoundScore = allPlayerResults[0]!.roundScore;
   const totalScore = previousTotal + humanRoundScore;
 
+  const aiTotals = allPlayerResults.slice(1).map((pr, i) => {
+    const prev = aiPreviousTotals?.[i] ?? 0;
+    return prev + pr.roundScore;
+  });
+
   const result: RoundResult = {
     roundNumber,
     letter,
@@ -63,9 +69,9 @@ export function scoreSinglePlayer(
     categories,
     playerResults: allPlayerResults.map((pr, i) => ({
       ...pr,
-      totalScore: i === 0 ? totalScore : pr.roundScore,
+      totalScore: i === 0 ? totalScore : aiTotals[i - 1] ?? pr.roundScore,
     })),
   };
 
-  return { result, roundScore: humanRoundScore, totalScore };
+  return { result, roundScore: humanRoundScore, totalScore, aiTotals };
 }

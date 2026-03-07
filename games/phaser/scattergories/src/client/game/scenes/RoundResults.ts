@@ -21,6 +21,7 @@ export interface RoundResultsData {
   localPlayers?: string[];
   localScores?: number[];
   aiDifficulty?: AIDifficulty;
+  aiPreviousTotals?: number[];
 }
 
 export class RoundResults extends Scene {
@@ -256,13 +257,15 @@ export class RoundResults extends Scene {
             totalScore: pr.totalScore,
             roundScores: [pr.roundScore],
           }));
+          const sorted = [...scores].sort((a, b) => b.totalScore - a.totalScore);
           this.scene.start('GameOver', {
             scores,
-            winnerId: scores[0]?.userId ?? '',
-            winnerName: scores[0]?.username ?? '',
+            winnerId: sorted[0]?.userId ?? '',
+            winnerName: sorted[0]?.username ?? '',
             mp: null,
             mode,
             localPlayers: data.localPlayers,
+            aiDifficulty: data.aiDifficulty,
           });
         });
       });
@@ -278,6 +281,7 @@ export class RoundResults extends Scene {
               usedLetters: data.usedLetters,
               totalScore: data.totalScore,
               roundNumber: roundNumber + 1,
+              aiPreviousTotals: data.aiPreviousTotals,
             });
           });
         });
