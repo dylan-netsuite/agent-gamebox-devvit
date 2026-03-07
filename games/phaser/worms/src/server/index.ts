@@ -473,7 +473,9 @@ router.post('/api/game/game-over', async (req, res): Promise<void> => {
   await updateLobbyStatus(code, 'finished');
 
   const players = await getLobbyPlayers(code);
-  const winnerPlayer = winningTeam >= 0 ? players[winningTeam] : null;
+  const winnerPlayer = winningTeam >= 0
+    ? players.find((p) => p.teamIndex === winningTeam) ?? null
+    : null;
   const playerInfos = players.map((p) => ({ userId: p.userId, username: p.username }));
   const { postId } = context;
   if (postId) {
