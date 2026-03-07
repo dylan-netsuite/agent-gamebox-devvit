@@ -15,6 +15,7 @@ interface ScorecardData {
 export class Scorecard extends Scene {
   private scores: number[] = [];
   private startHoleIndex: number = 0;
+  private viewOnly: boolean = false;
   private multiplayer: MultiplayerConfig | undefined = undefined;
   private multiplayerScores: MultiplayerScores | undefined = undefined;
   private allObjects: Phaser.GameObjects.GameObject[] = [];
@@ -35,6 +36,7 @@ export class Scorecard extends Scene {
   init(data: ScorecardData) {
     this.scores = data.scores ?? [];
     this.startHoleIndex = data.startHoleIndex ?? 0;
+    this.viewOnly = data.viewOnly ?? false;
     this.multiplayer = data.multiplayer;
     this.multiplayerScores = data.multiplayerScores;
     this.allObjects = [];
@@ -246,7 +248,7 @@ export class Scorecard extends Scene {
         .setDepth(2);
     }
 
-    if (this.scores.length === HOLES.length) {
+    if (!this.viewOnly && this.scores.length === HOLES.length) {
       void this.submitScore(totalStrokes, totalPar);
     }
 
@@ -260,7 +262,7 @@ export class Scorecard extends Scene {
     const cx = width / 2;
     const players = this.multiplayer.players;
     const numPlayers = players.length;
-    const holesPlayed = this.multiplayerScores[0]?.length ?? 0;
+    const holesPlayed = Math.max(...Object.values(this.multiplayerScores).map(s => s.length));
 
     this.add
       .text(cx, 20, 'SCORECARD', {
@@ -291,11 +293,10 @@ export class Scorecard extends Scene {
     this.scrollContainer = container;
     this.allObjects.push(container);
 
-    const mask = this.add.graphics();
-    mask.fillStyle(0xffffff);
-    mask.fillRect(0, scrollTop, width, scrollViewH);
-    container.setMask(new Phaser.Display.Masks.GeometryMask(this, mask));
-    void mask;
+    const maskGraphics = this.add.graphics();
+    maskGraphics.fillStyle(0xffffff);
+    maskGraphics.fillRect(0, scrollTop, width, scrollViewH);
+    container.setMask(new Phaser.Display.Masks.GeometryMask(this, maskGraphics));
 
     const rowH = 20;
     const holeColW = 90;
@@ -475,14 +476,20 @@ export class Scorecard extends Scene {
       return { player: p, total: s.reduce((a, b) => a + b, 0) };
     }).sort((a, b) => a.total - b.total);
 
-    const winner = standings[0]!;
+    const bestScore = standings[0]!.total;
+    const tiedWinners = standings.filter(s => s.total === bestScore);
+    const isTie = tiedWinners.length > 1;
+    const winnerLabel = isTie
+      ? `🏆 TIE! 🏆`
+      : `🏆 ${tiedWinners[0]!.player.name} WINS! 🏆`;
+    const winnerColor = isTie ? '#ffd700' : tiedWinners[0]!.player.colorHex;
 
     container.add(
       this.add
-        .text(cx, winnerY, `🏆 ${winner.player.name} WINS! 🏆`, {
+        .text(cx, winnerY, winnerLabel, {
           fontFamily: '"Arial Black", "Impact", sans-serif',
           fontSize: '18px',
-          color: winner.player.colorHex,
+          color: winnerColor,
           stroke: '#000000',
           strokeThickness: 2,
           align: 'center',

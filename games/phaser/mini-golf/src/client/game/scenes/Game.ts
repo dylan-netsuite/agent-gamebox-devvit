@@ -91,7 +91,7 @@ export class Game extends Scene {
     this.createHUD();
     this.setupInput();
 
-    if (this.isMultiplayer && this.currentPlayerIndex === 0) {
+    if (this.isMultiplayer) {
       this.showTurnTransition();
     }
 
@@ -673,7 +673,8 @@ export class Game extends Scene {
       this.cleanupHole();
       this.state = 'turn_transition';
 
-      const nextPlayer = this.multiplayer!.players[nextPlayerIdx]!;
+      const nextPlayer = this.multiplayer?.players[nextPlayerIdx];
+      if (!nextPlayer) return;
       this.showPassDeviceOverlay(nextPlayer.name, nextPlayer.color, () => {
         this.scene.start('Game', {
           holeIndex: this.currentHoleIndex,
@@ -691,8 +692,6 @@ export class Game extends Scene {
   private showTurnTransition(): void {
     const player = this.currentPlayer;
     if (!player) return;
-
-    if (this.currentPlayerIndex === 0) return;
 
     this.state = 'turn_transition';
     this.showPassDeviceOverlay(player.name, player.color, () => {
