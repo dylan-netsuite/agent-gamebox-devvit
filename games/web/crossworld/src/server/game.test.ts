@@ -176,3 +176,14 @@ for (const stage of ["user-budget", "installation-budget"] as const) {
     }
   });
 }
+
+test("the postcard starts fresh and leaves the previous scenario accepted record intact", async () => {
+  const legacyKey = "cq:crossworld-live-turn-1-v1:alice:accepted";
+  const legacy = JSON.stringify({ ...draft, status: "accepted", review: yes });
+  await redis.set(legacyKey, legacy);
+  expect(SCENARIO).toBe("chatterbloom-postcard-v1");
+  expect((await readTurn("alice")).revealed).toBe(false);
+  await submit("alice", draft, dependencies());
+  expect((await readTurn("alice")).status).toBe("accepted");
+  expect(await redis.get(legacyKey)).toBe(legacy);
+});

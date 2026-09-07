@@ -1,6 +1,6 @@
-# CrossWorld: first Devvit playtest
+# CrossWorld: Chatterbloom living postcard
 
-This app ports the personally tested single-turn mock to Reddit. The user chose CrossWorld as its name and OpenAI as its initial clue reviewer. Theme and art remain the user's decisions. The current renderer uses HTML controls and CSS; it does not need Phaser or a separately hosted server.
+This app ports the personally tested single-turn mock to Reddit. The user chose CrossWorld as its name and OpenAI as its initial clue reviewer. The current slice follows the user’s whimsical, colorful Chatterbloom Gardens direction. The renderer uses HTML controls, layered SVG, and CSS; it does not need Phaser or a separately hosted server. The vector illustration is editable prototype art, with final art direction still open to the user.
 
 ## Register, upload, and play
 
@@ -36,34 +36,44 @@ The judge uses `POST https://api.openai.com/v1/responses`, a pinned model, stric
 
 The prompt treats submitted text as data, allows ordinary inflections and fair everyday definitions, and does not invent substring or word-family restrictions. It does not demand that a clue uniquely identify one word. Structured output validates the shape of the answer; it does not guarantee semantic accuracy or make prompt injection impossible. Refusals, malformed output, timeouts and HTTP failures produce an unavailable response, never an automatic win.
 
-Current cost controls: one fresh review per user per 45 seconds; at most 20 attempted reviews per user per installation per UTC day; at most 200 attempted reviews per subreddit installation per UTC day. Failures count toward these API allowances but never use the gameplay restriction. Completed identical reviews are reused for seven days. There is no automatic retry. A counter failure stops the request before OpenAI, returns an unavailable response, and logs only the budget stage and numeric error code. These are conservative playtest limits, to be tuned with actual usage.
+Current cost controls: one fresh review per user per 45 seconds; at most 20 attempted reviews per user per scenario per installation per UTC day; at most 200 attempted reviews per subreddit installation per UTC day. Failures count toward these API allowances but never use the gameplay restriction. Completed identical reviews are reused for seven days. There is no automatic retry. A counter failure stops the request before OpenAI, returns an unavailable response, and logs only the budget stage and numeric error code. These are conservative playtest limits, to be tuned with actual usage.
 
 Reddit requires apps that use HTTP fetch to provide Terms & Conditions and Privacy Policy links in app details. Add the actual policies before wider distribution; this repository does not invent or publish legal terms for the owner.
 
 ## Requests and persistence
 
-| Route                        | Access                  | Behavior                                                                                    |
-| ---------------------------- | ----------------------- | ------------------------------------------------------------------------------------------- |
-| `GET /api/turn`              | Everyone                | Returns login/configuration readiness and the caller's own turn; guests get an empty turn.  |
-| `POST /api/draft`            | Signed-in Reddit user   | Saves bounded draft fields. Ignores client identities, statuses and verdicts.               |
-| `POST /api/submit`           | Signed-in Reddit user   | Revalidates slot and restriction, reads cached review or calls judge, and saves acceptance. |
-| `/internal/on-app-install`   | Devvit internal trigger | Creates the playtest post.                                                                  |
-| `/internal/menu/post-create` | Devvit moderator menu   | Creates another post for the same scenario.                                                 |
+| Route                                       | Access                  | Behavior                                                                                    |
+| ------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------- |
+| `GET /api/chatterbloom-postcard-v1/turn`    | Everyone                | Returns login/configuration readiness and the caller's own turn; guests get an empty turn.  |
+| `POST /api/chatterbloom-postcard-v1/draft`  | Signed-in Reddit user   | Saves bounded draft fields. Ignores client identities, statuses and verdicts.               |
+| `POST /api/chatterbloom-postcard-v1/submit` | Signed-in Reddit user   | Revalidates slot and restriction, reads cached review or calls judge, and saves acceptance. |
+| `/internal/on-app-install`                  | Devvit internal trigger | Creates the playtest post.                                                                  |
+| `/internal/menu/post-create`                | Devvit moderator menu   | Creates another post for the same scenario.                                                 |
+
+The scenario appears in each public game route, so a stale playtest backend cannot route a new postcard submission into an older turn. The client also checks the returned scenario before enabling play. A missing route or mismatched scenario shows an update/reopen message.
 
 User identity comes only from Devvit request context. There is no manual accept or reset API. Current slot and restriction definitions are server-owned shared code. The browser shares that logic for immediate feedback, but modifying the browser cannot change server acceptance.
 
-Redis installation-scoped keys use `cq:crossworld-live-turn-1-v1:<user>:…`. Drafts are editable; acceptance is a separate immutable `SET NX` record and always wins over later draft writes. That one record represents completion and restriction use, avoiding a separate increment that could award twice. A hash of normalized submission, model and rubric version identifies a cached review. A fixed expiring cooldown serializes fresh requests; it is deliberately never deleted by an older request. UTC budget keys expire after 48 hours, review caches after seven days; drafts and accepted progress persist. The shared daily counter also uses installation-scoped Redis. It is shared across users and posts in that subreddit, not across installations. This app does not require a global Redis grant. Before installing in additional communities, account for the multiplied review allowance or introduce a separately supported shared budget service.
+Redis installation-scoped keys now use `cq:chatterbloom-postcard-v1:<user>:…`. Changing the server-owned scenario gives this postcard a fresh turn. Earlier `cq:crossworld-live-turn-1-v1:<user>:…` records are retained unchanged, but this version does not expose a UI for switching back. The installation budget remains shared across scenarios; the per-user budget is scenario-specific. Drafts are editable; acceptance is a separate immutable `SET NX` record and always wins over later draft writes. That one record represents completion and restriction use, avoiding a separate increment that could award twice. A hash of normalized submission, model and rubric version identifies a cached review. A fixed expiring cooldown serializes fresh requests; it is deliberately never deleted by an older request. UTC budget keys expire after 48 hours, review caches after seven days; drafts and accepted progress persist. The shared daily counter also uses installation-scoped Redis. It is shared across users and posts in that subreddit, not across installations. This app does not require a global Redis grant. Before installing in additional communities, account for the multiplied review allowance or introduce a separately supported shared budget service.
 
 Drafts use last-save-wins behavior across devices. The client serializes its own saves, flushes edits before submission/refresh, and keeps typed content visible if a save fails. A response lost after acceptance is recovered by refreshing the saved turn. An interrupted request before the result is persisted can require a fresh paid call after cooldown; exactly-once external billing is not claimed.
 
 ## Rules and scope
 
 - The current slot has five A–Z letters, second letter A, crossing the supplied MAP.
-- Select one restriction: at most four words; exactly seven words; no E; no whole-word A/AN/THE; every word at most four letters; at least two words with the same initial; or no A.
+- Select one themed restriction: Pocket Posy (at most four words), Seven Petals (exactly seven), E’s Day Off (no E), Pull the Weeds (no whole-word A/AN/THE), Tiny Seeds (every word at most four letters), Twin Blossoms (any two words share an initial; other words are allowed), or Bee-Free Patch (no B). These restrictions apply to the clue, not the answer. This scenario replaces the earlier no-A card and relaxes the old all-words-same-initial rule.
 - Clues contain 1–140 characters and at least one word. A word is a case-insensitive contiguous group of A–Z letters. Apostrophes, hyphens and punctuation split tokens.
 - The exact answer as a whole clue word is banned. Its letters inside another word and word-family relatives are allowed. The same rules are visible in the UI.
 - A true `validWord` and true `fairClue` accept the turn. A rejection permits editing. Infrastructure errors spend no restriction.
-- One playable level, no daily scheduling, generated future grid, seven-day progression, leaderboards, multiplayer, appeals workflow or finished chapter art in this iteration. The single-turn mechanics must work on Reddit before adding those systems.
+- One playable discovery, no daily scheduling, generated future grid, seven-day progression, leaderboards, multiplayer, appeals workflow, connected-world finale or puzzle sharing in this iteration.
+
+## Living postcard presentation
+
+`src/client/garden.svg` contains the original layered vector landscape, greenhouse, flower symbols, butterfly and gardener Pip. The DOM controller in `garden.ts` loads this trusted bundled asset; user text is never inserted as markup. Art stays separate from game state and can be refined or replaced while preserving the named layers. CSS supplies subtle cloud/butterfly/gardener motion plus a finite vine, flower, window-light and wave sequence. This one sequence uses native browser animation; it does not add GSAP, Rive, or another renderer.
+
+The garden’s final appearance follows the server-returned accepted turn. Drafts, rejections, pending requests and service errors leave it dormant. A new accepted submission scrolls the garden into view, focuses its caption and plays the discovery. Loading an already accepted turn renders the final scene immediately without replay. Replay bloom affects presentation only: it makes no review call and spends nothing.
+
+Sound is off on every page load. Opting in creates a Web Audio context from that button gesture; discovery/replay plays a short four-note synthesized chime. No external sound files or audio network calls are used. Turning sound off closes the context. The app remains playable if audio is unavailable. Motion can be paused; OS reduced-motion always takes priority. Hidden pages stop animation and suspend sound. The controls are session-local preferences; final artwork alone is persisted via the accepted turn.
 
 ## Validation and rollout evidence
 
@@ -83,6 +93,14 @@ The first real submissions exposed a platform gap that the SDK test fixture did 
 
 On installed build 0.0.1.13, OpenAI rejected an unrelated clue, recovered the rejected review on refresh, reused an identical review, and enforced the cooldown on a revised clue. It then accepted the original VAMPS clue. The UI used one restriction, locked the turn, and recovered the same accepted result after a full Reddit reload. Repeat submission and a late draft save preserved acceptance. Typecheck, lint, all 37 tests and build passed. These two live judgments establish connectivity and tested transitions, not general judgment accuracy.
 
+### Chatterbloom postcard verification — 2026-09-07
+
+The garden adds two rule/storage regressions; all **39 tests**, TypeScript, ESLint and production build pass. **26 isolated browser checks** cover the reveal, pending/rejected/unavailable/accepted review states, draft recovery, keyboard focus, four responsive widths, audio opt-in, motion controls, accepted reload, visual-only replay, guest/configuration gates, and stale-backend protection. Screenshots were inspected at desktop and phone sizes. Browser audio was exercised technically; listening quality and actual iOS/Android devices still need human feedback.
+
+The real OpenAI review on build 0.0.1.20 accepted BarryBetsALot’s new postcard submission in approximately 3.1 seconds, and the garden bloomed. A full Reddit reload then exposed mismatched platform routing: new client assets and context version, but the previous scenario from the server. A clean prerelease restart alone did not resolve it. A full private `devvit upload` to 0.0.2 followed by a managed playtest at **0.0.2.2** restored consistent routing. The client now checks the scenario, and the game endpoints include it in their paths; an older backend returns a visible update message instead of reading or writing an earlier turn. The internal Devvit cause is unconfirmed; this is an observed deployment recovery, not an SDK root-cause claim.
+
+The final installed build recovered the identical accepted postcard on two full Reddit reloads without automatic animation or sound. Repeat submission and a late draft save returned the unchanged accepted turn. Replay triggered animation with zero review requests, and motion pause stopped all scene animations. Testing used only the explicitly authorized BarryBetsALot account; the owner’s postcard was not played. Original progress remains in the previous scenario’s keys. Human impressions of the art, sound, pacing and clue fairness remain pending. No public publication was performed.
+
 ## Sources checked 2026-09-07
 
 - [Devvit quickstart](https://developers.reddit.com/docs/quickstart): current Node requirement, app registration and playtest setup.
@@ -91,3 +109,5 @@ On installed build 0.0.1.13, OpenAI rejected an unrelated clue, recovered the re
 - [Devvit HTTP fetch](https://developers.reddit.com/docs/capabilities/server/http-fetch): server-only fetch, declared domains and app-policy links.
 - [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs): Responses JSON format and refusal handling.
 - [GPT-4.1 mini](https://developers.openai.com/api/docs/models/gpt-4.1-mini): pinned snapshot and structured-output support.
+
+- [Devvit playtest lifecycle](https://developers.reddit.com/docs/guides/tools/playtest): private playtest installation, live reload, and full upload version bump.

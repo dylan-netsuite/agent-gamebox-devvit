@@ -32,7 +32,7 @@ test.each([
   ["brief", "Lights on tables", "These are lights on our tables"],
   ["seven", "These lights are often placed on tables", "Lights on tables"],
   ["no-e", "Glowing bulbs", "Electric lights"],
-  ["no-a", "Electric lights", "Table lights"],
+  ["no-b", "Electric lights", "Bright bulbs"],
   ["no-articles", "Table lights", "The table lights"],
   ["short-words", "Give us some glow", "Provide illumination"],
   ["same-start", "Little lights", "Lights on tables"],
@@ -68,4 +68,15 @@ test("body parsing rejects wrong types and ignores forged identity and verdict",
       review: { fairClue: true },
     }),
   ).toEqual(draft);
+});
+
+test("Twin Blossoms allows other initials and requires a repeated initial", () => {
+  for (const clue of ["Little lights on tables", "Lights on little tables"])
+    expect(
+      validateTurn({ ...draft, restriction: "same-start", clue }).issues,
+    ).toEqual([]);
+  expect(
+    validateTurn({ ...draft, restriction: "same-start", clue: "Lights" })
+      .issues,
+  ).toHaveLength(1);
 });

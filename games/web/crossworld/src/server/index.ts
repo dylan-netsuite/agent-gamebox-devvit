@@ -5,7 +5,7 @@ import {
   getServerPort,
   reddit,
 } from "@devvit/web/server";
-import { SCENARIO } from "../shared/rules";
+import { API_ROOT, SCENARIO } from "../shared/rules";
 import { emptyTurn, type GameView } from "../shared/types";
 import { readTurn, saveDraft, submit, requireUser, GameError } from "./game";
 import { judgeConfig, JudgeUnavailable } from "./judge";
@@ -16,7 +16,7 @@ app.use("/api", (_req, res, next) => {
   res.set("Cache-Control", "no-store");
   next();
 });
-app.get("/api/turn", async (_req, res) => {
+app.get(`${API_ROOT}/turn`, async (_req, res) => {
   const config = await judgeConfig();
   const view: GameView = {
     scenario: SCENARIO,
@@ -26,10 +26,10 @@ app.get("/api/turn", async (_req, res) => {
   };
   res.json(view);
 });
-app.post("/api/draft", async (req, res) => {
+app.post(`${API_ROOT}/draft`, async (req, res) => {
   res.json(await saveDraft(requireUser(context.userId), req.body));
 });
-app.post("/api/submit", async (req, res) => {
+app.post(`${API_ROOT}/submit`, async (req, res) => {
   res.json(await submit(requireUser(context.userId), req.body));
 });
 
@@ -63,12 +63,10 @@ app.use(
         ? error.status
         : null;
     if (status === 400 || status === 413) {
-      res
-        .status(status)
-        .json({
-          error:
-            "The submission could not be read. Check its length and try again.",
-        });
+      res.status(status).json({
+        error:
+          "The submission could not be read. Check its length and try again.",
+      });
       return;
     }
     console.error("crossword_request_failed");

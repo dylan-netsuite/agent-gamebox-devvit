@@ -3,78 +3,108 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>CrossWorld · One turn</title>
+    <title>CrossWorld · Chatterbloom Gardens</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main>
       <header>
-        <a class="brand" href="#">CW<span>CrossWorld</span></a
-        ><span class="pill">Devvit playtest</span>
+        <a class="brand" href="#"
+          ><span class="brand-mark" aria-hidden="true">C<span>W</span></span
+          >CrossWorld</a
+        >
+        <span class="edition"
+          >A LIVING POSTCARD <span aria-hidden="true">✳</span> 01</span
+        >
       </header>
       <section class="intro">
-        <p class="eyebrow">CHAPTER 01 / LEVEL 01</p>
-        <h1>Make your word fit.<br />Make your clue count.</h1>
-        <p>
-          One new word. One restriction of your choosing. See today’s space,
-          then decide what to spend.
-        </p>
+        <p class="eyebrow">A LITTLE WORD CAN GROW A WHOLE WORLD</p>
+        <h1>Chatterbloom <em>Gardens</em></h1>
+        <p>Plant a word. Give it a clue. See what blossoms.</p>
       </section>
-      <div class="account-bar">
-        <p id="connection" role="status">Loading your turn…</p>
-        <button id="login" class="secondary" type="button" hidden>
-          Sign in to Reddit</button
-        ><button id="reload" class="secondary" type="button">
-          Refresh saved turn
-        </button>
-      </div>
       <div class="layout">
-        <section class="board-panel" aria-labelledby="board-title">
-          <div class="panel-heading">
-            <h2 id="board-title">Today’s addition</h2>
-            <span id="board-badge" class="pill">Unrevealed</span>
-          </div>
-          <div id="concealed">
-            <div class="concealed-symbol" aria-hidden="true">?</div>
-            <p>Today’s slot is ready.</p>
-            <button id="reveal" class="primary" type="button">
-              Reveal today’s slot
+        <section class="postcard-panel" aria-label="Your living postcard">
+          <figure id="garden-scene" class="garden-scene" data-state="waiting">
+            <div id="garden-art" aria-hidden="true"></div>
+            <figcaption id="garden-caption" tabindex="-1">
+              A small garden. A little possibility.
+            </figcaption>
+            <span class="postcard-stamp" aria-hidden="true"
+              >GREETINGS<br />FROM<br /><b>Chatterbloom</b></span
+            >
+          </figure>
+          <div class="scene-controls" aria-label="Postcard controls">
+            <button
+              id="motion"
+              class="quiet"
+              type="button"
+              aria-pressed="false"
+            >
+              Pause motion
+            </button>
+            <button id="sound" class="quiet" type="button" aria-pressed="false">
+              Sound: off
+            </button>
+            <button id="replay" class="quiet" type="button" hidden>
+              Replay bloom
             </button>
           </div>
-          <div id="revealed" hidden>
-            <div
-              id="board"
-              class="board"
-              role="img"
-              aria-label="MAP runs across. A new five-letter word runs down, crossing its A as the second letter."
-            ></div>
-            <p class="slot">
-              <strong>5 letters · down</strong><span>_ A _ _ _</span>
-            </p>
-            <p class="muted">
-              The A is fixed by the existing word.<br />You choose the word that
-              fits.
-            </p>
-            <div class="legend">
-              <span><i class="dot fixed"></i>Existing letters</span
-              ><span><i class="dot new"></i>Your new word</span>
+          <aside class="pip-note" aria-label="A note from Pip the gardener">
+            <span class="pip-avatar" aria-hidden="true">✿</span>
+            <div>
+              <p class="eyebrow">PIP · RESIDENT GARDENER</p>
+              <p id="pip-dialogue">
+                “The flowers have plenty to say. They’re just waiting for the
+                right word.”
+              </p>
             </div>
-          </div>
-          <p class="board-note">
-            MAP is your starting word. This first playtest has one playable
-            level. More levels will follow after testing.
+          </aside>
+          <section class="board-panel" aria-labelledby="board-title">
+            <div class="panel-heading">
+              <h2 id="board-title">Your patch of the puzzle</h2>
+              <span id="board-badge" class="pill">Unrevealed</span>
+            </div>
+            <div id="concealed">
+              <span class="seed-symbol" aria-hidden="true">✧</span>
+              <p>A word-shaped space is waiting beneath the leaves.</p>
+              <button id="reveal" class="primary" type="button">
+                Reveal the garden path
+              </button>
+            </div>
+            <div id="revealed" hidden>
+              <div
+                id="board"
+                class="board"
+                role="img"
+                aria-label="MAP runs across. A new five-letter word runs down, crossing its A as the second letter."
+              ></div>
+              <div class="slot">
+                <strong>5 letters · down</strong><span>_ A _ _ _</span>
+                <p>Crosses MAP at A.<br />You choose the word that fits.</p>
+              </div>
+            </div>
+          </section>
+          <p class="postcard-note">
+            One playable discovery. The rest of this world is still growing.
           </p>
         </section>
         <section class="play-panel" aria-labelledby="choice-title">
+          <p class="eyebrow">01 / PLANT YOUR FIRST WORD</p>
           <div class="panel-heading">
-            <h2 id="choice-title">Choose your restriction</h2>
+            <h2 id="choice-title">Pick a little challenge</h2>
             <span id="remaining" class="pill">7 available</span>
           </div>
           <p class="muted">
-            Choose one for this turn. It is spent only when your word and clue
-            are accepted.
+            Each seed has a quirk. Pick a rule for your clue; spend it only when
+            your word is accepted.
           </p>
+          <div class="account-bar">
+            <p id="connection" role="status">Loading your turn…</p>
+            <button id="login" class="secondary" type="button" hidden>
+              Sign in to Reddit
+            </button>
+          </div>
           <form id="turn-form" novalidate>
             <fieldset id="restriction-fieldset" disabled>
               <legend class="sr-only">Restrictions</legend>
@@ -119,7 +149,9 @@
               </p>
               <p>
                 All clues need at least one word and at most 140 characters.
-                These seven restrictions are a proposed pool for this playtest.
+                Twin Blossoms needs any two clue words with a matching initial;
+                other words can start differently. These seven cards are the
+                prototype’s challenge pool.
               </p>
             </details>
             <p id="judging" class="judge-note">
@@ -149,7 +181,9 @@
       <footer>
         <span id="storage-status" role="status"
           >Your turn is saved to your Reddit account.</span
-        ><span>One turn · Seven ways to write</span>
+        ><button id="reload" class="quiet" type="button">
+          Refresh saved turn
+        </button>
       </footer>
     </main>
     <script type="module" src="app.ts"></script>

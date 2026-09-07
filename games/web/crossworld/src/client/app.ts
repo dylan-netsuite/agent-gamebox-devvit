@@ -1,5 +1,12 @@
+import { createGarden } from "./garden";
 import { showLoginPrompt } from "@devvit/web/client";
-import { RESTRICTIONS, clueWords, validateTurn } from "../shared/rules";
+import {
+  API_ROOT,
+  RESTRICTIONS,
+  SCENARIO,
+  clueWords,
+  validateTurn,
+} from "../shared/rules";
 import { emptyTurn, type Turn, type GameView } from "../shared/types";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
@@ -14,9 +21,10 @@ let busy = false;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 let saves: Promise<void> = Promise.resolve();
 let dirty = false;
+const garden = createGarden();
 
 async function api<T>(path: string, body?: unknown): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(`${API_ROOT}${path}`, {
     ...(body === undefined
       ? {}
       : {
@@ -26,6 +34,10 @@ async function api<T>(path: string, body?: unknown): Promise<T> {
         }),
     signal: AbortSignal.timeout(25_000),
   });
+  if (response.status === 404)
+    throw new Error(
+      "This postcard is updating. Reopen the Reddit post to load the matching version. Your earlier turn is safe.",
+    );
   const data = (await response.json()) as T & { error?: string };
   if (!response.ok)
     throw new Error(
@@ -55,7 +67,7 @@ function board() {
   el("board").replaceChildren(...nodes);
 }
 
-function render() {
+function render(celebrate = false) {
   const accepted = turn.status === "accepted";
   const disabled = !loaded || busy || accepted || !turn.revealed;
   el("concealed").hidden = turn.revealed;
@@ -70,7 +82,7 @@ function render() {
   el("submit").textContent = busy
     ? "Reviewing your clue…"
     : accepted
-      ? "Turn complete"
+      ? "Postcard complete"
       : "Submit word & clue ↗";
   el("counter").textContent =
     `${clueWords(turn.clue).length} words · ${turn.clue.length}/140`;
@@ -92,16 +104,17 @@ function render() {
   el("result").hidden = !turn.review;
   if (turn.review) {
     el("result-title").textContent = accepted
-      ? "Your word belongs here."
+      ? "Look what you grew."
       : "Give your clue another pass.";
     el("result-copy").textContent =
-      `${turn.review.reason} ${accepted ? "Your restriction is used. You’ve completed this first playtest turn." : "Your restriction is still available. You can revise and submit again."}`;
+      `${turn.review.reason} ${accepted ? "One restriction spent. One little corner brought to life. Your postcard is complete." : "Your restriction is still available. You can revise and submit again."}`;
   }
   for (const input of document.querySelectorAll<HTMLInputElement>(
     'input[name="restriction"]',
   ))
     input.checked = input.value === turn.restriction;
   board();
+  garden.update(accepted, celebrate);
 }
 
 function queueSave(): Promise<void> {
@@ -113,7 +126,7 @@ function queueSave(): Promise<void> {
   const task = saves
     .catch(() => {})
     .then(async () => {
-      const saved = await api<Turn>("/api/draft", snapshot);
+      const saved = await api<Turn>("/draft", snapshot);
       if (saved.status === "accepted") {
         turn = saved;
         word.value = saved.word;
@@ -178,6 +191,9 @@ clue.addEventListener("input", changed);
 el("reveal").addEventListener("click", () => {
   turn.revealed = true;
   changed();
+  document
+    .querySelector<HTMLInputElement>('input[name="restriction"]')
+    ?.focus();
 });
 el("login").addEventListener("click", () => {
   showLoginPrompt();
@@ -198,7 +214,7 @@ el("turn-form").addEventListener("submit", (event) => {
     try {
       await queueSave();
       if (turn.status === "accepted") return;
-      turn = await api<Turn>("/api/submit", turn);
+      turn = await api<Turn>("/submit", turn);
       word.value = turn.word;
       clue.value = turn.clue;
       el("storage-status").textContent =
@@ -213,8 +229,14 @@ el("turn-form").addEventListener("submit", (event) => {
       );
     } finally {
       busy = false;
-      render();
-      if (turn.review) el("result").focus();
+      render(turn.status === "accepted");
+      if (turn.status === "accepted") {
+        el("garden-caption").focus({ preventScroll: true });
+        el("garden-scene").scrollIntoView({
+          block: "start",
+          behavior: "instant",
+        });
+      } else if (turn.review) el("result").focus();
     }
   })();
 });
@@ -226,7 +248,15 @@ async function load() {
   try {
     // Flush edits before refresh; a failed save must not silently discard them.
     await queueSave();
-    const view = await api<GameView>("/api/turn");
+    const view = await api<GameView>("/turn");
+    if (view.scenario !== SCENARIO) {
+      loaded = false;
+      signedIn = false;
+      judgeReady = false;
+      throw new Error(
+        "This postcard is updating. Reopen the Reddit post to load the matching version. Your earlier turn is safe.",
+      );
+    }
     turn = view.turn;
     signedIn = view.signedIn;
     judgeReady = view.judgeReady;
@@ -236,10 +266,12 @@ async function load() {
     el("storage-status").textContent = signedIn
       ? "Loaded your saved turn."
       : "Sign in to save your draft.";
-  } catch {
+  } catch (failure) {
     el("connection").textContent = "Could not load your saved turn.";
     error(
-      "Check your connection, then use Refresh saved turn. Your typed draft is still here.",
+      failure instanceof Error
+        ? failure.message
+        : "Check your connection, then use Refresh saved turn. Your typed draft is still here.",
     );
   } finally {
     busy = false;

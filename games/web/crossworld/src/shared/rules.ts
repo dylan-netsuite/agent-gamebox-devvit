@@ -1,33 +1,34 @@
 import type { Draft } from "./types";
-export const SCENARIO = "crossworld-live-turn-1-v1";
+export const SCENARIO = "chatterbloom-postcard-v1";
+export const API_ROOT = `/api/${SCENARIO}`;
 
 export const RESTRICTIONS = [
-  { id: "brief", name: "Keep it brief", rule: "Use at most 4 words." },
-  { id: "seven", name: "Seven words", rule: "Use exactly 7 words." },
+  { id: "brief", name: "Pocket Posy", rule: "Use at most 4 words." },
+  { id: "seven", name: "Seven Petals", rule: "Use exactly 7 words." },
   {
     id: "no-e",
-    name: "Without E",
+    name: "E’s Day Off",
     rule: "Do not use the letter E in your clue.",
   },
   {
     id: "no-articles",
-    name: "Skip the articles",
+    name: "Pull the Weeds",
     rule: "Do not use the words A, AN, or THE.",
   },
   {
     id: "short-words",
-    name: "Small words",
+    name: "Tiny Seeds",
     rule: "Every clue word must be 4 letters or fewer.",
   },
   {
     id: "same-start",
-    name: "Same start",
-    rule: "Use at least 2 words, all starting with the same letter.",
+    name: "Twin Blossoms",
+    rule: "At least 2 clue words must start with the same letter.",
   },
   {
-    id: "no-a",
-    name: "Without A",
-    rule: "Do not use the letter A in your clue.",
+    id: "no-b",
+    name: "Bee-Free Patch",
+    rule: "Do not use the letter B in your clue.",
   },
 ];
 
@@ -64,8 +65,8 @@ export function validateTurn(turn: Draft) {
       case "no-e":
         if (/e/i.test(clue)) issues.push("Remove every E from your clue.");
         break;
-      case "no-a":
-        if (/a/i.test(clue)) issues.push("Remove every A from your clue.");
+      case "no-b":
+        if (/b/i.test(clue)) issues.push("Remove every B from your clue.");
         break;
       case "no-articles":
         if (words.some((w) => ["a", "an", "the"].includes(w)))
@@ -76,7 +77,7 @@ export function validateTurn(turn: Draft) {
           issues.push("Each clue word must be 4 letters or fewer.");
         break;
       case "same-start":
-        if (words.length < 2 || words.some((w) => w[0] !== words[0]?.[0]))
+        if (new Set(words.map((w) => w[0])).size === words.length)
           issues.push("Use at least 2 words with the same starting letter.");
         break;
     }
