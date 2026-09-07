@@ -163,7 +163,7 @@ export class Scorecard extends Scene {
         totalStrokes += score;
         totalPar += hole.par;
         const diff = score - hole.par;
-        let scoreColor = '#ffffff';
+        let scoreColor: string;
         if (score === 1) scoreColor = '#ffd700';
         else if (diff < 0) scoreColor = '#32cd32';
         else if (diff === 0) scoreColor = '#ffffff';
@@ -392,7 +392,7 @@ export class Scorecard extends Scene {
         if (hasScore && scoreIdx < playerScores.length) {
           const score = playerScores[scoreIdx]!;
           const diff = score - hole.par;
-          let scoreColor = '#ffffff';
+          let scoreColor: string;
           if (score === 1) scoreColor = '#ffd700';
           else if (diff < 0) scoreColor = '#32cd32';
           else if (diff === 0) scoreColor = '#ffffff';

@@ -81,7 +81,7 @@ export class Preloader extends Scene {
         return;
       }
 
-      const { info, players, config } = data.lobby;
+      const { info, config } = data.lobby;
       const lobbyCode = info.lobbyCode;
       const postId = info.postId;
       const userId = context.userId ?? '';

@@ -1,7 +1,7 @@
-import type { Unit, GameState, RetreatOption } from '../../shared/types/game';
-import type { Order, MoveOrder, SupportOrder, OrderResult } from '../../shared/types/orders';
-import { ADJACENCIES, isAdjacent, determineCoast, getValidMoves } from '../../shared/data/adjacencies';
-import { PROVINCES } from '../../shared/data/provinces';
+import type { Unit, GameState, RetreatOption } from '../types/game';
+import type { Order, MoveOrder, SupportOrder, OrderResult } from '../types/orders';
+import { ADJACENCIES, isAdjacent, determineCoast, getValidMoves } from '../data/adjacencies';
+import { PROVINCES } from '../data/provinces';
 
 interface ResolutionState {
   orders: Map<string, Order>;

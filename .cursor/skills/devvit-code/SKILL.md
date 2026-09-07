@@ -50,7 +50,7 @@ Given a game path like `phaser/jeopardy`, all code lives under `games/phaser/jeo
   - Game logic in `game/` directory
   - Uses `fetch()` to call server endpoints
 - **Server code** (`games/{game-path}/src/server/`): Express endpoints
-  - All endpoints MUST start with `/api/`
+  - Browser endpoints start with `/api/`; platform handlers use configured `/internal/` routes
   - Access Redis via `import { redis } from '@devvit/web/server'`
   - Serverless runtime - no long-running processes
 - **Shared types** (`games/{game-path}/src/shared/`): Types used by both client and server
@@ -65,8 +65,10 @@ Given a game path like `phaser/jeopardy`, all code lives under `games/phaser/jeo
 
 ### Step 4: Validate Changes
 
-1. Type checking: `npm run type-check -w games/{game-path}`
-2. Linting: `npm run lint -w games/{game-path}`
+Run these commands from the repository root. `npm run check` combines type checking and lint without editing source.
+
+1. Type checking: `npm --prefix games/{game-path} run type-check`
+2. Linting: `npm --prefix games/{game-path} run lint`
 3. Fix any errors before proceeding
 
 ### Step 5: Update Status

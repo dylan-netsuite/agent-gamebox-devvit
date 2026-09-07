@@ -5,7 +5,6 @@ export const drawProfessorOrange: CharacterDrawFn = (g, x, y, w, h, facingRight,
   const dir = facingRight ? 1 : -1;
 
   const fur = 0xe8923a;
-  const furDark = 0xc47020;
   const furLight = 0xf5cc88;
   const stripe = 0xaa5510;
   const jacket = 0x6a5a48;

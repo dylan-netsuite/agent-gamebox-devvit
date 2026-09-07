@@ -4,7 +4,7 @@
 
 - **Engine**: Phaser 3.88.2 (WebGL, Canvas fallback)
 - **Client**: TypeScript, Vite, HTML/CSS
-- **Server**: Express 5 on Node 22 (serverless via `@devvit/web/server`)
+- **Server**: Express 5 on Node 24 (serverless via `@devvit/web/server`)
 - **Storage**: Redis (via `@devvit/web/server`)
 - **Platform**: Reddit Devvit
 

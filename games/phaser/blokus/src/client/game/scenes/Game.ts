@@ -370,7 +370,7 @@ export class Game extends Scene {
         this.finishGame();
         return;
       }
-      this.mp?.sendPass(this.myPlayerNumber);
+      void this.mp?.sendPass(this.myPlayerNumber);
       this.currentPlayer = this.opponentPlayerNumber();
       this.updateUI();
       return;
@@ -400,7 +400,7 @@ export class Game extends Scene {
 
     if (!this.board.hasValidMoves(this.myPlayerNumber)) {
       this.playerSkipped[this.myPlayerNumber - 1] = true;
-      this.mp?.sendPass(this.myPlayerNumber);
+      void this.mp?.sendPass(this.myPlayerNumber);
       this.finishGame();
       return;
     }
@@ -1016,7 +1016,7 @@ export class Game extends Scene {
           this.saveUndoSnapshot(this.dragPieceId, placedCells);
         }
         if (this.isMultiplayer && this.mp) {
-          this.mp.sendMove({ pieceId: this.dragPieceId, cells: placedCells, player: myP });
+          void this.mp.sendMove({ pieceId: this.dragPieceId, cells: placedCells, player: myP });
         }
         this.selectedPieceId = null;
         this.rotation = 0;
@@ -1164,7 +1164,7 @@ export class Game extends Scene {
         this.saveUndoSnapshot(this.selectedPieceId, placedCells);
       }
       if (this.isMultiplayer && this.mp) {
-        this.mp.sendMove({ pieceId: this.selectedPieceId, cells: placedCells, player: myP });
+        void this.mp.sendMove({ pieceId: this.selectedPieceId, cells: placedCells, player: myP });
       }
       this.ghostGraphics.clear();
       this.selectedPieceId = null;
@@ -1296,7 +1296,7 @@ export class Game extends Scene {
     }
 
     if (this.isMultiplayer && this.mp) {
-      this.mp.sendPass(myP);
+      void this.mp.sendPass(myP);
     }
 
     this.endTurn();
@@ -1423,7 +1423,7 @@ export class Game extends Scene {
 
     if (this.isMultiplayer && this.mp) {
       const winnerPlayer = myScore > oppScore ? myP : (oppScore > myScore ? oppP : null);
-      this.mp.sendGameOver(
+      void this.mp.sendGameOver(
         winnerPlayer,
         this.board.calculateScore(1),
         this.board.calculateScore(2),

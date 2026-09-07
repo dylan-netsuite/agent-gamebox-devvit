@@ -596,7 +596,7 @@ export class Obstacles {
 
         const colors = [0xffffff, 0xd4f5e3, 0xffffff];
         const color = colors[i % 3 < 0 ? (i % 3) + 3 : i % 3];
-        g.fillStyle(color, 0.85);
+        g.fillStyle(color ?? 0xffffff, 0.85);
         g.fillCircle(cx, cy, dotRadius);
         g.fillStyle(0x2e8b57, 0.5);
         g.fillCircle(cx + dx * dotRadius * 0.8, cy + dy * dotRadius * 0.8, dotRadius * 0.45);
@@ -926,7 +926,7 @@ export class Obstacles {
       entryRect,
       exitX: exit.x,
       exitY: exit.y,
-      exitAngle: def.exitAngle,
+      ...(def.exitAngle !== undefined ? { exitAngle: def.exitAngle } : {}),
       cooldown: 0,
     });
 
@@ -949,13 +949,13 @@ export class Obstacles {
       if (waypoints.length < 2) return;
       const segs = 30;
       gfx.beginPath();
-      gfx.moveTo(waypoints[0].x + offsetXPx, waypoints[0].y);
+      gfx.moveTo(waypoints[0]!.x + offsetXPx, waypoints[0]!.y);
 
       for (let w = 0; w < waypoints.length - 1; w += 3) {
-        const p0 = waypoints[w];
-        const p1 = waypoints[Math.min(w + 1, waypoints.length - 1)];
-        const p2 = waypoints[Math.min(w + 2, waypoints.length - 1)];
-        const p3 = waypoints[Math.min(w + 3, waypoints.length - 1)];
+        const p0 = waypoints[w]!;
+        const p1 = waypoints[Math.min(w + 1, waypoints.length - 1)]!;
+        const p2 = waypoints[Math.min(w + 2, waypoints.length - 1)]!;
+        const p3 = waypoints[Math.min(w + 3, waypoints.length - 1)]!;
         for (let i = 1; i <= segs; i++) {
           const t = i / segs;
           const px = bezierPoint(t, p0.x, p1.x, p2.x, p3.x) + offsetXPx;
@@ -1562,7 +1562,7 @@ export class Obstacles {
         this.scene.matter.body.setVelocity(ball.body, { x: 0, y: 0 });
 
         // Scale: shrink on entry, grow on exit
-        let scale = 1;
+        let scale: number;
         if (t < 0.15) {
           scale = 1 - (t / 0.15) * 0.6;
         } else if (t > 0.85) {
@@ -1964,7 +1964,7 @@ export class Obstacles {
     return this.cannons.some(c => c.animating || c.exitGraceMs > 0);
   }
 
-  update(delta: number, ball: GolfBall): { inWater: boolean; teleported: boolean } {
+  update(_delta: number, ball: GolfBall): { inWater: boolean; teleported: boolean } {
     if (this.isCannonAnimating()) {
       return { inWater: false, teleported: false };
     }

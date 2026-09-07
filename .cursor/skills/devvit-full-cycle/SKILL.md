@@ -1,11 +1,13 @@
 ---
 name: devvit-full-cycle
-description: Orchestrates the complete Devvit app development lifecycle for a specific game in the monorepo. First argument is always the game path (e.g., phaser/jeopardy). Runs planning, coding, deployment, testing, analysis, and documentation autonomously.
+description: Orchestrates the complete Devvit app development lifecycle for a specific game in the monorepo. First argument is always the game path (e.g., phaser/jeopardy). Runs planning, coding, playtesting, analysis, and documentation when the user requests a full game development cycle; excludes read-only reviews.
 ---
 
 # Devvit Full Cycle Orchestration
 
 Orchestrates the complete development workflow for a game in the monorepo. **Runs autonomously** -- do NOT stop between phases or ask the user for confirmation. Execute all phases in sequence until the workflow is complete or fails.
+
+Follow repository-root `AGENTS.md` for current runtime and commands. Preserve an active session workflow instead of starting a second state machine.
 
 ## Critical: Game Path
 
@@ -63,19 +65,16 @@ Given a game path like `phaser/jeopardy`:
 
 1. Read plan from `.workflows/{game-path}/{id}/plan.md`
 2. Implement all code changes within `games/{game-path}/`
-3. Run validation from the game directory:
-   - `npm run type-check -w games/{game-path}` -- fix any errors
-   - `npm run lint -w games/{game-path}` -- fix any errors
+3. Run validation from the repository root:
+   - `npm --prefix games/{game-path} run type-check` -- fix any errors
+   - `npm --prefix games/{game-path} run lint` -- fix any errors
 4. **Immediately proceed to Phase 3** -- do not pause
 
 ### Phase 3: Build + Deploy
 
-1. Build: `npm run build -w games/{game-path}` -- verify success
-2. Deploy: `cd games/{game-path} && npx devvit playtest` (reads subreddit from devvit.json)
-3. Construct playtest URL:
-   - Read `DEVVIT_SUBREDDIT` from `games/{game-path}/.env`
-   - Read app name from `games/{game-path}/devvit.json` `name` field
-   - URL: `https://www.reddit.com/r/{subreddit}?playtest={app-name}`
+1. Build: `npm --prefix games/{game-path} run build` -- verify success
+2. Deploy: run `npm run dev` inside `games/{game-path}` in a managed terminal; keep it alive during tests.
+3. Use the URL emitted by the CLI. Follow `/devvit-deploy` for environment precedence and record deployment success only after confirmed installation.
 4. Save deployment info to `.workflows/{game-path}/{id}/deployment.json`
 5. **Immediately proceed to Phase 4** -- do not pause
 
@@ -100,7 +99,7 @@ Given a game path like `phaser/jeopardy`:
 2. Review screenshots
 3. Evaluate against plan criteria
 4. **Decision**:
-   - If ALL critical tests pass -> mark `status: success`, workflow complete
+   - If ALL critical tests pass -> mark analysis successful and proceed to documentation; finish the workflow only after the remaining phases
    - If tests fail AND iteration < 3 -> create fix plan, loop back to Phase 2
    - If tests fail AND iteration >= 3 -> mark `status: failed`, report issues
 
@@ -159,7 +158,7 @@ After next steps are generated, commit all changes from this workflow:
    - Footer: `Workflow: {wf-id}`
 4. Stage relevant files:
    - `git add games/{game-path}/`
-   - `git add .workflows/{game-path}/{wf-id}/`
+   - Keep `.workflows/` local; it is gitignored. Do not force-add workflow artifacts.
    - Do NOT stage `.env` files or credentials
 5. Commit using a HEREDOC for proper formatting
 6. Run `git status` to verify the commit succeeded
@@ -177,9 +176,7 @@ If analysis determines fixes are needed:
 
 ## Playwright MCP Notes
 
-The Playwright MCP is configured with `--headless` and `--isolated` flags:
-- **Headless**: No visible browser window, no Chrome conflict
-- **Isolated**: Clean session each time, no stale state
+Discover the browser tools actually available. The optional `.cursor/mcp.json` uses separate persistent `player_one` and `player_two` profiles, without a guaranteed headless setting. Never reuse an active profile in another browser process. If those named servers are unavailable, use an available browser tool with a separate profile and report authentication gaps.
 
 When testing inside Devvit's iframe-based app:
 - The game runs inside nested iframes on Reddit
@@ -195,7 +192,7 @@ The playtest URL follows this pattern:
 https://www.reddit.com/r/{DEVVIT_SUBREDDIT}?playtest={app-name}
 ```
 
-- `DEVVIT_SUBREDDIT`: From `games/{game-path}/.env` (without `r/` prefix in the URL path)
+- Subreddit: explicit CLI argument, then loaded `DEVVIT_SUBREDDIT`, then `devvit.json` `dev.subreddit`. Strip `r/` for a candidate URL; prefer the observed CLI URL.
 - `app-name`: From `games/{game-path}/devvit.json` `name` field
 
 ## Error Handling
@@ -203,7 +200,7 @@ https://www.reddit.com/r/{DEVVIT_SUBREDDIT}?playtest={app-name}
 - Build failures: Fix code errors, retry build
 - Deployment issues: Check devvit auth, check game's `.env`
 - Test navigation failures: Verify URL, check if playtest server is running
-- Playwright errors: The headless config avoids Chrome conflicts
+- Playwright errors: verify available tools, authentication, and profile ownership; record untested scenarios instead of passing them
 - If playtest server is not running: Report to user that `npm run dev` must be running
 
 ## Status File

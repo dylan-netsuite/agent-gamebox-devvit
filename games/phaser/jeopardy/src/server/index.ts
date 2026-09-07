@@ -67,7 +67,7 @@ async function setCachedLatest(response: GameResponse): Promise<void> {
  * Redis/JSON round-trips can mangle `&amp;` into garbled Unicode + `mp;`.
  */
 function fixCorruptedText(text: string): string {
-  return cleanHtmlText(text.replace(/[^\x00-\x7F]{1,3}mp;/g, '&'));
+  return cleanHtmlText(text.replace(/[\u0080-\uFFFF]{1,3}mp;/g, '&'));
 }
 
 /**

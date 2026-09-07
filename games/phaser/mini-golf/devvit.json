@@ -5,7 +5,6 @@
     "dir": "dist/client",
     "entrypoints": {
       "default": {
-        "inline": true,
         "entry": "splash.html"
       },
       "game": {
@@ -37,5 +36,9 @@
   "permissions": {},
   "dev": {
     "subreddit": "mini_golf_devvit_dev"
+  },
+  "scripts": {
+    "build": "npm run build",
+    "dev": "vite build --watch"
   }
 }

@@ -29,8 +29,8 @@ export class TouchControls {
   private moveRightInterval: ReturnType<typeof setInterval> | null = null;
   private powerUpInterval: ReturnType<typeof setInterval> | null = null;
   private powerDownInterval: ReturnType<typeof setInterval> | null = null;
-  private powerUpObjects: Phaser.GameObjects.GameObject[] = [];
-  private powerDownObjects: Phaser.GameObjects.GameObject[] = [];
+  private powerUpObjects: Phaser.GameObjects.Components.Visible[] = [];
+  private powerDownObjects: Phaser.GameObjects.Components.Visible[] = [];
   private powerVisible = false;
 
   constructor(scene: Phaser.Scene, callbacks: TouchCallbacks) {
@@ -177,7 +177,7 @@ export class TouchControls {
     }, 0xf85149);
 
     for (const obj of [...this.powerUpObjects, ...this.powerDownObjects]) {
-      (obj as Phaser.GameObjects.Components.Visible).setVisible(false);
+      obj.setVisible(false);
     }
   }
 
@@ -188,8 +188,8 @@ export class TouchControls {
     onDown: () => void,
     onUp?: () => void,
     color: number = ACCENT,
-  ): Phaser.GameObjects.GameObject[] {
-    const objects: Phaser.GameObjects.GameObject[] = [];
+  ): Phaser.GameObjects.Components.Visible[] {
+    const objects: Phaser.GameObjects.Components.Visible[] = [];
 
     const bg = this.scene.add.graphics();
     bg.fillStyle(BG_COLOR, BG_ALPHA);
@@ -252,7 +252,7 @@ export class TouchControls {
     if (shouldShow !== this.powerVisible) {
       this.powerVisible = shouldShow;
       for (const obj of [...this.powerUpObjects, ...this.powerDownObjects]) {
-        (obj as Phaser.GameObjects.Components.Visible).setVisible(shouldShow);
+        obj.setVisible(shouldShow);
       }
     }
   }

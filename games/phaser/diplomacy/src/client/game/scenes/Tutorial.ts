@@ -4,7 +4,7 @@ import type { GameState, Country, PlayerInfo, Unit, BuildOption } from '../../..
 import { ALL_COUNTRIES, COUNTRY_NAMES } from '../../../shared/types/game';
 import { STARTING_UNITS, STARTING_SUPPLY_CENTERS } from '../../../shared/data/startingPositions';
 import { getHomeSupplyCenters } from '../../../shared/data/provinces';
-import { resolveOrders, applyResults } from '../../../server/core/orderResolver';
+import { resolveOrders, applyResults } from '../../../shared/logic/orderResolver';
 import { TUTORIAL_TURNS, type TutorialTurn, type TutorialStep } from '../tutorial/tutorialScript';
 import { TutorialOverlayDOM } from '../tutorial/TutorialOverlayDOM';
 import { OrdersPanelDOM, type StagedOrder, type StagedRetreat, type StagedBuild } from '../ui/OrdersPanelDOM';
@@ -489,13 +489,13 @@ export class Tutorial extends GamePlay {
       super.init({
         gameState: data.gameState!,
         currentPlayer: data.currentPlayer ?? TUTORIAL_PLAYER,
-        previousUnits: data.previousUnits,
+        ...(data.previousUnits ? { previousUnits: data.previousUnits } : {}),
       });
     } else if (data?.gameState) {
       super.init({
         gameState: data.gameState,
         currentPlayer: data.currentPlayer ?? TUTORIAL_PLAYER,
-        previousUnits: data.previousUnits,
+        ...(data.previousUnits ? { previousUnits: data.previousUnits } : {}),
       });
     } else {
       const state = createTutorialGameState();

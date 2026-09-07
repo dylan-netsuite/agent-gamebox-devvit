@@ -46,7 +46,7 @@ export class ModeSelect extends Scene {
         icon: '📖',
         title: 'TUTORIAL',
         desc: 'Learn the basics step by step',
-        badge: TutorialManager.isComplete() ? '✓ Completed' : undefined,
+        ...(TutorialManager.isComplete() ? { badge: '✓ Completed' } : {}),
         action: () => {
           SoundManager.play('select');
           this.scene.start('GamePlay', {

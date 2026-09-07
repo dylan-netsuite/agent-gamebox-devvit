@@ -32,12 +32,12 @@ succeeded=()
 for dir in "${games[@]}"; do
   name=$(basename "$dir")
   echo "========================================="
-  echo "  Building: $name"
+  echo "  Checking: $name"
   echo "========================================="
 
-  if ! (cd "$dir" && npm run build); then
-    echo "FAILED: $name (build)"
-    failed+=("$name (build)")
+  if ! (cd "$dir" && npm run check); then
+    echo "FAILED: $name (checks)"
+    failed+=("$name (checks)")
     continue
   fi
 

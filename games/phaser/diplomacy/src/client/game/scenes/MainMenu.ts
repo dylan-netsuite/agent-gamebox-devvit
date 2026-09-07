@@ -195,7 +195,7 @@ export class MainMenu extends Scene {
 
   private createPlayerList(): void {
     if (!this.gameState) return;
-    const { width, height } = this.scale;
+    const { width } = this.scale;
     const startY = 280;
 
     const headerText = this.add
@@ -285,7 +285,7 @@ export class MainMenu extends Scene {
       bg.setStrokeStyle(1, isSelected ? 0x2ecc71 : 0x334455);
       bg.setInteractive({ useHandCursor: true });
 
-      const label = this.add
+      this.add
         .text(bx, by, preset.label, {
           fontFamily: 'Arial, sans-serif',
           fontSize: '9px',

@@ -596,7 +596,7 @@ export class GamePlay extends Scene {
           unitType: unit.type,
           from: this.selectedUnitProvince,
           to: provinceId,
-          coast: autoCoast as 'NC' | 'SC' | 'EC' | undefined,
+          ...(autoCoast ? { coast: autoCoast as 'NC' | 'SC' | 'EC' } : {}),
         });
       }
       this.clearSelection();

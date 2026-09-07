@@ -1,18 +1,9 @@
 ---
-description: Use when writing server code for any game
+description: Server conventions for Devvit games
 globs: games/**/src/server/**/*
 alwaysApply: false
 ---
 
-Guidelines:
+Follow `AGENTS.md`. Devvit runs Node 24 with a request-scoped serverless lifecycle. Use `createServer` and `getServerPort` from `@devvit/web/server` for Express; use `fetch` for outbound HTTP with declared allowed domains. Do not use filesystem persistence, raw WebSockets, streaming, or background timers after returning a response.
 
-- This is a serverless node.js environment, you have all node globals at your disposal except: fs, http, https, and net.
-
-- Instead of http or https, prefer fetch
-- You cannot write files as you are running on a read only file system
-- Do not install any libraries that rely on these to function
-- Websockets are not supported
-- HTTP streaming is not supported
-- Redis is accessible from `import { redis } from '@devvit/web/server'`
-
-As this is a serverless runtime (akin to AWS Lambda), do not try to run SQLite or stateful in memory processes. For realtime use cases, consult the docs with devvit_search to learn more about the realtime service you can use.
+Use Redis for durable state and Devvit Realtime for notifications. Await writes/sends, validate client inputs, and derive identity from trusted context. Browser routes start with `/api/`; menu, trigger, scheduler, and other platform handlers use their configured `/internal/` routes. Shared client/server logic belongs in `src/shared` and must be free of server SDK imports.
