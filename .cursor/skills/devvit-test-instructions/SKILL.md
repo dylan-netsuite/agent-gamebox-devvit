@@ -1,76 +1,20 @@
 ---
 name: devvit-test-instructions
-description: Generates comprehensive testing instructions for a specific game based on the development plan and implementation.
+description: Prepare a concise human playtest brief with the verified URL, starting state, limitations, and feedback method, without solution spoilers.
 ---
 
-# Devvit Test Instructions Generator
+# Human playtest brief
 
-Generates comprehensive testing instructions for a game's features based on the development plan.
+Read [the shared contract](../devvit-full-cycle/references/workflow-contract.md). Resolve the explicit target and verified artifact directory; read its plan, readiness evidence, and technical results.
 
-## Usage
+Write `test-instructions.md` with:
 
-```
-/devvit-test-instructions phaser/jeopardy
-/devvit-test-instructions phaser/jeopardy wf-1234567890
-```
+- Verified URL and scenario/build identity.
+- Short player goal and visible rules, without example solutions or future reveals.
+- Starting state and reset controls. Keep the user's state separate from automation.
+- Honest limitations: local versus Reddit runtime, manual versus real AI judging, and omitted mechanics. Explain what affects player expectations.
+- Feedback method: submitted inputs or a copyable turn record, confusing moments, perceived fairness, and whether they wanted to continue. Separate neutral feedback prompts from a technical checklist.
 
-## Path Resolution
+For a mechanics experiment, put the hypothesis in evaluator notes instead of a leading player question. Reproducible fixtures and test-only reset/advance-day controls can help; do not introduce production bypasses or expand one turn into a full chapter.
 
-| Resource | Path |
-|----------|------|
-| Plan | `.workflows/{game-path}/{wf-id}/plan.md` |
-| Status | `.workflows/{game-path}/{wf-id}/status.json` |
-| Deployment | `.workflows/{game-path}/{wf-id}/deployment.json` |
-| Output | `.workflows/{game-path}/{wf-id}/test-instructions.md` |
-
-## Workflow
-
-### Step 1: Load Context
-
-1. Parse game path from first argument
-2. Find most recent workflow in `.workflows/{game-path}/` (or use provided wf-id)
-3. Read plan, status, and deployment info
-
-### Step 2: Analyze Plan and Implementation
-
-1. Extract feature requirements from plan
-2. Identify key functionality to test
-3. Review test criteria from plan (if provided)
-
-### Step 3: Generate Test Scenarios
-
-Create comprehensive test scenarios covering:
-
-1. **Visual/UI Tests**: Element visibility, styling, responsive layout
-2. **Interaction Tests**: Button clicks, navigation, user interactions
-3. **Functional Tests**: Core functionality, state management, error handling
-4. **Integration Tests**: API calls, client-server communication
-
-### Step 4: Create Test Instructions Document
-
-Generate `.workflows/{game-path}/{wf-id}/test-instructions.md` with:
-
-```markdown
-# Testing Instructions for {Feature Name}
-
-## Overview
-Brief description of what to test
-
-## Prerequisites
-- Playtest URL for this game
-- Game should be at expected initial state
-
-## Test Scenarios
-### Scenario 1: {Test Name}
-**Objective**: {What this test verifies}
-**Steps**: ...
-**Expected Result**: ...
-
-## Visual Verification Checklist
-## Interaction Checklist
-## Notes
-```
-
-### Step 5: Create Automated Test Scenarios
-
-If Playwright MCP is available, also generate Playwright test steps.
+Return the brief and URL to the owner. Preparing instructions is not evidence of a playtest. Wait for real observations before writing `human-feedback.md`.

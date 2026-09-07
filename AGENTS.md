@@ -4,7 +4,7 @@ Each `games/{engine}/{game}` directory is an independent npm project and Devvit 
 
 ## Architecture
 
-- `src/client`: Phaser browser code. Call backend routes through same-origin `/api/` fetches. Do not import server modules.
+- `src/client`: Browser code using the game's chosen renderer. Preserve Phaser in existing Phaser games; new text/grid games can use DOM controls and CSS. Call backend routes through same-origin `/api/` fetches. Do not import server modules.
 - `src/server`: Express running in Devvit's Node 24 serverless runtime. Use SDK `createServer` and `getServerPort`, Devvit Redis for durable state, `fetch` for allowlisted outbound HTTP, and Devvit Realtime for multiplayer messages.
 - `src/shared`: Pure logic/types usable on either side. Keep SDK server imports out of it.
 - `devvit.json`: App identity, permissions, entrypoints, routes, and build/watch commands. Keep existing app names and subreddit settings.
@@ -31,3 +31,5 @@ When playtesting is within the task's scope, run `npm run dev` inside the game d
 Use available browser tools to test the Reddit iframe. The optional `.cursor/mcp.json` player profiles support separate authenticated players; do not assume those named tools exist in every client. Never share the same persistent browser profile between concurrent browser processes. Report missing authentication/tools and untested scenarios explicitly.
 
 Keep changes scoped to the user's request. Reviews do not imply deployment or publication. Consult [the modernization assessment](docs/devvit-modernization.md) for known follow-ups.
+
+Local mechanics prototypes can live under `prototypes/` with their own serving and validation commands. They are not deployed Devvit apps and must label mocked persistence or judging. Use isolated state for automation and leave the user's session untouched. Human feedback remains pending until supplied. The [Devvit skill contract](.cursor/skills/devvit-full-cycle/references/workflow-contract.md) defines ownership and handoffs.
