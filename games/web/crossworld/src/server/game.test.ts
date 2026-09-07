@@ -100,14 +100,79 @@ test("provider failure preserves draft and cooldown instead of retrying automati
   await expect(submit("alice", draft, deps)).rejects.toThrow("45 seconds");
   expect(deps.judge).toHaveBeenCalledTimes(1);
 });
-test("per-user and app-wide budgets stop new provider calls", async () => {
+test("per-user and installation budgets stop new provider calls", async () => {
   const deps = dependencies();
   const day = new Date().toISOString().slice(0, 10);
   await redis.set(`cq:${SCENARIO}:alice:budget:${day}`, "20");
   await expect(submit("alice", draft, deps)).rejects.toThrow(
     "20-review allowance",
   );
-  await redis.global.set(`cq:judge-budget:${day}`, "200");
+  await redis.set(`cq:judge-budget:${day}`, "200");
   await expect(submit("bob", draft, deps)).rejects.toThrow("playtest limit");
   expect(deps.judge).not.toHaveBeenCalled();
 });
+
+test("submission works without a global Redis grant and charges expiring installation counters", async () => {
+  const blocked = vi
+    .spyOn(redis.global, "incrBy")
+    .mockRejectedValue(
+      Object.assign(new Error("global redis is not enabled"), { code: 9 }),
+    );
+  try {
+    const deps = dependencies();
+    expect((await submit("alice", draft, deps)).status).toBe("accepted");
+    expect(blocked).not.toHaveBeenCalled();
+    expect(deps.judge).toHaveBeenCalledTimes(1);
+    const day = new Date().toISOString().slice(0, 10);
+    for (const counter of [
+      `cq:${SCENARIO}:alice:budget:${day}`,
+      `cq:judge-budget:${day}`,
+    ]) {
+      expect(await redis.get(counter)).toBe("1");
+      expect(await redis.expireTime(counter)).toBeGreaterThan(
+        Date.now() / 1000,
+      );
+    }
+    await submit("alice", draft, deps);
+    expect(await redis.get(`cq:judge-budget:${day}`)).toBe("1");
+  } finally {
+    blocked.mockRestore();
+  }
+});
+
+for (const stage of ["user-budget", "installation-budget"] as const) {
+  test(`${stage} storage failure preserves draft, skips the provider and logs no raw error`, async () => {
+    const increment = redis.incrBy.bind(redis);
+    const broken = vi
+      .spyOn(redis, "incrBy")
+      .mockImplementation(async (key, value) => {
+        const isInstallation = key.startsWith("cq:judge-budget:");
+        if (isInstallation === (stage === "installation-budget"))
+          throw Object.assign(
+            new Error("private-key-value-and-submitted-clue"),
+            { code: 9 },
+          );
+        return increment(key, value);
+      });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const deps = dependencies();
+      await expect(submit("alice", draft, deps)).rejects.toMatchObject({
+        status: 503,
+      });
+      expect(await readTurn("alice")).toMatchObject({
+        ...draft,
+        status: "editing",
+        review: null,
+      });
+      expect(deps.judge).not.toHaveBeenCalled();
+      expect(log.mock.calls).toEqual([
+        ["crossworld_budget_failed", { stage, code: 9 }],
+      ]);
+      await expect(submit("alice", draft, deps)).rejects.toThrow("45 seconds");
+    } finally {
+      broken.mockRestore();
+      log.mockRestore();
+    }
+  });
+}

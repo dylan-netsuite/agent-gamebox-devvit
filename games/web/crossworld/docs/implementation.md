@@ -36,7 +36,7 @@ The judge uses `POST https://api.openai.com/v1/responses`, a pinned model, stric
 
 The prompt treats submitted text as data, allows ordinary inflections and fair everyday definitions, and does not invent substring or word-family restrictions. It does not demand that a clue uniquely identify one word. Structured output validates the shape of the answer; it does not guarantee semantic accuracy or make prompt injection impossible. Refusals, malformed output, timeouts and HTTP failures produce an unavailable response, never an automatic win.
 
-Current cost controls: one fresh review per user per 45 seconds; at most 20 attempted reviews per user per installation per UTC day; at most 200 attempted reviews app-wide per UTC day. Failures count toward these API allowances but never use the gameplay restriction. Completed identical reviews are reused for seven days. There is no automatic retry. These are conservative playtest limits, to be tuned with actual usage.
+Current cost controls: one fresh review per user per 45 seconds; at most 20 attempted reviews per user per installation per UTC day; at most 200 attempted reviews per subreddit installation per UTC day. Failures count toward these API allowances but never use the gameplay restriction. Completed identical reviews are reused for seven days. There is no automatic retry. A counter failure stops the request before OpenAI, returns an unavailable response, and logs only the budget stage and numeric error code. These are conservative playtest limits, to be tuned with actual usage.
 
 Reddit requires apps that use HTTP fetch to provide Terms & Conditions and Privacy Policy links in app details. Add the actual policies before wider distribution; this repository does not invent or publish legal terms for the owner.
 
@@ -52,7 +52,7 @@ Reddit requires apps that use HTTP fetch to provide Terms & Conditions and Priva
 
 User identity comes only from Devvit request context. There is no manual accept or reset API. Current slot and restriction definitions are server-owned shared code. The browser shares that logic for immediate feedback, but modifying the browser cannot change server acceptance.
 
-Redis installation-scoped keys use `cq:crossworld-live-turn-1-v1:<user>:…`. Drafts are editable; acceptance is a separate immutable `SET NX` record and always wins over later draft writes. That one record represents completion and restriction use, avoiding a separate increment that could award twice. A hash of normalized submission, model and rubric version identifies a cached review. A fixed expiring cooldown serializes fresh requests; it is deliberately never deleted by an older request. UTC budget keys expire after 48 hours, review caches after seven days; drafts and accepted progress persist. Global Redis contains only the app-wide daily counter.
+Redis installation-scoped keys use `cq:crossworld-live-turn-1-v1:<user>:…`. Drafts are editable; acceptance is a separate immutable `SET NX` record and always wins over later draft writes. That one record represents completion and restriction use, avoiding a separate increment that could award twice. A hash of normalized submission, model and rubric version identifies a cached review. A fixed expiring cooldown serializes fresh requests; it is deliberately never deleted by an older request. UTC budget keys expire after 48 hours, review caches after seven days; drafts and accepted progress persist. The shared daily counter also uses installation-scoped Redis. It is shared across users and posts in that subreddit, not across installations. This app does not require a global Redis grant. Before installing in additional communities, account for the multiplied review allowance or introduce a separately supported shared budget service.
 
 Drafts use last-save-wins behavior across devices. The client serializes its own saves, flushes edits before submission/refresh, and keeps typed content visible if a save fails. A response lost after acceptance is recovered by refreshing the saved turn. An interrupted request before the result is persisted can require a fresh paid call after cooldown; exactly-once external billing is not claimed.
 
@@ -75,12 +75,19 @@ node tools/validate-all.mjs --install web/crossworld
 
 The app has rule tests, Devvit Redis tests for isolation/concurrency/limits, and adapter tests for exact payload shape and malformed/refused/error responses. Browser QA uses separate mocked API contexts, including draft recovery, review error/revision/acceptance and 320/390/768/1440 pixel widths. Mocked provider tests do not prove live OpenAI connectivity.
 
-After configuration, verify the actual installed post under a separate test account: reveal, write a valid slot word and compliant clue, submit, read the real review, refresh, and confirm the same accepted turn or editable rejected turn returns. Also check that a guest cannot submit. Do not use the owner's live turn for automated acceptance testing. Keep the playtest process available for the user.
+After configuration, verify the actual installed post under a separate test account: reveal, write a valid slot word and compliant clue, submit, read the real review, refresh, and confirm the same accepted turn or editable rejected turn returns. Also check that a guest cannot submit. Use a separately authorized test account for automated acceptance testing. Keep the playtest process available for the user.
+
+### Live submission verification — 2026-09-07
+
+The first real submissions exposed a platform gap that the SDK test fixture did not enforce: the global Redis budget counter failed with RPC code 9. Diagnostic build 0.0.1.9 confirmed the failure at that operation. Submission now uses installation-scoped counters, with regressions for unavailable global Redis and safe failure handling for either daily counter.
+
+On installed build 0.0.1.13, OpenAI rejected an unrelated clue, recovered the rejected review on refresh, reused an identical review, and enforced the cooldown on a revised clue. It then accepted the original VAMPS clue. The UI used one restriction, locked the turn, and recovered the same accepted result after a full Reddit reload. Repeat submission and a late draft save preserved acceptance. Typecheck, lint, all 37 tests and build passed. These two live judgments establish connectivity and tested transitions, not general judgment accuracy.
 
 ## Sources checked 2026-09-07
 
 - [Devvit quickstart](https://developers.reddit.com/docs/quickstart): current Node requirement, app registration and playtest setup.
 - [Devvit settings and secrets](https://developers.reddit.com/docs/capabilities/server/settings-and-secrets): encrypted server-side settings and CLI setup after installation.
+- [Devvit Redis](https://developers.reddit.com/docs/capabilities/server/redis): installation-scoped persistence; shared storage must be designed explicitly.
 - [Devvit HTTP fetch](https://developers.reddit.com/docs/capabilities/server/http-fetch): server-only fetch, declared domains and app-policy links.
 - [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs): Responses JSON format and refusal handling.
 - [GPT-4.1 mini](https://developers.openai.com/api/docs/models/gpt-4.1-mini): pinned snapshot and structured-output support.

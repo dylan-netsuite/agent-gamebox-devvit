@@ -18,7 +18,7 @@ import {
 } from "./judge";
 
 export const USER_DAILY_LIMIT = 20;
-export const APP_DAILY_LIMIT = 200;
+export const INSTALLATION_DAILY_LIMIT = 200;
 export const COOLDOWN_MS = 45_000;
 const prefix = `cq:${SCENARIO}`;
 const key = (user: string, part: string) => `${prefix}:${user}:${part}`;
@@ -129,18 +129,20 @@ export async function submit(
 
   const day = new Date(now).toISOString().slice(0, 10);
   const userLimitKey = key(user, `budget:${day}`);
-  const userCount = await redis.incrBy(userLimitKey, 1);
-  if (userCount === 1) await redis.expire(userLimitKey, 172_800);
+  const userCount = await countReview(userLimitKey, "user-budget");
   if (userCount > USER_DAILY_LIMIT)
     throw new GameError(
       429,
       "Today’s 20-review allowance is used. Come back tomorrow; your restriction is still available.",
     );
-  // global spans all installations, so creating another post/subreddit cannot evade the app cap.
-  const appLimitKey = `cq:judge-budget:${day}`;
-  const appCount = await redis.global.incrBy(appLimitKey, 1);
-  if (appCount === 1) await redis.global.expire(appLimitKey, 172_800);
-  if (appCount > APP_DAILY_LIMIT)
+  // Standard Devvit Redis is scoped to this subreddit installation. Global Redis
+  // requires a separate platform grant and must not be a dependency for submitting.
+  const installationLimitKey = `cq:judge-budget:${day}`;
+  const installationCount = await countReview(
+    installationLimitKey,
+    "installation-budget",
+  );
+  if (installationCount > INSTALLATION_DAILY_LIMIT)
     throw new GameError(
       429,
       "Clue reviews have reached today’s playtest limit. Your restriction is still available.",
@@ -157,6 +159,32 @@ export async function submit(
     expiration: new Date(now + 7 * 86_400_000),
   });
   return finish(user, draft, judgment);
+}
+
+async function countReview(
+  counterKey: string,
+  stage: "user-budget" | "installation-budget",
+): Promise<number> {
+  try {
+    const count = await redis.incrBy(counterKey, 1);
+    if (count === 1) await redis.expire(counterKey, 172_800);
+    return count;
+  } catch (failure) {
+    // Raw storage errors may contain keys or request data. Emit only a fixed stage
+    // and numeric RPC code; fail closed before calling the paid provider.
+    const code =
+      typeof failure === "object" &&
+      failure !== null &&
+      "code" in failure &&
+      typeof failure.code === "number"
+        ? failure.code
+        : null;
+    console.error("crossworld_budget_failed", { stage, code });
+    throw new GameError(
+      503,
+      "Clue review could not start. Your draft is saved and your restriction is still available. Please try again.",
+    );
+  }
 }
 
 async function finish(
