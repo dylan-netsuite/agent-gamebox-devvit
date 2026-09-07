@@ -2,239 +2,142 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <title>CrossWorld · Chatterbloom Gardens</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <main>
-      <header>
-        <a class="brand" href="#garden-scene"
-          >CrossWorld<span class="brand-star" aria-hidden="true">✧</span></a
-        >
-        <span class="edition"
-          >THE FIRST WORLD <span aria-hidden="true">/</span> 01</span
-        >
-      </header>
-      <section class="intro">
-        <div>
-          <p class="eyebrow">THROUGH THE HEDGE, SOMETHING LISTENS</p>
-          <h1>Chatterbloom <em>Gardens</em></h1>
-        </div>
-        <p>The paths wander. <br />The flowers have opinions.</p>
-      </section>
-      <section class="world-panel" aria-label="Explore Chatterbloom Gardens">
-        <figure id="garden-scene" class="garden-scene" data-state="waiting">
-          <div id="garden-art" aria-hidden="true"></div>
-          <div class="scene-atmosphere" aria-hidden="true">
-            <i></i><i></i><i></i>
-          </div>
-          <div class="new-blooms" aria-hidden="true">
-            <span>✧</span><span>✦</span><span>✧</span>
-          </div>
-          <nav class="landmarks" aria-label="Garden landmarks">
-            <button type="button" class="landmark arch" data-place="arch">
-              <span class="landmark-dot" aria-hidden="true">1</span
-              ><span class="landmark-name">The Crooked Gate</span>
-            </button>
-            <button
-              type="button"
-              class="landmark fountain"
-              data-place="fountain"
-            >
-              <span class="landmark-dot" aria-hidden="true">2</span
-              ><span class="landmark-name">Murmuring Fountain</span>
-            </button>
-            <button
-              type="button"
-              class="landmark glasshouse"
-              data-place="glasshouse"
-            >
-              <span class="landmark-dot" aria-hidden="true">3</span
-              ><span class="landmark-name">The Glasshouse</span>
-            </button>
-            <button type="button" id="visit-bed" class="landmark bed">
-              <span class="landmark-dot" aria-hidden="true">✧</span
-              ><span class="landmark-name"
-                >The Whisper Bed<small id="bed-state"
-                  >Begin discovery</small
-                ></span
-              >
-            </button>
-          </nav>
-          <figcaption id="garden-caption" tabindex="-1">
-            Not everything here is waiting to be found. Some things are waiting
-            to be named.
-          </figcaption>
-        </figure>
-        <div class="world-toolbar">
-          <span class="explore-hint">Touch a place. See what answers.</span>
-          <div class="scene-controls" aria-label="Garden controls">
-            <button
-              id="motion"
-              class="quiet"
-              type="button"
-              aria-pressed="false"
-            >
-              Pause motion
-            </button>
-            <button id="sound" class="quiet" type="button" aria-pressed="false">
-              Sound: off
-            </button>
-            <button id="replay" class="quiet" type="button" hidden>
-              Replay awakening
-            </button>
-          </div>
-        </div>
-        <aside
-          id="place-note"
-          class="place-note"
-          aria-labelledby="place-title"
-          tabindex="-1"
-        >
-          <span id="place-symbol" aria-hidden="true">❧</span>
-          <div>
-            <p id="place-title" class="eyebrow">THE GARDEN, UNDER ITS BREATH</p>
-            <p id="garden-dialogue" aria-live="polite">
-              “Mind where you plant your words. They tend to take root.”
-            </p>
-          </div>
-        </aside>
-      </section>
-      <div id="discovery" class="layout">
-        <section class="board-panel" aria-labelledby="board-title">
-          <p class="eyebrow">A DISCOVERY / THE WHISPER BED</p>
-          <div class="panel-heading">
-            <h2 id="board-title" tabindex="-1">A word takes root</h2>
-            <span id="board-badge" class="pill">Unrevealed</span>
-          </div>
-          <p class="muted">
-            The roots have left a gap. Give it a word of your own, and a clue
-            for someone else to follow.
-          </p>
-          <div id="concealed">
-            <span class="seed-symbol" aria-hidden="true">❧</span>
-            <p>Five empty stones. One letter already known.</p>
-            <button id="reveal" class="primary" type="button" disabled>
-              Uncover the word stones
-            </button>
-          </div>
-          <div id="revealed" hidden>
-            <div
-              id="board"
-              class="board"
-              role="img"
-              aria-label="MAP runs across. A new five-letter word runs down, crossing its A as the second letter."
-            ></div>
-            <div class="slot">
-              <strong>5 letters · down</strong><span>_ A _ _ _</span>
-              <p>Crosses MAP at A.<br />You choose the word that fits.</p>
-            </div>
-          </div>
-          <p class="scope-note">
-            One playable discovery in a world taking shape. The other landmarks
-            can be inspected.
-          </p>
-        </section>
-        <section class="play-panel" aria-labelledby="choice-title">
-          <div class="panel-heading">
-            <h2 id="choice-title">Speak its peculiar language</h2>
-            <span id="remaining" class="pill">7 available</span>
-          </div>
-          <p class="muted">
-            The garden listens by different rules. Choose one for your clue. It
-            is used only when your word is accepted.
-          </p>
-          <div class="account-bar">
-            <p id="connection" role="status">Connecting to your garden…</p>
-            <button id="login" class="secondary" type="button" hidden>
-              Sign in to Reddit</button
-            ><button id="reconnect" class="secondary" type="button" hidden>
-              Reconnect
-            </button>
-          </div>
-          <form id="turn-form" novalidate>
-            <fieldset id="restriction-fieldset" disabled>
-              <legend class="sr-only">Restrictions</legend>
-              <div id="restrictions" class="restriction-grid"></div>
-            </fieldset>
-            <div class="entry-fields">
-              <label for="word"
-                >Your word<span>5 letters; second letter A</span></label
-              ><input
-                id="word"
-                name="word"
-                type="text"
-                maxlength="20"
-                autocomplete="off"
-                autocapitalize="characters"
-                spellcheck="false"
-                placeholder="Your answer"
-                disabled
-              />
-              <div class="clue-label">
-                <label for="clue">Your clue</label
-                ><span id="counter">0 words · 0/140</span>
-              </div>
-              <textarea
-                id="clue"
-                name="clue"
-                maxlength="140"
-                rows="3"
-                placeholder="Lead someone to your word without naming it."
-                disabled
-                aria-describedby="judging"
-              ></textarea>
-            </div>
-            <details class="rules">
-              <summary>How the rules are counted</summary>
-              <p>
-                Restrictions apply to the clue. Counting ignores case and treats
-                each group of A–Z letters as a word; punctuation, hyphens, and
-                apostrophes split words. Only the exact answer as a whole word
-                is banned. Matching letters inside another word are allowed.
-                There are no hidden substring or word-family bans.
-              </p>
-              <p>
-                All clues need at least one word and at most 140 characters.
-                Twin Blossoms needs any two clue words with a matching initial;
-                other words can start differently. These seven restrictions are
-                the prototype’s challenge pool.
-              </p>
-            </details>
-            <p id="judging" class="judge-note">
-              Your word and clue go to an AI reviewer to check English word
-              validity and clue fairness. Only the submitted text is sent to
-              OpenAI; your Reddit identity stays on the game server.
-            </p>
-            <div id="errors" role="alert" hidden></div>
-            <button id="submit" class="primary full" type="submit" disabled>
-              Submit word &amp; clue <span aria-hidden="true">↗</span>
-            </button>
-          </form>
-          <section
-            id="result"
-            class="result"
-            role="status"
-            tabindex="-1"
-            hidden
-            aria-labelledby="result-title"
+    <main class="game">
+      <header class="topbar">
+        <span class="brand">crossworld<span aria-hidden="true">✳</span></span>
+        <div class="tools">
+          <button
+            id="theme"
+            class="icon-button"
+            aria-label="Switch to dark theme"
+            title="Change theme"
           >
-            <p class="eyebrow" id="result-tag">CLUE REVIEW</p>
-            <h2 id="result-title"></h2>
-            <p id="result-copy"></p>
-          </section>
-        </section>
-      </div>
-      <footer>
-        <span id="storage-status" role="status"
-          >Connecting to your saved turn…</span
-        ><button id="reload" class="quiet" type="button">
-          Refresh saved turn
+            ◐</button
+          ><button
+            id="sound"
+            class="icon-button"
+            aria-label="Sound"
+            aria-pressed="false"
+            title="Sound off"
+          >
+            ♪</button
+          ><button
+            id="motion"
+            class="icon-button"
+            aria-label="Pause animations"
+            aria-pressed="false"
+            title="Pause animations"
+          >
+            Ⅱ
+          </button>
+        </div>
+      </header>
+      <section class="world-heading">
+        <p class="eyebrow">A WORLD YOU WRITE</p>
+        <h1>Chatterbloom Gardens</h1>
+        <p id="progress">An empty map. A place to begin.</p>
+      </section>
+      <section id="map" class="map" aria-label="Your crossword garden">
+        <div class="map-coordinate coordinate-top" aria-hidden="true">N ·</div>
+        <svg id="scenery" viewBox="0 0 450 450" aria-hidden="true"></svg>
+        <div id="paths" class="paths"></div>
+        <button id="explore" class="explore" type="button" disabled>
+          <span class="explore-dot" aria-hidden="true">+</span
+          ><span id="explore-label">Begin here</span>
         </button>
+        <span class="map-coordinate coordinate-bottom" aria-hidden="true"
+          >THE UNWRITTEN PLACES</span
+        >
+      </section>
+      <section class="map-caption" aria-live="polite">
+        <p id="story">Uncover a path. Give it a word. See what grows.</p>
+        <p id="connection" class="small" role="status">Finding your garden…</p>
+        <button id="reconnect" class="text-button" hidden>Reconnect</button
+        ><button id="login" class="text-button" hidden>
+          Sign in to Reddit
+        </button>
+      </section>
+      <footer>
+        <span id="storage-status" role="status">Connecting…</span
+        ><button id="refresh" class="text-button">Refresh</button>
       </footer>
     </main>
+    <dialog id="entry" aria-labelledby="entry-title">
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="sheet-heading">
+        <div>
+          <p id="path-label" class="eyebrow">PATH 01</p>
+          <h2 id="entry-title">Give this path a word</h2>
+        </div>
+        <button
+          id="close"
+          class="icon-button"
+          aria-label="Close word entry"
+          autofocus
+        >
+          ×
+        </button>
+      </div>
+      <div id="pattern" class="pattern" role="img"></div>
+      <p id="crossing-note" class="small"></p>
+      <form id="turn-form" novalidate>
+        <label for="restriction"
+          >A rule for your clue <span id="remaining"></span></label
+        ><select id="restriction" name="restriction">
+          <option value="">Choose a rule</option>
+        </select>
+        <label for="word">Your word <span>5 letters</span></label
+        ><input
+          id="word"
+          name="word"
+          maxlength="20"
+          autocomplete="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          placeholder="You choose what fits"
+        />
+        <label for="clue">Your clue <span id="counter">0 / 140</span></label
+        ><textarea
+          id="clue"
+          name="clue"
+          maxlength="140"
+          rows="2"
+          placeholder="Help someone find your word."
+          aria-describedby="judging"
+        ></textarea>
+        <p id="errors" role="alert" hidden></p>
+        <p id="review" role="status" hidden></p>
+        <button id="submit" class="primary" type="submit">
+          Grow this path <span aria-hidden="true">↗</span>
+        </button>
+        <p id="judging" class="small">
+          AI checks your word and clue. A rule is used only when accepted.
+        </p>
+        <details>
+          <summary>How clue rules work</summary>
+          <p class="small">
+            Rules apply to your clue. Each group of A–Z letters counts as a
+            word; punctuation splits words. Use 1–140 characters and at least
+            one word. Do not name your exact answer as a whole word. Matching
+            initials means any two clue words, not every word. Only your word
+            and clue are sent to OpenAI.
+          </p>
+        </details>
+      </form>
+      <div id="accepted-note" hidden>
+        <p id="accepted-clue"></p>
+        <p id="accepted-rule" class="small"></p>
+      </div>
+    </dialog>
     <script type="module" src="app.ts"></script>
   </body>
 </html>

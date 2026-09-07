@@ -10,6 +10,14 @@ import { emptyTurn, type GameView } from "../shared/types";
 import { readTurn, saveDraft, submit, requireUser, GameError } from "./game";
 import { judgeConfig, JudgeUnavailable } from "./judge";
 
+import {
+  JOURNEY_API_ROOT,
+  JOURNEY_SCENARIO,
+  emptyJourney,
+  type JourneyView,
+} from "../shared/journey";
+import { readJourney, saveJourney, submitJourney } from "./journey";
+
 const app = express();
 app.use(express.json({ limit: "2kb" }));
 app.use("/api", (_req, res, next) => {
@@ -31,6 +39,25 @@ app.post(`${API_ROOT}/draft`, async (req, res) => {
 });
 app.post(`${API_ROOT}/submit`, async (req, res) => {
   res.json(await submit(requireUser(context.userId), req.body));
+});
+
+app.get(`${JOURNEY_API_ROOT}/turn`, async (_req, res) => {
+  const config = await judgeConfig();
+  const view: JourneyView = {
+    scenario: JOURNEY_SCENARIO,
+    signedIn: Boolean(context.userId),
+    judgeReady: Boolean(config.enabled && config.key),
+    journey: context.userId
+      ? await readJourney(context.userId)
+      : emptyJourney(),
+  };
+  res.json(view);
+});
+app.post(`${JOURNEY_API_ROOT}/draft`, async (req, res) => {
+  res.json(await saveJourney(requireUser(context.userId), req.body));
+});
+app.post(`${JOURNEY_API_ROOT}/submit`, async (req, res) => {
+  res.json(await submitJourney(requireUser(context.userId), req.body));
 });
 
 const createPost = () =>

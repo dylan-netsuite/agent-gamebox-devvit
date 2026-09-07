@@ -36,7 +36,13 @@ export const RESTRICTIONS = [
 export const clueWords = (clue: string): string[] =>
   clue.toLowerCase().match(/[a-z]+/g) ?? [];
 
-export function validateTurn(turn: Draft) {
+export function validateTurn(
+  turn: Draft,
+  crossing: { index: number; letter: string } | null = {
+    index: 1,
+    letter: "A",
+  },
+) {
   const issues = [];
   const word = turn.word.trim().toUpperCase();
   const clue = turn.clue.trim();
@@ -46,8 +52,12 @@ export function validateTurn(turn: Draft) {
     issues.push("Choose one restriction.");
   if (!/^[A-Z]{5}$/.test(word))
     issues.push("Your answer must be exactly 5 letters, A–Z.");
-  else if (word[1] !== "A")
-    issues.push("The second letter must be A to match the crossing.");
+  else if (crossing && word[crossing.index] !== crossing.letter)
+    issues.push(
+      crossing.index === 1 && crossing.letter === "A"
+        ? "The second letter must be A to match the crossing."
+        : `Letter ${crossing.index + 1} must be ${crossing.letter} to match the crossing.`,
+    );
   if (!words.length) issues.push("Write a clue with at least one word.");
   if (clue.length > 140) issues.push("Keep your clue within 140 characters.");
   if (words.includes(word.toLowerCase()))

@@ -20,12 +20,13 @@ export async function refreshSession() {
   if (typeof bridge?.refreshToken === "function") await bridge.refreshToken();
 }
 
-export function createGameApi(
+export function createGameApi<View extends { scenario: string } = GameView>(
   fetcher: typeof fetch = fetch,
   refresh: () => Promise<void> = refreshSession,
+  options = { root: API_ROOT, scenario: SCENARIO },
 ) {
   async function request<T>(path: string, body?: unknown): Promise<T> {
-    const response = await fetcher(`${API_ROOT}${path}`, {
+    const response = await fetcher(`${options.root}${path}`, {
       ...(body === undefined
         ? {}
         : {
@@ -49,8 +50,8 @@ export function createGameApi(
   }
 
   async function readTurn() {
-    const view = await request<GameView>("/turn");
-    if (view.scenario !== SCENARIO) throw new SessionMismatch();
+    const view = await request<View>("/turn");
+    if (view.scenario !== options.scenario) throw new SessionMismatch();
     return view;
   }
 
