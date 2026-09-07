@@ -6,6 +6,8 @@ import {
   JOURNEY_API_ROOT,
   JOURNEY_SCENARIO,
   PATHS,
+  MAP_SIZE,
+  markerFor,
   emptyJourney,
   crossingFor,
   cellsFor,
@@ -66,7 +68,8 @@ function updateForm() {
     restriction.add(option);
   }
   restriction.value = turn.restriction;
-  el("remaining").textContent = `${7 - journey.completed.length} left`;
+  el("remaining").textContent =
+    `${RESTRICTIONS.length - journey.completed.length} left`;
   el("turn-form").hidden = inspected !== null;
   el("accepted-note").hidden = inspected === null;
   el("path-label").textContent =
@@ -105,7 +108,7 @@ function updatePattern() {
     inspected !== null
       ? "Your word is part of the map now."
       : fixed
-        ? `Letter ${fixed.index + 1} is ${fixed.letter}, from your previous path.`
+        ? `Letter ${fixed.index + 1} is ${fixed.letter}, from path ${fixed.source + 1}.`
         : "An open path. Any five-letter English word can take root.";
   el("counter").textContent =
     `${clueWords(clue.value).length} words · ${clue.value.length} / 140`;
@@ -124,10 +127,10 @@ function renderMap(celebrate = false) {
     button.type = "button";
     button.className = `path${layout.down ? " down" : ""}${current ? " current" : ""}`;
     button.dataset.path = String(index);
-    button.style.left = `${(layout.col / 9) * 100}%`;
-    button.style.top = `${(layout.row / 9) * 100}%`;
-    button.style.width = `${((layout.down ? 1 : 5) / 9) * 100}%`;
-    button.style.height = `${((layout.down ? 5 : 1) / 9) * 100}%`;
+    button.style.left = `${(layout.col / MAP_SIZE) * 100}%`;
+    button.style.top = `${(layout.row / MAP_SIZE) * 100}%`;
+    button.style.width = `${((layout.down ? 1 : 5) / MAP_SIZE) * 100}%`;
+    button.style.height = `${((layout.down ? 5 : 1) / MAP_SIZE) * 100}%`;
     const crossing = current ? crossingFor(journey.completed) : null;
     cellsFor(index).forEach((_cell, i) => {
       const stone = document.createElement("span");
@@ -152,14 +155,21 @@ function renderMap(celebrate = false) {
   explore.hidden = !journey.turn || journey.turn.revealed;
   explore.disabled = !ready || busy;
   const next = journey.completed.length;
-  explore.style.left = next === 0 ? "50%" : next === 1 ? "59%" : "23%";
-  explore.style.top = next === 0 ? "48%" : next === 1 ? "24%" : "70%";
+  const marker = markerFor(next);
+  explore.style.left = next
+    ? `${((marker.col + 0.5) / MAP_SIZE) * 100}%`
+    : "50%";
+  explore.style.top = next
+    ? `${((marker.row + 0.5) / MAP_SIZE) * 100}%`
+    : "48%";
   el("explore-label").textContent = next ? "Explore next" : "Begin here";
+  explore.classList.toggle("next-marker", next > 0);
+  explore.setAttribute("aria-label", next ? "Explore next" : "Begin here");
   el("progress").textContent =
-    next === 3
-      ? "3 paths uncovered · A crossword of your own"
+    next === PATHS.length
+      ? `${PATHS.length} paths uncovered · A crossword of your own`
       : next
-        ? `${next} of 3 paths uncovered`
+        ? `${next} of ${PATHS.length} paths uncovered`
         : journey.turn?.revealed
           ? "First path uncovered · Make it yours"
           : "An empty map. A place to begin.";

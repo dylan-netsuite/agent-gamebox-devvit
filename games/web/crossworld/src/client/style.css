@@ -528,3 +528,14 @@ body[data-paused="true"] * {
   min-width: 44px;
   min-height: 44px;
 }
+
+.explore.next-marker {
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+.next-marker #explore-label {
+  display: none;
+}

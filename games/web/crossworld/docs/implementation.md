@@ -1,6 +1,6 @@
 # CrossWorld: Chatterbloom Gardens
 
-The current slice is a mobile crossword map that begins blank and grows through three accepted word paths. Each acceptance adds one small illustration and opens the next crossing. Native HTML controls, a modal bottom sheet, inline SVG and CSS keep the artwork replaceable without introducing another renderer or backend. The earlier landmark gallery and postcard presentation are superseded.
+The current slice is a mobile crossword map that begins blank and grows through seven accepted word paths. Each acceptance adds one small illustration and opens the next crossing. Native HTML controls, a modal bottom sheet, inline SVG and CSS keep the artwork replaceable without introducing another renderer or backend. The earlier landmark gallery and postcard presentation are superseded.
 
 ## Register, upload, and play
 
@@ -44,21 +44,23 @@ Reddit requires apps that use HTTP fetch to provide Terms & Conditions and Priva
 
 | Route | Access | Behavior |
 | --- | --- | --- |
-| `GET /api/chatterbloom-paths-v1/turn` | Everyone | Login/reviewer readiness and the caller's journey; guests start blank. |
-| `POST /api/chatterbloom-paths-v1/draft` | Signed-in user | Saves bounded draft fields for the supplied numeric `path` index. |
-| `POST /api/chatterbloom-paths-v1/submit` | Signed-in user | Validates progression, crossing and unused rule, reviews the clue, persists acceptance. |
+| `GET /api/chatterbloom-seven-v1/turn` | Everyone | Login/reviewer readiness and the caller's journey; guests start blank. |
+| `POST /api/chatterbloom-seven-v1/draft` | Signed-in user | Saves bounded draft fields for the supplied numeric `path` index. |
+| `POST /api/chatterbloom-seven-v1/submit` | Signed-in user | Validates progression, crossing and unused rule, reviews the clue, persists acceptance. |
 | `/api/chatterbloom-postcard-v1/*` | Existing access rules | Compatibility routes for the previous single-turn client; separate saved state. |
 | `/internal/on-app-install`, `/internal/menu/post-create` | Devvit trigger / moderator | Creates a post. All posts in one installation share the caller's scenario progress. |
 
-The new journey response contains `completed` (an ordered array of immutable accepted turns) and `turn` (the current draft, or null when all three are complete). Client-supplied identity, status and judgment are ignored. Identity comes exclusively from trusted Devvit context. There is no manual accept, skip or reset API.
+The new journey response contains `completed` (an ordered array of immutable accepted turns) and `turn` (the current draft, or null when all seven are complete). Client-supplied identity, status and judgment are ignored. Identity comes exclusively from trusted Devvit context. There is no manual accept, skip or reset API.
 
-`src/shared/journey.ts` owns the three five-letter paths on a 9×9 map. Path 1 runs across. Path 2 runs down and shares the third letter of path 1 as its own third letter. Path 3 runs across and shares the last letter of path 2 as its own last letter. The resulting cells form exactly three connected words, without incidental touching sequences. Players choose the words; the first has no given letter. The prototype does not prohibit repeating a word. These fixed, equal-length crossings leave at least the previous word as a possible fit; broader layouts, vocabulary variety and difficulty need later playtesting.
+`src/shared/journey.ts` owns seven five-letter paths on a 13×13 map. Every new path crosses exactly one previously accepted path; the complete board contains 29 occupied cells and exactly seven words, with no incidental touching sequences. `crossingFor` derives the fixed letter and source path from actual shared coordinates. Crossings branch to earlier words instead of always using the last word. Every crossing uses the same letter index in both words, retaining the previous source word as a possible fallback fit. The prototype does not prohibit repeating a word. Players choose their own answers, with no given letter on the first path.
+
+Progress, completion, path rendering and available rules use the configured path/restriction count. The discovery marker sits at the free end farthest from earlier words; later markers are compact plus buttons so labels do not cover accepted letters. The five-letter entry pattern stays large while the full seven-word map fits on a phone.
 
 Restrictions come from the existing seven-rule pool and apply to the clue. Each acceptance uses one previously unused rule. `validateTurn` accepts a server-supplied crossing; legacy callers retain the original second-letter-A slot. The frontend shares validation for fast feedback, but only the server can accept a path.
 
-New path keys use `cq:chatterbloom-paths-v1:path:<index>:<user>:…`. `server/game.ts` exposes a reusable turn store and reviewer with immutable `SET NX` acceptance; `server/journey.ts` derives the completed prefix from those records. The server refuses future paths and returns existing progress for writes to older completed paths. Immutable earlier words make each later crossing and used-rule check stable during concurrent requests. There is no separate award counter to increment twice.
+New path keys use `cq:chatterbloom-seven-v1:path:<index>:<user>:…`. `server/game.ts` exposes a reusable turn store and reviewer with immutable `SET NX` acceptance; `server/journey.ts` derives the completed prefix from those records. The server refuses future paths and returns existing progress for writes to older completed paths. Immutable earlier words make each later crossing and used-rule check stable during concurrent requests. There is no separate award counter to increment twice.
 
-The new journey starts fresh without deleting or migrating `chatterbloom-postcard-v1` or `crossworld-live-turn-1-v1` records. There is no historical-turn picker in this interface. The 20-review daily user allowance is shared by all three new paths. The 200-review installation allowance remains shared across users, posts and scenarios. The 45-second cooldown and cached judgments belong to each path; completing a path allows reviewing the next immediately. The next cannot start until the previous acceptance is durable. Standard installation-scoped Redis is used; no global Redis grant is required.
+The new seven-word journey starts fresh without deleting or migrating `chatterbloom-paths-v1`, `chatterbloom-postcard-v1` or `crossworld-live-turn-1-v1` records. There is no historical-turn picker in this interface. The 20-review daily user allowance is shared by all seven new paths. The 200-review installation allowance remains shared across users, posts and scenarios. The 45-second cooldown and cached judgments belong to each path; completing a path allows reviewing the next immediately. The next cannot start until the previous acceptance is durable. Standard installation-scoped Redis is used; no global Redis grant is required.
 
 The browser serializes saves, marks edits unsaved immediately and flushes before close, submission and explicit refresh. Different devices use last-save-wins drafts; immutable acceptance always wins. Failed saves retain typed content on the current screen. Reconnect preserves it when the server is still on the same path; server progress takes precedence if another request already accepted that path. A lost successful response is recovered on refresh. An interrupted review before persistence can require a later paid retry; external API calls and Redis writes cannot be one atomic transaction.
 
@@ -66,13 +68,13 @@ The scenario appears in every game endpoint and is verified before gameplay beco
 
 ## Map, entry and illustration
 
-The initial map contains only one start marker; accepted scenery and future paths are absent from both the display and the interaction tree. Reveal exposes five empty stones and opens the entry sheet. Subsequent paths include a fixed letter from the server's previous accepted word. Unfilled paths remain visible when the sheet closes. Completed paths can be inspected by tapping their stones or tabbing to the path and pressing Enter. At shared cells, the later path is above the earlier one; tap a non-crossing stone to inspect the other word.
+The initial map contains only one start marker; accepted scenery and future paths are absent from both the display and the interaction tree. Reveal exposes five empty stones and opens the entry sheet. Subsequent paths include a fixed letter from an earlier accepted word. Unfilled paths remain visible when the sheet closes. Completed paths can be inspected by tapping their stones or tabbing to the path and pressing Enter. At shared cells, the later path is above the earlier one; tap a non-crossing stone to inspect the other word.
 
-Each acceptance mounts one small illustration from `src/client/garden.ts`: leaves, a pool, then a gate. Coordinates use the map's 450×450 SVG viewBox. Keep the artwork clear of the 9×9 letter layout when replacing these shapes. The older `garden.svg` remains an unused reference asset; it is not loaded by the new client. No artwork or fonts are fetched remotely.
+Each acceptance mounts one small illustration from `src/client/garden.ts`: leaves, pool, gate, lantern, mushroom, snail, then moon. Coordinates use the map's 450×450 SVG viewBox. Keep the artwork clear of the 13×13 letter layout when replacing these shapes. The older `garden.svg` remains an unused reference asset; it is not loaded by the new client. No artwork or fonts are fetched remotely.
 
 Word entry uses a native dialog for focus containment, Escape dismissal, a close button, explicit labels and a five-letter pattern that remains inside the sheet while the keyboard is open. The sheet scrolls on short viewports. Inputs use readable 16px text; action controls have at least 44px targets and paths extend their hit area around the cells. A real device keyboard and assistive-technology pass remain human checks beyond desktop browser emulation.
 
-Finite reveal animations respect OS reduced motion, the pause control and page visibility. Sound is off until a user gesture enables a short three-note Web Audio chime; reload does not replay discovery. Light/dark and sound/motion preferences are session-local. There are no continuous glowing or pulsing effects. The final screen shows three accepted paths and supports inspecting their clues; it does not pretend multiworld assembly or sharing is implemented.
+Finite reveal animations respect OS reduced motion, the pause control and page visibility. Sound is off until a user gesture enables a short three-note Web Audio chime; reload does not replay discovery. Light/dark and sound/motion preferences are session-local. There are no continuous glowing or pulsing effects. The final screen shows seven accepted paths and supports inspecting their clues; it does not pretend multiworld assembly or sharing is implemented.
 
 ## Validation and rollout evidence
 
@@ -117,6 +119,16 @@ The shared validation gate passed TypeScript, ESLint, **55 tests in five files**
 Private upload **0.0.4**, followed by playtest **0.0.4.2**, installed successfully. Under the separately authorized BarryBetsALot account, all three real OpenAI reviews accepted their submitted word/clue pairs in approximately **3.5s, 2.1s and 1.6s**. The map revealed one, two, then three elements. A full Reddit reload at 390px restored all three accepted paths; keyboard inspection showed the stored clue, and the iframe had no horizontal overflow. The old postcard accepted record was still present. The owner's new garden was not played. These observations establish the tested flow, not broad AI judgment accuracy or subjective design acceptance.
 
 Run artifacts live in the ignored `.workflows/chatterbloom-paths/run1/` directory. The managed playtest remains running for user feedback. Actual iOS/Android keyboards, screen readers and subjective art/gameplay feedback remain untested. Multiworld assembly, daily reset and sharing are outside this three-path slice; no public publication was performed.
+
+### Fresh seven-word human playtest — 2026-09-07
+
+The user's next request extends their personal playtest from three words to all seven. `chatterbloom-seven-v1` provides a fresh board without deleting the older three-word records. Four more routes and illustrations complete the seven-rule sequence; crossings are derived from shared coordinates and can branch to earlier words. Every configured path crosses one earlier path at the same letter index. The geometry test verifies 29 occupied cells and exactly seven words with no accidental adjacency.
+
+The shared gate passed typecheck, lint, **57 tests in five files**, and build. **43 isolated browser checks** passed the seven-word sequence, each later crossing/rule count/reveal, recovery/error states, 320/390/768px layouts and the short entry viewport. The map retains readable letters and compact discovery markers; the entry pattern remains larger for typing.
+
+Private upload **0.0.5** and managed playtest **0.0.5.2** loaded a genuinely fresh scenario for BarryBetsALot. That separate account completed all seven paths with seven real OpenAI acceptances, approximately **1.7–2.9 seconds** each. A full mobile Reddit reopen restored all seven accepted paths, seven used rules and seven scenery elements, with no next-path marker or horizontal overflow. Keyboard inspection recovered the last clue. The owner's new board was not played, and the server remains available for their own test. Subjective feedback and physical-device keyboard/accessibility testing remain pending.
+
+Evidence: ignored `.workflows/chatterbloom-seven/run1/`. No reset endpoint, public publication, multiworld expansion or sharing feature was added.
 
 ## Sources checked 2026-09-07
 
