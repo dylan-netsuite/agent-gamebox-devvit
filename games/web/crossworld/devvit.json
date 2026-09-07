@@ -1,0 +1,61 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "crossworld-game",
+  "post": {
+    "dir": "dist/client",
+    "entrypoints": {
+      "default": {
+        "entry": "splash.html"
+      },
+      "game": {
+        "entry": "game.html"
+      }
+    }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "menu": {
+    "items": [
+      {
+        "label": "Create CrossWorld post",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/post-create"
+      }
+    ]
+  },
+  "triggers": {
+    "onAppInstall": "/internal/on-app-install"
+  },
+  "permissions": {
+    "reddit": true,
+    "redis": true,
+    "http": {
+      "enable": true,
+      "domains": ["api.openai.com"]
+    }
+  },
+  "settings": {
+    "global": {
+      "judgeApiKey": {
+        "type": "string",
+        "label": "OpenAI API key for clue judging",
+        "isSecret": true
+      },
+      "judgeEnabled": {
+        "type": "boolean",
+        "label": "Enable paid clue judging",
+        "defaultValue": false
+      }
+    }
+  },
+  "scripts": {
+    "build": "npm run build",
+    "dev": "vite build --watch"
+  },
+  "dev": {
+    "subreddit": "crossworld_game_dev"
+  }
+}

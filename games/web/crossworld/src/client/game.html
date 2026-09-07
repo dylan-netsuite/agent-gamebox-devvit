@@ -10,8 +10,8 @@
   <body>
     <main>
       <header>
-        <a class="brand" href="./">CW<span>CrossWorld</span></a
-        ><span class="pill">Single-turn mock</span>
+        <a class="brand" href="#">CW<span>CrossWorld</span></a
+        ><span class="pill">Devvit playtest</span>
       </header>
       <section class="intro">
         <p class="eyebrow">CHAPTER 01 / LEVEL 01</p>
@@ -21,16 +21,14 @@
           then decide what to spend.
         </p>
       </section>
-      <nav class="levels" aria-label="Chapter progress">
-        <span class="level current" aria-current="step"
-          >1 <small>Today</small></span
-        ><span class="level">2 <small>Unknown</small></span
-        ><span class="level">3 <small>Unknown</small></span
-        ><span class="level">4 <small>Unknown</small></span
-        ><span class="level">5 <small>Unknown</small></span
-        ><span class="level">6 <small>Unknown</small></span
-        ><span class="level">7 <small>Unknown</small></span>
-      </nav>
+      <div class="account-bar">
+        <p id="connection" role="status">Loading your turn…</p>
+        <button id="login" class="secondary" type="button" hidden>
+          Sign in to Reddit</button
+        ><button id="reload" class="secondary" type="button">
+          Refresh saved turn
+        </button>
+      </div>
       <div class="layout">
         <section class="board-panel" aria-labelledby="board-title">
           <div class="panel-heading">
@@ -64,8 +62,8 @@
             </div>
           </div>
           <p class="board-note">
-            MAP is a supplied starting word for this mock. Later slots stay
-            unknown; only this turn is playable.
+            MAP is your starting word. This first playtest has one playable
+            level. More levels will follow after testing.
           </p>
         </section>
         <section class="play-panel" aria-labelledby="choice-title">
@@ -74,8 +72,8 @@
             <span id="remaining" class="pill">7 available</span>
           </div>
           <p class="muted">
-            Use one per level, once per chapter. A restriction is spent only
-            when the word and clue are accepted.
+            Choose one for this turn. It is spent only when your word and clue
+            are accepted.
           </p>
           <form id="turn-form" novalidate>
             <fieldset id="restriction-fieldset" disabled>
@@ -125,9 +123,9 @@
               </p>
             </details>
             <p id="judging" class="judge-note">
-              This mock checks fit and written rules. I’ll review whether your
-              word and clue make sense with you in chat. No AI judge is
-              connected.
+              Your word and clue go to an AI reviewer to check English word
+              validity and clue fairness. Only the submitted text is sent to
+              OpenAI; your Reddit identity stays on the game server.
             </p>
             <div id="errors" role="alert" hidden></div>
             <button id="submit" class="primary full" type="submit" disabled>
@@ -137,67 +135,23 @@
           <section
             id="result"
             class="result"
+            role="status"
             tabindex="-1"
             hidden
             aria-labelledby="result-title"
           >
-            <p class="eyebrow" id="result-tag">RULE CHECKS PASSED</p>
-            <h2 id="result-title">Ready for clue review</h2>
-            <p id="result-copy">
-              Your restriction is still available. Copy your turn into our chat
-              so we can review the clue’s meaning.
-            </p>
-            <textarea
-              id="report"
-              rows="8"
-              readonly
-              aria-label="Turn record to share"
-            ></textarea>
-            <div class="actions">
-              <button id="copy" class="primary" type="button">
-                Copy turn for chat</button
-              ><button id="revise" class="secondary" type="button">
-                Revise submission
-              </button>
-            </div>
-            <p id="copy-status" role="status"></p>
-            <details id="review-controls">
-              <summary>Record the review after our chat</summary>
-              <p>
-                This is a manual playtest control. Record the actual review; it
-                is not an AI verdict.
-              </p>
-              <label for="verdict">Review decision</label
-              ><select id="verdict">
-                <option value="">Choose the decision received</option>
-                <option value="accepted">Accepted</option>
-                <option value="revise">Needs revision</option></select
-              ><label for="review-note">Review note</label
-              ><textarea
-                id="review-note"
-                rows="2"
-                maxlength="500"
-                placeholder="What did the review say?"
-              ></textarea
-              ><button id="record-review" type="button" class="secondary">
-                Record review
-              </button>
-              <p id="review-error" role="alert"></p>
-            </details>
+            <p class="eyebrow" id="result-tag">CLUE REVIEW</p>
+            <h2 id="result-title"></h2>
+            <p id="result-copy"></p>
           </section>
         </section>
       </div>
       <footer>
-        <span id="storage-status">Your draft is saved in this browser.</span>
-        <details>
-          <summary>Reset this mock</summary>
-          <p>This clears only this browser’s current mock turn.</p>
-          <button id="reset" class="secondary" type="button">
-            Start fresh
-          </button>
-        </details>
+        <span id="storage-status" role="status"
+          >Your turn is saved to your Reddit account.</span
+        ><span>One turn · Seven ways to write</span>
       </footer>
     </main>
-    <script type="module" src="app.mjs"></script>
+    <script type="module" src="app.ts"></script>
   </body>
 </html>

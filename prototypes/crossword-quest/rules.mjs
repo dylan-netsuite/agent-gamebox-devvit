@@ -159,7 +159,7 @@ export function restoreTurn(raw) {
 export function turnReport(turn) {
   const restriction = RESTRICTIONS.find(({ id }) => id === turn.restriction);
   return [
-    "Crossword Quest — single-turn mock",
+    "CrossWorld — single-turn mock",
     `Scenario: ${SCENARIO}`,
     "Slot: 5 letters, second letter A; crosses MAP at A.",
     `Restriction: ${restriction ? `${restriction.name} — ${restriction.rule}` : "Not selected"}`,

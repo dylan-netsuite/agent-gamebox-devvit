@@ -6,9 +6,9 @@
     <meta name="color-scheme" content="dark light" />
     <meta
       name="description"
-      content="Crossword Quest MVP: daily crossword construction, illustrated chapters, a Figma asset pipeline, and a Devvit implementation plan."
+      content="CrossWorld MVP: daily crossword construction, illustrated chapters, a Figma asset pipeline, and a Devvit implementation plan."
     />
-    <title>Crossword Quest — MVP implementation</title>
+    <title>CrossWorld — MVP implementation</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236c72ff'/%3E%3Cpath d='M9 9h14v14H9z' fill='none' stroke='white' stroke-width='2'/%3E%3Cpath d='M9 16h14M16 9v14' stroke='white' stroke-width='2'/%3E%3C/svg%3E"
@@ -1253,7 +1253,7 @@
     <header class="topbar">
       <div class="monogram" aria-hidden="true">CQ</div>
       <div class="top-title">
-        Crossword Quest<span class="top-subtitle">/ MVP implementation</span>
+        CrossWorld<span class="top-subtitle">/ MVP implementation</span>
       </div>
       <span class="badge proposal">Design draft · v1</span>
       <div class="spacer"></div>
@@ -1297,6 +1297,8 @@
       </div>
     </nav>
     <main class="main" id="main">
+      <aside style="padding:16px;border:1px solid var(--border);border-radius:12px;margin:20px 0" aria-label="Current implementation status"><strong>Current direction:</strong> CrossWorld is the selected name. This earlier MVP document contains proposals, including art concepts that Dylan has not selected. The live development scope is one turn with OpenAI clue review; see the <a href="../games/web/crossworld/docs/implementation.md">current implementation and connectivity guide</a>.</aside>
+
       <section
         class="section hero"
         id="overview"
@@ -2677,7 +2679,7 @@ type ClueVerdict = {
         <details>
           <summary>Repository shape and required Devvit configuration</summary>
           <div class="detail-body">
-            <pre><code>games/dom/crossword-quest/        # proposed new independent app
+            <pre><code>games/web/crossworld/        # proposed new independent app
   devvit.json                   # app ID still to be selected
   vite.config.ts                # @devvit/start build integration
   src/client/                   # React scene, grid, forms, accessibility
@@ -2691,7 +2693,7 @@ type ClueVerdict = {
             <p>
               This repository has independent npm projects, not a root
               workspace. Run commands with
-              <code>npm --prefix games/dom/crossword-quest</code>. Extend the
+              <code>npm --prefix games/web/crossworld</code>. Extend the
               validation matrix to explicit engine/game entries; the current CI
               matrix names the existing Phaser apps. Keep private
               dictionaries/candidate fills out of the client bundle.
@@ -3298,10 +3300,9 @@ type ClueVerdict = {
               <tr>
                 <td>Launch name</td>
                 <td>
-                  Use “Crossword Quest” internally. An established mobile game
-                  already uses the name; choose a more distinctive public title.
+                  CrossWorld is the selected name. The earlier working name, Crossword Quest, was changed because another game already uses it.
                 </td>
-                <td>Before app registration and final branding.</td>
+                <td>Selected by Dylan; Devvit identifier availability is checked at registration.</td>
               </tr>
               <tr>
                 <td>Art direction</td>
@@ -3447,7 +3448,7 @@ type ClueVerdict = {
         </p>
       </section>
       <footer class="doc-footer">
-        <span>Crossword Quest · MVP implementation · Draft v1</span
+        <span>CrossWorld · MVP implementation · Draft v1</span
         ><span>Created with Snoocode · Self-contained HTML</span>
       </footer>
     </main>

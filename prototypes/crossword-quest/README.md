@@ -1,4 +1,4 @@
-# Crossword Quest — one-turn mechanics mock
+# CrossWorld — one-turn mechanics mock
 
 A neutral browser prototype for a player to reveal one slot, choose one of seven proposed restrictions, enter a fitting word and clue, and submit it for human review. Only one turn is implemented. No chapter theme, art direction, future slots, live AI, Reddit deployment, daily unlocks, dictionary service, or leaderboard is implied.
 
