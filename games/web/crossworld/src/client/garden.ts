@@ -1,9 +1,14 @@
-import artwork from "./garden.svg?raw";
+import artwork from "./garden.svg";
 
 export function createGarden() {
   const scene = document.getElementById("garden-scene")!;
-  document.getElementById("garden-art")!.innerHTML = artwork;
-  const dialogue = document.getElementById("pip-dialogue")!;
+  const illustration = document.createElement("img");
+  illustration.src = artwork;
+  illustration.alt = "";
+  illustration.width = 1200;
+  illustration.height = 800;
+  document.getElementById("garden-art")!.append(illustration);
+  const dialogue = document.getElementById("garden-dialogue")!;
   const caption = document.getElementById("garden-caption")!;
   const replay = document.getElementById("replay") as HTMLButtonElement;
   const motion = document.getElementById("motion") as HTMLButtonElement;
@@ -11,6 +16,7 @@ export function createGarden() {
   const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
   let paused = false;
   let accepted = false;
+  let inspected = false;
   let sounding = false;
   let audio: AudioContext | undefined;
   let revealTimer: ReturnType<typeof setTimeout> | undefined;
@@ -34,7 +40,7 @@ export function createGarden() {
   function chime() {
     if (!sounding || audio?.state !== "running" || document.hidden) return;
     const start = audio.currentTime;
-    [523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
+    [293.66, 349.23, 440, 587.33].forEach((frequency, index) => {
       const oscillator = audio!.createOscillator();
       const gain = audio!.createGain();
       const at = start + index * 0.17;
@@ -109,18 +115,47 @@ export function createGarden() {
   replay.addEventListener("click", celebrate);
   syncMotion();
 
+  const places = {
+    arch: [
+      "THE CROOKED GATE",
+      "The gate has grown around its own key. Beyond it, the path bends in a direction you cannot quite remember.",
+    ],
+    fountain: [
+      "MURMURING FOUNTAIN",
+      "The fountain clears its throat. ‘A penny for your thoughts? No? A peculiar word will do.’",
+    ],
+    glasshouse: [
+      "THE GLASSHOUSE",
+      "Something inside has been rearranging the pots. All the labels face the wall. All the flowers face you.",
+    ],
+  } as const;
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    "[data-place]",
+  )) {
+    button.addEventListener("click", () => {
+      const place = places[button.dataset.place as keyof typeof places];
+      inspected = true;
+      document.getElementById("place-title")!.textContent = place[0];
+      dialogue.textContent = place[1];
+      for (const landmark of document.querySelectorAll("[data-place]"))
+        landmark.setAttribute("aria-pressed", String(landmark === button));
+      document.getElementById("place-note")!.focus({ preventScroll: true });
+    });
+  }
+
   return {
     update(isAccepted: boolean, playDiscovery = false) {
       accepted = isAccepted;
       scene.classList.toggle("is-bloomed", accepted);
       scene.dataset.state = accepted ? "bloomed" : "waiting";
       replay.hidden = !accepted;
-      dialogue.textContent = accepted
-        ? "“Oh! They like your word. I’ll take a little credit for the watering.”"
-        : "“The flowers have plenty to say. They’re just waiting for the right word.”";
+      if (!inspected)
+        dialogue.textContent = accepted
+          ? "“There. Now they’ll be repeating that to one another all night.”"
+          : "“Mind where you plant your words. They tend to take root.”";
       caption.textContent = accepted
-        ? "A word planted. A garden awakened."
-        : "A small garden. A little possibility.";
+        ? "The Whisper Bed stirs. Your word belongs to the garden now."
+        : "Not everything here is waiting to be found. Some things are waiting to be named.";
       if (playDiscovery) celebrate();
     },
   };

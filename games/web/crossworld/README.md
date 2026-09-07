@@ -1,11 +1,13 @@
 # CrossWorld · Chatterbloom Gardens
 
-Fit your own word into a crossword, choose a writing restriction, and create a clue that fairly describes your word.
+Explore a strange garden, fit your own word into a crossword, and create a clue for someone else to follow.
 
-Step into a little illustrated garden, meet Pip, and bring one corner to life with your own word. This living postcard prototype contains one playable turn. Reveal the slot, pick one of seven restrictions, and write an answer and clue. Your draft saves to your Reddit account. An AI reviewer checks word validity and clue fairness after the game checks the written rules. Accepted turns use one restriction, grow smiling flowers, and light the greenhouse. Your finished garden is waiting when you return. You can revise a rejected clue without using the restriction. Sound is optional and starts off; motion can be paused and follows your device’s reduced-motion setting. Replay bloom replays the celebration without another clue review.
+Inspect the Crooked Gate, Murmuring Fountain and Glasshouse, then visit the Whisper Bed for one playable discovery. Uncover the word stones, choose one of seven writing restrictions, and write an answer and clue. Your draft saves to your Reddit account. An AI reviewer checks word validity and clue fairness after the game checks the written rules. An accepted turn uses one restriction and awakens the bed. Rejected clues can be revised without spending a restriction.
 
-Clue review sends your answer and clue to OpenAI. Your Reddit identity is not included in that request. AI judgments can be mistaken; this playtest is also a chance to assess whether the feedback feels fair. There is no automatic daily reset, next level, connected-world finale, or puzzle sharing yet. This postcard uses a fresh turn; earlier playtest progress remains stored separately.
+The illustrated world uses a simple, expressive backdrop with connected paths and space for future artistic additions. It replaces the earlier postcard presentation and preserves the same saved turn. Sound starts off; motion can be paused and follows your device’s reduced-motion setting. Replay awakening affects presentation only, without another clue review. If Reddit serves a stale session, the game attempts one reconnect; an explicit Reconnect action remains available if it cannot load.
 
-The game was previously called Crossword Quest. The new name is CrossWorld; the original browser mock remains in `prototypes/crossword-quest` to preserve existing saved turns.
+Clue review sends your answer and clue to OpenAI. Your Reddit identity is not included in that request. AI judgments can be mistaken; this playtest is also a chance to assess whether the feedback feels fair. There is no automatic daily reset, next level, connected-world finale, or puzzle sharing yet.
+
+The game was previously called Crossword Quest. The name is CrossWorld; the original browser mock remains in `prototypes/crossword-quest` to preserve its saved turns.
 
 Development and API setup: [implementation guide](docs/implementation.md).

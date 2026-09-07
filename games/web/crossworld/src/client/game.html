@@ -10,31 +10,67 @@
   <body>
     <main>
       <header>
-        <a class="brand" href="#"
-          ><span class="brand-mark" aria-hidden="true">C<span>W</span></span
-          >CrossWorld</a
+        <a class="brand" href="#garden-scene"
+          >CrossWorld<span class="brand-star" aria-hidden="true">✧</span></a
         >
         <span class="edition"
-          >A LIVING POSTCARD <span aria-hidden="true">✳</span> 01</span
+          >THE FIRST WORLD <span aria-hidden="true">/</span> 01</span
         >
       </header>
       <section class="intro">
-        <p class="eyebrow">A LITTLE WORD CAN GROW A WHOLE WORLD</p>
-        <h1>Chatterbloom <em>Gardens</em></h1>
-        <p>Plant a word. Give it a clue. See what blossoms.</p>
+        <div>
+          <p class="eyebrow">THROUGH THE HEDGE, SOMETHING LISTENS</p>
+          <h1>Chatterbloom <em>Gardens</em></h1>
+        </div>
+        <p>The paths wander. <br />The flowers have opinions.</p>
       </section>
-      <div class="layout">
-        <section class="postcard-panel" aria-label="Your living postcard">
-          <figure id="garden-scene" class="garden-scene" data-state="waiting">
-            <div id="garden-art" aria-hidden="true"></div>
-            <figcaption id="garden-caption" tabindex="-1">
-              A small garden. A little possibility.
-            </figcaption>
-            <span class="postcard-stamp" aria-hidden="true"
-              >GREETINGS<br />FROM<br /><b>Chatterbloom</b></span
+      <section class="world-panel" aria-label="Explore Chatterbloom Gardens">
+        <figure id="garden-scene" class="garden-scene" data-state="waiting">
+          <div id="garden-art" aria-hidden="true"></div>
+          <div class="scene-atmosphere" aria-hidden="true">
+            <i></i><i></i><i></i>
+          </div>
+          <div class="new-blooms" aria-hidden="true">
+            <span>✧</span><span>✦</span><span>✧</span>
+          </div>
+          <nav class="landmarks" aria-label="Garden landmarks">
+            <button type="button" class="landmark arch" data-place="arch">
+              <span class="landmark-dot" aria-hidden="true">1</span
+              ><span class="landmark-name">The Crooked Gate</span>
+            </button>
+            <button
+              type="button"
+              class="landmark fountain"
+              data-place="fountain"
             >
-          </figure>
-          <div class="scene-controls" aria-label="Postcard controls">
+              <span class="landmark-dot" aria-hidden="true">2</span
+              ><span class="landmark-name">Murmuring Fountain</span>
+            </button>
+            <button
+              type="button"
+              class="landmark glasshouse"
+              data-place="glasshouse"
+            >
+              <span class="landmark-dot" aria-hidden="true">3</span
+              ><span class="landmark-name">The Glasshouse</span>
+            </button>
+            <button type="button" id="visit-bed" class="landmark bed">
+              <span class="landmark-dot" aria-hidden="true">✧</span
+              ><span class="landmark-name"
+                >The Whisper Bed<small id="bed-state"
+                  >Begin discovery</small
+                ></span
+              >
+            </button>
+          </nav>
+          <figcaption id="garden-caption" tabindex="-1">
+            Not everything here is waiting to be found. Some things are waiting
+            to be named.
+          </figcaption>
+        </figure>
+        <div class="world-toolbar">
+          <span class="explore-hint">Touch a place. See what answers.</span>
+          <div class="scene-controls" aria-label="Garden controls">
             <button
               id="motion"
               class="quiet"
@@ -47,62 +83,75 @@
               Sound: off
             </button>
             <button id="replay" class="quiet" type="button" hidden>
-              Replay bloom
+              Replay awakening
             </button>
           </div>
-          <aside class="pip-note" aria-label="A note from Pip the gardener">
-            <span class="pip-avatar" aria-hidden="true">✿</span>
-            <div>
-              <p class="eyebrow">PIP · RESIDENT GARDENER</p>
-              <p id="pip-dialogue">
-                “The flowers have plenty to say. They’re just waiting for the
-                right word.”
-              </p>
+        </div>
+        <aside
+          id="place-note"
+          class="place-note"
+          aria-labelledby="place-title"
+          tabindex="-1"
+        >
+          <span id="place-symbol" aria-hidden="true">❧</span>
+          <div>
+            <p id="place-title" class="eyebrow">THE GARDEN, UNDER ITS BREATH</p>
+            <p id="garden-dialogue" aria-live="polite">
+              “Mind where you plant your words. They tend to take root.”
+            </p>
+          </div>
+        </aside>
+      </section>
+      <div id="discovery" class="layout">
+        <section class="board-panel" aria-labelledby="board-title">
+          <p class="eyebrow">A DISCOVERY / THE WHISPER BED</p>
+          <div class="panel-heading">
+            <h2 id="board-title" tabindex="-1">A word takes root</h2>
+            <span id="board-badge" class="pill">Unrevealed</span>
+          </div>
+          <p class="muted">
+            The roots have left a gap. Give it a word of your own, and a clue
+            for someone else to follow.
+          </p>
+          <div id="concealed">
+            <span class="seed-symbol" aria-hidden="true">❧</span>
+            <p>Five empty stones. One letter already known.</p>
+            <button id="reveal" class="primary" type="button" disabled>
+              Uncover the word stones
+            </button>
+          </div>
+          <div id="revealed" hidden>
+            <div
+              id="board"
+              class="board"
+              role="img"
+              aria-label="MAP runs across. A new five-letter word runs down, crossing its A as the second letter."
+            ></div>
+            <div class="slot">
+              <strong>5 letters · down</strong><span>_ A _ _ _</span>
+              <p>Crosses MAP at A.<br />You choose the word that fits.</p>
             </div>
-          </aside>
-          <section class="board-panel" aria-labelledby="board-title">
-            <div class="panel-heading">
-              <h2 id="board-title">Your patch of the puzzle</h2>
-              <span id="board-badge" class="pill">Unrevealed</span>
-            </div>
-            <div id="concealed">
-              <span class="seed-symbol" aria-hidden="true">✧</span>
-              <p>A word-shaped space is waiting beneath the leaves.</p>
-              <button id="reveal" class="primary" type="button">
-                Reveal the garden path
-              </button>
-            </div>
-            <div id="revealed" hidden>
-              <div
-                id="board"
-                class="board"
-                role="img"
-                aria-label="MAP runs across. A new five-letter word runs down, crossing its A as the second letter."
-              ></div>
-              <div class="slot">
-                <strong>5 letters · down</strong><span>_ A _ _ _</span>
-                <p>Crosses MAP at A.<br />You choose the word that fits.</p>
-              </div>
-            </div>
-          </section>
-          <p class="postcard-note">
-            One playable discovery. The rest of this world is still growing.
+          </div>
+          <p class="scope-note">
+            One playable discovery in a world taking shape. The other landmarks
+            can be inspected.
           </p>
         </section>
         <section class="play-panel" aria-labelledby="choice-title">
-          <p class="eyebrow">01 / PLANT YOUR FIRST WORD</p>
           <div class="panel-heading">
-            <h2 id="choice-title">Pick a little challenge</h2>
+            <h2 id="choice-title">Speak its peculiar language</h2>
             <span id="remaining" class="pill">7 available</span>
           </div>
           <p class="muted">
-            Each seed has a quirk. Pick a rule for your clue; spend it only when
-            your word is accepted.
+            The garden listens by different rules. Choose one for your clue. It
+            is used only when your word is accepted.
           </p>
           <div class="account-bar">
-            <p id="connection" role="status">Loading your turn…</p>
+            <p id="connection" role="status">Connecting to your garden…</p>
             <button id="login" class="secondary" type="button" hidden>
-              Sign in to Reddit
+              Sign in to Reddit</button
+            ><button id="reconnect" class="secondary" type="button" hidden>
+              Reconnect
             </button>
           </div>
           <form id="turn-form" novalidate>
@@ -150,8 +199,8 @@
               <p>
                 All clues need at least one word and at most 140 characters.
                 Twin Blossoms needs any two clue words with a matching initial;
-                other words can start differently. These seven cards are the
-                prototype’s challenge pool.
+                other words can start differently. These seven restrictions are
+                the prototype’s challenge pool.
               </p>
             </details>
             <p id="judging" class="judge-note">
@@ -180,7 +229,7 @@
       </div>
       <footer>
         <span id="storage-status" role="status"
-          >Your turn is saved to your Reddit account.</span
+          >Connecting to your saved turn…</span
         ><button id="reload" class="quiet" type="button">
           Refresh saved turn
         </button>

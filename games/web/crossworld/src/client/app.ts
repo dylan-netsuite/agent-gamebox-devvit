@@ -1,13 +1,8 @@
 import { createGarden } from "./garden";
+import { createGameApi, SessionMismatch } from "./api";
 import { showLoginPrompt } from "@devvit/web/client";
-import {
-  API_ROOT,
-  RESTRICTIONS,
-  SCENARIO,
-  clueWords,
-  validateTurn,
-} from "../shared/rules";
-import { emptyTurn, type Turn, type GameView } from "../shared/types";
+import { RESTRICTIONS, clueWords, validateTurn } from "../shared/rules";
+import { emptyTurn, type Turn } from "../shared/types";
 
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
@@ -23,28 +18,8 @@ let saves: Promise<void> = Promise.resolve();
 let dirty = false;
 const garden = createGarden();
 
-async function api<T>(path: string, body?: unknown): Promise<T> {
-  const response = await fetch(`${API_ROOT}${path}`, {
-    ...(body === undefined
-      ? {}
-      : {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        }),
-    signal: AbortSignal.timeout(25_000),
-  });
-  if (response.status === 404)
-    throw new Error(
-      "This postcard is updating. Reopen the Reddit post to load the matching version. Your earlier turn is safe.",
-    );
-  const data = (await response.json()) as T & { error?: string };
-  if (!response.ok)
-    throw new Error(
-      data.error || "Could not reach the game. Please try again.",
-    );
-  return data;
-}
+const { request: api, loadTurn } = createGameApi();
+let connectionError = false;
 
 function error(message: string) {
   el("errors").hidden = !message;
@@ -79,10 +54,17 @@ function render(celebrate = false) {
   el<HTMLButtonElement>("submit").disabled =
     disabled || !signedIn || !judgeReady;
   el<HTMLButtonElement>("reload").disabled = busy;
+  el<HTMLButtonElement>("reconnect").disabled = busy;
+  el("reconnect").hidden = !connectionError;
+  el("bed-state").textContent = accepted
+    ? "Awakened"
+    : turn.revealed
+      ? "Continue discovery"
+      : "Begin discovery";
   el("submit").textContent = busy
     ? "Reviewing your clue…"
     : accepted
-      ? "Postcard complete"
+      ? "Discovery complete"
       : "Submit word & clue ↗";
   el("counter").textContent =
     `${clueWords(turn.clue).length} words · ${turn.clue.length}/140`;
@@ -95,7 +77,7 @@ function render(celebrate = false) {
     ? "1 used · 6 remaining"
     : "7 available";
   el("login").hidden = !loaded || signedIn;
-  if (loaded)
+  if (loaded && !connectionError)
     el("connection").textContent = !signedIn
       ? "Sign in to save and submit your turn."
       : !judgeReady
@@ -104,10 +86,10 @@ function render(celebrate = false) {
   el("result").hidden = !turn.review;
   if (turn.review) {
     el("result-title").textContent = accepted
-      ? "Look what you grew."
+      ? "The garden has heard you."
       : "Give your clue another pass.";
     el("result-copy").textContent =
-      `${turn.review.reason} ${accepted ? "One restriction spent. One little corner brought to life. Your postcard is complete." : "Your restriction is still available. You can revise and submit again."}`;
+      `${turn.review.reason} ${accepted ? "One restriction spent. The Whisper Bed has awakened. This discovery is complete." : "Your restriction is still available. You can revise and submit again."}`;
   }
   for (const input of document.querySelectorAll<HTMLInputElement>(
     'input[name="restriction"]',
@@ -222,6 +204,11 @@ el("turn-form").addEventListener("submit", (event) => {
           ? "Completed turn saved to your Reddit account."
           : "Draft saved. Revise when ready.";
     } catch (failure) {
+      if (failure instanceof SessionMismatch) {
+        connectionError = true;
+        loaded = false;
+        el("connection").textContent = "The garden needs to reconnect.";
+      }
       error(
         failure instanceof Error
           ? failure.message
@@ -243,42 +230,56 @@ el("turn-form").addEventListener("submit", (event) => {
 
 async function load() {
   busy = true;
+  clearTimeout(saveTimer);
+  connectionError = false;
+  el("connection").textContent = "Connecting to your garden…";
   error("");
   render();
   try {
-    // Flush edits before refresh; a failed save must not silently discard them.
-    await queueSave();
-    const view = await api<GameView>("/turn");
-    if (view.scenario !== SCENARIO) {
-      loaded = false;
-      signedIn = false;
-      judgeReady = false;
-      throw new Error(
-        "This postcard is updating. Reopen the Reddit post to load the matching version. Your earlier turn is safe.",
-      );
-    }
-    turn = view.turn;
+    // Read first after any in-flight save settles. A failed draft save must not
+    // prevent session recovery or replace the player's unsaved local text.
+    await saves.catch(() => {});
+    const view = await loadTurn(() => {
+      el("connection").textContent = "Reconnecting your Reddit session…";
+    });
     signedIn = view.signedIn;
     judgeReady = view.judgeReady;
     loaded = true;
-    word.value = turn.word;
-    clue.value = turn.clue;
-    el("storage-status").textContent = signedIn
-      ? "Loaded your saved turn."
-      : "Sign in to save your draft.";
+    if (!dirty || view.turn.status === "accepted") {
+      turn = view.turn;
+      dirty = false;
+      word.value = turn.word;
+      clue.value = turn.clue;
+      el("storage-status").textContent = signedIn
+        ? "Loaded your saved turn."
+        : "Sign in to save your draft.";
+    } else {
+      el("storage-status").textContent = "Your unsaved draft is still here.";
+      // This is an explicit user reconnect, not an automatic write retry.
+      await queueSave();
+    }
   } catch (failure) {
-    el("connection").textContent = "Could not load your saved turn.";
+    connectionError = true;
+    loaded = false;
+    el("connection").textContent = "Could not connect to your saved turn.";
     error(
       failure instanceof Error
         ? failure.message
-        : "Check your connection, then use Refresh saved turn. Your typed draft is still here.",
+        : "Check your connection, then Reconnect. Your typed draft is still here.",
     );
   } finally {
     busy = false;
     render();
   }
 }
-el("reload").addEventListener("click", () => {
-  void load();
+for (const id of ["reload", "reconnect"]) {
+  el(id).addEventListener("click", () => {
+    void load();
+  });
+}
+el("visit-bed").addEventListener("click", () => {
+  el("discovery").scrollIntoView({ block: "start", behavior: "instant" });
+  if (!turn.revealed) el("reveal").focus();
+  else el("board-title").focus();
 });
 void load();
