@@ -9,7 +9,7 @@ const textarea = document.createElement('textarea');
  */
 export function decodeHtmlEntities(text: string): string {
   // Fix corrupted ampersands from old cache entries
-  let decoded = text.replace(/[^\x00-\x7F]{1,3}mp;/g, '&');
+  let decoded = text.replace(/[\u0080-\uFFFF]{1,3}mp;/g, '&');
 
   for (let i = 0; i < 3; i++) {
     textarea.innerHTML = decoded;

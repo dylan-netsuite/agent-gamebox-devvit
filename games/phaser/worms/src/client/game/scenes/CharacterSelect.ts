@@ -375,9 +375,9 @@ export class CharacterSelect extends Scene {
       wormsPerTeam: this.config.wormsPerTeam,
       teamCharacters,
       aiTeams: this.config.aiTeams ?? [],
-      mapId: this.config.mapId,
-      turnTimer: this.config.turnTimer,
-      aiDifficulty: this.config.aiDifficulty,
+      ...(this.config.mapId !== undefined ? { mapId: this.config.mapId } : {}),
+      ...(this.config.turnTimer !== undefined ? { turnTimer: this.config.turnTimer } : {}),
+      ...(this.config.aiDifficulty !== undefined ? { aiDifficulty: this.config.aiDifficulty } : {}),
     } satisfies GameConfig);
   }
 }

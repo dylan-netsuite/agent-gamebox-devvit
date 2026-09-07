@@ -243,7 +243,6 @@ export class GamePlay extends Scene {
     });
 
     this.hud = new HUD(this, this.weaponSystem, this.windSystem);
-    this.hud.setActiveWormNameGetter(() => this.activeWorm?.name ?? '');
     this.hud.setTurnTimerGetter(() => this.turnTimer);
     this.hud.setTeamGetter(() => {
       const w = this.activeWorm;

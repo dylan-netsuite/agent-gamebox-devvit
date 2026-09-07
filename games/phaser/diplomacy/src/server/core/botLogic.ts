@@ -5,7 +5,7 @@ import type { Order, MoveOrder, SupportOrder, HoldOrder } from '../../shared/typ
 import { saveGameState, getActivePlayers } from './gameState';
 import { ADJACENCIES, getValidMoves, determineCoast } from '../../shared/data/adjacencies';
 import { PROVINCES } from '../../shared/data/provinces';
-import { resolveOrders, applyResults } from './orderResolver';
+import { resolveOrders, applyResults } from '../../shared/logic/orderResolver';
 
 // ── Helpers ─────────────────────────────────────────
 
@@ -206,7 +206,7 @@ function simulateAndScore(
 
 // ── Candidate Generation (Tier 2) ───────────────────
 
-function generateAlternativeOrders(unit: Unit, state: GameState, country: Country): Order[] {
+function generateAlternativeOrders(unit: Unit, _state: GameState, country: Country): Order[] {
   const alternatives: Order[] = [];
   const moves = getValidMoves(unit.province, unit.type, unit.coast);
 
@@ -244,7 +244,7 @@ function generateCandidates(
 
   // For each unit, try swapping its order with alternatives
   for (let i = 0; i < units.length && candidates.length < MAX_CANDIDATES; i++) {
-    const unit = units[i];
+    const unit = units[i]!;
     const alternatives = generateAlternativeOrders(unit, state, country);
 
     for (const alt of alternatives) {
@@ -279,8 +279,8 @@ function generateCandidates(
   if (units.length >= 2 && candidates.length < MAX_CANDIDATES) {
     for (let i = 0; i < units.length - 1 && candidates.length < MAX_CANDIDATES; i++) {
       for (let j = i + 1; j < units.length && candidates.length < MAX_CANDIDATES; j++) {
-        const unitA = units[i];
-        const unitB = units[j];
+        const unitA = units[i]!;
+        const unitB = units[j]!;
         const movesA = getValidMoves(unitA.province, unitA.type, unitA.coast);
         const movesB = getValidMoves(unitB.province, unitB.type, unitB.coast);
 
@@ -364,17 +364,17 @@ function generateBaselineOrders(state: GameState, country: Country): Order[] {
   const claimedDestinations = new Map<string, number>();
 
   for (let i = 0; i < units.length; i++) {
-    const unit = units[i];
+    const unit = units[i]!;
     const moves = getValidMoves(unit.province, unit.type, unit.coast);
 
     const threatenedAdj = moves.filter((m) => threatened.has(m) && !myPositions.has(m));
     if (threatenedAdj.length > 0) {
-      const dest = threatenedAdj[0];
+      const dest = threatenedAdj[0]!;
       const existing = claimedDestinations.get(dest);
       if (existing !== undefined) {
         orders.push({
           type: 'support', country, unitType: unit.type, province: unit.province,
-          supportedProvince: orders[existing].province, supportedDestination: dest,
+          supportedProvince: orders[existing]!.province, supportedDestination: dest,
         } as SupportOrder);
         continue;
       }
@@ -405,12 +405,12 @@ function generateBaselineOrders(state: GameState, country: Country): Order[] {
         return a.score - b.score;
       });
 
-      const best = scored[0];
+      const best = scored[0]!;
       const existing = claimedDestinations.get(best.sc);
       if (existing !== undefined) {
         orders.push({
           type: 'support', country, unitType: unit.type, province: unit.province,
-          supportedProvince: orders[existing].province, supportedDestination: best.sc,
+          supportedProvince: orders[existing]!.province, supportedDestination: best.sc,
         } as SupportOrder);
         continue;
       }
@@ -441,8 +441,8 @@ function generateBaselineOrders(state: GameState, country: Country): Order[] {
         .map((m) => ({ prov: m, dist: distanceTo(m, new Set([bestTarget.sc]), unit.type) }))
         .sort((a, b) => a.dist - b.dist);
 
-      if (steppingMoves.length > 0 && steppingMoves[0].dist < distanceTo(unit.province, new Set([bestTarget.sc]), unit.type, unit.coast)) {
-        const dest = steppingMoves[0].prov;
+      if (steppingMoves.length > 0 && steppingMoves[0]!.dist < distanceTo(unit.province, new Set([bestTarget.sc]), unit.type, unit.coast)) {
+        const dest = steppingMoves[0]!.prov;
         const coast = determineCoast(unit.province, dest);
         const moveOrder: MoveOrder = {
           type: 'move', country, unitType: unit.type, province: unit.province,
@@ -458,7 +458,7 @@ function generateBaselineOrders(state: GameState, country: Country): Order[] {
       (o): o is MoveOrder => o.type === 'move' && moves.includes(o.destination)
     );
     if (supportable.length > 0) {
-      const target = supportable[0];
+      const target = supportable[0]!;
       orders.push({
         type: 'support', country, unitType: unit.type, province: unit.province,
         supportedProvince: target.province, supportedDestination: target.destination,
@@ -548,7 +548,7 @@ export async function autoSubmitBotRetreats(state: GameState): Promise<void> {
     });
     scored.sort((a, b) => a.score - b.score);
 
-    const best = scored[0];
+    const best = scored[0]!;
     const coast = determineCoast(d.from, best.dest);
     const newUnit: Unit = {
       type: d.unit.type,

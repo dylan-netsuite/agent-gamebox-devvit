@@ -1,6 +1,6 @@
 ---
 name: devvit-test
-description: Tests a deployed game using Playwright MCP in headless mode. Navigates to playtest URLs, interacts with the app, captures screenshots, and generates test results.
+description: Tests a deployed game using available browser automation. Navigates to playtest URLs, interacts with the app, captures screenshots, and generates test results.
 ---
 
 # Devvit Testing Skill
@@ -11,7 +11,7 @@ Tests deployed games using Playwright MCP. Runs fully autonomously -- do NOT ask
 
 - Do NOT ask the user for a playtest URL -- read it from `deployment.json` or construct it from the game's `.env` + `devvit.json`
 - Do NOT stop to ask what to test -- read the plan and generate test scenarios
-- Playwright is configured headless -- no browser window will open
+- Discover available browser tools and their actual settings. Follow root `AGENTS.md` for player-profile ownership; do not assume headless mode or specific MCP server names.
 
 ## Usage
 
@@ -34,7 +34,7 @@ Tests deployed games using Playwright MCP. Runs fully autonomously -- do NOT ask
 
 ### Step 1: Get Playtest URL
 
-Read from `.workflows/{game-path}/{wf-id}/deployment.json` -> `url` field. Never ask the user.
+Read the URL from `.workflows/{game-path}/{wf-id}/deployment.json` and verify a successful installation was observed. Keep the playtest terminal alive. A guessed URL is not deployment evidence; record missing authentication or unavailable tools as untested, not passed.
 
 ### Step 2: Navigate and Load App
 
@@ -60,6 +60,7 @@ async (page) => {
     const canvas = await gameFrame.$('canvas');
     if (canvas) {
       const box = await canvas.boundingBox();
+      if (!box) throw new Error("Game canvas is not visible");
       await page.mouse.click(box.x + box.width/2, box.y + box.height/2);
     }
   }

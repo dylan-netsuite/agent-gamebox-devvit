@@ -7,7 +7,6 @@ import {
   createInitialState,
   createLobby,
   getLobbyInfo,
-  saveLobbyInfo,
   findOpenLobby,
   listOpenLobbies,
   getLobbyPlayers,

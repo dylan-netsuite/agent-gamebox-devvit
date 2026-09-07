@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /games/phaser/*
+    schedule:
+      interval: weekly
+    groups:
+      devvit:
+        patterns: ["devvit", "@devvit/*"]
+      tooling:
+        dependency-type: development
+        exclude-patterns: ["devvit", "@devvit/*"]
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: phaser
+        update-types: [version-update:semver-major]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

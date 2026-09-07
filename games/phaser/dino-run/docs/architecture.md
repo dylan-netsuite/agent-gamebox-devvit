@@ -9,7 +9,7 @@
 | Bundler | Vite 6.2.4 |
 | Server | Express 5.1.0 on Devvit serverless |
 | Storage | Devvit Redis |
-| Platform | Devvit (@devvit/web 0.12.11) |
+| Platform | Devvit (@devvit/web 0.14.2) |
 
 ## Project Layout
 
@@ -57,7 +57,7 @@ User taps post → Splash (splash.html)
 ## Build Pipeline
 
 - **Client**: Vite builds `splash.html` and `game.html` as separate entry points. Phaser is chunked into its own bundle (`phaser.js`) for caching.
-- **Server**: Vite builds `index.ts` as a CJS module targeting Node 22.
+- **Server**: Vite builds `index.ts` as a CJS module targeting Node 24.
 - **Output**: `dist/client/` and `dist/server/` are referenced by `devvit.json`.
 
 ## Graphics

@@ -53,8 +53,6 @@ export class GameSetup extends Scene {
   private timerIndex = DEFAULT_TIMER_INDEX;
   private aiDifficultyIndex = DEFAULT_AI_DIFFICULTY_INDEX;
 
-  private teamCountText!: Phaser.GameObjects.Text;
-  private wormCountText!: Phaser.GameObjects.Text;
   private teamPreview!: Phaser.GameObjects.Container;
   private mapNameText!: Phaser.GameObjects.Text;
   private mapDescText!: Phaser.GameObjects.Text;
@@ -317,11 +315,6 @@ export class GameSetup extends Scene {
       }
     });
 
-    if (label === 'TEAMS') {
-      this.teamCountText = valueText;
-    } else {
-      this.wormCountText = valueText;
-    }
   }
 
   private buildMapRow(cx: number, y: number, panelW: number): void {

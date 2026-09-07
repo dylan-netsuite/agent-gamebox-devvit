@@ -114,7 +114,7 @@ Workflow: wf-1706234599999
 ### Step 4: Stage and Commit
 
 1. Stage game files: `git add games/{game-path}/`
-2. Stage workflow artifacts: `git add .workflows/{game-path}/{wf-id}/`
+2. Keep `.workflows/` artifacts local; they are gitignored. Do not force-add them.
 3. Stage any other related changes (e.g., doc updates, shared types)
 4. **Do NOT stage** files that contain secrets (`.env`, credentials)
 5. Commit using the generated message via HEREDOC:

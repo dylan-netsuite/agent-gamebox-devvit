@@ -1,9 +1,9 @@
 ---
-description: Use when writing webview code for any game
+description: Browser conventions for Phaser games
 globs: games/**/src/client/**/*
 alwaysApply: false
 ---
-Guidelines:
-- Use NPM dependencies if needed, ensure they are web compatible
-- You cannot use websockets. Call devvit_search and query for "realtime" to get more information
-- Only use the game's designated engine (e.g., Phaser for games under games/phaser/). Do not pull in other game engines.
+
+Follow `AGENTS.md`. Keep Phaser as the game engine. Use same-origin fetches to `/api/` and `@devvit/web/client` for Reddit UI effects and Realtime subscriptions. Do not import server modules or make external network requests from the webview.
+
+Keep the HTML splash lightweight, request expanded mode from a user gesture, handle missing `context.userId`, and resynchronize multiplayer state on reconnect. localStorage is version-specific and is not durable across app updates.

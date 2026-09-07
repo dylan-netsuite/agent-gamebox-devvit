@@ -1,50 +1,16 @@
 ---
 name: devvit-deploy
-description: Builds and deploys a specific game in the monorepo to the playtest environment. Constructs playtest URL from the game's config files.
+description: Build and playtest one Agent Gamebox app when the user requests deployment or a full development cycle. Record the observed CLI result for browser testing.
 ---
 
-# Devvit Deployment Skill
+# Devvit playtest
 
-Builds a game and prepares deployment info for testing. Constructs the playtest URL automatically from the game's config files.
+Input: game path relative to `games/`, for example `phaser/jeopardy`, plus an optional workflow ID. Follow root `AGENTS.md`.
 
-## Usage
+1. Run `node tools/validate-all.mjs phaser/jeopardy` from the repository root, substituting the selected game. Resolve failures before playtesting.
+2. Start `npm run dev` inside `games/{game-path}` in a managed terminal. This loads the optional `.env` and runs Devvit's configured build/watch commands. Keep it alive through browser testing.
+3. Use the playtest URL emitted by the CLI. Subreddit precedence is an explicit CLI argument, `DEVVIT_SUBREDDIT`, then `devvit.json`'s `dev.subreddit` (with platform-stored fallback). Do not assume `.env` exists or overrides an explicit argument.
+4. After the CLI confirms installation, record the URL, app name, subreddit, time, and terminal/session identifier in `.workflows/{game-path}/{wf-id}/deployment.json` with `status: deployed`.
+5. If the CLI reports an error or authentication is unavailable, record the actual failure. A constructed URL is only a candidate URL, never evidence of successful deployment.
 
-```
-/devvit-deploy phaser/jeopardy
-```
-
-## Workflow
-
-### Step 1: Build the Game
-
-1. Run `npm run build -w games/{game-path}`
-2. Verify build succeeds (exit code 0)
-3. If build fails, fix errors and retry
-
-### Step 2: Deploy to Playtest
-
-1. Run `cd games/{game-path} && npx devvit playtest`
-2. The subreddit is read from `games/{game-path}/devvit.json` `dev.subreddit` field
-
-### Step 3: Construct Playtest URL
-
-Do NOT ask the user for the URL. Construct it automatically:
-
-1. Read app name from `games/{game-path}/devvit.json` -> `name` field
-2. Read subreddit from `games/{game-path}/.env` -> `DEVVIT_SUBREDDIT` value
-   - Strip `r/` prefix if present for the URL path
-3. Construct: `https://www.reddit.com/r/{subreddit}?playtest={app-name}`
-
-### Step 4: Save Deployment Info
-
-Create/update `.workflows/{game-path}/{wf-id}/deployment.json`:
-```json
-{
-  "url": "https://www.reddit.com/r/{subreddit}?playtest={app-name}",
-  "gamePath": "phaser/jeopardy",
-  "status": "deployed",
-  "appName": "{app-name}",
-  "subreddit": "{subreddit}",
-  "deployedAt": "{timestamp}"
-}
-```
+This skill playtests the selected app. Public publication requires a user request that covers publication; do not invoke `npm run launch` as part of playtesting.

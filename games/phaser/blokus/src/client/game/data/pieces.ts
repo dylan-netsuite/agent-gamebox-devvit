@@ -1,3 +1,4 @@
+import { PIECE_DEFINITIONS } from '../../../shared/logic/pieces';
 export type { PieceDefinition } from '../../../shared/logic/pieces';
 export { PIECE_DEFINITIONS } from '../../../shared/logic/pieces';
 

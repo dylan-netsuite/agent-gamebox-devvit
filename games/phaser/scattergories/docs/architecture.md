@@ -4,7 +4,7 @@
 
 - **Engine**: Phaser 3.88.2 (2D game framework)
 - **Client**: TypeScript + Vite, runs in Devvit webview iframe
-- **Server**: Express.js on Devvit serverless runtime (Node 22)
+- **Server**: Express.js on Devvit serverless runtime (Node 24)
 - **State**: Redis via `@devvit/web/server`
 - **Realtime**: Devvit Realtime for multiplayer messaging
 - **Platform**: Reddit Devvit custom post

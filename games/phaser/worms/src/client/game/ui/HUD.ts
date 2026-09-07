@@ -53,7 +53,6 @@ export class HUD {
   private animating = false;
   private hoveredSlot = -1;
   private _clickedThisFrame = false;
-  private getActiveWormName: (() => string) | null = null;
   private getTurnTimer: (() => number) | null = null;
   private getTeam: (() => number) | null = null;
   private getIsRemoteTurn: (() => boolean) | null = null;
@@ -112,10 +111,6 @@ export class HUD {
       this.toggleArrow.setText('▶');
       this.drawBarBg();
     }
-  }
-
-  setActiveWormNameGetter(fn: () => string): void {
-    this.getActiveWormName = fn;
   }
 
   setTurnTimerGetter(fn: () => number): void {

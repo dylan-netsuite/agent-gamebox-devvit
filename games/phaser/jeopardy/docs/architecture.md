@@ -4,7 +4,7 @@
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
-| Platform | Reddit Devvit | 0.12.11 |
+| Platform | Reddit Devvit | 0.14.2 |
 | Game Engine | Phaser 3 | 3.88.2 |
 | Language | TypeScript | 5.8.2 |
 | Build Tool | Vite | 6.2.4 |
@@ -74,8 +74,9 @@ The splash page calls `requestExpandedMode(e, 'game')` to transition from the in
 
 ```
 npm run build
-  ├── npm run build:client   →  vite build (src/client → dist/client)
-  └── npm run build:server   →  vite build (src/server → dist/server/index.cjs)
+  └── vite build (@devvit/start/vite)
+        ├── client → dist/client
+        └── server → dist/server/index.cjs
 ```
 
 Both bundles are output to `dist/` which is referenced by `devvit.json`:
@@ -86,11 +87,11 @@ Both bundles are output to `dist/` which is referenced by `devvit.json`:
 
 ```
 Local development:
-  npm run dev          # Concurrent client watch + server watch + devvit playtest
+  npm run dev          # Devvit playtest with the official Vite build watcher
 
 Manual deploy:
-  npm run deploy       # build + devvit upload (to staging)
-  npm run launch       # build + upload + devvit publish (to production)
+  npm run deploy       # check + devvit upload (CLI runs the configured build)
+  npm run launch       # check + devvit publish (submits a version for review)
 ```
 
 `devvit playtest` uploads the built assets and creates a live-reloading session on a test subreddit.

@@ -29,7 +29,6 @@ class ChatPanelImpl {
   private myCountry: Country | null = null;
   private messagesByChannel: Map<string, ChatMessage[]> = new Map();
   private unreadByChannel: Map<string, number> = new Map();
-  private globalBadge = 0;
 
   init(onSend: (text: string, channel?: string) => void, myCountry?: Country) {
     this.onSend = onSend;
@@ -203,7 +202,6 @@ class ChatPanelImpl {
   private updateGlobalBadge() {
     let total = 0;
     for (const [, count] of this.unreadByChannel) total += count;
-    this.globalBadge = total;
     if (!this.badgeEl) return;
     if (total > 0) {
       this.badgeEl.textContent = String(total);

@@ -138,7 +138,7 @@ export function calculateBuilds(state: GameState): BuildOption[] {
 
     if (delta === 0) continue;
 
-    let validProvinces: string[] = [];
+    let validProvinces: string[];
 
     if (delta > 0) {
       const homeSCs = getHomeSupplyCenters(country).map((p) => p.id);

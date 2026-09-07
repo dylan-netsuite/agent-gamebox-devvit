@@ -1,5 +1,7 @@
 # Diplomacy - Architecture
 
+The order resolver now lives in `src/shared/logic/orderResolver.ts` so the tutorial and server share pure logic without a client import from the server directory.
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -28,10 +30,10 @@ games/phaser/diplomacy/
 │   │   ├── index.ts      # Express routes & API
 │   │   └── core/         # Game logic modules
 │   │       ├── gameState.ts     # Redis state management
-│   │       ├── orderResolver.ts # Diplomacy order resolution engine
 │   │       ├── botLogic.ts      # Bot player AI & auto-submit
 │   │       └── post.ts          # Reddit post creation
 │   └── shared/           # Shared between client & server
+│       ├── logic/orderResolver.ts # Pure order resolution for client and server
 │       ├── types/        # TypeScript interfaces
 │       │   ├── game.ts   # GameState, Country, Unit, etc.
 │       │   ├── orders.ts # Order types & formatting

@@ -8,7 +8,6 @@
     "dir": "dist/client",
     "entrypoints": {
       "default": {
-        "inline": true,
         "entry": "splash.html",
         "height": "tall"
       },
@@ -37,5 +36,9 @@
   },
   "dev": {
     "subreddit": "scatter_devvit_dev"
+  },
+  "scripts": {
+    "build": "npm run build",
+    "dev": "vite build --watch"
   }
 }

@@ -315,7 +315,7 @@ export async function getLobbyGameConfig(code: string): Promise<MultiplayerGameC
 // ── Game Move History ──
 
 export async function getGameMoves(code: string): Promise<string | null> {
-  return await redis.get(lobbyMovesKey(code));
+  return (await redis.get(lobbyMovesKey(code))) ?? null;
 }
 
 export async function saveGameMoves(code: string, movesJson: string): Promise<void> {
@@ -323,7 +323,7 @@ export async function saveGameMoves(code: string, movesJson: string): Promise<vo
 }
 
 export async function getGamePasses(code: string): Promise<string | null> {
-  return await redis.get(lobbyPassesKey(code));
+  return (await redis.get(lobbyPassesKey(code))) ?? null;
 }
 
 export async function saveGamePasses(code: string, passesJson: string): Promise<void> {

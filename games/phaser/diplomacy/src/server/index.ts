@@ -18,7 +18,7 @@ import {
   saveTurnSnapshot,
   getTurnHistory,
 } from './core/gameState';
-import { resolveOrders, applyResults } from './core/orderResolver';
+import { resolveOrders, applyResults } from '../shared/logic/orderResolver';
 import {
   fillBots,
   autoSubmitBotOrders,

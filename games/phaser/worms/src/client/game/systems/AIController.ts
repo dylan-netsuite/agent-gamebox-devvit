@@ -496,7 +496,7 @@ export class AIController {
 
     if (impactDist > weapon.blastRadius * 2.5) return 0;
 
-    let score = 0;
+    let score: number;
 
     if (impactDist <= weapon.blastRadius) {
       score = 100 - (impactDist / weapon.blastRadius) * 30;
@@ -646,7 +646,7 @@ export class AIController {
 
     for (let d = 0; d < maxDist; d += step) {
       let dx = baseDx;
-      let dy = baseDy;
+      const dy = baseDy;
       if (d > driftStart) {
         const t = (d - driftStart) / (maxDist - driftStart);
         dx += windForce * t * windMul * step;
