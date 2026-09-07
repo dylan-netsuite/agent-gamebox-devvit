@@ -20,7 +20,7 @@
   "dependencies": {
     "@devvit/web": "0.14.2",
     "express": "5.2.1",
-    "phaser": "3.88.2"
+    "phaser": "3.90.0"
   },
   "devDependencies": {
     "@devvit/start": "0.14.2",
