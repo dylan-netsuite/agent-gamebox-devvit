@@ -8,4 +8,6 @@ Covered sand, water, grass, shells and stones transform when their paths are dis
 
 This prototype allows immediate advancement through all five turns. Calendar-based daily gating, future-fill guarantees, other worlds and sharing are not implemented. The new shore starts fresh without deleting earlier Chatterbloom records.
 
+In the private playtest, open **Settings → Start fresh** to clear your current map and begin again. This resets only your Sandy Shore board. Review limits still apply, and old tabs must refresh before writing to the new board.
+
 [Play the private Reddit test](https://www.reddit.com/r/crossworld_game_dev/?playtest=crossworld-game), then choose **Explore Sandy Shore**. Approved subreddit access is required. [Development and API setup](docs/implementation.md).

@@ -35,6 +35,7 @@ let shore = emptyShore(),
   ready = false,
   signedIn = false,
   judgeReady = false,
+  canReset = false,
   busy = false,
   dirty = false,
   minimized = false,
@@ -443,19 +444,25 @@ function controls() {
           : "Review both clues",
   );
   el<HTMLButtonElement>("refresh").disabled = busy;
+  el<HTMLButtonElement>("restart").disabled = busy || !ready || !signedIn;
+  el("restart").hidden = !canReset;
 }
-function applyState(next: Shore) {
-  if (next.completed.length < shore.completed.length) return;
-  const advanced = next.completed.length > shore.completed.length;
+function applyState(next: Shore, acceptNewRun = false) {
+  const changedRun = (next.run ?? "initial") !== (shore.run ?? "initial");
+  if (changedRun && !acceptNewRun) return;
+  if (!changedRun && next.completed.length < shore.completed.length) return;
+  const advanced =
+    !changedRun && next.completed.length > shore.completed.length;
   shore = next;
   prepareLetters();
-  if (advanced) {
+  if (advanced || changedRun) {
     dirty = false;
     revision++;
     active = "across";
     minimized = false;
     el("criterion-picker").hidden = true;
     message("errors", "");
+    if (changedRun) message("pair-review-status", "Your fresh board is ready.");
   }
   updateEditor();
   renderMap();
@@ -473,13 +480,18 @@ function queueSave() {
   if (!ready || !signedIn || !shore.turn || !dirty) return saves;
   const version = revision,
     day = shore.completed.length,
+    run = shore.run ?? "initial",
     snapshot = currentDraft();
   el("storage-status").textContent = "Saving…";
   saves = saves
     .catch(() => {})
     .then(async () => {
       try {
-        const next = await api.request<Shore>("/draft", { ...snapshot, day });
+        const next = await api.request<Shore>("/draft", {
+          ...snapshot,
+          day,
+          run,
+        });
         if (next.completed.length > shore.completed.length) applyState(next);
         if (version === revision) {
           dirty = false;
@@ -589,7 +601,11 @@ editor.addEventListener("submit", (event) => {
     positionEditor();
     return;
   }
-  const payload = { ...result.pair, day: shore.completed.length };
+  const payload = {
+    ...result.pair,
+    day: shore.completed.length,
+    run: shore.run ?? "initial",
+  };
   dirty = true;
   revision++;
   busy = true;
@@ -652,12 +668,15 @@ async function load() {
     );
     signedIn = view.signedIn;
     judgeReady = view.judgeReady;
+    canReset = Boolean(view.canReset);
     ready = true;
     const local =
-      dirty && shore.completed.length === view.shore.completed.length
+      dirty &&
+      shore.completed.length === view.shore.completed.length &&
+      (shore.run ?? "initial") === (view.shore.run ?? "initial")
         ? shore.turn
         : null;
-    applyState(local ? { ...view.shore, turn: local } : view.shore);
+    applyState(local ? { ...view.shore, turn: local } : view.shore, true);
     message(
       "connection",
       !signedIn
@@ -692,5 +711,42 @@ el("reconnect").addEventListener("click", () => {
 el("login").addEventListener("click", () =>
   navigateTo("https://www.reddit.com/login/"),
 );
+el("restart").addEventListener("click", () => {
+  if (!ready || busy || !signedIn || !canReset) return;
+  el<HTMLDialogElement>("restart-confirm").showModal();
+});
+el("cancel-restart").addEventListener("click", () =>
+  el<HTMLDialogElement>("restart-confirm").close(),
+);
+el("confirm-restart").addEventListener("click", () => {
+  if (!ready || busy || !signedIn || !canReset) return;
+  el<HTMLDialogElement>("restart-confirm").close();
+  busy = true;
+  clearTimeout(saveTimer);
+  controls();
+  renderMap();
+  void (async () => {
+    await saves;
+    try {
+      const next = await api.request<Shore>("/reset", {
+        run: shore.run ?? "initial",
+      });
+      dirty = false;
+      applyState(next, true);
+      message("connection", "");
+      el("reconnect").hidden = true;
+      el("storage-status").textContent = "Saved";
+      el("restart").closest("details")?.removeAttribute("open");
+    } catch (error) {
+      message("connection", failureText(error));
+      el("reconnect").hidden = false;
+    } finally {
+      busy = false;
+      controls();
+      renderMap();
+      if (!shore.turn?.revealed) discover.focus({ preventScroll: true });
+    }
+  })();
+});
 window.addEventListener("resize", positionEditor);
 void load();

@@ -25,6 +25,7 @@
             ><button id="sound" type="button" aria-pressed="false">
               Sound
             </button>
+            <button id="restart" type="button" hidden>Start fresh</button>
           </div>
         </details>
       </header>
@@ -154,6 +155,22 @@
         </p>
       </details>
     </main>
+    <dialog
+      id="restart-confirm"
+      aria-labelledby="restart-title"
+      aria-describedby="restart-description"
+    >
+      <h2 id="restart-title">Start a fresh shore?</h2>
+      <p id="restart-description">
+        Your current words and clues will be cleared from the map.
+      </p>
+      <button id="cancel-restart" class="text-button" type="button" autofocus>
+        Keep this board
+      </button>
+      <button id="confirm-restart" class="text-button" type="button">
+        Start fresh
+      </button>
+    </dialog>
     <dialog id="inspect" aria-labelledby="inspect-title">
       <div class="dialog-heading">
         <h2 id="inspect-title">Your words</h2>

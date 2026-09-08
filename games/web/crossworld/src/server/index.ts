@@ -23,7 +23,13 @@ import {
   emptyShore,
   type ShoreView,
 } from "../shared/shore";
-import { readShore, saveShore, submitShore } from "./shore";
+import {
+  readShore,
+  saveShore,
+  submitShore,
+  resetShore,
+  canResetShore,
+} from "./shore";
 
 const app = express();
 app.use(express.json({ limit: "2kb" }));
@@ -71,6 +77,7 @@ app.get(`${SHORE_API_ROOT}/turn`, async (_req, res) => {
   const config = await judgeConfig();
   const view: ShoreView = {
     scenario: SHORE_SCENARIO,
+    canReset: canResetShore(context.userId, context.subredditName),
     signedIn: Boolean(context.userId),
     judgeReady: Boolean(config.enabled && config.key),
     shore: context.userId ? await readShore(context.userId) : emptyShore(),
@@ -82,6 +89,9 @@ app.post(`${SHORE_API_ROOT}/draft`, async (req, res) =>
 );
 app.post(`${SHORE_API_ROOT}/submit`, async (req, res) =>
   res.json(await submitShore(requireUser(context.userId), req.body)),
+);
+app.post(`${SHORE_API_ROOT}/reset`, async (req, res) =>
+  res.json(await resetShore(context.userId, context.subredditName, req.body)),
 );
 
 const createPost = () =>

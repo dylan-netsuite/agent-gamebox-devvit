@@ -57,11 +57,12 @@ export const CRITERIA = RESTRICTIONS.map((rule, i) => ({
 export type Entry = { word: string; clue: string; criterion: string };
 export type PairDraft = { revealed: boolean; across: Entry; down: Entry };
 export type Pair = PairDraft & { reviews: Record<Direction, Judgment | null> };
-export type Shore = { completed: Pair[]; turn: Pair | null };
+export type Shore = { completed: Pair[]; turn: Pair | null; run?: string };
 export type ShoreView = {
   scenario: string;
   signedIn: boolean;
   judgeReady: boolean;
+  canReset?: boolean;
   shore: Shore;
 };
 export const emptyPair = (): Pair => ({

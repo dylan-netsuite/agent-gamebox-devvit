@@ -1,7 +1,13 @@
 import { createDevvitTest } from "@devvit/test/server/vitest";
 import { redis } from "@devvit/web/server";
 import { expect, vi } from "vitest";
-import { readShore, saveShore, submitShore } from "./shore";
+import {
+  readShore,
+  saveShore,
+  submitShore,
+  resetShore,
+  canResetShore,
+} from "./shore";
 import {
   DAYS,
   DIRECTIONS,
@@ -338,4 +344,95 @@ test("both clues count toward the shared daily allowance and disabled judging ne
   );
   expect(off.judge).not.toHaveBeenCalled();
   expect((await readShore("bob")).completed).toHaveLength(0);
+});
+test("private restart clears only the caller's map and preserves legacy progress, verdicts and paid budgets", async () => {
+  const d = deps();
+  await submitShore("alice", payload(0), d);
+  await submitShore("bob", payload(0), d);
+  await saveJourney("alice", {
+    path: 0,
+    revealed: true,
+    restriction: "brief",
+    word: "LAMPS",
+    clue: "Lights on tables",
+  });
+  const old = await readShore("bob");
+  const fresh = await resetShore("alice", "crossworld_game_dev", {
+    run: "initial",
+    userId: "bob",
+  });
+  expect(fresh.run).toBeTruthy();
+  expect(fresh.completed).toEqual([]);
+  expect(fresh.turn).toEqual(emptyPair());
+  expect(await readShore("alice")).toEqual(fresh);
+  expect(await readShore("bob")).toEqual(old);
+  expect((await readJourney("alice")).turn?.word).toBe("LAMPS");
+  const budget = `cq:${SHORE_SCENARIO}:alice:budget:${new Date().toISOString().slice(0, 10)}`;
+  expect(await redis.get(budget)).toBe("2");
+  await expireReview();
+  const accepted = await submitShore(
+    "alice",
+    { ...payload(0), run: fresh.run },
+    d,
+  );
+  expect(accepted.completed).toHaveLength(1);
+  expect(accepted.run).toBe(fresh.run);
+  expect(d.judge).toHaveBeenCalledTimes(4); // Same Alice clues reuse their verdicts after restart.
+  expect(await redis.get(budget)).toBe("2");
+});
+test("restart rejects missing identity, other installations, stale requests and repeat clicks", async () => {
+  expect(canResetShore(undefined, "crossworld_game_dev")).toBe(false);
+  expect(canResetShore("alice", "another_subreddit")).toBe(false);
+  await expect(
+    resetShore(undefined, "crossworld_game_dev", { run: "initial" }),
+  ).rejects.toThrow();
+  await expect(
+    resetShore("alice", "another_subreddit", { run: "initial" }),
+  ).rejects.toThrow("private playtest");
+  await expect(resetShore("alice", "crossworld_game_dev", {})).rejects.toThrow(
+    "already changed",
+  );
+  const attempts = await Promise.allSettled([
+    resetShore("alice", "crossworld_game_dev", { run: "initial" }),
+    resetShore("alice", "crossworld_game_dev", { run: "initial" }),
+  ]);
+  expect(attempts.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+  const fresh = await readShore("alice");
+  await expect(
+    resetShore("alice", "crossworld_game_dev", { run: "initial" }),
+  ).rejects.toThrow("already changed");
+  await expect(
+    resetShore("alice", "crossworld_game_dev", { run: fresh.run }),
+  ).rejects.toThrow("45 seconds");
+  expect(await readShore("alice")).toEqual(fresh);
+});
+test("a restarted board rejects stale saves and paid submissions, including older clients", async () => {
+  const d = deps();
+  await saveShore("alice", payload(0));
+  const fresh = await resetShore("alice", "crossworld_game_dev", {
+    run: "initial",
+  });
+  await expect(saveShore("alice", payload(0))).rejects.toThrow("restarted");
+  await expect(
+    submitShore("alice", { ...payload(0), run: "initial" }, d),
+  ).rejects.toThrow("restarted");
+  expect(d.judge).not.toHaveBeenCalled();
+  expect(await readShore("alice")).toEqual(fresh);
+  await saveShore("alice", { ...payload(0), run: fresh.run });
+  expect((await readShore("alice")).turn?.across.word).toBe("SCALD");
+});
+test("a review already in flight cannot repopulate the fresh board", async () => {
+  const d = deps(),
+    releases: ((j: Judgment) => void)[] = [];
+  d.judge.mockImplementation(
+    () => new Promise((resolve) => releases.push(resolve)),
+  );
+  const pending = submitShore("alice", payload(0), d);
+  await vi.waitFor(() => expect(d.judge).toHaveBeenCalledTimes(2));
+  const fresh = await resetShore("alice", "crossworld_game_dev", {
+    run: "initial",
+  });
+  releases.forEach((resolve) => resolve(yes));
+  expect(await pending).toEqual(fresh);
+  expect(await readShore("alice")).toEqual(fresh);
 });
