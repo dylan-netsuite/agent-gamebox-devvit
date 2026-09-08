@@ -17,6 +17,13 @@ import {
   type JourneyView,
 } from "../shared/journey";
 import { readJourney, saveJourney, submitJourney } from "./journey";
+import {
+  SHORE_API_ROOT,
+  SHORE_SCENARIO,
+  emptyShore,
+  type ShoreView,
+} from "../shared/shore";
+import { readShore, saveShore, submitShore } from "./shore";
 
 const app = express();
 app.use(express.json({ limit: "2kb" }));
@@ -60,8 +67,25 @@ app.post(`${JOURNEY_API_ROOT}/submit`, async (req, res) => {
   res.json(await submitJourney(requireUser(context.userId), req.body));
 });
 
+app.get(`${SHORE_API_ROOT}/turn`, async (_req, res) => {
+  const config = await judgeConfig();
+  const view: ShoreView = {
+    scenario: SHORE_SCENARIO,
+    signedIn: Boolean(context.userId),
+    judgeReady: Boolean(config.enabled && config.key),
+    shore: context.userId ? await readShore(context.userId) : emptyShore(),
+  };
+  res.json(view);
+});
+app.post(`${SHORE_API_ROOT}/draft`, async (req, res) =>
+  res.json(await saveShore(requireUser(context.userId), req.body)),
+);
+app.post(`${SHORE_API_ROOT}/submit`, async (req, res) =>
+  res.json(await submitShore(requireUser(context.userId), req.body)),
+);
+
 const createPost = () =>
-  reddit.submitCustomPost({ title: "CrossWorld · One word, one clue" });
+  reddit.submitCustomPost({ title: "CrossWorld · Sandy Shore" });
 app.post("/internal/on-app-install", async (_req, res) => {
   await createPost();
   res.json({ status: "success" });

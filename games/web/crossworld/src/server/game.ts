@@ -49,12 +49,14 @@ export function createTurnGame(
   scenario: string,
   validate: typeof validateTurn = validateTurn,
   budgetScenario = scenario,
+  persistAcceptance = true,
 ) {
   const prefix = `cq:${scenario}`;
   const key = (user: string, part: string) => `${prefix}:${user}:${part}`;
   function reviewKeyFor(user: string, draft: Draft): string {
     const normalized = {
-      ...draft,
+      revealed: draft.revealed,
+      restriction: draft.restriction,
       word: draft.word.trim().toUpperCase(),
       clue: draft.clue.trim(),
     };
@@ -67,6 +69,14 @@ export function createTurnGame(
   async function readAccepted(user: string): Promise<Turn | null> {
     const value = await redis.get(key(user, "accepted"));
     return value ? (JSON.parse(value) as Turn) : null;
+  }
+
+  async function readReview(
+    user: string,
+    draft: Draft,
+  ): Promise<Judgment | null> {
+    const raw = await redis.get(reviewKeyFor(user, draft));
+    return raw ? (JSON.parse(raw) as Judgment) : null;
   }
 
   async function readTurn(user: string): Promise<Turn> {
@@ -207,7 +217,7 @@ export function createTurnGame(
       status: review.validWord && review.fairClue ? "accepted" : "editing",
       review,
     };
-    if (turn.status === "accepted") {
+    if (turn.status === "accepted" && persistAcceptance) {
       // Award and restriction consumption are represented by this one atomic record, never counters.
       await redis.set(key(user, "accepted"), JSON.stringify(turn), {
         nx: true,
@@ -217,6 +227,6 @@ export function createTurnGame(
     return (await readAccepted(user)) ?? turn;
   }
 
-  return { readTurn, saveDraft, submit };
+  return { readTurn, saveDraft, submit, readReview };
 }
 export const { readTurn, saveDraft, submit } = createTurnGame(SCENARIO);

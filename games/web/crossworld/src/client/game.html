@@ -4,139 +4,162 @@
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <title>CrossWorld · Chatterbloom Gardens</title>
+    <title>CrossWorld · Sandy Shore</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="game">
-      <header class="topbar">
-        <span class="brand">crossworld<span aria-hidden="true">✳</span></span>
-        <div class="tools">
-          <button
-            id="theme"
-            class="icon-button"
-            aria-label="Switch to dark theme"
-            title="Change theme"
-          >
-            ◐</button
-          ><button
-            id="sound"
-            class="icon-button"
-            aria-label="Sound"
-            aria-pressed="false"
-            title="Sound off"
-          >
-            ♪</button
-          ><button
-            id="motion"
-            class="icon-button"
-            aria-label="Pause animations"
-            aria-pressed="false"
-            title="Pause animations"
-          >
-            Ⅱ
+      <header class="world-heading">
+        <p class="brand">CrossWorld</p>
+        <h1>Sandy Shore</h1>
+        <details class="settings">
+          <summary aria-label="Settings">☼</summary>
+          <div class="tools">
+            <button id="theme" type="button" aria-label="Switch to dark theme">
+              Light / dark</button
+            ><button id="motion" type="button" aria-pressed="false">
+              Pause motion</button
+            ><button id="sound" type="button" aria-pressed="false">
+              Sound
+            </button>
+          </div>
+        </details>
+      </header>
+      <p id="connection" class="notice" role="status" hidden></p>
+      <button id="reconnect" class="text-button" type="button" hidden>
+        Reconnect</button
+      ><button id="login" class="text-button" type="button" hidden>
+        Sign in to Reddit
+      </button>
+      <section class="map" id="map" aria-label="Sandy Shore crossword map">
+        <div id="tiles" class="tiles"></div>
+        <svg id="scenery" viewBox="0 0 500 1000" aria-hidden="true"></svg>
+        <div
+          id="turn-switch"
+          class="turn-switch"
+          role="group"
+          aria-label="Choose a word"
+          hidden
+        >
+          <button id="across-tab" type="button" aria-pressed="true">
+            → Across <span id="across-status"></span></button
+          ><button id="down-tab" type="button" aria-pressed="false">
+            ↓ Down <span id="down-status"></span>
           </button>
         </div>
-      </header>
-      <section class="world-heading">
-        <p class="eyebrow">A WORLD YOU WRITE</p>
-        <h1>Chatterbloom Gardens</h1>
-        <p id="progress">An empty map. A place to begin.</p>
-      </section>
-      <section id="map" class="map" aria-label="Your crossword garden">
-        <div class="map-coordinate coordinate-top" aria-hidden="true">N ·</div>
-        <svg id="scenery" viewBox="0 0 450 450" aria-hidden="true"></svg>
-        <div id="paths" class="paths"></div>
-        <button id="explore" class="explore" type="button" disabled>
-          <span class="explore-dot" aria-hidden="true">+</span
-          ><span id="explore-label">Begin here</span>
+        <button id="discover" class="discover" type="button" disabled>
+          <span class="discover-mark" aria-hidden="true">+</span
+          ><span id="discover-label">Uncover two paths</span>
         </button>
-        <span class="map-coordinate coordinate-bottom" aria-hidden="true"
-          >THE UNWRITTEN PLACES</span
-        >
-      </section>
-      <section class="map-caption" aria-live="polite">
-        <p id="story">Uncover a path. Give it a word. See what grows.</p>
-        <p id="connection" class="small" role="status">Finding your garden…</p>
-        <button id="reconnect" class="text-button" hidden>Reconnect</button
-        ><button id="login" class="text-button" hidden>
-          Sign in to Reddit
+        <form id="map-editor" class="map-editor" novalidate hidden>
+          <div class="editor-heading">
+            <label id="clue-label" for="active-clue">Clue for Across</label
+            ><button
+              id="minimize"
+              type="button"
+              aria-label="Minimize clue editor"
+            >
+              −
+            </button>
+          </div>
+          <p id="word-guide" class="word-guide">
+            Tap the tiles to write your word.
+          </p>
+          <textarea
+            id="active-clue"
+            maxlength="140"
+            rows="2"
+            placeholder="Write a clue for your word…"
+          ></textarea>
+          <div class="editor-actions">
+            <button id="choose-criterion" class="criterion-badge" type="button">
+              <span id="criterion-icon" aria-hidden="true">✳</span
+              ><span id="criterion-name">Choose a criterion</span
+              ><span aria-hidden="true">⌄</span></button
+            ><button
+              id="next-word"
+              class="round-action"
+              type="button"
+              aria-label="Write the down word"
+            >
+              ↓</button
+            ><button
+              id="submit"
+              class="round-action"
+              type="submit"
+              aria-label="Review both clues"
+              hidden
+            >
+              ✓
+            </button>
+          </div>
+          <p id="criterion-rule" class="criterion-rule"></p>
+          <p id="review" class="review" role="status" hidden></p>
+          <p id="errors" class="error" role="alert" hidden></p>
+          <section
+            id="criterion-picker"
+            class="criterion-picker"
+            aria-label="Choose a clue criterion"
+            hidden
+          >
+            <div class="picker-heading">
+              <span id="picker-title">A rule for Across</span
+              ><button
+                id="close-picker"
+                type="button"
+                aria-label="Close criteria"
+              >
+                ×
+              </button>
+            </div>
+            <div id="criterion-options" class="criterion-options"></div>
+          </section>
+        </form>
+        <button id="restore-editor" class="restore-editor" type="button" hidden>
+          ✎ Write a clue
         </button>
+      </section>
+      <div class="map-status">
+        <span id="progress" aria-live="polite">Finding your shore…</span
+        ><button id="all-clues" class="text-button" type="button" hidden>
+          Your clues ↗
+        </button>
+      </div>
+      <p id="story" class="story">Uncover two paths. Make them yours.</p>
+      <p id="pair-review-status" class="sr-only" role="status"></p>
+      <section id="complete" class="complete" hidden>
+        <h2>Ten words. Your shore.</h2>
+        <p>Tap a tile to revisit its clue.</p>
       </section>
       <footer>
-        <span id="storage-status" role="status">Connecting…</span
-        ><button id="refresh" class="text-button">Refresh</button>
+        <span id="storage-status">Connecting…</span
+        ><button id="refresh" class="text-button" type="button">Refresh</button>
       </footer>
-    </main>
-    <dialog id="entry" aria-labelledby="entry-title">
-      <div class="sheet-handle" aria-hidden="true"></div>
-      <div class="sheet-heading">
-        <div>
-          <p id="path-label" class="eyebrow">PATH 01</p>
-          <h2 id="entry-title">Give this path a word</h2>
-        </div>
-        <button
-          id="close"
-          class="icon-button"
-          aria-label="Close word entry"
-          autofocus
-        >
-          ×
-        </button>
-      </div>
-      <div id="pattern" class="pattern" role="img"></div>
-      <p id="crossing-note" class="small"></p>
-      <form id="turn-form" novalidate>
-        <label for="restriction"
-          >A rule for your clue <span id="remaining"></span></label
-        ><select id="restriction" name="restriction">
-          <option value="">Choose a rule</option>
-        </select>
-        <label for="word">Your word <span>5 letters</span></label
-        ><input
-          id="word"
-          name="word"
-          maxlength="20"
-          autocomplete="off"
-          autocapitalize="characters"
-          spellcheck="false"
-          placeholder="You choose what fits"
-        />
-        <label for="clue">Your clue <span id="counter">0 / 140</span></label
-        ><textarea
-          id="clue"
-          name="clue"
-          maxlength="140"
-          rows="2"
-          placeholder="Help someone find your word."
-          aria-describedby="judging"
-        ></textarea>
-        <p id="errors" role="alert" hidden></p>
-        <p id="review" role="status" hidden></p>
-        <button id="submit" class="primary" type="submit">
-          Grow this path <span aria-hidden="true">↗</span>
-        </button>
-        <p id="judging" class="small">
-          AI checks your word and clue. A rule is used only when accepted.
+      <details class="how-to">
+        <summary>How to play</summary>
+        <p>
+          Tap a tile and type your own word. Write an across clue and a down
+          clue, each with its own criterion. Match the crossing letters. Both
+          clues must pass the AI review to open the next turn. You can play all
+          five turns now.
         </p>
-        <details>
-          <summary>How clue rules work</summary>
-          <p class="small">
-            Rules apply to your clue. Each group of A–Z letters counts as a
-            word; punctuation splits words. Use 1–140 characters and at least
-            one word. Do not name your exact answer as a whole word. Matching
-            initials means any two clue words, not every word. Only your word
-            and clue are sent to OpenAI.
-          </p>
-        </details>
-      </form>
-      <div id="accepted-note" hidden>
-        <p id="accepted-clue"></p>
-        <p id="accepted-rule" class="small"></p>
+        <p>
+          Clues use 1–140 characters. Groups of A–Z letters count as words;
+          punctuation separates them. Do not use your exact answer as a whole
+          word in its clue. Only the word and clue are sent to OpenAI for
+          review.
+        </p>
+      </details>
+    </main>
+    <dialog id="inspect" aria-labelledby="inspect-title">
+      <div class="dialog-heading">
+        <h2 id="inspect-title">Your words</h2>
+        <button id="close" class="text-button" type="button">Close</button>
       </div>
+      <div id="inspect-content"></div>
     </dialog>
     <script type="module" src="app.ts"></script>
   </body>

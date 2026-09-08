@@ -1,45 +1,48 @@
 import { navigateTo } from "@devvit/web/client";
 import { createGameApi } from "./api";
-import { createGarden } from "./garden";
-import { RESTRICTIONS, clueWords } from "../shared/rules";
+import { createShoreArt } from "./shore-art";
+import { criterionIcon, visualCriteria } from "./criteria-art";
 import {
-  JOURNEY_API_ROOT,
-  JOURNEY_SCENARIO,
-  PATHS,
-  MAP_SIZE,
-  markerFor,
-  emptyJourney,
-  crossingFor,
+  SHORE_API_ROOT,
+  SHORE_SCENARIO,
+  DAYS,
+  DIRECTIONS,
+  CRITERIA,
   cellsFor,
-  validatePath,
-  type Journey,
-  type JourneyView,
-} from "../shared/journey";
-import type { Draft } from "../shared/types";
-
+  cellKey,
+  lettersFor,
+  emptyShore,
+  parsePair,
+  validatePair,
+  type Direction,
+  type Shore,
+  type ShoreView,
+  type PairDraft,
+} from "../shared/shore";
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
-const sheet = el<HTMLDialogElement>("entry"),
-  word = el<HTMLInputElement>("word"),
-  clue = el<HTMLTextAreaElement>("clue"),
-  restriction = el<HTMLSelectElement>("restriction");
-const explore = el<HTMLButtonElement>("explore"),
-  submit = el<HTMLButtonElement>("submit");
-const api = createGameApi<JourneyView>(undefined, undefined, {
-  root: JOURNEY_API_ROOT,
-  scenario: JOURNEY_SCENARIO,
+const api = createGameApi<ShoreView>(undefined, undefined, {
+  root: SHORE_API_ROOT,
+  scenario: SHORE_SCENARIO,
 });
-const garden = createGarden();
-let journey = emptyJourney(),
+const art = createShoreArt(),
+  clue = el<HTMLTextAreaElement>("active-clue"),
+  discover = el<HTMLButtonElement>("discover"),
+  submit = el<HTMLButtonElement>("submit"),
+  editor = el<HTMLFormElement>("map-editor"),
+  inspect = el<HTMLDialogElement>("inspect");
+let shore = emptyShore(),
   ready = false,
   signedIn = false,
   judgeReady = false,
-  busy = false;
-let inspected: number | null = null,
+  busy = false,
+  dirty = false,
+  minimized = false,
   revision = 0,
-  dirty = false;
-let saveTimer: ReturnType<typeof setTimeout> | undefined;
-let saves: Promise<void> = Promise.resolve();
+  active: Direction = "across";
+let saveTimer: ReturnType<typeof setTimeout> | undefined,
+  saves: Promise<void> = Promise.resolve();
+const title = (d: Direction) => (d === "across" ? "Across" : "Down");
 const message = (id: string, text: string) => {
   el(id).textContent = text;
   el(id).hidden = !text;
@@ -47,203 +50,445 @@ const message = (id: string, text: string) => {
 const failureText = (error: unknown) =>
   error instanceof Error
     ? error.message
-    : "Could not save. Your typed draft is still here.";
-function draft(): Draft {
-  return {
-    revealed: journey.turn?.revealed ?? false,
-    restriction: restriction.value,
-    word: word.value,
-    clue: clue.value,
-  };
-}
-function updateForm() {
-  const turn = inspected === null ? journey.turn : journey.completed[inspected];
-  if (!turn) return;
-  word.value = turn.word;
-  clue.value = turn.clue;
-  restriction.replaceChildren(new Option("Choose a rule", ""));
-  for (const rule of RESTRICTIONS) {
-    const option = new Option(rule.rule, rule.id);
-    option.disabled = journey.completed.some((t) => t.restriction === rule.id);
-    restriction.add(option);
+    : "Could not save. Both drafts are still on this screen.";
+const pass = (d: Direction) =>
+  Boolean(shore.turn?.reviews[d]?.validWord && shore.turn.reviews[d]?.fairClue);
+const editable = () => ready && !busy && Boolean(shore.turn?.revealed);
+function prepareLetters() {
+  if (!shore.turn?.revealed) return;
+  const fixed = lettersFor(shore.completed),
+    day = shore.completed.length;
+  for (const direction of DIRECTIONS) {
+    const word = shore.turn[direction].word
+      .toUpperCase()
+      .padEnd(DAYS[day]![direction].length, " ")
+      .split("");
+    cellsFor(day, direction).forEach((cell, i) => {
+      const letter = fixed.get(cellKey(cell));
+      if (letter) word[i] = letter;
+    });
+    const next = word.join("");
+    if (next !== shore.turn[direction].word)
+      shore.turn.reviews[direction] = null;
+    shore.turn[direction].word = next;
   }
-  restriction.value = turn.restriction;
-  el("remaining").textContent =
-    `${RESTRICTIONS.length - journey.completed.length} left`;
-  el("turn-form").hidden = inspected !== null;
-  el("accepted-note").hidden = inspected === null;
-  el("path-label").textContent =
-    `PATH ${String((inspected ?? journey.completed.length) + 1).padStart(2, "0")} · ${inspected === null ? "5 LETTERS" : "PART OF YOUR GARDEN"}`;
-  el("entry-title").textContent =
-    inspected === null ? "Give this path a word" : PATHS[inspected]!.place;
-  el("accepted-clue").textContent = turn.clue;
-  el("accepted-rule").textContent =
-    RESTRICTIONS.find((r) => r.id === turn.restriction)?.rule ?? "";
+}
+function currentDraft(): PairDraft {
+  return parsePair(shore.turn)!;
+}
+function updateEditor() {
+  const turn = shore.turn;
+  editor.hidden = !turn?.revealed || minimized;
+  el("restore-editor").hidden = !turn?.revealed || !minimized;
+  el("turn-switch").hidden = !turn?.revealed;
+  el("complete").hidden = turn !== null;
+  el("all-clues").hidden = shore.completed.length === 0;
+  for (const d of DIRECTIONS) {
+    el(`${d}-tab`).setAttribute("aria-pressed", String(active === d));
+    el(`${d}-status`).textContent = pass(d) ? "✓" : "";
+  }
+  if (!turn) return;
+  clue.value = turn[active].clue;
+  el("clue-label").textContent = `Clue for ${title(active)}`;
+  el("word-guide").textContent =
+    `${DAYS[shore.completed.length]![active].length} letters · tap the tiles to write your word`;
+  const criterion = visualCriteria.find((c) => c.id === turn[active].criterion);
+  el("criterion-icon").innerHTML = criterionIcon(criterion?.id ?? "");
+  el("criterion-name").textContent = criterion?.label ?? "Choose a criterion";
+  el("choose-criterion").setAttribute(
+    "aria-label",
+    `${title(active)} criterion: ${criterion?.label ?? "choose a rule"}`,
+  );
+  el("criterion-rule").textContent = criterion?.rule ?? "";
+  el("picker-title").textContent = `A rule for ${title(active)}`;
+  for (const button of el(
+    "criterion-options",
+  ).querySelectorAll<HTMLButtonElement>("button"))
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.criterion === turn[active].criterion),
+    );
+  const review = turn.reviews[active];
   message(
     "review",
-    turn.review && turn.status === "editing" ? turn.review.reason : "",
+    review ? `${pass(active) ? "Passed" : "Revise"}: ${review.reason}` : "",
   );
-  message("errors", "");
-  updatePattern();
+  el("review").classList.toggle("rejected", Boolean(review && !pass(active)));
+  const bothReady = DIRECTIONS.every(
+    (d) =>
+      /^[A-Z]+$/.test(turn[d].word) &&
+      turn[d].word.length === DAYS[shore.completed.length]![d].length &&
+      turn[d].clue.trim() &&
+      turn[d].criterion,
+  );
+  submit.hidden = !bothReady;
+  el("next-word").hidden = bothReady;
+  const other = active === "across" ? "down" : "across";
+  el("next-word").setAttribute("aria-label", `Write the ${other} word`);
+  el("next-word").textContent = other === "down" ? "↓" : "→";
+  positionEditor();
 }
-function updatePattern() {
-  const fixed = crossingFor(journey.completed);
-  const shown =
-    inspected === null
-      ? word.value.trim().toUpperCase()
-      : (journey.completed[inspected]?.word ?? "");
-  const pattern = el("pattern");
-  pattern.replaceChildren();
-  const letters: string[] = [];
-  for (let i = 0; i < 5; i++) {
-    const stone = document.createElement("span");
-    const isFixed = inspected === null && fixed?.index === i;
-    stone.textContent = isFixed ? fixed.letter : (shown[i] ?? "·");
-    if (isFixed) stone.className = "fixed";
-    letters.push(stone.textContent);
-    pattern.append(stone);
+function positionEditor() {
+  if (!shore.turn?.revealed) return;
+  const map = el("map"),
+    path = DAYS[shore.completed.length]![active];
+  const unit = map.clientHeight / 10;
+  const start = path.row * unit,
+    end = (path.row + (active === "down" ? path.length : 1)) * unit;
+  const height = Math.max(
+    editor.offsetHeight,
+    el("criterion-picker").hidden ? 0 : el("criterion-picker").offsetHeight,
+    180,
+  );
+  const below = end + 10,
+    above = start - height - 10;
+  const top = below + height <= map.clientHeight ? below : Math.max(0, above);
+  editor.style.top = `${Math.min(top, map.clientHeight - height)}px`;
+  el("restore-editor").style.top =
+    `${Math.min(end + 8, map.clientHeight - 50)}px`;
+}
+function showClues(items: { day: number; direction: Direction }[]) {
+  const content = el("inspect-content");
+  content.replaceChildren();
+  for (const { day, direction } of items) {
+    const pair = shore.completed[day];
+    if (!pair) continue;
+    const block = document.createElement("section");
+    block.className = "saved-clue";
+    const label = document.createElement("small"),
+      word = document.createElement("p"),
+      text = document.createElement("p"),
+      rule = document.createElement("small"),
+      strong = document.createElement("strong");
+    label.textContent = `Turn ${day + 1} · ${direction === "across" ? "→ Across" : "↓ Down"}`;
+    strong.textContent = pair[direction].word;
+    word.append(strong);
+    text.textContent = pair[direction].clue;
+    rule.textContent =
+      CRITERIA.find((r) => r.id === pair[direction].criterion)?.rule ?? "";
+    block.append(label, word, text, rule);
+    content.append(block);
   }
-  pattern.setAttribute("aria-label", `Word path: ${letters.join(" ")}`);
-  el("crossing-note").textContent =
-    inspected !== null
-      ? "Your word is part of the map now."
-      : fixed
-        ? `Letter ${fixed.index + 1} is ${fixed.letter}, from path ${fixed.source + 1}.`
-        : "An open path. Any five-letter English word can take root.";
-  el("counter").textContent =
-    `${clueWords(clue.value).length} words · ${clue.value.length} / 140`;
+  if (content.children.length) inspect.showModal();
 }
-function renderMap(celebrate = false) {
-  const paths = el("paths");
-  paths.replaceChildren();
-  const turns = [
-    ...journey.completed,
-    ...(journey.turn?.revealed ? [journey.turn] : []),
-  ];
-  turns.forEach((turn, index) => {
-    const layout = PATHS[index]!,
-      current = index === journey.completed.length;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `path${layout.down ? " down" : ""}${current ? " current" : ""}`;
-    button.dataset.path = String(index);
-    button.style.left = `${(layout.col / MAP_SIZE) * 100}%`;
-    button.style.top = `${(layout.row / MAP_SIZE) * 100}%`;
-    button.style.width = `${((layout.down ? 1 : 5) / MAP_SIZE) * 100}%`;
-    button.style.height = `${((layout.down ? 5 : 1) / MAP_SIZE) * 100}%`;
-    const crossing = current ? crossingFor(journey.completed) : null;
-    cellsFor(index).forEach((_cell, i) => {
-      const stone = document.createElement("span");
-      stone.className = `stone${crossing?.index === i ? " crossing" : ""}`;
-      stone.textContent = current
-        ? crossing?.index === i
-          ? crossing.letter
-          : "·"
-        : (turn.word[i] ?? "");
-      stone.setAttribute("aria-hidden", "true");
-      button.append(stone);
-    });
-    button.setAttribute(
-      "aria-label",
-      current
-        ? `Write path ${index + 1}, five letters${crossing ? `, letter ${crossing.index + 1} is ${crossing.letter}` : ""}`
-        : `Inspect path ${index + 1}: ${turn.word}. ${layout.place}`,
+function focusTile(index: number, step = 1) {
+  const length = DAYS[shore.completed.length]?.[active].length ?? 0;
+  for (let i = index; i >= 0 && i < length; i += step) {
+    const target = el("tiles").querySelector<HTMLInputElement>(
+      `input[data-index="${i}"]`,
     );
-    button.addEventListener("click", () => openSheet(current ? null : index));
-    paths.append(button);
-  });
-  explore.hidden = !journey.turn || journey.turn.revealed;
-  explore.disabled = !ready || busy;
-  const next = journey.completed.length;
-  const marker = markerFor(next);
-  explore.style.left = next
-    ? `${((marker.col + 0.5) / MAP_SIZE) * 100}%`
-    : "50%";
-  explore.style.top = next
-    ? `${((marker.row + 0.5) / MAP_SIZE) * 100}%`
-    : "48%";
-  el("explore-label").textContent = next ? "Explore next" : "Begin here";
-  explore.classList.toggle("next-marker", next > 0);
-  explore.setAttribute("aria-label", next ? "Explore next" : "Begin here");
-  el("progress").textContent =
-    next === PATHS.length
-      ? `${PATHS.length} paths uncovered · A crossword of your own`
-      : next
-        ? `${next} of ${PATHS.length} paths uncovered`
-        : journey.turn?.revealed
-          ? "First path uncovered · Make it yours"
-          : "An empty map. A place to begin.";
-  el("story").textContent = next
-    ? PATHS[next - 1]!.note
-    : journey.turn?.revealed
-      ? "A word of your own. A clue for someone else."
-      : "Uncover a path. Give it a word. See what grows.";
-  garden.update(next, celebrate);
+    if (target) {
+      target.focus();
+      target.select();
+      return;
+    }
+  }
+  clue.focus();
+}
+function selectWord(direction: Direction, index?: number) {
+  if (!editable()) return;
+  active = direction;
+  minimized = false;
+  el("criterion-picker").hidden = true;
+  message("errors", "");
+  updateEditor();
+  renderMap();
+  controls();
+  if (index !== undefined) focusTile(index);
+  else clue.focus();
+}
+function markEdited(before: PairDraft) {
+  if (!shore.turn) return;
+  for (const d of DIRECTIONS)
+    if (
+      before[d].word !== shore.turn[d].word ||
+      before[d].clue !== shore.turn[d].clue ||
+      before[d].criterion !== shore.turn[d].criterion
+    )
+      shore.turn.reviews[d] = null;
+  dirty = true;
+  revision++;
+  message("errors", "");
+  el("storage-status").textContent = signedIn
+    ? "Unsaved changes"
+    : "Guest · not saved";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    void queueSave();
+  }, 500);
+}
+function putLetters(index: number, text: string) {
+  if (!editable() || !shore.turn) return;
+  const before = currentDraft(),
+    day = shore.completed.length,
+    layout = cellsFor(day, active),
+    fixed = lettersFor(shore.completed);
+  const letters = text.toUpperCase().replace(/[^A-Z]/g, "");
+  if (!letters) return;
+  const slice = letters.slice(0, layout.length - index);
+  for (let i = 0; i < slice.length; i++) {
+    const expected = fixed.get(cellKey(layout[index + i]!));
+    if (expected && expected !== slice[i]) {
+      message(
+        "errors",
+        `Letter ${index + i + 1} is ${expected}, from an earlier path.`,
+      );
+      positionEditor();
+      return;
+    }
+  }
+  for (let i = 0; i < slice.length; i++)
+    writeCell(cellKey(layout[index + i]!), slice[i]!);
+  markEdited(before);
+  updateEditor();
+  renderMap();
+  focusTile(index + slice.length);
+}
+function writeCell(key: string, letter: string) {
+  if (!shore.turn) return;
+  for (const d of DIRECTIONS) {
+    const index = cellsFor(shore.completed.length, d).findIndex(
+      (cell) => cellKey(cell) === key,
+    );
+    if (index < 0) continue;
+    const word = shore.turn[d].word
+      .padEnd(DAYS[shore.completed.length]![d].length, " ")
+      .split("");
+    word[index] = letter;
+    shore.turn[d].word = word.join("");
+  }
+}
+function erase(index: number) {
+  if (!editable() || !shore.turn) return;
+  const before = currentDraft();
+  writeCell(cellKey(cellsFor(shore.completed.length, active)[index]!), " ");
+  markEdited(before);
+  updateEditor();
+  renderMap();
+  focusTile(index);
+}
+function renderMap(animate = false) {
+  const root = el("tiles");
+  root.replaceChildren();
+  const shown = shore.completed.length + (shore.turn?.revealed ? 1 : 0),
+    fixed = lettersFor(shore.completed);
+  const cells = new Map<
+    string,
+    {
+      row: number;
+      col: number;
+      paths: { day: number; direction: Direction; index: number }[];
+    }
+  >();
+  for (let day = 0; day < shown; day++)
+    for (const direction of DIRECTIONS)
+      cellsFor(day, direction).forEach((cell, index) => {
+        const key = cellKey(cell);
+        if (!cells.has(key)) cells.set(key, { ...cell, paths: [] });
+        cells.get(key)!.paths.push({ day, direction, index });
+      });
+  for (const [key, cell] of cells) {
+    const current = cell.paths.filter((p) => p.day === shore.completed.length),
+      selected = current.find((p) => p.direction === active);
+    const typed = current
+      .map((p) => shore.turn?.[p.direction].word[p.index])
+      .filter((v): v is string => Boolean(v && /[A-Z]/.test(v)));
+    const letter = fixed.get(key) ?? typed[0] ?? "",
+      conflict =
+        new Set([...typed, ...(fixed.has(key) ? [fixed.get(key)!] : [])]).size >
+        1;
+    const tile = document.createElement("div");
+    tile.className = "tile";
+    tile.dataset.cell = key;
+    tile.style.gridRow = String(cell.row + 1);
+    tile.style.gridColumn = String(cell.col + 1);
+    if (current.length) tile.classList.add("current");
+    if (selected) tile.classList.add("active");
+    if (fixed.has(key)) tile.classList.add("fixed");
+    if (conflict) tile.classList.add("conflict");
+    if (animate && current.length && !fixed.has(key))
+      tile.classList.add("new-tile");
+    if (selected && !fixed.has(key)) {
+      const field = document.createElement("input");
+      field.type = "text";
+      field.maxLength = 1;
+      field.autocomplete = "off";
+      field.autocapitalize = "characters";
+      field.spellcheck = false;
+      field.enterKeyHint = "next";
+      field.value = letter;
+      field.dataset.index = String(selected.index);
+      field.setAttribute(
+        "aria-label",
+        `${title(active)} letter ${selected.index + 1} of ${DAYS[shore.completed.length]![active].length}`,
+      );
+      field.disabled = !editable();
+      field.addEventListener("focus", () => field.select());
+      field.addEventListener("input", () => {
+        if (field.value) putLetters(selected.index, field.value);
+        else erase(selected.index);
+      });
+      field.addEventListener("paste", (event) => {
+        event.preventDefault();
+        putLetters(selected.index, event.clipboardData?.getData("text") ?? "");
+      });
+      field.addEventListener("keydown", (event) => {
+        if (event.key === "Backspace") {
+          event.preventDefault();
+          if (field.value) erase(selected.index);
+          else {
+            const previous = [
+              ...root.querySelectorAll<HTMLInputElement>("input"),
+            ]
+              .filter((n) => Number(n.dataset.index) < selected.index)
+              .at(-1);
+            if (previous) erase(Number(previous.dataset.index));
+          }
+        } else if (
+          ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"].includes(
+            event.key,
+          )
+        ) {
+          event.preventDefault();
+          const step = ["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 1;
+          focusTile(selected.index + step, step);
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          clue.focus();
+        }
+      });
+      tile.append(field);
+    } else {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "letter";
+      button.textContent = letter;
+      button.disabled = !ready || busy;
+      button.setAttribute(
+        "aria-label",
+        `Row ${cell.row + 1}, column ${cell.col + 1}${letter ? `, ${letter}` : ", empty"}${current.length ? ", select " + current.map((p) => p.direction).join(" or ") : ", inspect clue"}`,
+      );
+      button.addEventListener("click", () => {
+        if (current.length) {
+          const next =
+            current.find((p) => p.direction !== active) ?? current[0]!;
+          selectWord(next.direction, next.index);
+        } else showClues(cell.paths);
+      });
+      tile.append(button);
+    }
+    const starts = cell.paths.filter((p) => p.index === 0);
+    if (starts.length) {
+      const label = document.createElement("span");
+      label.className = "number";
+      label.textContent = starts
+        .map((p) => `${p.day + 1}${p.direction === "across" ? "→" : "↓"}`)
+        .join(" ");
+      label.setAttribute("aria-hidden", "true");
+      tile.append(label);
+    }
+    root.append(tile);
+  }
+  art.update(shown, [...cells.values()], animate);
+  discover.hidden = !shore.turn || shore.turn.revealed;
+  discover.disabled = !ready || busy;
+  if (shore.turn && !shore.turn.revealed) {
+    const options = DIRECTIONS.flatMap((d) =>
+      cellsFor(shore.completed.length, d),
+    ).filter((cell) => !fixed.has(cellKey(cell)));
+    const center = options[Math.floor(options.length / 2)] ?? {
+      row: 2,
+      col: 2,
+    };
+    discover.style.left = `${(center.col + 0.5) * 20}%`;
+    discover.style.top = `${(center.row + 0.5) * 10}%`;
+  }
+  el("discover-label").textContent = shore.completed.length
+    ? "Uncover the next pair"
+    : "Uncover two paths";
+  el("progress").textContent = shore.turn
+    ? `Turn ${shore.completed.length + 1} / 5 · ${shown * 2} paths found`
+    : "10 / 10 paths discovered";
+  el("story").textContent = shore.turn?.revealed
+    ? "Tap a tile to write. Tap a rule to choose."
+    : shore.turn
+      ? "Two paths are waiting beneath the shore."
+      : "";
 }
 function controls() {
-  for (const field of [word, clue, restriction])
-    field.disabled = busy || !ready;
-  submit.disabled = busy || !ready || !signedIn || !judgeReady;
-  submit.textContent = busy
-    ? "Listening to your clue…"
-    : !signedIn
-      ? "Sign in to grow this path"
-      : !judgeReady
-        ? "Clue review unavailable"
-        : "Grow this path ↗";
+  clue.disabled = !editable();
+  for (const id of [
+    "across-tab",
+    "down-tab",
+    "choose-criterion",
+    "next-word",
+    "minimize",
+    "restore-editor",
+  ])
+    el<HTMLButtonElement>(id).disabled = !editable();
+  for (const button of el(
+    "criterion-options",
+  ).querySelectorAll<HTMLButtonElement>("button"))
+    button.disabled = !editable();
+  submit.disabled = !editable() || !signedIn || !judgeReady;
+  submit.textContent = busy ? "…" : "✓";
+  submit.setAttribute(
+    "aria-label",
+    busy
+      ? "Reviewing both clues"
+      : !signedIn
+        ? "Sign in to review both clues"
+        : !judgeReady
+          ? "Clue review unavailable"
+          : "Review both clues",
+  );
   el<HTMLButtonElement>("refresh").disabled = busy;
 }
-function openSheet(path: number | null) {
-  if (!ready || busy) return;
-  inspected = path;
-  updateForm();
-  controls();
-  if (!sheet.open) sheet.showModal();
-}
-function applyState(next: Journey, celebrate = false) {
-  if (next.completed.length < journey.completed.length) return;
-  const advanced = next.completed.length > journey.completed.length;
-  journey = next;
+function applyState(next: Shore) {
+  if (next.completed.length < shore.completed.length) return;
+  const advanced = next.completed.length > shore.completed.length;
+  shore = next;
+  prepareLetters();
   if (advanced) {
     dirty = false;
     revision++;
-    inspected = null;
-    if (sheet.open) sheet.close();
+    active = "across";
+    minimized = false;
+    el("criterion-picker").hidden = true;
+    message("errors", "");
   }
-  renderMap(celebrate && advanced);
-  updateForm();
+  updateEditor();
+  renderMap();
   controls();
   if (advanced) {
-    // Native dialog restores focus to its opener, which has just been replaced.
-    const target = !explore.hidden
-      ? explore
-      : el("paths").querySelector<HTMLButtonElement>("button");
-    target?.focus({ preventScroll: true });
+    art.celebrate();
+    message("pair-review-status", "Both clues passed. The next pair is ready.");
+    (shore.turn ? discover : el<HTMLButtonElement>("all-clues")).focus({
+      preventScroll: true,
+    });
   }
 }
 function queueSave() {
   clearTimeout(saveTimer);
-  if (!ready || !signedIn || !journey.turn || !dirty) return saves;
+  if (!ready || !signedIn || !shore.turn || !dirty) return saves;
   const version = revision,
-    path = journey.completed.length,
-    snapshot = { ...journey.turn };
+    day = shore.completed.length,
+    snapshot = currentDraft();
   el("storage-status").textContent = "Saving…";
   saves = saves
     .catch(() => {})
     .then(async () => {
       try {
-        const next = await api.request<Journey>("/draft", {
-          ...snapshot,
-          path,
-        });
-        if (next.completed.length > journey.completed.length) applyState(next);
+        const next = await api.request<Shore>("/draft", { ...snapshot, day });
+        if (next.completed.length > shore.completed.length) applyState(next);
         if (version === revision) {
           dirty = false;
-          el("storage-status").textContent = "Garden saved";
+          el("storage-status").textContent = "Saved";
+          message("connection", "");
         }
       } catch (error) {
         if (version === revision) {
-          el("storage-status").textContent = "Draft not saved · try Refresh";
+          el("storage-status").textContent = "Unsaved changes";
           message("connection", failureText(error));
           el("reconnect").hidden = false;
         }
@@ -251,75 +496,146 @@ function queueSave() {
     });
   return saves;
 }
-for (const field of [word, clue, restriction])
-  field.addEventListener("input", () => {
-    if (!journey.turn || busy) return;
-    journey.turn = { ...journey.turn, ...draft(), review: null };
-    revision++;
-    dirty = true;
-    el("storage-status").textContent = signedIn
-      ? "Unsaved changes…"
-      : "Guest · not saved";
-    message("errors", "");
-    message("review", "");
-    updatePattern();
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      void queueSave();
-    }, 500);
+clue.addEventListener("input", () => {
+  if (!editable() || !shore.turn) return;
+  const before = currentDraft();
+  shore.turn[active].clue = clue.value;
+  markEdited(before);
+  updateEditor();
+  controls();
+});
+for (const direction of DIRECTIONS)
+  el(`${direction}-tab`).addEventListener("click", () => selectWord(direction));
+el("next-word").addEventListener("click", () =>
+  selectWord(active === "across" ? "down" : "across", 0),
+);
+el("choose-criterion").addEventListener("click", () => {
+  el("criterion-picker").hidden = !el("criterion-picker").hidden;
+  positionEditor();
+  if (!el("criterion-picker").hidden)
+    el("criterion-options")
+      .querySelector<HTMLButtonElement>('button[aria-pressed="true"],button')
+      ?.focus({ preventScroll: true });
+});
+el("close-picker").addEventListener("click", () => {
+  el("criterion-picker").hidden = true;
+  positionEditor();
+  el("choose-criterion").focus({ preventScroll: true });
+});
+for (const rule of visualCriteria) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "criterion-card";
+  button.dataset.criterion = rule.id;
+  button.innerHTML = criterionIcon(rule.id);
+  const text = document.createElement("span");
+  text.textContent = rule.label;
+  button.append(text);
+  button.setAttribute("aria-label", `${rule.name}: ${rule.rule}`);
+  button.title = rule.rule;
+  button.setAttribute("aria-pressed", "false");
+  button.addEventListener("click", () => {
+    if (!editable() || !shore.turn) return;
+    const before = currentDraft();
+    shore.turn[active].criterion = rule.id;
+    markEdited(before);
+    el("criterion-picker").hidden = true;
+    updateEditor();
+    controls();
+    el("choose-criterion").focus({ preventScroll: true });
   });
-explore.addEventListener("click", () => {
-  if (!ready || !journey.turn) return;
-  journey.turn.revealed = true;
+  el("criterion-options").append(button);
+}
+el("minimize").addEventListener("click", () => {
+  minimized = true;
+  el("criterion-picker").hidden = true;
+  updateEditor();
+  el("restore-editor").focus({ preventScroll: true });
+});
+el("restore-editor").addEventListener("click", () => {
+  minimized = false;
+  updateEditor();
+  clue.focus();
+});
+discover.addEventListener("click", () => {
+  if (!ready || busy || !shore.turn) return;
+  shore.turn.revealed = true;
+  prepareLetters();
   dirty = true;
   revision++;
-  renderMap();
-  openSheet(null);
+  active = "across";
+  minimized = false;
+  updateEditor();
+  renderMap(true);
+  controls();
+  art.celebrate();
+  el("across-tab").focus({ preventScroll: true });
   void queueSave();
 });
-el("close").addEventListener("click", () => {
-  void queueSave();
-  sheet.close();
-});
-sheet.addEventListener("close", () => {
-  void queueSave();
-  if (ready)
-    (el("paths").querySelector<HTMLButtonElement>(".current") ?? explore).focus(
-      { preventScroll: true },
-    );
-});
-el("turn-form").addEventListener("submit", (event) => {
+el("close").addEventListener("click", () => inspect.close());
+el("all-clues").addEventListener("click", () =>
+  showClues(
+    shore.completed.flatMap((_, day) =>
+      DIRECTIONS.map((direction) => ({ day, direction })),
+    ),
+  ),
+);
+editor.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (busy || !ready || !signedIn || !judgeReady || !journey.turn) return;
-  const current = draft(),
-    result = validatePath(current, journey.completed);
+  if (!editable() || !signedIn || !judgeReady || !shore.turn) return;
+  const result = validatePair(currentDraft(), shore.completed);
   if (result.issues.length) {
-    message("errors", result.issues.join(" "));
+    message("errors", result.issues[0]!);
+    positionEditor();
     return;
   }
-  journey.turn = { ...journey.turn, ...current };
+  const payload = { ...result.pair, day: shore.completed.length };
   dirty = true;
   revision++;
-  const payload = { ...current, path: journey.completed.length };
   busy = true;
   controls();
+  renderMap();
   message("errors", "");
-  message("review", "");
+  message("pair-review-status", "Reviewing both clues.");
   void (async () => {
     await queueSave();
     try {
-      const next = await api.request<Journey>("/submit", payload);
+      const next = await api.request<Shore>("/submit", payload);
       dirty = false;
-      applyState(next, true);
-      el("storage-status").textContent = "Garden saved";
+      applyState(next);
+      el("storage-status").textContent = "Saved";
+      if (next.turn) {
+        active =
+          DIRECTIONS.find(
+            (d) =>
+              next.turn!.reviews[d] &&
+              (!next.turn!.reviews[d]!.validWord ||
+                !next.turn!.reviews[d]!.fairClue),
+          ) ?? active;
+        updateEditor();
+        message(
+          "pair-review-status",
+          "This pair needs a revision. Both words are still editable.",
+        );
+      }
     } catch (error) {
       message("errors", failureText(error));
-      message("connection", failureText(error));
-      el("reconnect").hidden = false;
+      try {
+        const view = await api.loadTurn();
+        if (view.shore.completed.length > shore.completed.length)
+          applyState(view.shore);
+        else if (shore.turn && view.shore.turn) {
+          shore.turn.reviews = view.shore.turn.reviews;
+          updateEditor();
+        }
+      } catch {
+        /* Keep both local drafts and the original error. */
+      }
     } finally {
       busy = false;
       controls();
       renderMap();
+      positionEditor();
     }
   })();
 });
@@ -327,35 +643,35 @@ async function load() {
   if (busy) return;
   busy = true;
   controls();
-  message("connection", "Finding your garden…");
+  message("connection", "Finding your shore…");
   await queueSave();
   await saves;
   try {
     const view = await api.loadTurn(() =>
-      message("connection", "Reconnecting to your garden…"),
+      message("connection", "Reconnecting…"),
     );
     signedIn = view.signedIn;
     judgeReady = view.judgeReady;
     ready = true;
     const local =
-      dirty && journey.completed.length === view.journey.completed.length
-        ? journey.turn
+      dirty && shore.completed.length === view.shore.completed.length
+        ? shore.turn
         : null;
-    applyState(local ? { ...view.journey, turn: local } : view.journey);
+    applyState(local ? { ...view.shore, turn: local } : view.shore);
     message(
       "connection",
       !signedIn
-        ? "Sign in to save and grow your garden."
+        ? "Sign in to save your words and clues."
         : !judgeReady
-          ? "Clue review is resting. You can still write and save."
+          ? "Clue review is unavailable. You can still write and save."
           : "",
     );
     el("login").hidden = signedIn;
     el("reconnect").hidden = true;
     el("storage-status").textContent = signedIn
       ? dirty
-        ? "Draft kept on this screen"
-        : "Garden saved"
+        ? "Drafts kept on this screen"
+        : "Saved"
       : "Guest · not saved";
   } catch (error) {
     message("connection", failureText(error));
@@ -364,6 +680,7 @@ async function load() {
     busy = false;
     controls();
     renderMap();
+    positionEditor();
   }
 }
 el("refresh").addEventListener("click", () => {
@@ -375,4 +692,5 @@ el("reconnect").addEventListener("click", () => {
 el("login").addEventListener("click", () =>
   navigateTo("https://www.reddit.com/login/"),
 );
+window.addEventListener("resize", positionEditor);
 void load();

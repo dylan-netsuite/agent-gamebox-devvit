@@ -1,6 +1,32 @@
-# CrossWorld: Chatterbloom Gardens
+# CrossWorld: Sandy Shore
 
-The current slice is a mobile crossword map that begins blank and grows through seven accepted word paths. Each acceptance adds one small illustration and opens the next crossing. Native HTML controls, a modal bottom sheet, inline SVG and CSS keep the artwork replaceable without introducing another renderer or backend. The earlier landmark gallery and postcard presentation are superseded.
+The current prototype implements the owner's supplied 5-column, 10-row illustration layout. Ten paths are discovered in five paired turns, with one across and one down word per turn. Each word has its own authored clue and independently selected criterion. The seven available criteria can be reused. Immediate advancement is explicitly enabled for this private prototype; there is no calendar-day gate.
+
+Native HTML, CSS and replaceable inline SVG form the phone interface. The crossword is the map. Five sparse shore cover groups clear away as pairs are discovered. Players type directly into active path tiles, switch direction on the map, and write a clue in a compact editor positioned around the active path. A visual seven-rule picker replaces that editor temporarily; each direction retains its own selection. The editor can be minimized to reveal the map. Both clues must pass review before the next pair opens. Players can inspect completed clues. The pale sand, turquoise title, orange subtitle and exact tile footprint follow the owner's reference; detailed art is left to the owner.
+
+## Paired turns and storage
+
+The current routes are `GET /api/sandy-shore-pairs-v1/turn`, `POST /api/sandy-shore-pairs-v1/draft`, and `POST /api/sandy-shore-pairs-v1/submit`. POST bodies contain a zero-based `day`, `revealed`, and `across` / `down` objects containing `word`, `clue`, and `criterion`. A read returns scenario/readiness flags and `shore: { completed, turn }`. Completed entries contain both clues and their reviews; `turn` is null only after five accepted pairs. The server ignores supplied awards, reviews and identity. Signed-in writes use trusted Devvit user context.
+
+`src/shared/shore.ts` owns the reference geometry. Across lengths are 5, 3, 5, 3, 5; down lengths are 6, 5, 6, 5, 5. The board has 33 occupied cells and fifteen shared crossings. Every fixed crossing and the current companion crossing is validated before a paid call. The prototype validates the current pair; it does not search for a complete future fill or let players revise accepted earlier pairs.
+
+`src/server/shore.ts` stores each pair under `cq:sandy-shore-pairs-v1:<user>:day:<day>:{draft,accepted,reviewing}`. A single atomic SET NX accepted record contains both words, criteria and verdicts. Partial passes, unavailable reviews, concurrent submissions and late draft writes cannot award half a pair or combine two submissions. Accepted prefixes are immutable. The new scenario preserves all older records and the seven-path and postcard compatibility routes.
+
+Two bounded reviewer calls run together and are fully awaited. The existing `createTurnGame` adapter supports review-only use; shore acceptance is committed only by the pair coordinator. Each direction has a cached verdict and fixed cooldown, and the pair has a 45-second review lease. Both calls count toward the existing 20-review user/scenario and 200-review installation UTC-day limits. An unchanged successful clue can reuse its cached review on retry. Review hashes use canonical draft field order, preserving legacy cache keys. No server credentials or identity are sent to the browser or provider.
+
+Draft saves are debounced and serialized; edits immediately show as unsaved. Refresh flushes both drafts and preserves unsaved local input if saving fails. Responses from older edits cannot replace newer local typing. A provider failure never triggers an automatic paid retry. Read recovery can restore the companion's cached review. Earlier accepted state wins over late saves.
+
+The current entrypoints are `src/client/app.ts`, `game.html`, `style.css`, `criteria-art.ts` and `shore-art.ts`. Active editable tiles use native one-character inputs with automatic advance, backspace, arrow navigation and whole-word paste. Other tiles use native buttons. Shared letters within the current pair update together; accepted crossings are read-only. Unfinished words retain spaces so a saved crossing never shifts position. Rule icons also carry text and accessible descriptions. The art uses only finite discovery transitions, optional gesture-enabled sound and reduced-motion controls. No image generation, new framework or dependency change is required.
+
+## Sandy Shore verification
+
+The shared gate passes TypeScript, ESLint, 67 tests across six files, and a production build. Paired-turn regressions cover the exact ten-path geometry, all fifteen crossings, independent reusable criteria, full five-turn completion, partial and unavailable reviews, atomic acceptance, concurrency, late saves, forged fields, budgets and preservation of older scenarios. A regression also verifies that unfinished tile drafts keep their spatial crossing positions through storage.
+
+The final map interface passes 95 isolated browser checks with mocked API responses, including all five paired turns, native letter entry and backspace, shared letters, separate clue criteria, reload, rejection and save failures, inspection, theme and reduced motion. An additional sixteen checks verify both editor and visual picker placement for later turns at 320px. Viewport checks cover 320, 390 and 768px widths and a short viewport; these do not substitute for physical phone keyboards.
+
+On private build **0.0.6.2**, the authorized BarryBetsALot test account completed all five pairs with ten real OpenAI acceptances; pair responses took approximately 1.7–4.2 seconds. That run used the earlier entry-panel interface. After the requested map integration, private upload **0.0.7** and playtest **0.0.7.2** restored the same five accepted pairs, separate criteria, 33 tiles and all ten inspectable clues on a full Reddit reopen at 390px, without horizontal overflow or client errors. The final editable interface was tested with isolated mocks; the completed live test account was not reset. The owner's progress was not played or reset.
+
+Physical iOS/Android keyboards, screen readers, subjective feedback on the revised interface and audio listening quality remain untested. The successful fixtures establish this flow and provider connectivity, not general clue judgment accuracy or guaranteed future fillability for arbitrary answers.
 
 ## Register, upload, and play
 
@@ -40,7 +66,7 @@ Current cost controls: one fresh review per user per path per 45 seconds; at mos
 
 Reddit requires apps that use HTTP fetch to provide Terms & Conditions and Privacy Policy links in app details. Add the actual policies before wider distribution; this repository does not invent or publish legal terms for the owner.
 
-## Requests and persistence
+## Earlier Chatterbloom requests and persistence (retained)
 
 | Route | Access | Behavior |
 | --- | --- | --- |

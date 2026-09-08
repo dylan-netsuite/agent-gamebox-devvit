@@ -42,6 +42,7 @@ export function validateTurn(
     index: 1,
     letter: "A",
   },
+  length = 5,
 ) {
   const issues = [];
   const word = turn.word.trim().toUpperCase();
@@ -50,8 +51,8 @@ export function validateTurn(
   if (!turn.revealed) issues.push("Reveal today’s slot first.");
   if (!RESTRICTIONS.some(({ id }) => id === turn.restriction))
     issues.push("Choose one restriction.");
-  if (!/^[A-Z]{5}$/.test(word))
-    issues.push("Your answer must be exactly 5 letters, A–Z.");
+  if (word.length !== length || !/^[A-Z]+$/.test(word))
+    issues.push(`Your answer must be exactly ${length} letters, A–Z.`);
   else if (crossing && word[crossing.index] !== crossing.letter)
     issues.push(
       crossing.index === 1 && crossing.letter === "A"

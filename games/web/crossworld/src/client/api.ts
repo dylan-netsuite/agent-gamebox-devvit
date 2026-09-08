@@ -4,7 +4,7 @@ import type { GameView } from "../shared/types";
 export class SessionMismatch extends Error {
   constructor() {
     super(
-      "The garden could not reconnect to this version. Try Reconnect below. If it still fails, reopen the game from the subreddit. Your saved turn is safe.",
+      "The game could not reconnect to this version. Try Reconnect below. If it still fails, reopen the game from the subreddit. Your saved turn is safe.",
     );
   }
 }
@@ -39,7 +39,7 @@ export function createGameApi<View extends { scenario: string } = GameView>(
     if ([401, 403, 404].includes(response.status)) throw new SessionMismatch();
     if (!response.headers.get("content-type")?.includes("application/json"))
       throw new Error(
-        "The garden is unavailable. Try Reconnect. Your typed draft is still here.",
+        "The game is unavailable. Try Reconnect. Your typed draft is still here.",
       );
     const data = (await response.json()) as T & { error?: string };
     if (!response.ok)

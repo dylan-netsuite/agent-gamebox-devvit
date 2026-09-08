@@ -1,11 +1,11 @@
-# CrossWorld · Chatterbloom Gardens
+# CrossWorld · Sandy Shore
 
-Start with an empty map. Uncover a path, give it a five-letter word and a clue, and watch a small part of the garden appear. Each new path crosses a letter from a word you already placed. After seven accepted words, you have a little connected crossword of your own.
+Uncover a shore, two crossword paths at a time. Each of five turns gives you one across path and one down path. Choose your own words, write their clues, and pick a separate clue criterion for each. The ten paths form the supplied Sandy Shore layout: 33 tiles with three-, five-, and six-letter words.
 
-Choose a different writing rule for each clue. The game checks the crossing and rule, then an AI reviewer checks the word and clue's meaning. Rejections stay editable and spend no rule. Your draft and completed paths save to your Reddit account; tap an accepted path to inspect its word and clue.
+Tap the map tiles to enter a word. Switch between **Across** and **Down** on the map; a compact clue editor sits beside the active path. Tap its criterion symbol to choose from seven visual rules. Each clue keeps its own rule, and rules can be reused. Current shared letters update together; earlier accepted crossings stay fixed. Both clues must pass the AI review before the next turn opens. A partial pass leaves both words editable; drafts and completed pairs save to your Reddit account. Minimize the editor to see the whole map, or tap completed tiles to revisit your clues.
 
-The phone layout keeps the map central and opens word entry in a compact sheet. The illustrations are deliberately sparse, expressive shapes with room for the owner's own artwork. Light/dark, optional sound and reduced-motion controls are included. Sound starts off.
+Covered sand, water, grass, shells and stones transform when their paths are discovered. The simple vector placeholders leave room for the owner's own art. The mobile layout includes light/dark, reduced motion and optional sound (off initially).
 
-This is a seven-word garden prototype. There is no automatic daily reset, multiworld finale or sharing yet. The new journey starts blank; earlier three-word, postcard and single-turn records remain stored separately. The original browser mock also remains in `prototypes/crossword-quest`.
+This prototype allows immediate advancement through all five turns. Calendar-based daily gating, future-fill guarantees, other worlds and sharing are not implemented. The new shore starts fresh without deleting earlier Chatterbloom records.
 
-[Play the private Reddit test](https://www.reddit.com/r/crossworld_game_dev/?playtest=crossworld-game) (approved subreddit access required). [Development and API setup](docs/implementation.md).
+[Play the private Reddit test](https://www.reddit.com/r/crossworld_game_dev/?playtest=crossworld-game), then choose **Explore Sandy Shore**. Approved subreddit access is required. [Development and API setup](docs/implementation.md).
