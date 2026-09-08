@@ -1,218 +1,37 @@
 ---
 name: devvit-full-cycle
-description: Orchestrates the complete Devvit app development lifecycle for a specific game in the monorepo. First argument is always the game path (e.g., phaser/jeopardy). Runs planning, coding, playtesting, analysis, and documentation when the user requests a full game development cycle; excludes read-only reviews.
+description: Develop or iterate one Devvit game or local mechanics prototype, with automated verification and an optional human playtest handoff. Use for a requested development cycle; reviews do not start implementation.
 ---
 
-# Devvit Full Cycle Orchestration
+# Devvit development cycle
 
-Orchestrates the complete development workflow for a game in the monorepo. **Runs autonomously** -- do NOT stop between phases or ask the user for confirmation. Execute all phases in sequence until the workflow is complete or fails.
+Read [the shared contract](references/workflow-contract.md) and root `AGENTS.md`. They define scope, workflow ownership, validation, evidence, and resuming for this skill family.
 
-Follow repository-root `AGENTS.md` for current runtime and commands. Preserve an active session workflow instead of starting a second state machine.
+## Select the scope
 
-## Critical: Game Path
+The first argument identifies an existing game relative to `games/`, or an explicit prototype directory. Remaining text describes the change. Examples:
 
-The first argument is always the **game path** relative to `games/`. All operations are scoped to that game directory.
-
-## Critical: Autonomous Execution
-
-- Execute ALL phases in a single turn without pausing for user input
-- Do NOT ask the user to confirm between phases
-- Do NOT ask the user for a playtest URL -- read it from `devvit playtest` output or the game's `.env`
-- Do NOT stop to summarize progress mid-workflow -- just keep going
-- Only stop if a phase fails with an unrecoverable error
-
-## Usage
-
-```
-/devvit-full-cycle phaser/jeopardy Add score tracking to the game
-/devvit-full-cycle phaser/trivia Create initial quiz game
+```text
+/devvit-full-cycle phaser/jeopardy Add score tracking; automated playtest
+/devvit-full-cycle prototypes/crossword-quest Prepare one mock turn; I will play
 ```
 
-The first argument (`phaser/jeopardy`) is the game path. Everything after it is the feature request.
+Resolve these choices from the request and current context:
 
-## Path Resolution
+- **Target:** Existing app, new app, or local prototype. A mechanics mock can be local; a local preview is not a Reddit deployment. Do not provision a full app for a mock unless needed or requested.
+- **Verification:** Automated, human, or both. If the user wants to play, do technical checks in separate state and hand over an untouched turn. Human feedback is required only when it is part of the requested acceptance criteria.
+- **Delivery:** The active session workflow owns commits, push, PR, and CI. Without one, finish the authorized local work and commit only when requested or covered by the requested cycle. Public publication requires explicit scope.
 
-Given a game path like `phaser/jeopardy`:
+For a new app, inspect the current official template and installed SDK rather than assuming files exist. Preserve existing app identities and renderers. Choose a new renderer from the requirements; Phaser is not mandatory for text/grid interfaces. Record a prototype's validation and serving commands in its plan.
 
-| Resource | Path |
-|----------|------|
-| Game root | `games/phaser/jeopardy/` |
-| Client code | `games/phaser/jeopardy/src/client/` |
-| Server code | `games/phaser/jeopardy/src/server/` |
-| Shared types | `games/phaser/jeopardy/src/shared/` |
-| Game config | `games/phaser/jeopardy/devvit.json` |
-| Environment | `games/phaser/jeopardy/.env` |
-| Game docs | `games/phaser/jeopardy/docs/` |
-| Workflow state | `.workflows/phaser/jeopardy/{wf-id}/` |
+## Execute
 
-## Workflow Execution
+1. **Plan:** Record the current request, constraints, target, baseline changes, acceptance criteria, verification mode, and artifact directory. Later user corrections override old design proposals. Separate gameplay hypotheses from decided rules. Implement only the agreed slice.
+2. **Code:** Use [devvit-code](../devvit-code/SKILL.md). Run the shared validation gate, fix actionable failures, and record commands, exit results, test counts, and omissions.
+3. **Prepare:** Use [devvit-deploy](../devvit-deploy/SKILL.md) for Reddit apps. For a local prototype, start its documented server bound to loopback, serve only its directory, verify the actual URL, and record the process identifier. Keep it running for the user's session.
+4. **Verify:** Use [devvit-test](../devvit-test/SKILL.md) for technical checks and [devvit-test-instructions](../devvit-test-instructions/SKILL.md) for a human brief. Do not play in the user's saved state or reveal proposed answers before their turn.
+5. **Human handoff, when selected:** Supply the working URL, scenario/build, short instructions, honest mock limitations, and feedback method. Preserve the running process and artifacts. If the request is to prepare a playable turn, preparation is fulfilled and delivery can proceed with human acceptance pending. If the request requires evaluating their play, wait for their actual response before dependent analysis. Elapsed time is not feedback.
+6. **Analyze:** Use [devvit-analyze](../devvit-analyze/SKILL.md). Distinguish technical results, user observations, and proposed changes. Iterate within the owner's retry limits. Never turn a critical failure or untested required criterion into success.
+7. **Document and deliver:** Use [devvit-docs](../devvit-docs/SKILL.md) for affected documentation. Return evidence to the active workflow for delivery and CI. In standalone execution, use [devvit-commit](../devvit-commit/SKILL.md) within the authorized scope. Report pending human feedback separately from delivered code.
 
-### Phase 1: Initialize + Plan
-
-1. Parse arguments: extract game path and feature request
-2. Generate workflow ID: `wf-{timestamp}`
-3. Create `.workflows/{game-path}/{id}/` directory
-4. Save request to `.workflows/{game-path}/{id}/request.txt`
-5. Analyze the game's codebase to understand current state:
-   - Client code in `games/{game-path}/src/client/`
-   - Server code in `games/{game-path}/src/server/`
-   - Shared types in `games/{game-path}/src/shared/`
-   - Existing `.cursor/rules/` conventions
-6. Save plan to `.workflows/{game-path}/{id}/plan.md`
-7. **Immediately proceed to Phase 2** -- do not pause
-
-### Phase 2: Code
-
-1. Read plan from `.workflows/{game-path}/{id}/plan.md`
-2. Implement all code changes within `games/{game-path}/`
-3. Run validation from the repository root:
-   - `npm --prefix games/{game-path} run type-check` -- fix any errors
-   - `npm --prefix games/{game-path} run lint` -- fix any errors
-4. **Immediately proceed to Phase 3** -- do not pause
-
-### Phase 3: Build + Deploy
-
-1. Build: `npm --prefix games/{game-path} run build` -- verify success
-2. Deploy: run `npm run dev` inside `games/{game-path}` in a managed terminal; keep it alive during tests.
-3. Use the URL emitted by the CLI. Follow `/devvit-deploy` for environment precedence and record deployment success only after confirmed installation.
-4. Save deployment info to `.workflows/{game-path}/{id}/deployment.json`
-5. **Immediately proceed to Phase 4** -- do not pause
-
-### Phase 4: Test
-
-1. Read playtest URL from `.workflows/{game-path}/{id}/deployment.json`
-2. Generate test scenarios based on the plan's testing criteria
-3. Use Playwright MCP to execute tests:
-   - `browser_navigate` to the playtest URL
-   - Wait for page load
-   - Take screenshots at key steps
-   - Interact with the app (click buttons, navigate scenes)
-   - Check `browser_console_messages` for errors
-   - Record pass/fail for each scenario
-4. Save results to `.workflows/{game-path}/{id}/test-results.json`
-5. Save screenshots to `.workflows/{game-path}/{id}/screenshots/`
-6. **Immediately proceed to Phase 5** -- do not pause
-
-### Phase 5: Analyze
-
-1. Read test results from `.workflows/{game-path}/{id}/test-results.json`
-2. Review screenshots
-3. Evaluate against plan criteria
-4. **Decision**:
-   - If ALL critical tests pass -> mark analysis successful and proceed to documentation; finish the workflow only after the remaining phases
-   - If tests fail AND iteration < 3 -> create fix plan, loop back to Phase 2
-   - If tests fail AND iteration >= 3 -> mark `status: failed`, report issues
-
-### Phase 6: Documentation
-
-After analysis succeeds (or after final iteration):
-
-1. Read the workflow artifacts (request, plan, test results, analysis)
-2. Update all documentation in `games/{game-path}/docs/`:
-   - `docs/architecture.md` -- system architecture and tech stack
-   - `docs/game-mechanics.md` -- game rules, scenes, scoring, timers
-   - `docs/api-reference.md` -- server endpoints and Redis keys
-   - `docs/scenes.md` -- Phaser scene inventory with details
-   - `docs/changelog.md` -- append entry for this workflow's changes
-3. Follow the conventions in `/devvit-docs` skill for writing guidelines
-4. **Immediately proceed to Phase 7** -- do not pause
-
-### Phase 7: Next Steps
-
-After documentation is updated:
-
-1. Review everything accomplished in this workflow (request, plan, test results)
-2. Analyze the current state of the game holistically:
-   - What features are implemented and working?
-   - What features are partially implemented or have known gaps?
-   - What's the most impactful thing to build next?
-3. Generate a prioritized list of next steps, saved to `.workflows/{game-path}/{id}/next-steps.md`
-4. Each next step should include:
-   - **Title**: Short description
-   - **Priority**: High / Medium / Low
-   - **Rationale**: Why this matters now
-   - **Scope estimate**: Small (1 cycle), Medium (2-3 cycles), Large (4+ cycles)
-   - **Dependencies**: What must be done first, if anything
-5. Categories to consider:
-   - **Bugs**: Issues discovered during testing that weren't fixed
-   - **Game mechanics**: Missing rules, incomplete logic, edge cases
-   - **UI/UX**: Visual polish, responsiveness, accessibility
-   - **Testing**: Unit tests, integration tests, coverage gaps
-   - **Performance**: Optimization opportunities
-   - **Features**: New capabilities that would enhance the game
-6. Present the top 3-5 recommendations to the user with a brief explanation of each
-7. **Immediately proceed to Phase 8** -- do not pause
-
-### Phase 8: Git Commit
-
-After next steps are generated, commit all changes from this workflow:
-
-1. Read workflow artifacts to understand what was accomplished:
-   - `request.txt`, `plan.md`, `status.json`, `test-results.json`
-2. Run `git status` to verify there are changes to commit
-3. Generate a descriptive commit message:
-   - Type prefix: `feat`, `fix`, `refactor`, etc.
-   - Scope: the game name (e.g., `jeopardy`, `worms`)
-   - Subject: concise summary of what was accomplished (max 72 chars)
-   - Body: 2-4 sentences covering the feature, key technical changes, and test results
-   - Footer: `Workflow: {wf-id}`
-4. Stage relevant files:
-   - `git add games/{game-path}/`
-   - Keep `.workflows/` local; it is gitignored. Do not force-add workflow artifacts.
-   - Do NOT stage `.env` files or credentials
-5. Commit using a HEREDOC for proper formatting
-6. Run `git status` to verify the commit succeeded
-7. **Then mark the workflow as complete**
-
-See the `/devvit-commit` skill for full commit message guidelines and examples.
-
-### Iteration Loop
-
-If analysis determines fixes are needed:
-1. Create `.workflows/{game-path}/{id}/fix-plan.md` with specific fixes
-2. Increment iteration counter
-3. Go back to Phase 2 using the fix plan
-4. Continue through Phase 3-5 again
-
-## Playwright MCP Notes
-
-Discover the browser tools actually available. The optional `.cursor/mcp.json` uses separate persistent `player_one` and `player_two` profiles, without a guaranteed headless setting. Never reuse an active profile in another browser process. If those named servers are unavailable, use an available browser tool with a separate profile and report authentication gaps.
-
-When testing inside Devvit's iframe-based app:
-- The game runs inside nested iframes on Reddit
-- Use `browser_run_code` to find and interact with the game canvas
-- Phaser renders to a `<canvas>` element -- use coordinate-based clicks
-- Use `browser_console_messages` to verify click handlers and errors
-- The game iframe URL contains `webview.devvit.net`
-
-## Playtest URL Construction
-
-The playtest URL follows this pattern:
-```
-https://www.reddit.com/r/{DEVVIT_SUBREDDIT}?playtest={app-name}
-```
-
-- Subreddit: explicit CLI argument, then loaded `DEVVIT_SUBREDDIT`, then `devvit.json` `dev.subreddit`. Strip `r/` for a candidate URL; prefer the observed CLI URL.
-- `app-name`: From `games/{game-path}/devvit.json` `name` field
-
-## Error Handling
-
-- Build failures: Fix code errors, retry build
-- Deployment issues: Check devvit auth, check game's `.env`
-- Test navigation failures: Verify URL, check if playtest server is running
-- Playwright errors: verify available tools, authentication, and profile ownership; record untested scenarios instead of passing them
-- If playtest server is not running: Report to user that `npm run dev` must be running
-
-## Status File
-
-`.workflows/{game-path}/{id}/status.json`:
-```json
-{
-  "workflowId": "wf-123",
-  "gamePath": "phaser/jeopardy",
-  "phase": "complete",
-  "status": "success",
-  "iteration": 1,
-  "maxIterations": 3
-}
-```
+Continue independent work without phase-by-phase permission requests. Pause for actual missing input, required human feedback, or an owning-workflow blocker. Resume the existing target and artifacts instead of starting another cycle for each new message.

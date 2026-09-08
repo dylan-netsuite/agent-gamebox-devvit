@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>CrossWorld · Sandy Shore</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="game">
+      <header class="world-heading">
+        <p class="brand">CrossWorld</p>
+        <h1>Sandy Shore</h1>
+        <details class="settings">
+          <summary aria-label="Settings">☼</summary>
+          <div class="tools">
+            <button id="theme" type="button" aria-label="Switch to dark theme">
+              Light / dark</button
+            ><button id="motion" type="button" aria-pressed="false">
+              Pause motion</button
+            ><button id="sound" type="button" aria-pressed="false">
+              Sound
+            </button>
+            <button id="restart" type="button" hidden>Start fresh</button>
+          </div>
+        </details>
+      </header>
+      <p id="connection" class="notice" role="status" hidden></p>
+      <button id="reconnect" class="text-button" type="button" hidden>
+        Reconnect</button
+      ><button id="login" class="text-button" type="button" hidden>
+        Sign in to Reddit
+      </button>
+      <section class="map" id="map" aria-label="Sandy Shore crossword map">
+        <div id="tiles" class="tiles"></div>
+        <svg id="scenery" viewBox="0 0 500 1000" aria-hidden="true"></svg>
+        <div
+          id="turn-switch"
+          class="turn-switch"
+          role="group"
+          aria-label="Choose a word"
+          hidden
+        >
+          <button id="across-tab" type="button" aria-pressed="true">
+            → Across <span id="across-status"></span></button
+          ><button id="down-tab" type="button" aria-pressed="false">
+            ↓ Down <span id="down-status"></span>
+          </button>
+        </div>
+        <button id="discover" class="discover" type="button" disabled>
+          <span class="discover-mark" aria-hidden="true">+</span
+          ><span id="discover-label">Uncover two paths</span>
+        </button>
+        <form id="map-editor" class="map-editor" novalidate hidden>
+          <div class="editor-heading">
+            <label id="clue-label" for="active-clue">Clue for Across</label
+            ><button
+              id="minimize"
+              type="button"
+              aria-label="Minimize clue editor"
+            >
+              −
+            </button>
+          </div>
+          <p id="word-guide" class="word-guide">
+            Tap the tiles to write your word.
+          </p>
+          <textarea
+            id="active-clue"
+            maxlength="140"
+            rows="2"
+            placeholder="Write a clue for your word…"
+          ></textarea>
+          <div class="editor-actions">
+            <button id="choose-criterion" class="criterion-badge" type="button">
+              <span id="criterion-icon" aria-hidden="true">✳</span
+              ><span id="criterion-name">Choose a criterion</span
+              ><span aria-hidden="true">⌄</span></button
+            ><button
+              id="next-word"
+              class="round-action"
+              type="button"
+              aria-label="Write the down word"
+            >
+              ↓</button
+            ><button
+              id="submit"
+              class="round-action"
+              type="submit"
+              aria-label="Review both clues"
+              hidden
+            >
+              ✓
+            </button>
+          </div>
+          <p id="criterion-rule" class="criterion-rule"></p>
+          <p id="review" class="review" role="status" hidden></p>
+          <p id="errors" class="error" role="alert" hidden></p>
+          <section
+            id="criterion-picker"
+            class="criterion-picker"
+            aria-label="Choose a clue criterion"
+            hidden
+          >
+            <div class="picker-heading">
+              <span id="picker-title">A rule for Across</span
+              ><button
+                id="close-picker"
+                type="button"
+                aria-label="Close criteria"
+              >
+                ×
+              </button>
+            </div>
+            <div id="criterion-options" class="criterion-options"></div>
+          </section>
+        </form>
+        <button id="restore-editor" class="restore-editor" type="button" hidden>
+          ✎ Write a clue
+        </button>
+      </section>
+      <div class="map-status">
+        <span id="progress" aria-live="polite">Finding your shore…</span
+        ><button id="all-clues" class="text-button" type="button" hidden>
+          Your clues ↗
+        </button>
+      </div>
+      <p id="story" class="story">Uncover two paths. Make them yours.</p>
+      <p id="pair-review-status" class="sr-only" role="status"></p>
+      <section id="complete" class="complete" hidden>
+        <h2>Ten words. Your shore.</h2>
+        <p>Tap a tile to revisit its clue.</p>
+      </section>
+      <footer>
+        <span id="storage-status">Connecting…</span
+        ><button id="refresh" class="text-button" type="button">Refresh</button>
+      </footer>
+      <details class="how-to">
+        <summary>How to play</summary>
+        <p>
+          Tap a tile and type your own word. Write an across clue and a down
+          clue, each with its own criterion. Match the crossing letters. Both
+          clues must pass the AI review to open the next turn. You can play all
+          five turns now.
+        </p>
+        <p>
+          Clues use 1–140 characters. Groups of A–Z letters count as words;
+          punctuation separates them. Do not use your exact answer as a whole
+          word in its clue. Only the word and clue are sent to OpenAI for
+          review.
+        </p>
+      </details>
+    </main>
+    <dialog
+      id="restart-confirm"
+      aria-labelledby="restart-title"
+      aria-describedby="restart-description"
+    >
+      <h2 id="restart-title">Start a fresh shore?</h2>
+      <p id="restart-description">
+        Your current words and clues will be cleared from the map.
+      </p>
+      <button id="cancel-restart" class="text-button" type="button" autofocus>
+        Keep this board
+      </button>
+      <button id="confirm-restart" class="text-button" type="button">
+        Start fresh
+      </button>
+    </dialog>
+    <dialog id="inspect" aria-labelledby="inspect-title">
+      <div class="dialog-heading">
+        <h2 id="inspect-title">Your words</h2>
+        <button id="close" class="text-button" type="button">Close</button>
+      </div>
+      <div id="inspect-content"></div>
+    </dialog>
+    <script type="module" src="app.ts"></script>
+  </body>
+</html>

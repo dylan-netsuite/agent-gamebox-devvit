@@ -21,15 +21,16 @@ jobs:
       matrix:
         game:
           [
-            blokus,
-            dino-run,
-            diplomacy,
-            jeopardy,
-            meerca-chase,
-            mini-golf,
-            rush-hour,
-            scattergories,
-            worms,
+            phaser/blokus,
+            phaser/dino-run,
+            phaser/diplomacy,
+            phaser/jeopardy,
+            phaser/meerca-chase,
+            phaser/mini-golf,
+            phaser/rush-hour,
+            phaser/scattergories,
+            phaser/worms,
+            web/crossworld,
           ]
     steps:
       - uses: actions/checkout@v7
@@ -37,5 +38,5 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-          cache-dependency-path: games/phaser/${{ matrix.game }}/package-lock.json
-      - run: node tools/validate-all.mjs --install phaser/${{ matrix.game }}
+          cache-dependency-path: games/${{ matrix.game }}/package-lock.json
+      - run: node tools/validate-all.mjs --install ${{ matrix.game }}

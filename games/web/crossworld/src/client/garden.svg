@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none">
+  <title>Chatterbloom Gardens — simple illustrated environment</title>
+  <desc>Four places connected by a winding path: a crooked gate, a quiet fountain, a glasshouse and an empty word bed. Broad colored shapes leave room for the artist's additions.</desc>
+  <!-- Each named group is an independently editable layer. No baked-in labels. -->
+  <g id="ground">
+    <path fill="#809b7e" d="M0 0h1200v800H0z"/>
+    <path fill="#9aaa80" d="M86 140C229 91 341 129 475 88s298 23 421 16 230 86 202 216-132 133-123 233-134 205-335 186-169-54-313-28S47 624 86 523 9 277 86 140Z"/>
+    <path fill="#729078" d="M0 472c131-118 189-14 252 39s188 69 183 139S223 805 0 780Z"/>
+    <path fill="#adc092" d="M332 247c67-42 156-11 211-64 52-50 165-37 198 17s-22 104-122 103-245 10-287-56Z"/>
+  </g>
+  <g id="paths" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M244 186c24 66 69 111 164 138s166 68 153 137-145 46-174 116 102 120 140 223M584 385c109-27 229-70 338-172M435 556c77-28 197-26 280 11s156 71 215 26" stroke="#7c8767" stroke-width="87"/>
+    <path d="M244 186c24 66 69 111 164 138s166 68 153 137-145 46-174 116 102 120 140 223M584 385c109-27 229-70 338-172M435 556c77-28 197-26 280 11s156 71 215 26" stroke="#c9ba91" stroke-width="66"/>
+    <path d="m323 291 10-21m93 67 9-29m236 27 9 25m127-88 20 20M406 619l-23 18m94 80-28 19m306-139 13-23" stroke="#a39572" stroke-width="3"/>
+  </g>
+  <g id="hedge-boundary">
+    <path fill="#385b4d" d="M0 0h1200v169c-75 27-95-22-155-13S949 122 920 94s-108 29-150 12-66 7-116-22-83 50-137 28-72 27-111 7-78 10-113 23-108-15-140 51S50 307 0 297Z"/>
+    <path fill="#436b57" d="M0 0h1200v86c-87-14-165 3-216-22S859 50 812 47s-91 36-143 6-79 21-131 7-55 33-92 20-105-10-156 20-86-16-129 9S45 212 0 225Z"/>
+    <path fill="#385b4d" d="M0 336c52 7 82 52 66 106s58 65 38 113 19 63 16 108 37 38 50 73H0Zm1200-123c-60 30-74 72-67 133s-39 82-13 126-68 65-60 121-72 78-111 111l-17 96h268Z"/>
+    <path fill="#52765e" d="M1200 407c-89 17-32 125-73 156s-65 17-62 75-82 41-91 116 181 47 226 46Z"/>
+  </g>
+  <g id="crooked-gate" stroke="#304b3f" stroke-width="5" stroke-linejoin="round">
+    <path fill="#6c8264" d="m181 247 2-128q47-61 120-13l28 133-39 20-26-128q-26-17-48 11l4 110Z"/>
+    <path fill="#294c40" stroke="none" d="m219 233-1-91q22-28 48-11l26 109Z"/>
+    <path d="m199 134 19 8m-36 44 36-4m62-23 33-5m-26 45 33-4" stroke="#445f4c" stroke-width="3"/>
+    <path d="M190 268c-41-51-42-109 0-163m-28 67-27-19m38-25 21 7m108 84c39-44 49-79 31-110" stroke="#324e3e"/>
+  </g>
+  <g id="fountain" stroke="#40594b" stroke-width="4" stroke-linejoin="round">
+    <ellipse cx="568" cy="392" rx="88" ry="40" fill="#5f775e" stroke="none"/>
+    <path fill="#b0ac88" d="M480 359q90-66 172 0v26q-80 60-172-1Z"/>
+    <ellipse cx="566" cy="356" rx="86" ry="36" fill="#c7c09b"/>
+    <ellipse cx="566" cy="355" rx="64" ry="23" fill="#557f77" stroke-width="3"/>
+    <path d="m536 355 20 4m32-9 22 1" stroke="#a1b7a0" stroke-width="2"/>
+    <path fill="#9fa482" d="m551 347 10-82 22 4 9 78q-19 13-41 0Z"/>
+    <path fill="#c9c49f" d="M541 260q39-28 68 4l-13 16-44-4Z"/>
+  </g>
+  <g id="glasshouse" stroke="#355346" stroke-width="5" stroke-linejoin="round">
+    <path fill="#758f74" stroke="none" d="m797 282 62 33 220-61-50-69Z"/>
+    <path fill="#a1b79d" d="m793 173 82-99 139 39 44 108-185 65-73-34Z"/>
+    <path fill="#bbc8a8" d="m793 173 89-79 76 112-85 80-73-34Z"/>
+    <path fill="#7d9d87" d="m958 206 100-35v50l-185 65Z"/>
+    <path d="m882 94 132 19m-182 57 181-33m-161 63 176-40m-114-49 33 91m-1-82 27 72m-50 61-5-46m-121 25 55 24" stroke-width="3"/>
+    <path fill="#344f43" d="m824 241 4-38 24 9 6 45Z" stroke-width="3"/>
+    <path d="m1024 228 18-77m-7 33 22-19m-23 40-18-17" stroke="#466249" stroke-width="4"/>
+  </g>
+  <g id="word-bed" stroke="#4b5e47" stroke-width="4" stroke-linejoin="round">
+    <path fill="#798767" stroke="none" d="M474 579q139-55 261 6l-22 74q-136 49-248-7Z"/>
+    <path fill="#a6a27d" d="M467 558q128-67 266 3l-4 58q-142 68-265 0Z"/>
+    <path fill="#4f6952" d="M467 558q128-67 266 3-143 71-266-3Z"/>
+    <path d="m494 576-2 50m71-32-1 44m80-44 2 44m63-57 1 47" stroke="#6e7957" stroke-width="3"/>
+    <path d="m552 560 5-47m-6 35-22-20m79 30 13-54m-11 41 27-21" stroke="#9eab76"/>
+    <path fill="#aab780" stroke="none" d="M557 522q-31-22-29-41 35 6 29 41Zm60-2q-1-30 28-37-3 27-28 37Z"/>
+  </g>
+  <g id="simple-foliage" stroke="#395643" stroke-width="4" stroke-linecap="round">
+    <path d="M104 367q56-101 24-170m-18 139-32-34m51-39 33-30M991 617q10-108 54-157m-41 88 36-10"/>
+    <path fill="#778aa2" stroke="none" d="M127 221q-64-22-50-58 62 11 50 58Zm3 55q-2-46 45-50-7 35-45 50Z"/>
+    <path fill="#a594ad" stroke="none" d="M1048 475q-34-39-13-62 40 30 13 62Zm-36 65q3-43 46-40-7 43-46 40Z"/>
+    <path d="m307 478 8-26m-3 11-17-11m497 44 8-25m-6 15 17-9" stroke="#6e825e" stroke-width="3"/>
+  </g>
+  <g id="foreground">
+    <path fill="#3a5b4b" d="M0 723c92-55 181-21 214 18s111-22 167 27l26 32H0Zm1200-56c-93 11-127 51-174 51s-81 39-94 82h268Z"/>
+    <path fill="#597b60" d="M0 764c73-69 157-13 199 9l73 27H0Zm1200-24c-116-23-128 44-192 60h192Z"/>
+  </g>
+</svg>
