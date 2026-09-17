@@ -18,6 +18,17 @@
         </p>
         <div class="header-tools">
           <button
+            id="worlds"
+            class="icon-button"
+            type="button"
+            aria-label="Choose world"
+            title="Choose world"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2Z M9 3v16M15 5v16" />
+            </svg>
+          </button>
+          <button
             id="help"
             class="icon-button"
             type="button"
@@ -55,8 +66,11 @@
       </header>
       <div class="world-heading">
         <div>
-          <p class="eyebrow chapter">A world in ten words</p>
-          <h1>Sandy Shore<span aria-hidden="true">.</span></h1>
+          <p id="world-chapter" class="eyebrow chapter">A world in ten words</p>
+          <h1>
+            <span id="world-title">Sandy Shore</span
+            ><span class="world-dot" aria-hidden="true">.</span>
+          </h1>
         </div>
         <div class="journey">
           <span id="turn-label">Turn 1 of 5</span>
@@ -135,7 +149,7 @@
             <div class="loop-guide">
               <span><b>01</b> Uncover a pair of paths</span
               ><span><b>02</b> Write two words &amp; clues</span
-              ><span><b>03</b> Watch your shore unfold</span>
+              ><span><b>03</b> Watch your world unfold</span>
             </div>
             <p class="fine-print">Five turns, at your own pace.</p>
           </section>
@@ -265,12 +279,15 @@
           </button>
           <section id="complete" class="complete" hidden>
             <span class="completion-seal" aria-hidden="true">✳</span>
-            <p class="eyebrow">Sandy Shore, discovered</p>
+            <p id="completion-world" class="eyebrow">Sandy Shore, discovered</p>
             <h2>Ten words.<br />A world of your own.</h2>
             <p>
               Every crossing has a story. Tap a path to revisit the clues you
               left behind.
             </p>
+            <button id="explore-worlds" class="primary" type="button">
+              Explore another world ↗
+            </button>
           </section>
         </aside>
       </section>
@@ -331,6 +348,31 @@
         sent to OpenAI for review.
       </p>
     </dialog>
+    <dialog id="world-picker" aria-labelledby="world-picker-title">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">The CrossWorld atlas</p>
+          <h2 id="world-picker-title">Where next?</h2>
+        </div>
+        <button
+          id="close-worlds"
+          class="icon-button"
+          type="button"
+          aria-label="Close worlds"
+        >
+          ×
+        </button>
+      </div>
+      <p class="world-picker-intro">
+        Two places to make your own. Each keeps your words and clues.
+      </p>
+      <div id="world-options" class="world-options"></div>
+      <p id="world-switch-error" class="notice" role="status" hidden></p>
+      <p class="fine-print">
+        Both worlds are open for this playtest. The daily clue review allowance
+        is shared.
+      </p>
+    </dialog>
     <dialog
       id="restart-confirm"
       aria-labelledby="restart-title"
@@ -352,7 +394,7 @@
     <dialog id="inspect" aria-labelledby="inspect-title">
       <div class="dialog-heading">
         <div>
-          <p class="eyebrow">Collected on Sandy Shore</p>
+          <p id="inspect-world" class="eyebrow">Collected in Sandy Shore</p>
           <h2 id="inspect-title">Your field notes</h2>
         </div>
         <button

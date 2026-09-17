@@ -1,19 +1,18 @@
+import { WORLDS, worldFor, type WorldDefinition } from "../shared/worlds";
+import { readPreference, writePreference } from "./preferences";
 import { navigateTo } from "@devvit/web/client";
 import { createGameApi } from "./api";
 import { createShoreArt } from "./shore-art";
 import { criterionIcon, visualCriteria } from "./criteria-art";
 import {
-  SHORE_API_ROOT,
-  SHORE_SCENARIO,
-  DAYS,
   DIRECTIONS,
   CRITERIA,
-  cellsFor,
+  cellsFor as cellsForWorld,
   cellKey,
-  lettersFor,
+  lettersFor as lettersForWorld,
   emptyShore,
   parsePair,
-  validatePair,
+  validatePair as validateWorldPair,
   type Direction,
   type Shore,
   type ShoreView,
@@ -21,11 +20,31 @@ import {
 } from "../shared/shore";
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
+const world = worldFor(location.hash.slice(1) || readPreference("world"));
+const DAYS = world.days;
+const cellsFor = (day: number, direction: Direction) =>
+  cellsForWorld(day, direction, world);
+const lettersFor = (completed: Shore["completed"]) =>
+  lettersForWorld(completed, world);
+const validatePair = (draft: PairDraft, completed: Shore["completed"]) =>
+  validateWorldPair(draft, completed, world);
+document.documentElement.dataset.world = world.id;
+document.title = `CrossWorld · ${world.name}`;
+el("world-title").textContent = world.name;
+el("world-chapter").textContent = world.chapter;
+el("atlas").setAttribute("aria-label", `${world.name} crossword`);
+el("map").setAttribute("aria-label", `${world.name} crossword map`);
+el("map-viewport").setAttribute("aria-label", `${world.name} crossword map`);
+el("inspect-world").textContent = `Collected in ${world.name}`;
+el("completion-world").textContent = `${world.name}, discovered`;
+el("restart-title").textContent = `Start a fresh ${world.noun}?`;
+el("restart-description").textContent =
+  `Your current ${world.name} words and clues will be cleared. Your other world stays as it is.`;
 const api = createGameApi<ShoreView>(undefined, undefined, {
-  root: SHORE_API_ROOT,
-  scenario: SHORE_SCENARIO,
+  root: world.apiRoot,
+  scenario: world.scenario,
 });
-const art = createShoreArt(),
+const art = createShoreArt(world),
   clue = el<HTMLTextAreaElement>("active-clue"),
   discover = el<HTMLButtonElement>("discover"),
   submit = el<HTMLButtonElement>("submit"),
@@ -449,7 +468,7 @@ function renderMap(animate = false) {
     }
     root.append(tile);
   }
-  art.update(shown, [...cells.values()], animate);
+  art.update(shown, [...cells.values()], animate, shore.completed.length);
   discover.hidden = !shore.turn || shore.turn.revealed;
   discover.disabled = !ready || busy;
   if (shore.turn && !shore.turn.revealed) {
@@ -480,19 +499,21 @@ function renderMap(animate = false) {
   el("map-caption").textContent = shore.turn?.revealed
     ? `${title(active)} · ${DAYS[shore.completed.length]![active].length} letters`
     : shore.turn
-      ? "Uncharted shore"
-      : "Your discovered shore";
+      ? `Uncharted ${world.noun}`
+      : `Your discovered ${world.noun}`;
   el("place-title").textContent = shore.completed.length
-    ? (DAYS[shore.completed.length]?.place ?? "Your shore is complete.")
-    : "Beneath the sand.";
+    ? (DAYS[shore.completed.length]?.place ?? `Your ${world.noun} is complete.`)
+    : world.introduction;
   el("place-copy").textContent = shore.completed.length
-    ? "Two clues accepted. Follow the marker to uncover the next pair of paths and see what washes ashore."
-    : "A little exploring. A little wordplay. Uncover two paths and give them words of your own.";
+    ? `Two clues accepted. Follow the marker to discover the next corner of your ${world.noun}.`
+    : world.welcome;
   el("progress").textContent = shore.turn
     ? `${shore.completed.length * 2} of 10 words written · ${shown * 2} paths found`
     : "10 words written · 5 turns complete";
   el("story").textContent = shore.turn?.revealed
-    ? "Your words meet at the crossings."
+    ? world.id === "haunted-hedge"
+      ? `${shore.completed.length} of 5 lanterns lit · your words meet at the crossings.`
+      : "Your words meet at the crossings."
     : shore.turn
       ? "Follow the marker. See what’s beneath."
       : "A crossword only you could have made.";
@@ -529,6 +550,12 @@ function controls() {
   el<HTMLButtonElement>("refresh").disabled = busy;
   el<HTMLButtonElement>("restart").disabled = busy || !ready || !signedIn;
   el("restart").hidden = !canReset;
+  for (const id of ["worlds", "explore-worlds", "close-worlds"])
+    el<HTMLButtonElement>(id).disabled = busy;
+  for (const button of el("world-options").querySelectorAll<HTMLButtonElement>(
+    "button",
+  ))
+    button.disabled = busy || button.dataset.world === world.id;
 }
 function applyState(next: Shore, acceptNewRun = false) {
   const changedRun = (next.run ?? "initial") !== (shore.run ?? "initial");
@@ -545,7 +572,8 @@ function applyState(next: Shore, acceptNewRun = false) {
     minimized = false;
     el("criterion-picker").hidden = true;
     message("errors", "");
-    if (changedRun) message("pair-review-status", "Your fresh board is ready.");
+    if (changedRun)
+      message("pair-review-status", `Your fresh ${world.name} board is ready.`);
   }
   updateEditor();
   renderMap();
@@ -758,7 +786,7 @@ async function load() {
   if (busy) return;
   busy = true;
   controls();
-  message("connection", "Finding your shore…");
+  message("connection", `Finding ${world.name}…`);
   await queueSave();
   await saves;
   try {
@@ -869,5 +897,74 @@ document.addEventListener("click", (event) => {
   if (event.target instanceof Node && !settings.contains(event.target))
     settings.open = false;
 });
+const worldDialog = el<HTMLDialogElement>("world-picker");
+function showWorlds() {
+  if (busy) return;
+  message("world-switch-error", "");
+  worldDialog.showModal();
+}
+el("worlds").addEventListener("click", showWorlds);
+el("explore-worlds").addEventListener("click", showWorlds);
+el("close-worlds").addEventListener("click", () => worldDialog.close());
+worldDialog.addEventListener("cancel", (event) => {
+  if (busy) event.preventDefault();
+});
+for (const option of WORLDS) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "world-option";
+  button.dataset.world = option.id;
+  button.setAttribute(
+    "aria-label",
+    option.id === world.id
+      ? `${option.name}, current world`
+      : `Explore ${option.name}`,
+  );
+  const swatch = document.createElement("span"),
+    content = document.createElement("span"),
+    heading = document.createElement("strong"),
+    detail = document.createElement("span"),
+    action = document.createElement("small");
+  swatch.className = "world-swatch";
+  swatch.setAttribute("aria-hidden", "true");
+  swatch.textContent = option.id === "sandy-shore" ? "≈" : "☾";
+  content.className = "world-option-copy";
+  heading.textContent = option.name;
+  detail.textContent = option.description;
+  action.textContent =
+    option.id === world.id ? "Current world" : "Explore world ↗";
+  content.append(heading, detail, action);
+  button.append(swatch, content);
+  button.addEventListener("click", () => {
+    void switchWorld(option);
+  });
+  el("world-options").append(button);
+}
+async function switchWorld(next: WorldDefinition) {
+  if (busy || next.id === world.id) return;
+  busy = true;
+  controls();
+  renderMap();
+  message("world-switch-error", "Saving your place…");
+  await queueSave();
+  await saves;
+  if (dirty) {
+    busy = false;
+    message(
+      "world-switch-error",
+      signedIn
+        ? "Your changes could not be saved. Close this menu and reconnect before switching worlds."
+        : "Sign in to save your words before switching worlds.",
+    );
+    controls();
+    renderMap();
+    return;
+  }
+  writePreference("world", next.id);
+  // Reload only our iframe, retaining Devvit's signed URL query. All writes have
+  // settled on the old world's API before a new world can mount.
+  location.hash = next.id;
+  location.reload();
+}
 window.addEventListener("resize", () => positionMap(true));
 void load();

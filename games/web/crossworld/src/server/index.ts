@@ -17,19 +17,9 @@ import {
   type JourneyView,
 } from "../shared/journey";
 import { readJourney, saveJourney, submitJourney } from "./journey";
-import {
-  SHORE_API_ROOT,
-  SHORE_SCENARIO,
-  emptyShore,
-  type ShoreView,
-} from "../shared/shore";
-import {
-  readShore,
-  saveShore,
-  submitShore,
-  resetShore,
-  canResetShore,
-} from "./shore";
+import { emptyShore, type ShoreView } from "../shared/shore";
+import { WORLDS } from "../shared/worlds";
+import { createWorldGame, canResetShore } from "./shore";
 
 const app = express();
 app.use(express.json({ limit: "2kb" }));
@@ -73,26 +63,30 @@ app.post(`${JOURNEY_API_ROOT}/submit`, async (req, res) => {
   res.json(await submitJourney(requireUser(context.userId), req.body));
 });
 
-app.get(`${SHORE_API_ROOT}/turn`, async (_req, res) => {
-  const config = await judgeConfig();
-  const view: ShoreView = {
-    scenario: SHORE_SCENARIO,
-    canReset: canResetShore(context.userId, context.subredditName),
-    signedIn: Boolean(context.userId),
-    judgeReady: Boolean(config.enabled && config.key),
-    shore: context.userId ? await readShore(context.userId) : emptyShore(),
-  };
-  res.json(view);
-});
-app.post(`${SHORE_API_ROOT}/draft`, async (req, res) =>
-  res.json(await saveShore(requireUser(context.userId), req.body)),
-);
-app.post(`${SHORE_API_ROOT}/submit`, async (req, res) =>
-  res.json(await submitShore(requireUser(context.userId), req.body)),
-);
-app.post(`${SHORE_API_ROOT}/reset`, async (req, res) =>
-  res.json(await resetShore(context.userId, context.subredditName, req.body)),
-);
+// Only configured routes select a world; client-supplied identity/world fields are ignored.
+for (const world of WORLDS) {
+  const game = createWorldGame(world);
+  app.get(`${world.apiRoot}/turn`, async (_req, res) => {
+    const config = await judgeConfig();
+    const view: ShoreView = {
+      scenario: world.scenario,
+      canReset: canResetShore(context.userId, context.subredditName),
+      signedIn: Boolean(context.userId),
+      judgeReady: Boolean(config.enabled && config.key),
+      shore: context.userId ? await game.read(context.userId) : emptyShore(),
+    };
+    res.json(view);
+  });
+  app.post(`${world.apiRoot}/draft`, async (req, res) =>
+    res.json(await game.save(requireUser(context.userId), req.body)),
+  );
+  app.post(`${world.apiRoot}/submit`, async (req, res) =>
+    res.json(await game.submit(requireUser(context.userId), req.body)),
+  );
+  app.post(`${world.apiRoot}/reset`, async (req, res) =>
+    res.json(await game.reset(context.userId, context.subredditName, req.body)),
+  );
+}
 
 const createPost = () =>
   reddit.submitCustomPost({ title: "CrossWorld · Sandy Shore" });

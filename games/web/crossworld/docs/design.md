@@ -25,3 +25,24 @@ Frames: Mobile covered, mobile authoring, mobile criteria, wide completion. Mobi
 ## Verification
 
 Before render inspected. Clue panel covers substantial board, weak hierarchy, uneven iconography and bottom-only progress. New composition removes overlay and makes current task/state visible. Verification outcomes recorded in evidence after browser work.
+
+## Haunted Hedge and a cohesive world family
+
+The user endorsed the Sandy Shore redesign and requested a slightly spookier second world, Haunted Hedge, with distinct colors that retain cohesive tones. Both worlds reuse the map/field-note layout, typography, paper surfaces, tile shapes, visual criteria, focus conventions and CrossWorld wordmark.
+
+| Role        | Sandy Shore              | Haunted Hedge                       |
+| ----------- | ------------------------ | ----------------------------------- |
+| Map         | `#FAF5E5` warm sand      | `#EAE5EE` lavender mist             |
+| Ink         | `#263F3B` sea green      | `#443947` dusk plum                 |
+| Action      | `#087E73` teal           | `#725B79` plum                      |
+| Selected    | `#DFEBE2` sea glass      | `#E0D4E4` muted lilac               |
+| Environment | Tide pools, shells, sand | Sage hedges, mist, crooked ironwork |
+| Warm detail | Terracotta               | `#ECD197` lantern amber             |
+
+Haunted Hedge discovery order: rusted gate, watchful topiary, whisper walk, lost fountain, moon gate. Revealing a pair clears its cover; only accepting both clues lights the corresponding lantern. Light is static and paired with the visible lantern count. Ordinary dictionary words remain welcome.
+
+The world picker is available from the masthead map icon and after completion. Both worlds are open during this prototype; no speculative unlock screen is shown. Switching waits for existing saves, keeps work on screen when saving fails, and restores the other world's own progress. Theme and reduced-motion preferences are session preferences, separate from authoritative game saves. Sound requires an opt-in gesture on each page.
+
+The new geometry has five Across paths (3,5,5,3,5 letters) and five Down paths (5,5,5,4,4 letters), 33 occupied cells and 11 intersections. Discovery counts are 7,15,21,26,33. The same narrow viewport behavior centers each active path.
+
+[Haunted Hedge concept and palette comparison](https://app.excalidraw.com/s/9oHgJ0UhsrQ/8CzTbLeRgHt). The Excalidraw frames describe structure; the browser render remains authoritative for final type and spacing. The implemented new-world flow has been inspected at narrow and wide sizes; physical-device keyboard and human playtesting remain separate validation.

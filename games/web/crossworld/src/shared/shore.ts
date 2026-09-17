@@ -1,47 +1,14 @@
+import { SANDY_SHORE, type WorldDefinition } from "./worlds";
 import { RESTRICTIONS, validateTurn } from "./rules";
 import { type Draft, type Judgment } from "./types";
 
-export const SHORE_SCENARIO = "sandy-shore-pairs-v1";
-export const SHORE_API_ROOT = `/api/${SHORE_SCENARIO}`;
+export const SHORE_SCENARIO = SANDY_SHORE.scenario;
+export const SHORE_API_ROOT = SANDY_SHORE.apiRoot;
 export const ROWS = 10;
 export const COLS = 5;
 export const DIRECTIONS = ["across", "down"] as const;
 export type Direction = (typeof DIRECTIONS)[number];
-type Path = { row: number; col: number; length: number };
-// The supplied reference, in discovery order. Rows/columns are zero-based.
-export const DAYS: { across: Path; down: Path; place: string; note: string }[] =
-  [
-    {
-      across: { row: 2, col: 0, length: 5 },
-      down: { row: 0, col: 1, length: 6 },
-      place: "Sand drifts",
-      note: "The sand shifts. Two paths appear.",
-    },
-    {
-      across: { row: 4, col: 1, length: 3 },
-      down: { row: 1, col: 3, length: 5 },
-      place: "Tide pool",
-      note: "The tide slips away, leaving a crossing behind.",
-    },
-    {
-      across: { row: 5, col: 0, length: 5 },
-      down: { row: 4, col: 2, length: 6 },
-      place: "Sea grass",
-      note: "The grass parts around two more paths.",
-    },
-    {
-      across: { row: 7, col: 0, length: 3 },
-      down: { row: 5, col: 0, length: 5 },
-      place: "Shell bank",
-      note: "A few shells roll aside. There is more to find.",
-    },
-    {
-      across: { row: 9, col: 0, length: 5 },
-      down: { row: 5, col: 4, length: 5 },
-      place: "Smooth stones",
-      note: "The last stones settle. Your shore is uncovered.",
-    },
-  ];
+export const DAYS = SANDY_SHORE.days;
 export const CRITERIA = RESTRICTIONS.map((rule, i) => ({
   ...rule,
   name: [
@@ -72,8 +39,12 @@ export const emptyPair = (): Pair => ({
   reviews: { across: null, down: null },
 });
 export const emptyShore = (): Shore => ({ completed: [], turn: emptyPair() });
-export const cellsFor = (day: number, direction: Direction) => {
-  const path = DAYS[day]?.[direction];
+export const cellsFor = (
+  day: number,
+  direction: Direction,
+  world: WorldDefinition = SANDY_SHORE,
+) => {
+  const path = world.days[day]?.[direction];
   return path
     ? Array.from({ length: path.length }, (_, i) => ({
         row: path.row + (direction === "down" ? i : 0),
@@ -83,11 +54,14 @@ export const cellsFor = (day: number, direction: Direction) => {
 };
 export const cellKey = (cell: { row: number; col: number }) =>
   `${cell.row},${cell.col}`;
-export function lettersFor(completed: Pair[]) {
+export function lettersFor(
+  completed: Pair[],
+  world: WorldDefinition = SANDY_SHORE,
+) {
   const letters = new Map<string, string>();
   completed.forEach((pair, day) => {
     for (const direction of DIRECTIONS)
-      cellsFor(day, direction).forEach((cell, i) =>
+      cellsFor(day, direction, world).forEach((cell, i) =>
         letters.set(cellKey(cell), pair[direction].word[i]!),
       );
   });
@@ -98,17 +72,18 @@ export function crossingsFor(
   direction: Direction,
   completed: Pair[],
   pair?: PairDraft,
+  world: WorldDefinition = SANDY_SHORE,
 ) {
-  const fixed = lettersFor(completed);
+  const fixed = lettersFor(completed, world);
   const other = direction === "across" ? "down" : "across";
   const companion = new Map<string, string>();
   if (pair)
-    cellsFor(day, other).forEach((cell, i) => {
+    cellsFor(day, other, world).forEach((cell, i) => {
       const letter = pair[other].word.toUpperCase()[i];
       if (letter && /^[A-Z]$/.test(letter))
         companion.set(cellKey(cell), letter);
     });
-  return cellsFor(day, direction).flatMap((cell, index) => {
+  return cellsFor(day, direction, world).flatMap((cell, index) => {
     const key = cellKey(cell),
       letter = fixed.get(key) ?? companion.get(key);
     return letter ? [{ index, letter, fixed: fixed.has(key) }] : [];
@@ -142,9 +117,13 @@ export function parsePair(raw: unknown): PairDraft | null {
   }
   return { revealed: p.revealed, across: entries[0]!, down: entries[1]! };
 }
-export function validatePair(pair: PairDraft, completed: Pair[]) {
+export function validatePair(
+  pair: PairDraft,
+  completed: Pair[],
+  world: WorldDefinition = SANDY_SHORE,
+) {
   const day = completed.length,
-    layout = DAYS[day];
+    layout = world.days[day];
   const issues: string[] = [];
   const normalized = parsePair(pair)!;
   if (!layout)
@@ -165,7 +144,7 @@ export function validatePair(pair: PairDraft, completed: Pair[]) {
         (issue) => `${direction === "across" ? "Across" : "Down"}: ${issue}`,
       ),
     );
-    for (const crossing of crossingsFor(day, direction, completed, pair))
+    for (const crossing of crossingsFor(day, direction, completed, pair, world))
       if (
         result.word.length === layout[direction].length &&
         result.word[crossing.index] !== crossing.letter

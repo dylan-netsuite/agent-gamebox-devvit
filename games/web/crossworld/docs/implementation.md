@@ -1,10 +1,24 @@
-# CrossWorld: Sandy Shore
+# CrossWorld: paired worlds
 
 The current prototype implements the owner's supplied 5-column, 10-row illustration layout. Ten paths are discovered in five paired turns, with one across and one down word per turn. Each word has its own authored clue and independently selected criterion. The seven available criteria can be reused. Immediate advancement is explicitly enabled for this private prototype; there is no calendar-day gate.
 
 Native HTML, CSS and replaceable inline SVG form the responsive interface. The crossword is the map. A coastal field-guide visual system uses warm paper, sea-green ink and controls, a terracotta accent, serif world/word headings and readable utility text. Five contour-drawn shore cover groups transform as pairs are discovered. The exact supplied tile footprint remains unchanged.
 
 On wide screens, the entire map and field-note editor share one atlas surface. On phones, a map viewport centers the active path at usable tile sizes; **Full map** switches to an overview, and **Back to clue** restores the editor. The clue card never covers map tiles. Across/Down choices show each word, its own rule and preparation/review state. Seven visual criteria replace the editor temporarily, with explicit Close and Escape recovery. Help, preferences and saved-clue inspection use native controls and HTML dialogs. Source colors/spacing are semantic CSS variables; no external fonts, images or new dependencies are required.
+
+## Haunted Hedge / shared world engine
+
+`src/shared/worlds.ts` supplies the two trusted world definitions: geometry, identity, copy and API root. The shared geometry/validation functions accept a world and default to Sandy Shore for compatibility. `createWorldGame` binds the existing pair engine to a trusted definition; Express registers only the known routes. Client-supplied world or identity fields cannot select another storage namespace.
+
+Haunted Hedge uses `/api/haunted-hedge-pairs-v1/{turn,draft,submit,reset}` with the existing wire shape (the board field remains `shore`). Its Redis progress, verdicts, cooldowns and reset generation are isolated by scenario. Sandy Shore's routes and original keys are unchanged. The two worlds intentionally share the original `sandy-shore-pairs-v1` user daily budget namespace plus the existing installation budget, so switching/resetting does not refresh the paid allowance.
+
+The client selects only known worlds through a hash and optional session preference. The picker freezes editing, settles the old world's queued saves, checks for remaining unsaved work, and reloads only the iframe while preserving the signed Devvit query. Failed saves and unsaved guest work block navigation with an explanation. Cross-world state is never merged; reopening loads from the chosen world's API. The current-world reset dialog names its scope.
+
+Garden cover art and lanterns are separate layers: revealing paths changes the cover, while `completed.length` alone controls lantern lighting. World-specific semantic tokens support light/dark palettes. All older shore/scenario behavior remains covered by existing tests.
+
+Validation: **79 source tests across seven files**, TypeScript, ESLint and production build pass. Eight new tests verify hedge geometry and a complete five-pair fill, independent storage/accounts, forged-field rejection, concurrent separate-world acceptance, shared budget enforcement, isolated restart, partial review and unknown-world fallback. **49 isolated browser checks** exercise all five hedge pairs, separate criteria, lantern conditions, switching/restoration, failed-save blocking, guest recovery, reset isolation and layouts from 320–1120px. The existing **98 map-flow** and **10 reset** browser checks still pass. Browser provider results are mocked.
+
+Private playtest **0.0.9.9** returned HTTP 200 for both world routes as BarryBetsALot. Actual Reddit switching restored Sandy Shore's existing ten revealed tiles and opened an untouched Haunted Hedge. Before/after readback confirmed both boards unchanged, with zero gameplay POST requests during inspection. No live AI review or reset was made. Physical phone keyboards, screen readers, audio listening and human acceptance remain unverified; a valid example fill is not a guarantee for arbitrary earlier word choices.
 
 ## Paired turns and storage
 

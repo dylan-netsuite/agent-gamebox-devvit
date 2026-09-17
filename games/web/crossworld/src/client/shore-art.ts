@@ -1,3 +1,6 @@
+import { SANDY_SHORE, type WorldDefinition } from "../shared/worlds";
+import { hedgeCovers, hedgeLanterns } from "./hedge-art";
+import { readPreference, writePreference } from "./preferences";
 // Intentionally spare, editable vector placeholders for the owner's future artwork.
 const covers = [
   `<g fill="none" stroke="#b29b65" stroke-width="1.5" stroke-linecap="round">
@@ -20,14 +23,14 @@ const covers = [
   `<g fill="#d8d4bd" stroke="#a5a38c" stroke-width="1.5"><path d="M422 624q-14-44 17-50t46 27q12 36-21 56t-42-33Z"/><path d="M429 744q-22-22-4-44t39-1q31 32 5 45t-40 0Z"/><path d="M430 876q-15-46 12-56t45 32q10 34-15 40t-42-16Z"/><path d="M298 952q-1-30 34-31t37 25q-1 29-36 29t-35-23Z"/><path d="M188 952q-19-17-1-39t37 9q22 23 5 36t-41-6Z"/><path d="M78 955q12-31 40-20t23 29q-5 16-33 13t-30-22Z"/></g>
    <g fill="none" stroke="#f8f2df" stroke-width="2"><path d="M438 589q20-3 28 11m-30 105 24 20m-18 109 27 10m-156 94 36 2m-160-11 24 17m-112 3 22 11"/></g>`,
 ];
-export function createShoreArt() {
+export function createShoreArt(world: WorldDefinition = SANDY_SHORE) {
   const art = document.getElementById("scenery")!;
-  art.innerHTML = `<defs><mask id="clear-tiles"><rect width="500" height="1000" fill="white"/><g id="tile-mask"></g></mask></defs><g mask="url(#clear-tiles)">${covers.map((svg, i) => `<g class="cover" data-cover="${i}">${svg}</g>`).join("")}</g>`;
+  art.innerHTML = `<defs><mask id="clear-tiles"><rect width="500" height="1000" fill="white"/><g id="tile-mask"></g></mask></defs><g mask="url(#clear-tiles)">${(world.id === "haunted-hedge" ? hedgeCovers : covers).map((svg, i) => `<g class="cover" data-cover="${i}">${svg}</g>`).join("")}</g>${world.id === "haunted-hedge" ? hedgeLanterns : ""}`;
   const motion = document.getElementById("motion") as HTMLButtonElement;
   const sound = document.getElementById("sound") as HTMLButtonElement;
   const theme = document.getElementById("theme") as HTMLButtonElement;
   const preference = matchMedia("(prefers-reduced-motion: reduce)");
-  let paused = false,
+  let paused = readPreference("motion") === "paused",
     sounding = false;
   let audio: AudioContext | undefined;
   function sync() {
@@ -39,6 +42,7 @@ export function createShoreArt() {
   }
   motion.addEventListener("click", () => {
     paused = !paused;
+    writePreference("motion", paused ? "paused" : "on");
     sync();
   });
   preference.addEventListener("change", sync);
@@ -49,12 +53,20 @@ export function createShoreArt() {
         document.hidden || !sounding ? audio.suspend() : audio.resume()
       ).catch(() => {});
   });
-  theme.addEventListener("click", () => {
-    const dark = document.documentElement.classList.toggle("dark");
+  if (readPreference("theme") === "dark")
+    document.documentElement.classList.add("dark");
+  const syncTheme = () =>
     theme.setAttribute(
       "aria-label",
-      dark ? "Switch to light theme" : "Switch to dark theme",
+      document.documentElement.classList.contains("dark")
+        ? "Switch to light theme"
+        : "Switch to dark theme",
     );
+  syncTheme();
+  theme.addEventListener("click", () => {
+    const dark = document.documentElement.classList.toggle("dark");
+    writePreference("theme", dark ? "dark" : "light");
+    syncTheme();
   });
   sound.addEventListener("click", () => {
     void (async () => {
@@ -85,6 +97,7 @@ export function createShoreArt() {
       discovered: number,
       cells: { row: number; col: number }[],
       animate = false,
+      completed = 0,
     ) {
       // Clear any future illustration where an earlier pair already has readable tiles.
       document.getElementById("tile-mask")!.innerHTML = cells
@@ -97,6 +110,9 @@ export function createShoreArt() {
         node.style.transition = animate ? "" : "none";
         node.classList.toggle("discovered", i < discovered);
       });
+      art
+        .querySelectorAll<SVGGElement>("[data-lantern]")
+        .forEach((node, i) => node.classList.toggle("lit", i < completed));
     },
     celebrate() {
       if (!sounding || audio?.state !== "running" || document.hidden) return;
