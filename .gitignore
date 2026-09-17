@@ -26,5 +26,5 @@ dist
 **/tools/*.tmp
 
 # Devvit testing (browser profiles, screenshots)
-.devvit-testing/profiles/
-.devvit-testing/screenshots/
+.devvit-testing/
+.suitereact-testing/
