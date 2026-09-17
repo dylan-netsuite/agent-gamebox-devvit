@@ -1,0 +1,45 @@
+{
+  "private": true,
+  "name": "crossworld",
+  "version": "0.0.1",
+  "license": "BSD-3-Clause",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "check": "npm run type-check && npm run lint",
+    "deploy": "npm run check && devvit upload",
+    "dev": "devvit playtest",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint --fix ./src",
+    "login": "devvit login --copy-paste",
+    "launch": "npm run check && devvit publish",
+    "prettier": "prettier --write .",
+    "type-check": "tsc --build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@devvit/web": "0.14.2",
+    "express": "5.2.1"
+  },
+  "devDependencies": {
+    "@devvit/start": "0.14.2",
+    "@devvit/test": "0.14.2",
+    "@eslint/js": "10.0.1",
+    "@types/express": "5.0.6",
+    "@types/node": "24.13.3",
+    "devvit": "0.14.2",
+    "dotenv-cli": "11.0.0",
+    "eslint": "10.9.1",
+    "globals": "17.11.0",
+    "prettier": "3.9.6",
+    "prettier-package-json": "2.8.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.68.0",
+    "vite": "8.2.2",
+    "vitest": "5.0.0"
+  },
+  "engines": {
+    "node": ">=24.18.0 <25"
+  },
+  "description": "A single playable CrossWorld turn on Reddit"
+}

@@ -1,0 +1,27 @@
+name: Validate prototypes
+
+on:
+  pull_request:
+    paths:
+      - "prototypes/crossword-quest/**"
+      - ".github/workflows/validate-prototypes.yml"
+  push:
+    branches: [main]
+    paths:
+      - "prototypes/crossword-quest/**"
+      - ".github/workflows/validate-prototypes.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  crossword-mock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: node --check prototypes/crossword-quest/rules.mjs
+      - run: node --check prototypes/crossword-quest/app.mjs
+      - run: node --test prototypes/crossword-quest/rules.test.mjs

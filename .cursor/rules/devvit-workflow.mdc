@@ -6,6 +6,8 @@ alwaysApply: true
 
 Use `.cursor/skills/devvit-full-cycle/SKILL.md` when the user requests that game workflow. Follow `AGENTS.md` for current commands and runtime constraints. A review or explanation does not start an implementation/deployment workflow.
 
-Game workflows use paths relative to `games/` (for example `phaser/jeopardy`) and keep local artifacts in `.workflows/{game-path}/{wf-id}/`. Preserve any active session workflow instead of starting competing phase tracking.
+Game workflows use paths relative to `games/` (for example `phaser/jeopardy`); local prototypes may use an explicit prototype directory. Read `.cursor/skills/devvit-full-cycle/references/workflow-contract.md` for verified bindings and evidence. The active session workflow is the sole owner of phase state and delivery. Companion skills return evidence rather than marking it complete.
 
 Do not record deployment success from a constructed URL or browser-test success without observed results. Keep playtest running while using browser tools. Use available tools with isolated player profiles; do not assume a particular MCP tool name or headless setting.
+
+When the user wants to play, prepare an untouched session and wait for actual feedback before dependent analysis. Preparation can be delivered while feedback remains pending. Never simulate the user's choices or infer enjoyment from technical checks.

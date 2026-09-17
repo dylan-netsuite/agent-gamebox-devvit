@@ -1,99 +1,17 @@
 ---
 name: devvit-test
-description: Tests a deployed game using available browser automation. Navigates to playtest URLs, interacts with the app, captures screenshots, and generates test results.
+description: Verify a prepared Devvit game or local prototype with available browser automation, preserving an untouched session when the user will play. Report observed checks separately from pending human feedback.
 ---
 
-# Devvit Testing Skill
+# Devvit technical verification
 
-Tests deployed games using Playwright MCP. Runs fully autonomously -- do NOT ask the user for input.
+Read [the shared contract](../devvit-full-cycle/references/workflow-contract.md) and root `AGENTS.md`.
 
-## Critical: Autonomous Execution
+1. Resolve the bound plan and `deployment.json`. Verify observed readiness and the target/version. Keep its process available. Do not reconstruct a URL from `.env` and call it deployed.
+2. Discover available browser tools. Use an isolated context or separate test profile/state. Do not assume particular MCP names, headless mode, or persistent player profiles. Never share an active profile with another process.
+3. Inspect the live accessibility tree and frames. Prefer role/label locators for DOM controls. For Phaser, locate the visible canvas and use measured bounds; avoid fixed iframe hosts and unverified coordinates. Fail the check if its frame/control is absent; never silently skip actions.
+4. Test outcomes against the plan: validation, state transitions, reload recovery, responsive/keyboard behavior, and server errors as relevant. Screenshots and console inspection supplement actual assertions.
+5. Record checks as `pass`, `fail`, or `untested`, with required flag, expected/observed outcome, and evidence in `test-results.json`. Include commands, counts, and errors. Authentication or tool gaps are untested.
+6. For user play, leave their draft/storage/account untouched and hand off a clean URL with [devvit-test-instructions](../devvit-test-instructions/SKILL.md). Do not solve their live turn, supply answers, or infer satisfaction from technical success.
 
-- Do NOT ask the user for a playtest URL -- read it from `deployment.json` or construct it from the game's `.env` + `devvit.json`
-- Do NOT stop to ask what to test -- read the plan and generate test scenarios
-- Discover available browser tools and their actual settings. Follow root `AGENTS.md` for player-profile ownership; do not assume headless mode or specific MCP server names.
-
-## Usage
-
-```
-/devvit-test phaser/jeopardy
-/devvit-test phaser/jeopardy wf-1234567890
-```
-
-## Path Resolution
-
-| Resource | Path |
-|----------|------|
-| Deployment info | `.workflows/{game-path}/{wf-id}/deployment.json` |
-| Game config | `games/{game-path}/devvit.json` |
-| Environment | `games/{game-path}/.env` |
-| Test results | `.workflows/{game-path}/{wf-id}/test-results.json` |
-| Screenshots | `.workflows/{game-path}/{wf-id}/screenshots/` |
-
-## Workflow
-
-### Step 1: Get Playtest URL
-
-Read the URL from `.workflows/{game-path}/{wf-id}/deployment.json` and verify a successful installation was observed. Keep the playtest terminal alive. A guessed URL is not deployment evidence; record missing authentication or unavailable tools as untested, not passed.
-
-### Step 2: Navigate and Load App
-
-1. `browser_navigate` to the playtest URL
-2. Wait for page to load
-3. Take screenshot: `screenshots/01-initial-load.png`
-4. Find and click the app post or start button
-5. Take screenshot: `screenshots/02-app-launched.png`
-
-### Step 3: Interact with Devvit App in Iframe
-
-The Devvit app renders inside nested iframes. To interact:
-
-1. Use `browser_snapshot` to see the accessibility tree
-2. Look for iframe content containing the game elements
-3. For Phaser canvas games, use `browser_run_code` with coordinate-based clicks:
-
-```javascript
-async (page) => {
-  const frames = page.frames();
-  const gameFrame = frames.find(f => f.url().includes('webview.devvit.net'));
-  if (gameFrame) {
-    const canvas = await gameFrame.$('canvas');
-    if (canvas) {
-      const box = await canvas.boundingBox();
-      if (!box) throw new Error("Game canvas is not visible");
-      await page.mouse.click(box.x + box.width/2, box.y + box.height/2);
-    }
-  }
-}
-```
-
-4. Use `browser_console_messages` to verify actions registered
-
-### Step 4: Execute Test Scenarios
-
-Generate tests from the plan. For each test:
-1. Describe what we're testing
-2. Take before screenshot
-3. Perform actions
-4. Take after screenshot
-5. Check console for errors
-6. Record pass/fail
-
-### Step 5: Generate Results
-
-Save to `.workflows/{game-path}/{wf-id}/test-results.json`:
-```json
-{
-  "testRunId": "test-{timestamp}",
-  "gamePath": "phaser/jeopardy",
-  "playtestUrl": "{url}",
-  "status": "complete",
-  "tests": [...],
-  "summary": { "totalTests": 8, "passedTests": 7, "failedTests": 1 },
-  "consoleErrors": []
-}
-```
-
-### Step 6: Proceed to Analysis
-
-After saving results, **immediately continue** to the next phase.
+Return results to the owner. Human feedback stays pending until the user supplies it. Do not independently mark overall completion or start another phase.

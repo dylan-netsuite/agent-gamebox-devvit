@@ -1,10 +1,11 @@
 # Agent Gamebox
 
-Nine independent [Devvit Web](https://developers.reddit.com/docs/) apps that run inside Reddit posts, with Phaser clients, Express backends, and Redis persistence.
+Ten independent [Devvit Web](https://developers.reddit.com/docs/) apps that run inside Reddit posts, with Phaser or DOM clients, Express backends, and Redis persistence.
 
 | Game                                         | Description                                  |
 | -------------------------------------------- | -------------------------------------------- |
 | [Blokus](games/phaser/blokus/)               | Tile-placement strategy                      |
+| [CrossWorld](games/web/crossworld/) | Clue-writing crossword playtest |
 | [Dino Run](games/phaser/dino-run/)           | T-Rex endless runner                         |
 | [Diplomacy](games/phaser/diplomacy/)         | Seven-power negotiation board game           |
 | [Jeopardy](games/phaser/jeopardy/)           | Quiz show with J-Archive questions           |
@@ -26,7 +27,7 @@ npm ci
 npm run dev
 ```
 
-`npm run dev` starts Devvit playtest and its Vite build watcher. It loads a game-local `.env` when present; `.env` is optional because the apps already set `dev.subreddit` in `devvit.json`. An explicit subreddit argument takes precedence over `DEVVIT_SUBREDDIT`, then the manifest setting. Follow the CLI's emitted playtest URL and keep the process alive during browser tests.
+`npm run dev` starts Devvit playtest and its Vite build watcher. Existing Phaser apps load a game-local `.env` when present and set `dev.subreddit` in `devvit.json`. CrossWorld uses the CLI’s development-subreddit setup unless an explicit target is supplied. An explicit subreddit argument takes precedence over `DEVVIT_SUBREDDIT`, then the manifest setting. Follow the CLI's emitted playtest URL and keep the process alive during browser tests.
 
 | Command inside a game | Effect                                             |
 | --------------------- | -------------------------------------------------- |
@@ -55,16 +56,16 @@ node tools/validate-all.mjs phaser/blokus
 
 [GitHub Actions](.github/workflows/validate.yml) runs the same validation per game on pull requests and pushes to main. [Dependabot](.github/dependabot.yml) groups Devvit package updates. Phaser major upgrades require a deliberate migration.
 
-Blokus uses the official `@devvit/test` harness for isolated Redis tests. Rush Hour and Worms also have unit tests. Other games currently report no tests; passing builds do not imply gameplay coverage. See [the assessment](docs/devvit-modernization.md) for validation results and remaining work.
+CrossWorld and Blokus use the official `@devvit/test` harness for isolated Redis tests. Rush Hour and Worms also have unit tests. Other games currently report no tests; passing builds do not imply gameplay coverage. See [the assessment](docs/devvit-modernization.md) for validation results and remaining work.
 
 For live verification, use an authenticated Reddit playtest and browser automation that can inspect the nested game iframe. The optional `.cursor/mcp.json` defines two persistent player profiles for multiplayer testing; these tools must be enabled in the chosen client. Use a separate profile for each browser process. Profile and screenshot directories are gitignored.
 
 ## Architecture
 
 ```text
-games/phaser/{game}/
+games/{engine}/{game}/
 ├── src/
-│   ├── client/       Phaser scenes and HTML splash/game entrypoints
+│   ├── client/       Phaser scenes or DOM UI, with HTML entrypoints
 │   ├── server/       Express routes and Devvit SDK calls
 │   └── shared/       Pure logic and types used on both sides
 ├── devvit.json       App identity, permissions, routes, build/watch scripts

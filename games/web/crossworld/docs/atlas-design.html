@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CrossWorld — The Atlas of Fifty Worlds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#0f1117;--surface:#181a20;--surface2:#1e2028;--surface3:#252830;
+--border:#2e3140;--border-hover:#3d4155;
+--text:#e2e4e9;--text-muted:#8b8fa3;--text-dim:#5c6078;
+--accent:#6c72ff;--accent-glow:rgba(108,114,255,.15);--accent-soft:#5258d4;
+--green:#34d399;--green-bg:rgba(52,211,153,.1);
+--yellow:#fbbf24;--yellow-bg:rgba(251,191,36,.1);
+--red:#f87171;--red-bg:rgba(248,113,113,.1);
+--blue:#60a5fa;--blue-bg:rgba(96,165,250,.1);
+--orange:#fb923c;--orange-bg:rgba(251,146,60,.1);
+--purple:#a78bfa;--purple-bg:rgba(167,139,250,.1);
+--radius:12px;--radius-sm:8px;
+--shadow:0 1px 3px rgba(0,0,0,.3),0 4px 12px rgba(0,0,0,.15);
+--transition:.2s cubic-bezier(.4,0,.2,1);
+--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+--mono:'JetBrains Mono','Fira Code','SF Mono',monospace;
+}
+[data-theme="light"]{
+--bg:#f8f9fb;--surface:#ffffff;--surface2:#f0f1f4;--surface3:#e6e8ed;
+--border:#d4d7e0;--border-hover:#b8bcc8;
+--text:#1a1d2b;--text-muted:#5a5f73;--text-dim:#8b8fa3;
+--accent:#5558e6;--accent-glow:rgba(85,88,230,.1);--accent-soft:#4a4dd0;
+--green:#16a34a;--green-bg:rgba(22,163,74,.08);
+--yellow:#ca8a04;--yellow-bg:rgba(202,138,4,.08);
+--red:#dc2626;--red-bg:rgba(220,38,38,.08);
+--blue:#2563eb;--blue-bg:rgba(37,99,235,.08);
+--orange:#ea580c;--orange-bg:rgba(234,88,12,.08);
+--purple:#7c3aed;--purple-bg:rgba(124,58,237,.08);
+--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.topbar{position:fixed;top:0;left:0;right:0;height:56px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 20px;z-index:100}
+.logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--purple));display:grid;place-items:center;font-weight:800;font-size:12px;color:#fff;letter-spacing:-.5px}
+.topbar h1{font-size:14px;font-weight:600;letter-spacing:-.2px;white-space:nowrap}
+.spacer{flex:1}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;background:var(--accent-glow);color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);white-space:nowrap}
+.badge-complete{background:var(--green-bg);color:var(--green);border-color:color-mix(in srgb,var(--green) 30%,transparent)}
+.badge-gap{background:var(--red-bg);color:var(--red);border-color:color-mix(in srgb,var(--red) 30%,transparent)}
+.badge-warn{background:var(--yellow-bg);color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 30%,transparent)}
+.badge-gate{background:var(--orange-bg);color:var(--orange);border-color:color-mix(in srgb,var(--orange) 30%,transparent)}
+.search-btn,.theme-toggle{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition);display:flex;align-items:center;gap:7px}
+.search-btn{padding:6px 11px;font-size:12px;font-family:var(--font)}
+.theme-toggle{padding:7px;place-items:center}
+.search-btn:hover,.theme-toggle:hover{border-color:var(--border-hover);color:var(--text);background:var(--surface3)}
+kbd{font-family:var(--mono);font-size:10px;background:var(--surface3);border:1px solid var(--border);border-radius:4px;padding:1px 4px}
+[data-theme="dark"] .icon-sun{display:none}
+[data-theme="light"] .icon-moon{display:none}
+.sidebar{position:fixed;top:56px;left:0;bottom:0;width:250px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:20px 0 60px;z-index:50}
+.sidebar::-webkit-scrollbar{width:6px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.nav-group{margin-bottom:18px}
+.nav-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--text-dim);padding:0 20px 7px}
+.sidebar a{display:block;padding:6px 20px 6px 20px;color:var(--text-muted);text-decoration:none;font-size:13px;border-left:2px solid transparent;transition:var(--transition)}
+.sidebar a:hover{color:var(--text);background:var(--surface2)}
+.sidebar a.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-glow);font-weight:500}
+.main{margin-left:250px;padding:56px 0 100px;max-width:1080px}
+.inner{padding:0 44px}
+.hero{padding:52px 44px 34px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.hero .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.hero h1{font-size:40px;font-weight:800;letter-spacing:-1.2px;line-height:1.12;margin-bottom:12px;background:linear-gradient(135deg,var(--text),var(--text-muted));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .sub{font-size:17px;color:var(--text-muted);max-width:660px;line-height:1.6}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.meta-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:99px;font-size:12px;color:var(--text-muted)}
+.meta-chip strong{color:var(--text);font-weight:600}
+.dot{width:7px;height:7px;border-radius:50%}
+.section{padding:40px 44px;scroll-margin-top:70px}
+.section+.section{border-top:1px solid var(--border)}
+.section h2{font-size:25px;font-weight:700;letter-spacing:-.6px;margin-bottom:8px;display:flex;align-items:center;gap:11px}
+.section h2 .num{width:26px;height:26px;border-radius:7px;background:var(--accent-glow);color:var(--accent);display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+.section .lede{color:var(--text-muted);margin-bottom:24px;font-size:15px;max-width:740px}
+h3{font-size:17px;font-weight:650;margin:28px 0 10px;letter-spacing:-.3px}
+h4{font-size:14px;font-weight:650;margin:20px 0 8px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;font-size:11px}
+p{margin-bottom:12px;color:var(--text-muted)}
+p strong,li strong{color:var(--text);font-weight:600}
+ul,ol{margin:0 0 14px 20px;color:var(--text-muted)}
+li{margin-bottom:6px}
+code{font-family:var(--mono);font-size:12.5px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 5px;color:var(--purple)}
+pre{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow-x:auto;margin:14px 0;font-size:12.5px;line-height:1.6}
+pre code{background:none;border:none;padding:0;color:var(--text)}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13.5px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+th{background:var(--surface2);text-align:left;padding:10px 13px;font-weight:650;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);border-bottom:1px solid var(--border)}
+td{padding:10px 13px;border-bottom:1px solid var(--border);color:var(--text-muted);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+td strong{color:var(--text)}
+.callout{border-radius:var(--radius);padding:14px 17px;margin:16px 0;border:1px solid;font-size:14px}
+.callout p:last-child{margin-bottom:0}
+.callout-info{background:var(--blue-bg);border-color:color-mix(in srgb,var(--blue) 28%,transparent)}
+.callout-warn{background:var(--yellow-bg);border-color:color-mix(in srgb,var(--yellow) 28%,transparent)}
+.callout-success{background:var(--green-bg);border-color:color-mix(in srgb,var(--green) 28%,transparent)}
+.callout-danger{background:var(--red-bg);border-color:color-mix(in srgb,var(--red) 28%,transparent)}
+.callout strong{color:var(--text)}
+.collapsible{border:1px solid var(--border);border-radius:var(--radius);margin:12px 0;overflow:hidden;background:var(--surface)}
+.collapsible-trigger{width:100%;background:none;border:none;color:var(--text);padding:13px 17px;font-size:14px;font-weight:600;font-family:var(--font);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:var(--transition);text-align:left}
+.collapsible-trigger:hover{background:var(--surface2)}
+.chevron{transition:transform var(--transition);color:var(--text-dim);flex:none}
+.collapsible-trigger[aria-expanded="true"] .chevron{transform:rotate(90deg)}
+.collapsible-body{display:none;padding:0 17px 16px;border-top:1px solid var(--border)}
+.collapsible-body.open{display:block;padding-top:14px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:13px;margin:16px 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:var(--transition)}
+.card:hover{border-color:var(--border-hover);transform:translateY(-2px);box-shadow:var(--shadow)}
+.card-title{font-weight:650;font-size:14px;margin-bottom:7px;display:flex;align-items:center;gap:9px;color:var(--text)}
+.card-title .num{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.card p{font-size:13px;margin:0;line-height:1.55}
+.swatches{display:flex;gap:0;border-radius:7px;overflow:hidden;border:1px solid var(--border);height:26px;width:150px;flex:none}
+.sw{flex:1}
+.region-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.region-head h3{margin:0;font-size:19px}
+.world-tag{display:inline-block;font-family:var(--mono);font-size:11px;color:var(--text-dim);background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;margin-right:6px}
+.axis-flow{display:flex;flex-wrap:wrap;gap:8px;padding:6px 0 14px;margin:8px 0}
+.axis-step{flex:1 1 150px;min-width:150px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 13px;position:relative;transition:var(--transition)}
+.axis-step:hover{border-color:var(--accent);transform:translateY(-2px)}
+.axis-step .n{font-family:var(--mono);font-size:10px;color:var(--text-dim);display:block;margin-bottom:3px}
+.axis-step .t{font-weight:650;font-size:13px;color:var(--text);display:block;margin-bottom:3px}
+.axis-step .d{font-size:11.5px;color:var(--text-muted);line-height:1.45}
+.grid-demo{font-family:var(--mono);font-size:13px;line-height:1.5;letter-spacing:2px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin:12px 0;color:var(--text-muted);display:inline-block}
+.grid-demo b{color:var(--accent)}
+.grid-demo i{color:var(--green);font-style:normal}
+.search-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:200;display:none;padding-top:14vh}
+.search-overlay.open{display:block}
+.search-box{max-width:520px;margin:0 auto;background:var(--surface);border:1px solid var(--border-hover);border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden}
+.search-box input{width:100%;background:none;border:none;border-bottom:1px solid var(--border);padding:15px 18px;color:var(--text);font-size:15px;font-family:var(--font);outline:none}
+.search-results{max-height:340px;overflow-y:auto}
+.search-results a{display:block;padding:10px 18px;color:var(--text-muted);text-decoration:none;font-size:13.5px;border-bottom:1px solid var(--border)}
+.search-results a:hover,.search-results a.sel{background:var(--accent-glow);color:var(--accent)}
+.footer{padding:28px 44px;color:var(--text-dim);font-size:12.5px;border-top:1px solid var(--border)}
+@media(max-width:940px){
+.sidebar{display:none}.main{margin-left:0}
+.inner,.section,.hero,.footer{padding-left:20px;padding-right:20px}
+.hero h1{font-size:30px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">CW</div>
+  <h1>CrossWorld — Atlas of Fifty Worlds</h1>
+  <span class="badge">Design Bible v1</span>
+  <div class="spacer"></div>
+  <button class="search-btn" onclick="openSearch()">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="4.5"/><path d="M9.5 9.5l3 3"/></svg>
+    Search <kbd>⌘K</kbd>
+  </button>
+  <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+  </button>
+</header>
+
+<nav class="sidebar" id="sidebar">
+  <div class="nav-group">
+    <div class="nav-label">Foundations</div>
+    <a href="#premise">The Premise</a>
+    <a href="#loop">The Daily Loop</a>
+    <a href="#atlas">Atlas Topology</a>
+    <a href="#axes">The Seven Axes</a>
+    <a href="#curve">Difficulty Curve</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Systems</div>
+    <a href="#restrictions">Restriction Library</a>
+    <a href="#carry">Carry-Forward &amp; Solvability</a>
+    <a href="#judge">The Judge</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">The Fifty Worlds</div>
+    <a href="#r1">I · The Shallows</a>
+    <a href="#r2">II · The Hedge</a>
+    <a href="#r3">III · The Hollow</a>
+    <a href="#r4">IV · The Works</a>
+    <a href="#r5">V · The Drift</a>
+    <a href="#r6">VI · The Reliquary</a>
+    <a href="#r7">VII · The Unmaking</a>
+    <a href="#w50">The Fiftieth</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-label">Delivery</div>
+    <a href="#payoff">Completion Payoff</a>
+    <a href="#model">Data Model</a>
+    <a href="#build">Build Phasing</a>
+    <a href="#risks">Risks &amp; Open Questions</a>
+  </div>
+</nav>
+
+<main class="main">
+
+<section class="hero">
+  <div class="eyebrow">CrossWorld · Game Design Bible</div>
+  <h1>The Atlas of Fifty Worlds</h1>
+  <p class="sub">A daily word game where you don't solve the crossword — you <em>write</em> it. Fifty interconnected worlds, one per day, each one made permanent by the words you put into it. The fiftieth world is built from your own answers, so no two players ever finish the same game.</p>
+  <div class="meta-row">
+    <span class="meta-chip"><span class="dot" style="background:var(--accent)"></span><strong>Worlds:</strong> 50</span>
+    <span class="meta-chip"><span class="dot" style="background:var(--green)"></span><strong>Regions:</strong> 7 × 7 + 1</span>
+    <span class="meta-chip"><span class="dot" style="background:var(--purple)"></span><strong>Total slots:</strong> 388</span>
+    <span class="meta-chip"><span class="dot" style="background:var(--orange)"></span><strong>Run length:</strong> ~50 days</span>
+    <span class="meta-chip"><span class="dot" style="background:var(--blue)"></span><strong>Platform:</strong> Devvit Web</span>
+  </div>
+</section>
+
+<section class="section" id="premise">
+  <h2><span class="num">1</span> The Premise</h2>
+  <p class="lede">Everything below is built on the mechanic that already exists in the prototype. Nothing here requires replacing it.</p>
+
+  <p>In a normal crossword, a setter writes clues and you supply the answers. CrossWorld inverts that: <strong>the grid gives you a slot, and you supply both the answer and the clue.</strong> A judge decides whether your word is real and whether your clue is fair. If it passes, the word is written into the world permanently and the terrain around it wakes up.</p>
+
+  <h3>The three checks, and who owns them</h3>
+  <table>
+    <thead><tr><th>Check</th><th>Owner</th><th>What it enforces</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Fit</strong></td><td>Server, deterministic</td><td>Length, crossing letters, A–Z only, answer not present in its own clue, 140-char cap.</td></tr>
+      <tr><td><strong>Restriction</strong></td><td>Server, deterministic</td><td>The one-use constraint you spent on this slot. Pure string/regex checks, never a judgment call.</td></tr>
+      <tr><td><strong>Meaning</strong></td><td>LLM judge</td><td>Only two booleans: <code>validWord</code> and <code>fairClue</code>. Nothing else.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-info">
+    <p><strong>This separation is load-bearing and must not erode.</strong> Every restriction added across all fifty worlds is mechanically checkable on the clue string. The judge never rules on style, difficulty, cleverness, or constraint compliance. That keeps the game fair, cheap, fast, and — critically — <em>debuggable</em>. A rejected clue always has a reason you can point at.</p>
+  </div>
+
+  <h3>Why the player keeps coming back</h3>
+  <p>The retention engine is not the puzzle. It is <strong>authorship</strong>. Every accepted entry is a sentence you wrote that is now part of a place. After fifty days you are not holding a score — you are holding roughly <strong>388 clues you personally composed</strong>, attached to a map you personally routed. That is the artifact.</p>
+</section>
+
+<section class="section" id="loop">
+  <h2><span class="num">2</span> The Daily Loop</h2>
+  <p class="lede">One world per day. A world is the unit of a session, not a slot.</p>
+
+  <div class="axis-flow">
+    <div class="axis-step"><span class="n">01</span><span class="t">Arrive</span><span class="d">Today's world opens. You see its terrain and how many paths it holds.</span></div>
+    <div class="axis-step"><span class="n">02</span><span class="t">Reveal</span><span class="d">One discovery at a time: a slot's position, length, and any letters already fixed.</span></div>
+    <div class="axis-step"><span class="n">03</span><span class="t">Spend</span><span class="d">Pick one unused restriction from today's deck. You cannot get it back.</span></div>
+    <div class="axis-step"><span class="n">04</span><span class="t">Write</span><span class="d">Supply an answer that fits, and a clue that obeys the restriction.</span></div>
+    <div class="axis-step"><span class="n">05</span><span class="t">Judge</span><span class="d">Fit and restriction checked locally. Meaning checked by the judge (~1.7s).</span></div>
+    <div class="axis-step"><span class="n">06</span><span class="t">Lock</span><span class="d">Accepted words are permanent. The terrain reacts. Next discovery opens.</span></div>
+    <div class="axis-step"><span class="n">07</span><span class="t">Route</span><span class="d">World complete. It joins the atlas and reveals its neighbours. Pick tomorrow.</span></div>
+  </div>
+
+  <h3>The daily allowance</h3>
+  <ul>
+    <li><strong>One world per calendar day.</strong> Finishing early does not buy you the next world.</li>
+    <li><strong>A world can be left mid-way and resumed the same day.</strong> Drafts already persist in the prototype; this extends to partial worlds.</li>
+    <li><strong>Gate worlds are the one exception:</strong> they may straddle a day boundary without breaking the streak, because they run long by design.</li>
+    <li><strong>Missing a day does not reset the atlas.</strong> It breaks a streak counter, nothing else. A fifty-day commitment cannot also be a fifty-day perfect-attendance requirement — that is a design trap.</li>
+  </ul>
+
+  <h3>The spend decision</h3>
+  <p>A world's restriction deck is sized to its slot count, and every restriction is one-use. <strong>You choose which restriction to spend before you know what the later slots look like.</strong> Burning <em>Two Breaths</em> ("exactly 2 words") on an easy 4-letter noun feels efficient right up until the final slot turns out to be an 8-letter verb with five fixed crossings and <em>Two Breaths</em> is the only card you had left.</p>
+
+  <div class="callout callout-success">
+    <p><strong>This is the core tactical tension and it scales for free.</strong> Bigger worlds mean bigger decks, longer planning horizons, and more ways to strand yourself. No new mechanic is needed to make world 40 harder than world 4.</p>
+  </div>
+</section>
+
+<section class="section" id="atlas">
+  <h2><span class="num">3</span> Atlas Topology</h2>
+  <p class="lede">Fifty worlds arranged as a connected graph, not a tree. Choice controls order, never exclusion.</p>
+
+  <h3>Seven regions of seven, and the fiftieth</h3>
+  <p>Regions are geographic, thematic, chromatic, and mechanical all at once. Each holds <strong>six open worlds and one Gate</strong>. The Gate unlocks only when the other six in its region are complete, and clearing it opens the next region.</p>
+
+  <table>
+    <thead><tr><th>Region</th><th>Worlds</th><th>Mood</th><th>Palette</th><th>Slots</th></tr></thead>
+    <tbody>
+      <tr><td><strong>I · The Shallows</strong></td><td>1–7</td><td>Sun-bleached coast. Something under the water.</td>
+        <td><span class="swatches"><span class="sw" style="background:#E8D5B0"></span><span class="sw" style="background:#7FB3AD"></span><span class="sw" style="background:#C87D5A"></span><span class="sw" style="background:#9B8B7A"></span><span class="sw" style="background:#3A5A63"></span></span></td><td>32</td></tr>
+      <tr><td><strong>II · The Hedge</strong></td><td>8–14</td><td>Cultivated, and wrong. Topiary that counts you back.</td>
+        <td><span class="swatches"><span class="sw" style="background:#C4B5D4"></span><span class="sw" style="background:#5B4464"></span><span class="sw" style="background:#8CA37B"></span><span class="sw" style="background:#E5A954"></span><span class="sw" style="background:#2A3328"></span></span></td><td>44</td></tr>
+      <tr><td><strong>III · The Hollow</strong></td><td>15–21</td><td>Wild, fungal, and willing to trade.</td>
+        <td><span class="swatches"><span class="sw" style="background:#6B7F4E"></span><span class="sw" style="background:#5A4632"></span><span class="sw" style="background:#7E96B0"></span><span class="sw" style="background:#C9A227"></span><span class="sw" style="background:#22261C"></span></span></td><td>46</td></tr>
+      <tr><td><strong>IV · The Works</strong></td><td>22–28</td><td>Abandoned industry that never actually stopped.</td>
+        <td><span class="swatches"><span class="sw" style="background:#B5522F"></span><span class="sw" style="background:#C9A54E"></span><span class="sw" style="background:#22201E"></span><span class="sw" style="background:#E8722C"></span><span class="sw" style="background:#3E6B66"></span></span></td><td>56</td></tr>
+      <tr><td><strong>V · The Drift</strong></td><td>29–35</td><td>Weightless. The wind has opinions.</td>
+        <td><span class="swatches"><span class="sw" style="background:#A8B4C0"></span><span class="sw" style="background:#EDE8DE"></span><span class="sw" style="background:#6B5F8C"></span><span class="sw" style="background:#D4C078"></span><span class="sw" style="background:#38414F"></span></span></td><td>56</td></tr>
+      <tr><td><strong>VI · The Reliquary</strong></td><td>36–42</td><td>A museum of forgotten things. Every label is wrong.</td>
+        <td><span class="swatches"><span class="sw" style="background:#EDE4D3"></span><span class="sw" style="background:#C09A9A"></span><span class="sw" style="background:#A88C4A"></span><span class="sw" style="background:#8E9296"></span><span class="sw" style="background:#D9CFB8"></span></span></td><td>70</td></tr>
+      <tr><td><strong>VII · The Unmaking</strong></td><td>43–49</td><td>The world coming apart into the words it was made of.</td>
+        <td><span class="swatches"><span class="sw" style="background:#2B2A4A"></span><span class="sw" style="background:#F2EFE8"></span><span class="sw" style="background:#B03A3A"></span><span class="sw" style="background:#4A4A50"></span><span class="sw" style="background:#9A9AA0"></span></span></td><td>70</td></tr>
+      <tr><td><strong>The Fiftieth</strong></td><td>50</td><td>The atlas folds into one grid.</td>
+        <td><span class="swatches"><span class="sw" style="background:#E8D5B0"></span><span class="sw" style="background:#5B4464"></span><span class="sw" style="background:#6B7F4E"></span><span class="sw" style="background:#B5522F"></span><span class="sw" style="background:#6B5F8C"></span><span class="sw" style="background:#A88C4A"></span><span class="sw" style="background:#2B2A4A"></span></span></td><td>14</td></tr>
+    </tbody>
+  </table>
+
+  <p>The narrative shape of that sequence: <strong>washed up → cultivated → wild → made → high → remembered → unmade → remade.</strong> You arrive with nothing, and you leave having written the world back into existence.</p>
+
+  <h3 id="ordering">Why "choose one of two" still matters when nothing is excluded</h3>
+  <div class="callout callout-warn">
+    <p><strong>This is the design question that has to be answered honestly.</strong> If you eventually play all fifty worlds, a branch that doesn't remove anything is theatre. It only earns its place if <em>order</em> has consequences.</p>
+  </div>
+  <p>It does, for two reasons:</p>
+  <ol>
+    <li><strong>Carry-forward makes order into difficulty.</strong> A world inherits fixed letters from whichever neighbours are <em>already complete</em>. Enter a world early with one finished neighbour and you get two or three fixed tiles. Come back to it last, with four finished neighbours, and you inherit a dozen. You are choosing, every single day, whether to take the easy approach now and leave a knot for later, or take the knot while you still have clean restrictions in hand.</li>
+    <li><strong>Restriction decks are region-scoped.</strong> The nastiest cards in a region's pool have to be spent somewhere inside that region. Routing is a budgeting problem: which world do you want to be holding <em>No Repeats</em> on?</li>
+  </ol>
+  <p>The frontier shows <strong>2 destinations in Regions I–III, 3 in Regions IV–VII</strong>, with the region's Gate appearing once the other six are lit.</p>
+
+  <h3>Frontier rules</h3>
+  <ul>
+    <li>Completing a world reveals all of its unvisited neighbours as frontier.</li>
+    <li>Frontier worlds never expire and never disappear.</li>
+    <li>You may only enter a world adjacent to completed terrain — the atlas grows outward from Sandy Shore.</li>
+    <li>A Gate is adjacent to every world in its region, so it lights the moment the sixth one closes.</li>
+  </ul>
+</section>
+
+<section class="section" id="axes">
+  <h2><span class="num">4</span> The Seven Axes</h2>
+  <p class="lede">Each region introduces exactly one new source of difficulty, then carries it forward. By Region VII all seven are live simultaneously.</p>
+
+  <div class="card-grid">
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--green-bg);color:var(--green)">I</span> Volume</div><p><strong>The Shallows.</strong> Slot count and word length. Every discovery's Across and Down cross at one shared letter — the shipped behaviour — but discoveries stay independent of each other.</p></div>
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--purple-bg);color:var(--purple)">II</span> Cross-discovery</div><p><strong>The Hedge.</strong> Crossings reach <em>between</em> discoveries. Your third answer constrains your sixth, hours later in the same session.</p></div>
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--blue-bg);color:var(--blue)">III</span> Carry-forward</div><p><strong>The Hollow.</strong> Border tiles are inherited from completed neighbours. Words you wrote days ago start dictating letters.</p></div>
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--orange-bg);color:var(--orange)">IV</span> Stacking</div><p><strong>The Works.</strong> Two restrictions per slot, drawn from different tiers. Combinatorial pain, still fully deterministic.</p></div>
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--yellow-bg);color:var(--yellow)">V</span> Compulsion</div><p><strong>The Drift.</strong> Some slots arrive with their restriction pre-assigned. Choice is removed exactly where it hurts.</p></div>
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--red-bg);color:var(--red)">VI</span> Meta-rules</div><p><strong>The Reliquary.</strong> A world-wide constraint binds every clue in the session to every other one.</p></div>
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--accent-glow);color:var(--accent)">VII</span> Subtraction</div><p><strong>The Unmaking.</strong> Letters leave the board. Slots are pre-filled with wrong answers. The grid fights back.</p></div>
+  </div>
+
+  <div class="callout callout-info">
+    <p><strong>Deliberately absent: a timer, a score, a leaderboard, and a lives system.</strong> None of them survive contact with a game whose core act is composition. A clock turns clue-writing into panic-typing, and a leaderboard rewards the shortest acceptable clue rather than the best one.</p>
+  </div>
+</section>
+
+<section class="section" id="curve">
+  <h2><span class="num">5</span> Difficulty Curve</h2>
+  <p class="lede">388 slots over 50 days, averaging 7.8 per day. The ramp is per-region, with a breather and a Gate inside each.</p>
+
+  <table>
+    <thead><tr><th>Region</th><th>Base slots</th><th>Breather</th><th>Gate</th><th>Word lengths</th><th>Est. session</th></tr></thead>
+    <tbody>
+      <tr><td>I · Shallows</td><td>4</td><td>—</td><td>6</td><td>3–5</td><td>5–7 min</td></tr>
+      <tr><td>II · Hedge</td><td>6</td><td>4 (#11)</td><td>8</td><td>3–6</td><td>8–11 min</td></tr>
+      <tr><td>III · Hollow</td><td>6</td><td>4 (#18)</td><td>8</td><td>4–6</td><td>9–12 min</td></tr>
+      <tr><td>IV · Works</td><td>8</td><td>6 (#25)</td><td>10</td><td>4–7</td><td>11–14 min</td></tr>
+      <tr><td>V · Drift</td><td>8</td><td>6 (#32)</td><td>10</td><td>4–7</td><td>12–15 min</td></tr>
+      <tr><td>VI · Reliquary</td><td>10</td><td>8 (#37)</td><td>12</td><td>4–8</td><td>14–18 min</td></tr>
+      <tr><td>VII · Unmaking</td><td>10</td><td>8 (#46)</td><td>12</td><td>3–9</td><td>15–20 min</td></tr>
+      <tr><td><strong>The Fiftieth</strong></td><td colspan="3"><strong>14</strong></td><td>3–11</td><td>~25 min</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <p><strong>Two worlds exceed the 15-minute target: the Reliquary and Unmaking Gates, at 12 slots.</strong> That is intentional — they are the two boss beats before the finale — but it is the single most likely place for a fifty-day streak to die. Mitigation: <strong>Gates alone may be paused across a day boundary</strong> without breaking the streak. If playtesting shows drop-off at #42 or #49 anyway, cut both to 10 before cutting anything else.</p>
+  </div>
+
+  <h3>Breathers are not filler</h3>
+  <p>Every region's breather is smaller <em>and</em> meaner — fewer slots, but a concentrated version of the region's axis. <em>The Espalier</em> (#11) is four slots that all cross each other. <em>Thin Air</em> (#32) is six slots where every single restriction is forced. They reset session length without resetting pressure.</p>
+</section>
+
+<section class="section" id="restrictions">
+  <h2><span class="num">6</span> The Restriction Library</h2>
+  <p class="lede">Forty cards in six tiers. Every one is checkable with string and regex operations on the clue — no judge involvement, ever.</p>
+
+  <p>The prototype ships seven restrictions in <code>src/shared/rules.ts</code>. That pool needs to reach forty to feed fifty worlds without repetition fatigue. Tier determines which regions may draw a card; deck size always equals the world's slot count.</p>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="true"><span>Tier I — Shape · Regions I–II</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body open">
+      <table>
+        <thead><tr><th>Card</th><th>Rule</th><th>Check</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Pocket Posy</strong></td><td>At most 4 words.</td><td><code>words.length &lt;= 4</code></td></tr>
+          <tr><td><strong>Seven Petals</strong></td><td>Exactly 7 words.</td><td><code>words.length === 7</code></td></tr>
+          <tr><td><strong>Two Breaths</strong></td><td>Exactly 2 words.</td><td><code>words.length === 2</code></td></tr>
+          <tr><td><strong>Tiny Seeds</strong></td><td>Every word 4 letters or fewer.</td><td><code>words.every(w =&gt; w.length &lt;= 4)</code></td></tr>
+          <tr><td><strong>Long Shadow</strong></td><td>At least one word of 8+ letters.</td><td><code>words.some(w =&gt; w.length &gt;= 8)</code></td></tr>
+          <tr><td><strong>The Long Way</strong></td><td>At least 12 words.</td><td><code>words.length &gt;= 12</code></td></tr>
+          <tr><td><strong>Half Measure</strong></td><td>30 characters or fewer.</td><td><code>clue.length &lt;= 30</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Tier II — Letter bans · Regions II–III</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <table>
+        <thead><tr><th>Card</th><th>Rule</th><th>Check</th></tr></thead>
+        <tbody>
+          <tr><td><strong>E's Day Off</strong></td><td>No letter E.</td><td><code>!/e/i.test(clue)</code></td></tr>
+          <tr><td><strong>Bee-Free Patch</strong></td><td>No letter B.</td><td><code>!/b/i.test(clue)</code></td></tr>
+          <tr><td><strong>Vowel Toll</strong></td><td>No letter A.</td><td><code>!/a/i.test(clue)</code></td></tr>
+          <tr><td><strong>Tongue-Tied</strong></td><td>No letter T.</td><td><code>!/t/i.test(clue)</code></td></tr>
+          <tr><td><strong>Serpentless</strong></td><td>No letter S.</td><td><code>!/s/i.test(clue)</code></td></tr>
+          <tr><td><strong>Pull the Weeds</strong></td><td>No A, AN, or THE as whole words.</td><td>word-level set check</td></tr>
+          <tr><td><strong>One Vowel</strong></td><td>Only one distinct vowel in the whole clue.</td><td><code>new Set(clue.match(/[aeiou]/gi)).size &lt;= 1</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Tier III — Structure · Regions III–IV</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <table>
+        <thead><tr><th>Card</th><th>Rule</th><th>Check</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Twin Blossoms</strong></td><td>At least 2 words share a first letter.</td><td>first-letter set size &lt; word count</td></tr>
+          <tr><td><strong>Alliterator's Vow</strong></td><td>Every word starts with the same letter.</td><td>first-letter set size === 1</td></tr>
+          <tr><td><strong>Chain Link</strong></td><td>Each word starts with the previous word's last letter.</td><td>pairwise scan</td></tr>
+          <tr><td><strong>Ascending</strong></td><td>Each word is longer than the one before it.</td><td>strictly increasing lengths</td></tr>
+          <tr><td><strong>Descending</strong></td><td>Each word is shorter than the one before it.</td><td>strictly decreasing lengths</td></tr>
+          <tr><td><strong>Bookends</strong></td><td>First and last word are the same word (min 3 words).</td><td><code>words[0] === words.at(-1)</code></td></tr>
+          <tr><td><strong>Alphabetical</strong></td><td>Word first-letters in non-decreasing alphabetical order.</td><td>sorted-equality check</td></tr>
+          <tr><td><strong>Even Keel</strong></td><td>Every word has an even number of letters.</td><td><code>w.length % 2 === 0</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Tier IV — Answer-relational · Regions IV–V</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <p>These bind the clue to the letters of the answer itself. They are the first tier where the restriction's difficulty depends on which answer you chose — which means the <em>answer</em> becomes a tactical decision, not just a fitting exercise.</p>
+      <table>
+        <thead><tr><th>Card</th><th>Rule</th><th>Check</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Shared Root</strong></td><td>Every clue word shares at least one letter with the answer.</td><td>per-word set intersection</td></tr>
+          <tr><td><strong>Untouched</strong></td><td>No clue word contains <em>any</em> letter from the answer.</td><td>set disjoint</td></tr>
+          <tr><td><strong>Initial Echo</strong></td><td>At least one word starts with the answer's first letter.</td><td>prefix scan</td></tr>
+          <tr><td><strong>Tail Echo</strong></td><td>At least one word ends with the answer's last letter.</td><td>suffix scan</td></tr>
+          <tr><td><strong>Same Length</strong></td><td>At least one word is exactly as long as the answer.</td><td>length scan</td></tr>
+          <tr><td><strong>Hidden Path</strong></td><td>The answer's letters appear in order as a subsequence of the clue's letters.</td><td>two-pointer subsequence</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-warn"><p><strong>Hidden Path needs a guard.</strong> It flirts with giving the answer away, which the existing "answer not in clue" rule already forbids. Keep both: the answer may be spelled out across the clue, but never appear as a contiguous whole word.</p></div>
+    </div>
+  </div>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Tier V — World meta-rules · Region VI</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <p>A single card drawn once for the <em>entire world</em>, binding every clue in the session to each other. Per-slot restrictions still apply on top.</p>
+      <table>
+        <thead><tr><th>Card</th><th>Rule</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Continuity</strong></td><td>Each clue must begin with the last letter of the previous clue.</td></tr>
+          <tr><td><strong>No Reuse</strong></td><td>No word may appear in more than one clue in this world.</td></tr>
+          <tr><td><strong>Shrinking World</strong></td><td>Each clue must be shorter in characters than the one before it.</td></tr>
+          <tr><td><strong>The Same Breath</strong></td><td>Every clue has the same word count — set by whatever your first clue was.</td></tr>
+          <tr><td><strong>One Voice</strong></td><td>Every clue begins with the same letter — set by your first clue.</td></tr>
+          <tr><td><strong>Rising Tide</strong></td><td>Each clue has exactly one more word than the one before it.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-info"><p><strong>Meta-rules are where the first clue becomes the most important decision of the day.</strong> Under <em>One Voice</em> or <em>The Same Breath</em>, your opening clue silently sets the terms for every clue that follows. The UI must make that consequence visible <em>before</em> submission, not after.</p></div>
+    </div>
+  </div>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Tier VI — Cruel · Region VII and the Fiftieth</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <table>
+        <thead><tr><th>Card</th><th>Rule</th></tr></thead>
+        <tbody>
+          <tr><td><strong>No Repeats</strong></td><td>No letter appears twice anywhere in the clue.</td></tr>
+          <tr><td><strong>Silence</strong></td><td>15 characters or fewer.</td></tr>
+          <tr><td><strong>Two Bans</strong></td><td>No E and no A.</td></tr>
+          <tr><td><strong>Voiceless</strong></td><td>No letter from the world's own name may appear in the clue.</td></tr>
+          <tr><td><strong>The Redaction</strong></td><td>Zero occurrences of E, T, A, O, or I.</td></tr>
+          <tr><td><strong>Last Rites</strong></td><td><em>Untouched</em> and <em>Tiny Seeds</em> at once.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-danger"><p><strong>These need playtest calibration more than anything else in this document.</strong> <em>No Repeats</em> on a 3-word clue is fine; on a 7-word clue it is impossible. Tier VI cards must only ever be dealt alongside a permissive shape card, and the deck builder has to enforce that pairing rather than trusting the content author.</p></div>
+    </div>
+  </div>
+
+  <h3>Deck construction rules</h3>
+  <table>
+    <thead><tr><th>Region</th><th>Deck source</th><th>Per slot</th><th>Choice</th></tr></thead>
+    <tbody>
+      <tr><td>I</td><td>Tier I</td><td>1 card</td><td>Free pick</td></tr>
+      <tr><td>II</td><td>Tiers I–II</td><td>1 card</td><td>Free pick</td></tr>
+      <tr><td>III</td><td>Tiers I–III</td><td>1 card</td><td>Free pick</td></tr>
+      <tr><td>IV</td><td>Tiers I–IV</td><td>2 cards (1 shape + 1 other)</td><td>Free pick</td></tr>
+      <tr><td>V</td><td>Tiers I–IV</td><td>2 cards</td><td>2 slots pre-assigned</td></tr>
+      <tr><td>VI</td><td>Tiers I–IV + one Tier V</td><td>2 cards + world meta-rule</td><td>3 slots pre-assigned</td></tr>
+      <tr><td>VII</td><td>Tiers I–VI</td><td>2 cards + world meta-rule</td><td>Half the slots pre-assigned</td></tr>
+      <tr><td>50</td><td>Your seven most-used cards</td><td>2 cards + meta-rule</td><td>All pre-assigned</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="section" id="carry">
+  <h2><span class="num">7</span> Carry-Forward &amp; The Solvability Guarantee</h2>
+  <p class="lede">The single largest technical risk in this design. It has a clean answer, but the answer has to be built, not assumed.</p>
+
+  <h3>How overlap works</h3>
+  <p>The atlas is one continuous coordinate space. Worlds occupy adjacent rectangular regions on it. Where world B borders a <strong>completed</strong> world A, the letters in A's border cells become <strong>fixed seed tiles</strong> in B.</p>
+
+  <div class="grid-demo">
+World A (done)      World B (today)<br>
+· S H O R E ·  →    <b>E</b> _ _ _ _<br>
+· · · · <i>T</i> ·  →    <b>T</b> _ _ _<br>
+· · · · <i>A</i> ·  →    <b>A</b> _ _ _ _ _
+  </div>
+  <p><span class="badge badge-gate">Seeds</span> The last letter of each of A's border words becomes the first letter of a slot in B. Seeds are rendered in the neighbour world's accent colour and labelled with its name, so the player can see <em>which past self</em> caused today's problem.</p>
+
+  <div class="callout callout-danger">
+    <p><strong>The failure mode:</strong> a player writes a perfectly legal answer that leaves a later slot in the same world with a pattern no English word matches. The world becomes unwinnable, the daily allowance is spent, and the atlas is bricked. This <em>will</em> happen without an explicit defence — the player supplies the words, so there is no authored answer key to fall back on.</p>
+  </div>
+
+  <h3>The Lantern Guarantee</h3>
+  <p>Three layers, all deterministic, none involving the judge:</p>
+
+  <ol>
+    <li><strong>Pre-offer check.</strong> A world is only offered as frontier if every slot in it, given its current seed tiles, matches at least <em>K</em> dictionary words. Run at route-reveal time against a precomputed pattern index.</li>
+    <li><strong>Pre-accept check.</strong> When a player submits an answer, before locking it, re-derive the patterns of every remaining slot in the world. If any drops to <strong>zero</strong> matches, reject with a specific message — <em>"That answer closes the path to the fountain. Try another."</em> This is a fit failure, not a judge failure, and it costs the player nothing.</li>
+    <li><strong>Loosen the Knot.</strong> Once per world, the player may release one inherited seed letter. The world stays winnable no matter what. It costs the world's <em>clean clear</em> mark on the atlas — a cosmetic, permanent, visible scar. Never a hard block.</li>
+  </ol>
+
+  <h4>K by region</h4>
+  <table>
+    <thead><tr><th>Region</th><th>I</th><th>II</th><th>III</th><th>IV</th><th>V</th><th>VI</th><th>VII</th><th>50</th></tr></thead>
+    <tbody><tr><td><strong>Min matches</strong></td><td>60</td><td>40</td><td>25</td><td>18</td><td>12</td><td>8</td><td>5</td><td>3</td></tr></tbody>
+  </table>
+  <p>K falling is itself a difficulty lever: by Region VII a slot may have only five legal words in the language, and finding one of them <em>is</em> the puzzle.</p>
+
+  <div class="callout callout-info">
+    <p><strong>Cost of the pattern index.</strong> A 60k-word dictionary indexed by length and letter-position fits comfortably in memory and answers a pattern query in microseconds. Precompute at build time, ship as a static asset, keep it server-side so the client cannot enumerate valid answers. This is the one piece of genuinely new infrastructure the fifty-world design requires.</p>
+  </div>
+</section>
+
+<section class="section" id="judge">
+  <h2><span class="num">8</span> The Judge at Scale</h2>
+  <p class="lede">388 judge calls per full playthrough. The prototype's judge is already correctly scoped; the concern is consistency, cost, and abuse.</p>
+
+  <h3>What stays exactly as it is</h3>
+  <p>The instruction block in <code>src/server/judge.ts</code> is well-built and should not be loosened. It already: treats submitted text as untrusted data rather than instructions, refuses to invent bans the server doesn't enforce, returns a strict two-boolean schema, and fails closed to <code>JudgeUnavailable</code> without consuming the player's restriction. Keep all of that.</p>
+
+  <h3>What has to change for fifty worlds</h3>
+  <table>
+    <thead><tr><th>Concern</th><th>At 10 calls</th><th>At 388 calls</th><th>Response</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Consistency</strong></td><td>Invisible</td><td>Players will find and share edge cases</td><td>Cache verdicts by <code>(answer, normalised clue, judgeVersion)</code>. Identical submissions must always get identical rulings.</td></tr>
+      <tr><td><strong>Cost</strong></td><td>Negligible</td><td>~388 × mini-model per completion</td><td>Still cheap. Cache hits on common short clues will cut it further. Not a blocker.</td></tr>
+      <tr><td><strong>Latency</strong></td><td>~1.7s, fine</td><td>~11 min of cumulative waiting</td><td>Optimistic UI: lock the tile visually on submit, reconcile on verdict. Never make the player watch a spinner 388 times.</td></tr>
+      <tr><td><strong>Abuse</strong></td><td>Bounded by 10/day</td><td>Retries are unbounded</td><td>Per-user daily call ceiling well above honest play (~60), separate from the one-world-per-day rule.</td></tr>
+      <tr><td><strong>Drift</strong></td><td>N/A</td><td>Model updates change verdicts mid-run</td><td><code>JUDGE_VERSION</code> is already there. Pin the model. Never re-judge a locked entry — accepted is accepted, forever.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <p><strong>The one rule that protects a fifty-day run:</strong> a locked entry is never re-evaluated. Not on model upgrade, not on rule change, not on migration. A player who is thirty worlds deep must never log in to find that world 12 has been invalidated.</p>
+  </div>
+</section>
+
+<section class="section" id="r1">
+  <div class="region-head">
+    <h3>Region I · The Shallows</h3>
+    <span class="swatches"><span class="sw" style="background:#E8D5B0"></span><span class="sw" style="background:#7FB3AD"></span><span class="sw" style="background:#C87D5A"></span><span class="sw" style="background:#9B8B7A"></span><span class="sw" style="background:#3A5A63"></span></span>
+    <span class="badge">Worlds 1–7</span><span class="badge badge-complete">Axis: Volume</span>
+  </div>
+  <p class="lede">You wash up with nothing. Sun-bleached, gentle, and quietly wrong under the surface. Every discovery here is a real crossing — one Across, one Down, one shared letter — so the player learns the actual puzzle from day one. What grows across the region is how much of it you do at once.</p>
+
+  <div class="callout callout-warn">
+    <p><strong>Region I is a crossword from world 1.</strong> An earlier draft of this document specified "no crossings" here, which contradicted the shipped prototype — <code>worlds.ts</code> Sandy Shore already pairs an Across at <code>(2,0,len 5)</code> with a Down at <code>(0,1,len 6)</code> that meet at <code>(2,1)</code>, and <code>rules.ts</code> validates the shared letter. Stripping crossings would make the first seven days a word-prompt worksheet and would invalidate Phase 1 as the kill gate: you cannot test whether an interlocking atlas is fun with a build that does not interlock. <strong>Every discovery pair crosses exactly once. 16 crossings across the region.</strong></p>
+  </div>
+
+  <table>
+    <thead><tr><th>#</th><th>World</th><th>Slots</th><th>Premise</th><th>What it teaches</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1</strong></td><td><strong>Sandy Shore</strong></td><td>4</td><td>Where you wash up. Two paths appear in the shifting sand.</td><td>The core act: answer + clue + judge, against one shared letter per discovery.</td></tr>
+      <tr><td><strong>2</strong></td><td><strong>Glass Reach</strong></td><td>4</td><td>A beach of sea-glass that hums faintly when you name a piece.</td><td>Restrictions exist and are one-use. Word lengths stop being uniform.</td></tr>
+      <tr><td><strong>3</strong></td><td><strong>The Wrackline</strong></td><td>4</td><td>The tide's leavings. Everything here belonged to someone.</td><td>Spending order matters — the deck is exactly the size of the world.</td></tr>
+      <tr><td><strong>4</strong></td><td><strong>Gullery</strong></td><td>4</td><td>Cliffs of arguing birds. They stop when you get one right.</td><td>Shape cards can conflict with each other. First real planning beat.</td></tr>
+      <tr><td><strong>5</strong></td><td><strong>Low Water</strong></td><td>6</td><td>The sea pulls back much further than it should, and stays back.</td><td>Session length steps up. Three discoveries, not two.</td></tr>
+      <tr><td><strong>6</strong></td><td><strong>The Bell Buoy</strong></td><td>4</td><td>A bell rings offshore. Nobody is out there to ring it.</td><td>Breather. Introduces 3-letter slots, which are harder to clue, not easier.</td></tr>
+      <tr><td><strong>7</strong></td><td><strong>⛩ The Long Pier</strong> <span class="badge badge-gate">Gate</span></td><td>6</td><td>A pier that continues further out than the map has room for.</td><td>Region capstone. One crossing reaches <em>between</em> discoveries — a preview of Region II.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Discoveries &amp; adjacency</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <p><span class="world-tag">1</span> Sand drifts · Tide pool &nbsp;&nbsp; <span class="world-tag">2</span> Green shard · Bottle neck &nbsp;&nbsp; <span class="world-tag">3</span> Rope knot · Salt-stiff coat</p>
+      <p><span class="world-tag">4</span> Nest ledge · Loud stone &nbsp;&nbsp; <span class="world-tag">5</span> Wet flats · Buried keel · Old channel &nbsp;&nbsp; <span class="world-tag">6</span> Iron tongue · Rope line</p>
+      <p><span class="world-tag">7</span> First piling · Missing plank · Fog end</p>
+      <p><strong>Adjacency:</strong> 1 → {2, 3}. 2 → {4, 5}. 3 → {5, 6}. 4 → {6}. 5 → {6}. All → 7 (Gate). 7 → Region II.</p>
+    </div>
+  </div>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Verified grid spec — 32 slots, 16 crossings</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <p>Coordinates are 1-based <code>(row, col)</code>. Every pair crosses at exactly one cell; the shared letter is shown. Machine-checked for letter agreement, card compliance, duplicate cards, answer-in-clue, and accidental adjacent runs.</p>
+      <table>
+        <thead><tr><th>World</th><th>Discovery</th><th>Across</th><th>Down</th><th>Cross</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="2"><strong>1 Sandy Shore</strong></td><td>Sand drifts</td><td>1A (2,1) SAND · Pocket Posy</td><td>1D (1,3) ANTS · Two Breaths</td><td>(2,3) <strong>N</strong></td></tr>
+          <tr><td>Tide pool</td><td>2A (8,1) COAST · Half Measure</td><td>2D (7,2) FOAM · Tiny Seeds</td><td>(8,2) <strong>O</strong></td></tr>
+          <tr><td rowspan="2"><strong>2 Glass Reach</strong></td><td>Green shard</td><td>1A (2,1) GLASS · Pocket Posy</td><td>1D (1,3) WAVE · Two Breaths</td><td>(2,3) <strong>A</strong></td></tr>
+          <tr><td>Bottle neck</td><td>2A (8,2) TIDE · Tiny Seeds</td><td>2D (6,3) SHINE · Long Shadow</td><td>(8,3) <strong>I</strong></td></tr>
+          <tr><td rowspan="2"><strong>3 The Wrackline</strong></td><td>Rope knot</td><td>1A (3,1) ROPE · Two Breaths</td><td>1D (1,2) FLOAT · Pocket Posy</td><td>(3,2) <strong>O</strong></td></tr>
+          <tr><td>Salt-stiff coat</td><td>2A (9,1) SALT · Half Measure</td><td>2D (9,4) TORN · Tiny Seeds</td><td>(9,4) <strong>T</strong></td></tr>
+          <tr><td rowspan="2"><strong>4 Gullery</strong></td><td>Nest ledge</td><td>1A (2,1) NEST · Pocket Posy</td><td>1D (1,3) ISLE · Two Breaths</td><td>(2,3) <strong>S</strong></td></tr>
+          <tr><td>Loud stone</td><td>2A (8,1) STONE · Half Measure</td><td>2D (7,3) LOUD · Tiny Seeds</td><td>(8,3) <strong>O</strong></td></tr>
+          <tr><td rowspan="3"><strong>5 Low Water</strong></td><td>Wet flats</td><td>1A (3,1) FLAT · Pocket Posy</td><td>1D (1,3) SHALE · Long Shadow</td><td>(3,3) <strong>A</strong></td></tr>
+          <tr><td>Buried keel</td><td>2A (9,1) KEEL · Two Breaths</td><td>2D (8,2) BEAMS · Tiny Seeds</td><td>(9,2) <strong>E</strong></td></tr>
+          <tr><td>Old channel</td><td>3A (15,1) CANAL · Seven Petals</td><td>3D (14,3) INLET · Half Measure</td><td>(15,3) <strong>N</strong></td></tr>
+          <tr><td rowspan="2"><strong>6 The Bell Buoy</strong></td><td>Iron tongue</td><td>1A (2,2) BELL · Two Breaths</td><td>1D (2,2) BUOY · Pocket Posy</td><td>(2,2) <strong>B</strong></td></tr>
+          <tr><td>Rope line</td><td>2A (8,1) IRON · Half Measure</td><td>2D (7,3) FOG · Tiny Seeds</td><td>(8,3) <strong>O</strong></td></tr>
+          <tr><td rowspan="3"><strong>7 The Long Pier</strong> <span class="badge badge-gate">Gate</span></td><td>First piling</td><td>1A (2,1) PIER · Pocket Posy</td><td>1D (2,1) POST · Two Breaths</td><td>(2,1) <strong>P</strong></td></tr>
+          <tr><td>Missing plank</td><td>2A (9,1) PLANK · Half Measure</td><td>2D (7,3) GRAIN · Tiny Seeds</td><td>(9,3) <strong>A</strong></td></tr>
+          <tr><td>Fog end</td><td>3A (11,1) CANOE · Seven Petals</td><td>3D (11,1) CRANE · Long Shadow</td><td>(11,1) <strong>C</strong> &nbsp;+&nbsp; (11,3) <strong>N</strong> shared with 2D GRAIN</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-success">
+        <p><strong>The Gate's cross-discovery link.</strong> <code>3A CANOE</code> runs through <code>(11,3)</code>, which is the final letter of <code>2D GRAIN</code> written in the previous discovery. That single cell is the whole preview of Region II: an answer you already locked now constrains one you haven't written yet.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="r2">
+  <div class="region-head">
+    <h3>Region II · The Hedge</h3>
+    <span class="swatches"><span class="sw" style="background:#C4B5D4"></span><span class="sw" style="background:#5B4464"></span><span class="sw" style="background:#8CA37B"></span><span class="sw" style="background:#E5A954"></span><span class="sw" style="background:#2A3328"></span></span>
+    <span class="badge">Worlds 8–14</span><span class="badge badge-complete">Axis: Cross-discovery</span>
+  </div>
+  <p class="lede">Cultivated and wrong. Somebody planted all this deliberately and then left. Pair crossings are now assumed; what changes here is that crossings reach <em>between</em> discoveries. An answer you locked in discovery one dictates a letter in discovery three, an hour later in the same session — so the planning horizon stops being one pair wide.</p>
+
+  <table>
+    <thead><tr><th>#</th><th>World</th><th>Slots</th><th>Premise</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td><strong>8</strong></td><td><strong>Haunted Hedge</strong></td><td>6</td><td>Beyond a crooked gate, the hedges are quietly watching.</td><td>First cross-discovery link — one letter, carried forward, clearly signposted.</td></tr>
+      <tr><td><strong>9</strong></td><td><strong>The Knot Garden</strong></td><td>6</td><td>Paths that tie themselves while you're looking somewhere else.</td><td>Two cross-discovery links, and they meet on the same cell.</td></tr>
+      <tr><td><strong>10</strong></td><td><strong>Glasshouse</strong></td><td>6</td><td>Everything inside is out of season, confidently.</td><td>Inherited letters are revealed <em>before</em> you pick your restriction.</td></tr>
+      <tr><td><strong>11</strong></td><td><strong>The Espalier</strong></td><td>4</td><td>Trees pinned flat against a wall, still growing sideways.</td><td>Breather, concentrated: all four slots are chained into one lattice.</td></tr>
+      <tr><td><strong>12</strong></td><td><strong>Statuary Walk</strong></td><td>6</td><td>The statues come to a different number every time you count them.</td><td>One slot's length is hidden until you commit a restriction to it.</td></tr>
+      <tr><td><strong>13</strong></td><td><strong>The Maze Hedge</strong></td><td>8</td><td>Wrong turns are still turns. Nobody said they weren't.</td><td>Non-linear discovery order — you choose which path to open next, and it changes what you inherit.</td></tr>
+      <tr><td><strong>14</strong></td><td><strong>⛩ The Moon Gate</strong> <span class="badge badge-gate">Gate</span></td><td>8</td><td>A perfectly round door in the hedge. It is standing open.</td><td>Every slot crosses at least two others. First fully connected lattice.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Discoveries &amp; adjacency</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <p><span class="world-tag">8</span> Rusted gate · Watchful topiary · Moon shadow &nbsp;&nbsp; <span class="world-tag">9</span> Tied path · Box border · Centre stone</p>
+      <p><span class="world-tag">10</span> Cracked pane · Out of season · Condensation &nbsp;&nbsp; <span class="world-tag">11</span> Pinned branch · Wall fruit</p>
+      <p><span class="world-tag">12</span> First plinth · The extra one · Averted face &nbsp;&nbsp; <span class="world-tag">13</span> Wrong turn · Dead end · False centre · Way back</p>
+      <p><span class="world-tag">14</span> Round door · Threshold · Far side · Nothing behind</p>
+      <p><strong>Adjacency:</strong> 8 → {9, 10}. 9 → {11, 12}. 10 → {11, 13}. 11 → {12, 13}. 12, 13 → each other. All → 14 (Gate).</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="r3">
+  <div class="region-head">
+    <h3>Region III · The Hollow</h3>
+    <span class="swatches"><span class="sw" style="background:#6B7F4E"></span><span class="sw" style="background:#5A4632"></span><span class="sw" style="background:#7E96B0"></span><span class="sw" style="background:#C9A227"></span><span class="sw" style="background:#22261C"></span></span>
+    <span class="badge">Worlds 15–21</span><span class="badge badge-complete">Axis: Carry-forward</span>
+  </div>
+  <p class="lede">Past the hedge the planting stops and the wood does not. This is where words you wrote days ago start showing up as fixed letters in today's grid — the first time the atlas stops being a menu and starts being a consequence.</p>
+
+  <table>
+    <thead><tr><th>#</th><th>World</th><th>Slots</th><th>Premise</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td><strong>15</strong></td><td><strong>Rootfall</strong></td><td>6</td><td>Where the hedge ends and something older takes over.</td><td>First seed tiles. Two inherited letters, both clearly attributed.</td></tr>
+      <tr><td><strong>16</strong></td><td><strong>The Spore Market</strong></td><td>6</td><td>Everything is priced. Nobody is selling.</td><td>Seeds scale with how many neighbours you've already completed.</td></tr>
+      <tr><td><strong>17</strong></td><td><strong>Deadfall</strong></td><td>6</td><td>A tree came down a long time ago and is still coming down.</td><td>Introduces <em>Loosen the Knot</em> explicitly, as a tutorial beat.</td></tr>
+      <tr><td><strong>18</strong></td><td><strong>The Quiet Mushroom</strong></td><td>4</td><td>It unfolds politely. It has been saving this spot.</td><td>Breather. Four slots, every letter seeded from elsewhere.</td></tr>
+      <tr><td><strong>19</strong></td><td><strong>Badger Court</strong></td><td>8</td><td>A hearing is in session and you have been called as a witness.</td><td>Slots must be completed in a fixed order. No routing inside the world.</td></tr>
+      <tr><td><strong>20</strong></td><td><strong>The Mycelium</strong></td><td>8</td><td>Everything down here already knows what you're going to write.</td><td>Seeds from <em>non-adjacent</em> completed worlds. The network reaches.</td></tr>
+      <tr><td><strong>21</strong></td><td><strong>⛩ The Hollow Oak</strong> <span class="badge badge-gate">Gate</span></td><td>8</td><td>The inside is larger than the outside. Obviously.</td><td>Seeded from all six Hollow worlds at once.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Discoveries &amp; adjacency</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <p><span class="world-tag">15</span> Torn earth · Under-root · First dark &nbsp;&nbsp; <span class="world-tag">16</span> Empty stall · Set price · No seller</p>
+      <p><span class="world-tag">17</span> Leaning trunk · Slow collapse · New growth &nbsp;&nbsp; <span class="world-tag">18</span> Saved spot · Patient cap</p>
+      <p><span class="world-tag">19</span> The summons · Sworn in · Cross-examined · Verdict &nbsp;&nbsp; <span class="world-tag">20</span> First thread · The network · Already known · Reply</p>
+      <p><span class="world-tag">21</span> Bark door · Inner ring · Larger inside · Heartwood</p>
+      <p><strong>Adjacency:</strong> 15 → {16, 17}. 16 → {18, 19}. 17 → {18, 20}. 18 → {19, 20}. 19, 20 → each other. All → 21 (Gate).</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="r4">
+  <div class="region-head">
+    <h3>Region IV · The Works</h3>
+    <span class="swatches"><span class="sw" style="background:#B5522F"></span><span class="sw" style="background:#C9A54E"></span><span class="sw" style="background:#22201E"></span><span class="sw" style="background:#E8722C"></span><span class="sw" style="background:#3E6B66"></span></span>
+    <span class="badge">Worlds 22–28</span><span class="badge badge-complete">Axis: Stacking</span>
+  </div>
+  <p class="lede">Human hands made all of this and then stopped coming. It never shut down. Two restrictions per slot from here on — the combinatorics do the work, no new rules required.</p>
+
+  <table>
+    <thead><tr><th>#</th><th>World</th><th>Slots</th><th>Premise</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td><strong>22</strong></td><td><strong>The Cut</strong></td><td>8</td><td>A canal with no water in it, and a barge that is still moving.</td><td>First stacked pair. Deliberately compatible cards.</td></tr>
+      <tr><td><strong>23</strong></td><td><strong>Pump House</strong></td><td>8</td><td>Something is being drained. It isn't water.</td><td>You choose both cards, and may pick a bad pair. No warning.</td></tr>
+      <tr><td><strong>24</strong></td><td><strong>The Foundry</strong></td><td>8</td><td>Moulds for shapes that don't exist yet.</td><td>Tier IV enters: restrictions that key off your own answer's letters.</td></tr>
+      <tr><td><strong>25</strong></td><td><strong>Signal Box</strong></td><td>6</td><td>Levers for tracks that were never laid.</td><td>Breather. Six slots, but the deck holds only six cards for twelve picks.</td></tr>
+      <tr><td><strong>26</strong></td><td><strong>The Long Chimney</strong></td><td>8</td><td>The smoke goes down.</td><td>Discoveries resolve bottom-to-top; seeds arrive from the last slot first.</td></tr>
+      <tr><td><strong>27</strong></td><td><strong>Slag Field</strong></td><td>8</td><td>Glass that still remembers being ore.</td><td>Two slots share an answer — one word, two clues, two restrictions.</td></tr>
+      <tr><td><strong>28</strong></td><td><strong>⛩ The Turbine Hall</strong> <span class="badge badge-gate">Gate</span></td><td>10</td><td>It has been running this entire time.</td><td>Ten slots, twenty restriction picks, one shared deck of ten.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Discoveries &amp; adjacency</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <p><span class="world-tag">22</span> Dry lock · Tow path · Moving barge · Low bridge &nbsp;&nbsp; <span class="world-tag">23</span> Intake · Pressure gauge · What's draining · Overflow</p>
+      <p><span class="world-tag">24</span> Cold crucible · Empty mould · Shape unmade · The pour &nbsp;&nbsp; <span class="world-tag">25</span> First lever · Phantom track · Green light</p>
+      <p><span class="world-tag">26</span> Base flue · Inverted draught · Soot line · Down-smoke &nbsp;&nbsp; <span class="world-tag">27</span> Cooled glass · Ore memory · Sharp ground · Slow shine</p>
+      <p><span class="world-tag">28</span> Door seal · Floor hum · Main shaft · The governor · Still running</p>
+      <p><strong>Adjacency:</strong> 22 → {23, 24, 25}. 23 → {25, 26}. 24 → {26, 27}. 25 → {27}. 26, 27 → each other. All → 28 (Gate). Frontier now shows <strong>3</strong> destinations.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="r5">
+  <div class="region-head">
+    <h3>Region V · The Drift</h3>
+    <span class="swatches"><span class="sw" style="background:#A8B4C0"></span><span class="sw" style="background:#EDE8DE"></span><span class="sw" style="background:#6B5F8C"></span><span class="sw" style="background:#D4C078"></span><span class="sw" style="background:#38414F"></span></span>
+    <span class="badge">Worlds 29–35</span><span class="badge badge-complete">Axis: Compulsion</span>
+  </div>
+  <p class="lede">The ground lets go. Up here the wind decides some things for you — restrictions begin arriving pre-assigned, and choice is removed precisely where you'd most want it.</p>
+
+  <table>
+    <thead><tr><th>#</th><th>World</th><th>Slots</th><th>Premise</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td><strong>29</strong></td><td><strong>The Updraft</strong></td><td>8</td><td>The ground lets go and does not apologise.</td><td>One slot's restriction is forced. It is announced in advance.</td></tr>
+      <tr><td><strong>30</strong></td><td><strong>Cloudbank</strong></td><td>8</td><td>A bank. For clouds. There are deposits and there is interest.</td><td>Forced restrictions are hidden until the slot is revealed.</td></tr>
+      <tr><td><strong>31</strong></td><td><strong>The Kite Field</strong></td><td>8</td><td>Every kite has a string. None of them reach the ground.</td><td>You may swap one forced card for a random replacement. Blind.</td></tr>
+      <tr><td><strong>32</strong></td><td><strong>Thin Air</strong></td><td>6</td><td>Fewer words up here, and they cost more.</td><td>Breather, concentrated: <em>every</em> restriction is forced.</td></tr>
+      <tr><td><strong>33</strong></td><td><strong>The Weather House</strong></td><td>8</td><td>Two little figures. Only one of them ever comes out.</td><td>Two slots, mutually exclusive cards: choosing for one forbids it in the other.</td></tr>
+      <tr><td><strong>34</strong></td><td><strong>Stormline</strong></td><td>8</td><td>The words arrive before the thunder does.</td><td>Slots reveal in pairs — plan two at once or lose the option.</td></tr>
+      <tr><td><strong>35</strong></td><td><strong>⛩ The Eye</strong> <span class="badge badge-gate">Gate</span></td><td>10</td><td>Calm, and completely surrounded.</td><td>Outer eight forced, inner two free. The calm is the reward.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Discoveries &amp; adjacency</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <p><span class="world-tag">29</span> Let go · First lift · Thermal · Above the tree line &nbsp;&nbsp; <span class="world-tag">30</span> Teller window · Deposit slip · Vault of vapour · Withdrawal</p>
+      <p><span class="world-tag">31</span> Loose string · The tangle · High flier · No anchor &nbsp;&nbsp; <span class="world-tag">32</span> Short breath · Costly word · The summit</p>
+      <p><span class="world-tag">33</span> Two doors · The one who stays · Barometer · Change coming &nbsp;&nbsp; <span class="world-tag">34</span> The flash · The count · Thunder · Arrived late</p>
+      <p><span class="world-tag">35</span> Outer wall · Calm centre · Surrounded · Other side · Second wall</p>
+      <p><strong>Adjacency:</strong> 29 → {30, 31, 32}. 30 → {32, 33}. 31 → {33, 34}. 32 → {34}. 33, 34 → each other. All → 35 (Gate).</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="r6">
+  <div class="region-head">
+    <h3>Region VI · The Reliquary</h3>
+    <span class="swatches"><span class="sw" style="background:#EDE4D3"></span><span class="sw" style="background:#C09A9A"></span><span class="sw" style="background:#A88C4A"></span><span class="sw" style="background:#8E9296"></span><span class="sw" style="background:#D9CFB8"></span></span>
+    <span class="badge">Worlds 36–42</span><span class="badge badge-complete">Axis: Meta-rules</span>
+  </div>
+  <p class="lede">A museum of everything the world has forgotten, and every label is wrong. Each world here carries a single constraint binding all of its clues to one another — your first sentence quietly sets the terms for the whole session.</p>
+
+  <table>
+    <thead><tr><th>#</th><th>World</th><th>Slots</th><th>Premise</th><th>Meta-rule</th></tr></thead>
+    <tbody>
+      <tr><td><strong>36</strong></td><td><strong>The Vitrine</strong></td><td>10</td><td>Glass cases. Your reflection is running slightly behind you.</td><td><strong>Continuity</strong> — each clue starts with the previous clue's last letter.</td></tr>
+      <tr><td><strong>37</strong></td><td><strong>Card Catalog</strong></td><td>8</td><td>Every card refers you to another card.</td><td>Breather. <strong>No Reuse</strong> — no word twice across the whole world.</td></tr>
+      <tr><td><strong>38</strong></td><td><strong>The Wax Gallery</strong></td><td>10</td><td>Likenesses of people who were never here.</td><td><strong>The Same Breath</strong> — every clue matches your first clue's word count.</td></tr>
+      <tr><td><strong>39</strong></td><td><strong>Hall of Maps</strong></td><td>10</td><td>Every map on the wall is a map of this room.</td><td><strong>One Voice</strong> — every clue begins with the same letter.</td></tr>
+      <tr><td><strong>40</strong></td><td><strong>The Sound Archive</strong></td><td>10</td><td>Recordings of rooms. No voices on any of them.</td><td><strong>Shrinking World</strong> — each clue shorter than the last.</td></tr>
+      <tr><td><strong>41</strong></td><td><strong>Storage B</strong></td><td>10</td><td>Everything that didn't make it into the exhibit.</td><td><strong>Rising Tide</strong> — each clue exactly one word longer than the last.</td></tr>
+      <tr><td><strong>42</strong></td><td><strong>⛩ The Accession Desk</strong> <span class="badge badge-gate">Gate</span></td><td>12</td><td>You are being catalogued. The form is very thorough.</td><td>You <em>choose</em> the meta-rule before starting — and cannot change it.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Discoveries &amp; adjacency</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <p><span class="world-tag">36</span> First case · Lagging reflection · Dust seal · Label error · Locked drawer</p>
+      <p><span class="world-tag">37</span> Drawer A · See also · Circular reference · No such card</p>
+      <p><span class="world-tag">38</span> Unknown sitter · Warm hand · Melted hem · Almost right · The mirror figure</p>
+      <p><span class="world-tag">39</span> North wall · This room · You are here · Fold line · Blank legend</p>
+      <p><span class="world-tag">40</span> Reel one · Room tone · No voices · Tape hiss · The gap</p>
+      <p><span class="world-tag">41</span> Crate stack · Not exhibited · Wrong accession · Duplicate · Deaccessioned</p>
+      <p><span class="world-tag">42</span> Intake form · Your details · Condition report · Assigned number · Shelf mark · Catalogued</p>
+      <p><strong>Adjacency:</strong> 36 → {37, 38, 39}. 37 → {39, 40}. 38 → {40, 41}. 39 → {41}. 40, 41 → each other. All → 42 (Gate).</p>
+    </div>
+  </div>
+
+  <div class="callout callout-warn">
+    <p><strong>UI requirement, not optional.</strong> Under a meta-rule the first clue is the highest-stakes decision of the session, and a player who doesn't realise that will feel cheated at slot 7. The composer must show the live meta-constraint — "every clue must now have 5 words" — the instant it locks, and preview it while drafting.</p>
+  </div>
+</section>
+
+<section class="section" id="r7">
+  <div class="region-head">
+    <h3>Region VII · The Unmaking</h3>
+    <span class="swatches"><span class="sw" style="background:#2B2A4A"></span><span class="sw" style="background:#F2EFE8"></span><span class="sw" style="background:#B03A3A"></span><span class="sw" style="background:#4A4A50"></span><span class="sw" style="background:#9A9AA0"></span></span>
+    <span class="badge">Worlds 43–49</span><span class="badge badge-complete">Axis: Subtraction</span>
+  </div>
+  <p class="lede">The world comes apart into the words it was made of. Letters leave the board. Slots arrive pre-filled and wrong. This is the only region where the grid actively works against you rather than merely constraining you.</p>
+
+  <table>
+    <thead><tr><th>#</th><th>World</th><th>Slots</th><th>Premise</th><th>Twist</th></tr></thead>
+    <tbody>
+      <tr><td><strong>43</strong></td><td><strong>The Margin</strong></td><td>10</td><td>Past the edge of the written part.</td><td>Slots extend beyond the visible grid. Length unknown until you commit.</td></tr>
+      <tr><td><strong>44</strong></td><td><strong>Erasure</strong></td><td>10</td><td>A letter leaves the board each turn. You choose which one.</td><td>After each accept, you delete one letter from the atlas. Forever.</td></tr>
+      <tr><td><strong>45</strong></td><td><strong>The Redaction</strong></td><td>10</td><td>Some slots are already filled in, and they are wrong.</td><td>Pre-filled wrong answers you must write <em>around</em>, not over.</td></tr>
+      <tr><td><strong>46</strong></td><td><strong>Palimpsest</strong></td><td>8</td><td>There is an older world underneath this one.</td><td>Breather. Seeds come from a <em>ghost</em> grid you never played.</td></tr>
+      <tr><td><strong>47</strong></td><td><strong>The Stutter</strong></td><td>10</td><td>The same slot, three times, differently.</td><td>Three slots demand three distinct answers to the same pattern.</td></tr>
+      <tr><td><strong>48</strong></td><td><strong>Blank Verse</strong></td><td>10</td><td>The grid is mostly nothing. The nothing is load-bearing.</td><td>Sparse grid, almost no crossings — and Tier VI cards on every slot.</td></tr>
+      <tr><td><strong>49</strong></td><td><strong>⛩ The Vanishing Point</strong> <span class="badge badge-gate">Gate</span></td><td>12</td><td>Everything converges. One slot runs the whole length of the world.</td><td>An 11-letter spine that every other slot crosses. Write it last.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="collapsible">
+    <button class="collapsible-trigger" aria-expanded="false"><span>Discoveries &amp; adjacency</span><span class="chevron">▸</span></button>
+    <div class="collapsible-body">
+      <p><span class="world-tag">43</span> Edge of text · The gutter · Annotation · Unwritten · Off the page</p>
+      <p><span class="world-tag">44</span> First removal · Chosen letter · The gap widens · Held together · What's left</p>
+      <p><span class="world-tag">45</span> Filled wrong · Struck through · Corrected · Still wrong · Stet</p>
+      <p><span class="world-tag">46</span> Top layer · Scraped · Older text · Underneath</p>
+      <p><span class="world-tag">47</span> First pass · Again · Differently · Once more · Settled</p>
+      <p><span class="world-tag">48</span> Mostly nothing · Load-bearing void · Thin scaffold · One word holds · Negative space</p>
+      <p><span class="world-tag">49</span> Convergence · Horizon · The long slot · Everything crosses · Last light · The point</p>
+      <p><strong>Adjacency:</strong> 43 → {44, 45, 46}. 44 → {46, 47}. 45 → {47, 48}. 46 → {48}. 47, 48 → each other. All → 49 (Gate).</p>
+    </div>
+  </div>
+
+  <div class="callout callout-danger">
+    <p><strong>World 44 is the riskiest design in the document.</strong> Letting a player delete a letter from the permanent atlas is thematically perfect and mechanically dangerous — it can retroactively invalidate a completed word in another world. <strong>Rule: deletion only affects tiles that are not load-bearing crossings for any completed entry.</strong> The board must grey out illegal deletions rather than allowing and then rejecting them. If that constraint leaves too few legal targets to be interesting, cut the world rather than weakening the invariant.</p>
+  </div>
+</section>
+
+<section class="section" id="w50">
+  <div class="region-head">
+    <h3>The Fiftieth · The Cartographer's Table</h3>
+    <span class="swatches"><span class="sw" style="background:#E8D5B0"></span><span class="sw" style="background:#5B4464"></span><span class="sw" style="background:#6B7F4E"></span><span class="sw" style="background:#B5522F"></span><span class="sw" style="background:#6B5F8C"></span><span class="sw" style="background:#A88C4A"></span><span class="sw" style="background:#2B2A4A"></span></span>
+    <span class="badge badge-gate">World 50</span><span class="badge">14 slots</span>
+  </div>
+
+  <p class="lede">The atlas folds down into a single grid. Every crossing letter in it was written by you, in one of the forty-nine worlds behind you, and every one is labelled with where it came from.</p>
+
+  <div class="callout callout-success">
+    <p><strong>No two players ever play the same fiftieth world.</strong> The grid is generated from the player's own answer history — which means the finale is not content the team authored, it is content the player authored across seven weeks without realising it. That is the whole payoff of the fifty-day structure, and it is the reason the design is worth building at this scale.</p>
+  </div>
+
+  <h3>How the grid is generated</h3>
+  <ol>
+    <li>Take one accepted answer from each of the seven regions — the player's <strong>longest</strong> in each, ties broken by earliest.</li>
+    <li>Lay those seven as the grid's spine, intersecting at shared letters. Colour each in its home region's accent.</li>
+    <li>Generate fourteen open slots crossing that spine, verified solvable at <strong>K = 3</strong>.</li>
+    <li>Hover any crossing letter to see the world, the date, and the clue you wrote for it.</li>
+  </ol>
+
+  <h4>Seven discoveries</h4>
+  <p><strong>The fold</strong> · <strong>Seven regions</strong> · <strong>Your first word</strong> · <strong>Your worst clue</strong> · <strong>The Long Pier returns</strong> · <strong>Every crossing</strong> · <strong>The Last Word</strong></p>
+
+  <h3>The restriction deck</h3>
+  <p>Your seven most-frequently-spent cards across the whole atlas, dealt back to you. <strong>All fourteen slots are pre-assigned</strong> — there is no choosing left. The game hands you the constraints you leaned on most and asks you to use them one final time, which reads as either a gift or an indictment depending on how you played.</p>
+
+  <h3>The Last Word</h3>
+  <p>The final slot is eleven letters and crosses every region spine. It cannot be started until the other thirteen are locked. Its clue carries a single restriction: <strong>Bookends</strong> — the first and last word of the clue must be the same word. The sentence closes on itself, and so does the atlas.</p>
+</section>
+
+<section class="section" id="payoff">
+  <h2><span class="num">9</span> Completion Payoff</h2>
+  <p class="lede">Fifty days is a serious ask. The ending has to be worth the commitment, and it has to be shareable — this is Reddit.</p>
+
+  <div class="card-grid">
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--accent-glow);color:var(--accent)">1</span> The Atlas</div><p>All fifty worlds render as one continuous illustrated map, fully lit, each in its region's palette. Clean-cleared worlds glow; worlds where you loosened a knot carry a visible scar. Exportable as a single tall image.</p></div>
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--green-bg);color:var(--green)">2</span> Your Lexicon</div><p>All ~388 answers and the clues you wrote for them, dated, grouped by world. This is the real trophy. It is not a score — it is seven weeks of your own writing.</p></div>
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--purple-bg);color:var(--purple)">3</span> The Shareable</div><p>A generated Reddit post: your finished atlas, your Last Word, and three clues the game picked out as your best. Zero spoilers for anyone still playing — nobody else's grid matches yours.</p></div>
+    <div class="card"><div class="card-title"><span class="num" style="background:var(--orange-bg);color:var(--orange)">4</span> The Second Atlas</div><p>New game plus. Same fifty worlds, one added rule: <strong>every answer you used the first time is banned.</strong> Costs no new content and is meaningfully harder.</p></div>
+  </div>
+
+  <h3>Mid-run payoffs</h3>
+  <p>Nobody plays fifty days on the promise of day fifty. Each of the seven Gates has to land as its own ending:</p>
+  <ul>
+    <li><strong>The region transforms.</strong> Clearing a Gate re-renders all seven of its worlds in their final, fully-lit state on the atlas.</li>
+    <li><strong>A Region Card.</strong> A small illustrated card naming your best clue in that region, shareable on its own.</li>
+    <li><strong>One restriction retires.</strong> You pick a card you never want to see again. It leaves your pool permanently. Small, personal, and it makes the next region feel like yours.</li>
+  </ul>
+
+  <div class="callout callout-info">
+    <p><strong>Seven endings, not one.</strong> A player who stops at world 21 should still feel they finished something. That is the difference between a fifty-day game and a fifty-day chore.</p>
+  </div>
+</section>
+
+<section class="section" id="model">
+  <h2><span class="num">10</span> Data Model</h2>
+  <p class="lede">What has to change from the current prototype. Most of it is additive.</p>
+
+  <h3>World definition — extends the existing shape</h3>
+  <p>Today's <code>WorldDefinition</code> in <code>src/shared/worlds.ts</code> already carries <code>id</code>, <code>scenario</code>, <code>apiRoot</code>, <code>name</code>, <code>chapter</code>, <code>noun</code>, and a <code>days[]</code> array of across/down pairs. It needs region metadata, deck configuration, and atlas placement:</p>
+
+<pre><code>type WorldDefinition = {
+  // ...all existing fields unchanged...
+  region: RegionId;              // "shallows" | "hedge" | ... | "unmaking"
+  ordinal: number;               // 1-50, for display and gating
+  kind: "open" | "breather" | "gate";
+  atlas: { x: number; y: number; w: number; h: number };  // placement
+  neighbours: string[];          // world ids sharing a border
+  deck: {
+    tiers: TierId[];             // which tiers this world may draw from
+    cardsPerSlot: 1 | 2;
+    forcedSlots: number[];       // slot indices with pre-assigned cards
+    metaRule?: MetaRuleId;       // Region VI+
+  };
+  minMatches: number;            // K for the Lantern Guarantee
+};</code></pre>
+
+  <h3>New: atlas progress (per user, Redis)</h3>
+<pre><code>type AtlasProgress = {
+  completed: Record&lt;string, WorldResult&gt;;  // worldId -> result
+  frontier: string[];                      // currently enterable world ids
+  activeWorld: string | null;
+  lastCompletedDate: string;               // YYYY-MM-DD, enforces 1/day
+  streak: number;
+  retiredCards: CardId[];                  // one per Gate cleared
+  knotsLoosened: string[];                 // worldIds carrying a scar
+};
+
+type WorldResult = {
+  entries: { slot: number; answer: string; clue: string;
+             cards: CardId[]; at: number }[];
+  cleanClear: boolean;
+  completedAt: number;
+};</code></pre>
+
+  <h3>New: the pattern index</h3>
+  <p>A build-time artifact, not a runtime service. Index a ~60k-word dictionary by <code>(length, position, letter)</code> into bitsets; a pattern query is a series of intersections. Ships as a static server-side asset. Never exposed to the client — otherwise the client can enumerate every legal answer and the game is over.</p>
+
+  <h3>Carried forward unchanged</h3>
+  <ul>
+    <li>The <code>validateTurn</code> deterministic gate in <code>src/shared/rules.ts</code> — extended with new cards, same structure.</li>
+    <li>The judge contract, instruction block, timeout, and <code>JudgeUnavailable</code> fail-closed behaviour.</li>
+    <li>Draft persistence and the save-before-switch guard already built for the world picker.</li>
+    <li>Per-world scenario keys and API roots — these scale to fifty without change.</li>
+  </ul>
+
+  <div class="callout callout-warn">
+    <p><strong>Fifty hand-authored worlds is the real cost, and it is not in the code.</strong> Each needs a grid layout, atlas placement, a verified-solvable slot set, discovery names, and palette work. Budget an authoring tool plus a validator that runs the Lantern Guarantee across all fifty at build time. Hand-checking fifty grids will not hold.</p>
+  </div>
+</section>
+
+<section class="section" id="build">
+  <h2><span class="num">11</span> Build Phasing</h2>
+  <p class="lede">Do not build fifty worlds. Build the machine that makes a world hard, prove it on seven, then scale content.</p>
+
+  <table>
+    <thead><tr><th>Phase</th><th>Scope</th><th>Proves</th><th>Cut line</th></tr></thead>
+    <tbody>
+      <tr><td><strong>0 · Today</strong></td><td>2 worlds, 7 cards, judge, drafts</td><td>The core act is fun</td><td>Shipped</td></tr>
+      <tr><td><strong>1 · Atlas spine</strong></td><td>Region I only (7 worlds, 32 slots, 16 pair crossings), frontier graph, Gate, one-per-day</td><td>Branching and daily cadence hold on a grid that actually interlocks</td><td>If routing feels like theatre here, the 50-world plan is wrong and should stop. Do not ship this phase without pair crossings — a non-interlocking Region I gives a false negative.</td></tr>
+      <tr><td><strong>2 · Pattern index</strong></td><td>Dictionary index, Lantern Guarantee, Loosen the Knot</td><td>Carry-forward can never brick a run</td><td>Non-negotiable before Region III exists.</td></tr>
+      <tr><td><strong>3 · Card library</strong></td><td>All 40 cards, tiers, deck builder, stacking</td><td>Difficulty scales without new mechanics</td><td>Tier VI can ship later; Tiers I–IV cannot.</td></tr>
+      <tr><td><strong>4 · Regions II–IV</strong></td><td>21 worlds, cross-discovery links, carry-forward, stacking</td><td>The curve works over three weeks</td><td>First real retention read. Instrument heavily.</td></tr>
+      <tr><td><strong>5 · Regions V–VII</strong></td><td>21 worlds, forced cards, meta-rules, subtraction</td><td>Late game holds without a timer or score</td><td>World 44 (Erasure) is the first thing to cut.</td></tr>
+      <tr><td><strong>6 · The Fiftieth</strong></td><td>Generated finale, atlas export, Lexicon, share post</td><td>The payoff justifies the run</td><td>Build the generator early, even if the world ships last.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-success">
+    <p><strong>Phase 1 is the real decision point.</strong> Seven worlds is enough to know whether a daily atlas is compelling or whether CrossWorld is better as a great standalone puzzle with a world picker. Getting an honest read there is worth more than any amount of further design.</p>
+  </div>
+</section>
+
+<section class="section" id="risks">
+  <h2><span class="num">12</span> Risks &amp; Open Questions</h2>
+
+  <table>
+    <thead><tr><th>Risk</th><th>Severity</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Fifty-day retention.</strong> Daily word games lose most players in week one. Fifty days is a very long tail.</td><td><span class="badge badge-gap">High</span></td><td>Seven Gate endings. No streak-reset punishment. Region I is under 7 minutes a day.</td></tr>
+      <tr><td><strong>Clue-writing fatigue.</strong> 388 original clues is far more composition than any comparable game asks for.</td><td><span class="badge badge-gap">High</span></td><td>Breathers, the ramp, and a hard 10-slot cap on non-Gate worlds. Watch abandon rate by slot index, not by world.</td></tr>
+      <tr><td><strong>Carry-forward deadlock.</strong> A legal answer strands a later slot.</td><td><span class="badge badge-warn">Med</span></td><td>Solved by design — pre-offer check, pre-accept check, Loosen the Knot. Requires the pattern index to exist first.</td></tr>
+      <tr><td><strong>Authoring cost.</strong> Fifty grids, 388 verified slots, 50 palettes, 175 discovery names.</td><td><span class="badge badge-warn">Med</span></td><td>Generator plus build-time validator. Names and premises are already written in this document.</td></tr>
+      <tr><td><strong>Judge inconsistency.</strong> Over 388 calls, players will find contradictory rulings and post them.</td><td><span class="badge badge-warn">Med</span></td><td>Verdict caching, pinned model, never re-judge a locked entry.</td></tr>
+      <tr><td><strong>Tier VI calibration.</strong> Cruel cards may be outright impossible on some slots.</td><td><span class="badge badge-warn">Med</span></td><td>Deck builder enforces pairing with a permissive shape card. Needs playtest data, not more design.</td></tr>
+      <tr><td><strong>Routing is theatre.</strong> If order consequences aren't legible, branching feels fake.</td><td><span class="badge badge-gap">High</span></td><td>Seeds are colour-coded and attributed to the world that caused them. The frontier preview shows inherited-letter count before you commit.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Open questions</h3>
+  <ol>
+    <li><strong>Is a world ever replayable?</strong> Right now a completed world is frozen. A player who writes a clue they're unhappy with has no recourse for fifty days. A once-per-region "revise one clue" token would fix that — but it weakens permanence, which is the emotional core.</li>
+    <li><strong>Should other players' clues ever be visible?</strong> This is a Reddit game and there is an obvious social layer: see how three strangers clued the same slot. It is also the single fastest way to turn authorship into imitation. Recommend keeping it out of v1 and revisiting after Phase 4.</li>
+    <li><strong>What happens on day 51?</strong> The Second Atlas is a cheap answer. A better one may be player-authored worlds — but that is a content-moderation surface, not a feature.</li>
+    <li><strong>Does the atlas need to be geographically coherent?</strong> The design assumes a literal 2D map. A more abstract constellation would be cheaper to author and lose some of the "one growing world" feeling. Worth prototyping both in Phase 1.</li>
+  </ol>
+</section>
+
+<div class="footer">
+  <p>CrossWorld — Atlas of Fifty Worlds · Design Bible v1 · Grounded in the CrossWorld prototype (<code>games/web/crossworld</code>).<br>
+  Structure: 7 regions × 7 worlds + 1 finale · 388 slots · ~50 days · 40 restriction cards.</p>
+</div>
+
+</main>
+
+<div class="search-overlay" id="searchOverlay" onclick="if(event.target===this)closeSearch()">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Jump to a section or world…" autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</div>
+
+<script>
+(function(){var s=localStorage.getItem('theme');if(s)document.documentElement.setAttribute('data-theme',s);})();
+function toggleTheme(){var h=document.documentElement;var n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);localStorage.setItem('theme',n);}
+
+var sections=[].slice.call(document.querySelectorAll('.section'));
+var navLinks=[].slice.call(document.querySelectorAll('.sidebar a'));
+function syncActive(){
+  var probe=140,current=sections[0];
+  for(var i=0;i<sections.length;i++){
+    if(sections[i].getBoundingClientRect().top<=probe)current=sections[i];
+  }
+  var want=current?current.id:null;
+  navLinks.forEach(function(l){
+    l.classList.toggle('active',l.getAttribute('href')==='#'+want);
+  });
+}
+var ticking=false;
+window.addEventListener('scroll',function(){
+  if(ticking)return;ticking=true;
+  requestAnimationFrame(function(){syncActive();ticking=false;});
+},{passive:true});
+window.addEventListener('resize',syncActive,{passive:true});
+syncActive();
+
+document.querySelectorAll('.collapsible-trigger').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var open=btn.getAttribute('aria-expanded')==='true';
+    btn.setAttribute('aria-expanded',String(!open));
+    btn.nextElementSibling.classList.toggle('open');
+  });
+});
+
+var idx=[];
+document.querySelectorAll('.section').forEach(function(s){
+  var h=s.querySelector('h2,h3');
+  if(h)idx.push({id:s.id,label:h.textContent.trim().replace(/\s+/g,' ')});
+  s.querySelectorAll('tbody tr td:nth-child(2) strong').forEach(function(t){
+    idx.push({id:s.id,label:t.textContent.trim()+'  —  '+(h?h.textContent.trim().replace(/\s+/g,' '):'')});
+  });
+});
+function renderResults(q){
+  var box=document.getElementById('searchResults');
+  var hits=idx.filter(function(i){return i.label.toLowerCase().indexOf(q.toLowerCase())>-1;}).slice(0,12);
+  box.innerHTML=hits.map(function(h){return '<a href="#'+h.id+'" onclick="closeSearch()">'+h.label+'</a>';}).join('')||'<a style="color:var(--text-dim)">No matches</a>';
+}
+function openSearch(){document.getElementById('searchOverlay').classList.add('open');var i=document.getElementById('searchInput');i.value='';renderResults('');i.focus();}
+function closeSearch(){document.getElementById('searchOverlay').classList.remove('open');}
+document.getElementById('searchInput').addEventListener('input',function(e){renderResults(e.target.value);});
+document.addEventListener('keydown',function(e){
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openSearch();}
+  if(e.key==='Escape')closeSearch();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CrossWorld · One turn</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <a class="brand" href="./">CW<span>CrossWorld</span></a
+        ><span class="pill">Single-turn mock</span>
+      </header>
+      <section class="intro">
+        <p class="eyebrow">CHAPTER 01 / LEVEL 01</p>
+        <h1>Make your word fit.<br />Make your clue count.</h1>
+        <p>
+          One new word. One restriction of your choosing. See today’s space,
+          then decide what to spend.
+        </p>
+      </section>
+      <nav class="levels" aria-label="Chapter progress">
+        <span class="level current" aria-current="step"
+          >1 <small>Today</small></span
+        ><span class="level">2 <small>Unknown</small></span
+        ><span class="level">3 <small>Unknown</small></span
+        ><span class="level">4 <small>Unknown</small></span
+        ><span class="level">5 <small>Unknown</small></span
+        ><span class="level">6 <small>Unknown</small></span
+        ><span class="level">7 <small>Unknown</small></span>
+      </nav>
+      <div class="layout">
+        <section class="board-panel" aria-labelledby="board-title">
+          <div class="panel-heading">
+            <h2 id="board-title">Today’s addition</h2>
+            <span id="board-badge" class="pill">Unrevealed</span>
+          </div>
+          <div id="concealed">
+            <div class="concealed-symbol" aria-hidden="true">?</div>
+            <p>Today’s slot is ready.</p>
+            <button id="reveal" class="primary" type="button">
+              Reveal today’s slot
+            </button>
+          </div>
+          <div id="revealed" hidden>
+            <div
+              id="board"
+              class="board"
+              role="img"
+              aria-label="MAP runs across. A new five-letter word runs down, crossing its A as the second letter."
+            ></div>
+            <p class="slot">
+              <strong>5 letters · down</strong><span>_ A _ _ _</span>
+            </p>
+            <p class="muted">
+              The A is fixed by the existing word.<br />You choose the word that
+              fits.
+            </p>
+            <div class="legend">
+              <span><i class="dot fixed"></i>Existing letters</span
+              ><span><i class="dot new"></i>Your new word</span>
+            </div>
+          </div>
+          <p class="board-note">
+            MAP is a supplied starting word for this mock. Later slots stay
+            unknown; only this turn is playable.
+          </p>
+        </section>
+        <section class="play-panel" aria-labelledby="choice-title">
+          <div class="panel-heading">
+            <h2 id="choice-title">Choose your restriction</h2>
+            <span id="remaining" class="pill">7 available</span>
+          </div>
+          <p class="muted">
+            Use one per level, once per chapter. A restriction is spent only
+            when the word and clue are accepted.
+          </p>
+          <form id="turn-form" novalidate>
+            <fieldset id="restriction-fieldset" disabled>
+              <legend class="sr-only">Restrictions</legend>
+              <div id="restrictions" class="restriction-grid"></div>
+            </fieldset>
+            <div class="entry-fields">
+              <label for="word"
+                >Your word<span>5 letters; second letter A</span></label
+              ><input
+                id="word"
+                name="word"
+                type="text"
+                maxlength="20"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                placeholder="Your answer"
+                disabled
+              />
+              <div class="clue-label">
+                <label for="clue">Your clue</label
+                ><span id="counter">0 words · 0/140</span>
+              </div>
+              <textarea
+                id="clue"
+                name="clue"
+                maxlength="140"
+                rows="3"
+                placeholder="Lead someone to your word without naming it."
+                disabled
+                aria-describedby="judging"
+              ></textarea>
+            </div>
+            <details class="rules">
+              <summary>How the rules are counted</summary>
+              <p>
+                Restrictions apply to the clue. Counting ignores case and treats
+                each group of A–Z letters as a word; punctuation, hyphens, and
+                apostrophes split words. Only the exact answer as a whole word
+                is banned. Matching letters inside another word are allowed.
+                There are no hidden substring or word-family bans.
+              </p>
+              <p>
+                All clues need at least one word and at most 140 characters.
+                These seven restrictions are a proposed pool for this playtest.
+              </p>
+            </details>
+            <p id="judging" class="judge-note">
+              This mock checks fit and written rules. I’ll review whether your
+              word and clue make sense with you in chat. No AI judge is
+              connected.
+            </p>
+            <div id="errors" role="alert" hidden></div>
+            <button id="submit" class="primary full" type="submit" disabled>
+              Submit word &amp; clue <span aria-hidden="true">↗</span>
+            </button>
+          </form>
+          <section
+            id="result"
+            class="result"
+            tabindex="-1"
+            hidden
+            aria-labelledby="result-title"
+          >
+            <p class="eyebrow" id="result-tag">RULE CHECKS PASSED</p>
+            <h2 id="result-title">Ready for clue review</h2>
+            <p id="result-copy">
+              Your restriction is still available. Copy your turn into our chat
+              so we can review the clue’s meaning.
+            </p>
+            <textarea
+              id="report"
+              rows="8"
+              readonly
+              aria-label="Turn record to share"
+            ></textarea>
+            <div class="actions">
+              <button id="copy" class="primary" type="button">
+                Copy turn for chat</button
+              ><button id="revise" class="secondary" type="button">
+                Revise submission
+              </button>
+            </div>
+            <p id="copy-status" role="status"></p>
+            <details id="review-controls">
+              <summary>Record the review after our chat</summary>
+              <p>
+                This is a manual playtest control. Record the actual review; it
+                is not an AI verdict.
+              </p>
+              <label for="verdict">Review decision</label
+              ><select id="verdict">
+                <option value="">Choose the decision received</option>
+                <option value="accepted">Accepted</option>
+                <option value="revise">Needs revision</option></select
+              ><label for="review-note">Review note</label
+              ><textarea
+                id="review-note"
+                rows="2"
+                maxlength="500"
+                placeholder="What did the review say?"
+              ></textarea
+              ><button id="record-review" type="button" class="secondary">
+                Record review
+              </button>
+              <p id="review-error" role="alert"></p>
+            </details>
+          </section>
+        </section>
+      </div>
+      <footer>
+        <span id="storage-status">Your draft is saved in this browser.</span>
+        <details>
+          <summary>Reset this mock</summary>
+          <p>This clears only this browser’s current mock turn.</p>
+          <button id="reset" class="secondary" type="button">
+            Start fresh
+          </button>
+        </details>
+      </footer>
+    </main>
+    <script type="module" src="app.mjs"></script>
+  </body>
+</html>

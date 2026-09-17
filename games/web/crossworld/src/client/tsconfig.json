@@ -1,0 +1,14 @@
+{
+  "extends": "../../tools/tsconfig-base.json",
+  "compilerOptions": {
+    "customConditions": ["browser"],
+    "lib": ["DOM", "ES2023", "esnext.disposable"],
+    "outDir": "../../dist/types/client",
+    "jsx": "react-jsx",
+    "tsBuildInfoFile": "../../dist/client/tsconfig.tsbuildinfo",
+    "strictPropertyInitialization": false
+  },
+  "include": ["**/*", "**/*.json"],
+  "exclude": ["**/*.test.ts"],
+  "references": [{ "path": "../shared" }]
+}

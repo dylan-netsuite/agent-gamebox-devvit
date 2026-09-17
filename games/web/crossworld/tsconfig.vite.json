@@ -1,0 +1,9 @@
+{
+  "extends": "./tools/tsconfig-base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "outDir": "./dist/types/vite",
+    "tsBuildInfoFile": "./dist/vite.tsbuildinfo"
+  },
+  "include": ["vite.config.ts"]
+}

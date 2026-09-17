@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-GAMES_DIR="$REPO_ROOT/games/phaser"
+GAMES_DIR="$REPO_ROOT/games"
 
 if [ ! -d "$GAMES_DIR" ]; then
   echo "Error: $GAMES_DIR not found"
@@ -10,7 +10,7 @@ if [ ! -d "$GAMES_DIR" ]; then
 fi
 
 games=()
-for dir in "$GAMES_DIR"/*/; do
+for dir in "$GAMES_DIR"/*/*/; do
   [ -f "$dir/devvit.json" ] && games+=("$dir")
 done
 

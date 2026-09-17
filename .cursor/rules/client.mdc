@@ -1,9 +1,9 @@
 ---
-description: Browser conventions for Phaser games
+description: Browser conventions for Devvit games
 globs: games/**/src/client/**/*
 alwaysApply: false
 ---
 
-Follow `AGENTS.md`. Keep Phaser as the game engine. Use same-origin fetches to `/api/` and `@devvit/web/client` for Reddit UI effects and Realtime subscriptions. Do not import server modules or make external network requests from the webview.
+Follow `AGENTS.md`. Preserve the renderer of existing games. For new games choose the renderer from the interaction needs; text/grid interfaces can use DOM controls and CSS. Use same-origin fetches to `/api/` and `@devvit/web/client` for Reddit UI effects and Realtime subscriptions. Do not import server modules or make external network requests from the webview.
 
 Keep the HTML splash lightweight, request expanded mode from a user gesture, handle missing `context.userId`, and resynchronize multiplayer state on reconnect. localStorage is version-specific and is not durable across app updates.

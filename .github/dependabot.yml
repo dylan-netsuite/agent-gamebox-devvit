@@ -3,6 +3,7 @@ updates:
   - package-ecosystem: npm
     directories:
       - /games/phaser/*
+      - /games/web/*
     schedule:
       interval: weekly
     groups:

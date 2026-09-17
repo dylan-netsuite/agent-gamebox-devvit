@@ -1,0 +1,17 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./src/client"
+    },
+    {
+      "path": "./src/shared"
+    },
+    {
+      "path": "./src/server"
+    },
+    {
+      "path": "./tsconfig.vite.json"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CrossWorld · Explore your next world</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="splash-page">
+    <main class="splash">
+      <p class="brand">
+        <span class="brand-mark" aria-hidden="true">✳</span> CrossWorld
+      </p>
+      <svg class="splash-art" viewBox="0 0 128 100" aria-hidden="true">
+        <path
+          d="M4 84q30-23 60-2t60-1M9 92q30-23 60-2t55-1"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+          opacity=".35"
+        />
+        <g fill="#dfebe2" stroke="currentColor">
+          <rect x="18" y="34" width="27" height="27" rx="4" />
+          <rect x="50" y="34" width="27" height="27" rx="4" />
+          <rect
+            x="82"
+            y="34"
+            width="27"
+            height="27"
+            rx="4"
+            fill="#e0d4e4"
+            stroke="#725b79"
+          />
+          <rect x="50" y="2" width="27" height="27" rx="4" />
+          <rect
+            x="50"
+            y="66"
+            width="27"
+            height="27"
+            rx="4"
+            fill="#e0d4e4"
+            stroke="#725b79"
+          />
+        </g>
+        <path d="M60 47h8m-4-4v8" fill="none" stroke="currentColor" />
+      </svg>
+      <p class="eyebrow">A world in ten words</p>
+      <h1>A world awaits<span class="world-dot" aria-hidden="true">.</span></h1>
+      <p>Uncover a path. Leave a clue.<br />Build a crossword of your own.</p>
+      <button id="play" class="primary">
+        Explore CrossWorld <span aria-hidden="true">↗</span>
+      </button>
+      <p class="help">Two worlds. Five turns each. Your own words.</p>
+      <p id="error" class="help" role="alert" hidden></p>
+    </main>
+    <script type="module" src="splash.ts"></script>
+  </body>
+</html>
