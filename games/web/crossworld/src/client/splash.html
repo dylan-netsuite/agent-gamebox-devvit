@@ -7,19 +7,35 @@
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="style.css" />
   </head>
-  <body>
+  <body class="splash-page">
     <main class="splash">
-      <p class="brand">CrossWorld</p>
-      <h1>Sandy Shore</h1>
-      <div class="splash-mark" aria-hidden="true">≈</div>
-      <p>
-        Find two paths beneath the shore.<br />Make them yours with words and
-        clues.
+      <p class="brand">
+        <span class="brand-mark" aria-hidden="true">✳</span> CrossWorld
       </p>
+      <svg class="splash-art" viewBox="0 0 128 100" aria-hidden="true">
+        <path
+          d="M4 84q30-23 60-2t60-1M9 92q30-23 60-2t55-1"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+          opacity=".35"
+        />
+        <g fill="#dfebe2" stroke="currentColor">
+          <rect x="18" y="34" width="27" height="27" rx="4" />
+          <rect x="50" y="34" width="27" height="27" rx="4" />
+          <rect x="82" y="34" width="27" height="27" rx="4" />
+          <rect x="50" y="2" width="27" height="27" rx="4" />
+          <rect x="50" y="66" width="27" height="27" rx="4" />
+        </g>
+        <path d="M60 47h8m-4-4v8" fill="none" stroke="currentColor" />
+      </svg>
+      <p class="eyebrow">A world in ten words</p>
+      <h1>Sandy Shore<span aria-hidden="true">.</span></h1>
+      <p>Uncover a path. Leave a clue.<br />Build a crossword of your own.</p>
       <button id="play" class="primary">
         Explore Sandy Shore <span aria-hidden="true">↗</span>
       </button>
-      <p class="help">Five turns. Ten paths. Your own crossword.</p>
+      <p class="help">Five turns. A little discovery every time.</p>
       <p id="error" class="help" role="alert" hidden></p>
     </main>
     <script type="module" src="splash.ts"></script>

@@ -1,10 +1,24 @@
 // Intentionally spare, editable vector placeholders for the owner's future artwork.
 const covers = [
-  `<path d="M95 152q55-75 112 0-43 19-112 0m-41 106q112-100 226 0-112 37-226 0" fill="#e7d697"/><path d="M120 138q30-19 57 0M100 241q64-28 116-2" fill="none" stroke="#f7e9b8" stroke-width="5" stroke-linecap="round"/>`,
-  `<path d="M324 154q60-22 83 44t-17 92q37 74-12 150t-167 6q-51-57 31-79l61-29q-19-48 10-76-28-68 11-108" fill="#bbdcd0"/><path d="M335 196q19-14 38 3m-55 191q31 13 58-3m-150 30 48 2" stroke="#e9efcc" stroke-width="5" stroke-linecap="round" fill="none"/>`,
-  `<path d="M203 622q-52-49-27-100 54 29 27 100m61 104q-8-73 43-98 14 60-43 98m-32 148q-57-28-45-70 55 7 45 70" fill="#d8daa7"/><path d="M75 554q68-47 111 3m112 0q74-44 133 1M237 635q-31-44-22-68m31 93q25-31 25-68m-20 177q-29-28-23-65m18 88q35-30 30-76" fill="none" stroke="#96b496" stroke-width="8" stroke-linecap="round"/>`,
-  `<path d="M48 659q-39-18-29-61t65-14q33 34-36 75m-17 122q-49-19-15-51t66-15q41 42-51 66m28 144q-60 9-52-47t62-15q41 35-10 62m95-205q-37-5-32-35t43-13q27 33-11 48" fill="#dcb8a0"/><path d="M33 605l16 35m-27 96 26 28m-15 109 22 37m82-220 15 17" fill="none" stroke="#f8e3b8" stroke-width="4" stroke-linecap="round"/>`,
-  `<path d="M435 584q41-21 51 19t-18 67q-39 16-42-28t9-58m1 151q-14-28 8-37t35 19q12 29-7 44t-36-26m-11 118q5-46 44-35t22 63q-35 40-66-28M309 935q36-31 62-2t-10 48q-51 8-52-46m-120-14q39-9 54 24t-35 36q-50-4-19-60M80 950q24-28 51-9t2 36q-27 11-53-27" fill="#cec7b0"/><path d="M444 606q17-8 23 10m-23 225 29 4m-150 104 31-3" fill="none" stroke="#e8dfc1" stroke-width="4" stroke-linecap="round"/>`,
+  `<g fill="none" stroke="#b29b65" stroke-width="1.5" stroke-linecap="round">
+    <path d="M60 228q76-106 174-23t91 21M32 251q117-86 242 13M84 283q72-37 136-1"/>
+    <path d="M113 92q49-51 99 4M96 113q68-53 137 11M130 131q39-23 66-1"/>
+    <path d="M64 205q47-49 83-28M219 153q15 9 24 21" opacity=".5"/>
+    <path d="M80 309h12m145-7h7m-75-118h6M104 62h5"/>
+   </g><path d="M60 228q76-106 174-23t91 21q-105 54-265 2" fill="#dac68c" opacity=".22"/>`,
+  `<path d="M330 137c73-22 118 60 88 109-19 31-30 51-22 94 20 84-72 139-158 109-45-16-71-58-28-77 37-17 71-7 84-45 18-49-5-69-8-103-3-41 18-78 44-87Z" fill="#c2ddd0" stroke="#83b5a4" stroke-width="1.5"/>
+   <g fill="none" stroke="#83b5a4" stroke-width="1.3"><path d="M338 158c47-19 76 43 60 74-29 55-31 51-22 117 9 66-68 89-115 68-25-11-29-23-5-29 48-10 57-16 64-67 7-57-35-126 18-163Z"/><path d="M344 180q33-9 35 24m-90 197q46 5 70-27"/><path d="M359 261h22m-36 6h14m-117 141h23" stroke="#fffdf2" stroke-width="3"/></g>
+   <g fill="#b29b65"><circle cx="418" cy="294" r="2"/><circle cx="435" cy="280" r="1.5"/><circle cx="267" cy="460" r="2"/></g>`,
+  `<g fill="none" stroke="#819d77" stroke-width="2" stroke-linecap="round">
+    <path d="M202 593q-40-76-30-114m30 114q20-77 58-97m-58 97q-8-55 5-87M258 798q-45-56-36-101m36 101q-3-92 41-118m-41 118q-18-27-42-29M254 949q-39-59-29-104m29 104q23-55 14-101"/>
+    <path d="M172 479q-11 55 18 81m70-64q-40 2-48 58M222 697q-16 45 21 62m56-79q-49 2-42 67M225 845q-32 37 20 70" fill="#bac6a0"/>
+    <path d="M40 551q70-36 130 0m140 11q74-34 135-9" stroke="#c1bb91"/>
+   </g>`,
+  `<defs><g id="shore-shell"><path d="M0 27C-47 7-44-22-29-28c9-14 22-9 29-2 9-14 23-14 29 0C52-28 48 5 0 27Z" fill="#e9cbb0" stroke="#b8886c" stroke-width="1.5"/><path d="M0 27-29-28M0 27 0-30M0 27 29-30M0 27-16-34M0 27 17-35" fill="none" stroke="#b8886c" stroke-width="1"/><path d="M-8 25h16" stroke="#b8886c" stroke-width="3"/></g></defs>
+   <use href="#shore-shell" transform="translate(59 648) rotate(-26)"/><use href="#shore-shell" transform="translate(38 771) rotate(20) scale(.82)"/><use href="#shore-shell" transform="translate(60 911) rotate(-30) scale(.75)"/><use href="#shore-shell" transform="translate(158 756) rotate(15) scale(.6)"/>
+   <g fill="none" stroke="#b8886c" stroke-width="1"><path d="M12 689q15 5 28-1m49 174q15 9 34 2m12-161 12 2"/></g>`,
+  `<g fill="#d8d4bd" stroke="#a5a38c" stroke-width="1.5"><path d="M422 624q-14-44 17-50t46 27q12 36-21 56t-42-33Z"/><path d="M429 744q-22-22-4-44t39-1q31 32 5 45t-40 0Z"/><path d="M430 876q-15-46 12-56t45 32q10 34-15 40t-42-16Z"/><path d="M298 952q-1-30 34-31t37 25q-1 29-36 29t-35-23Z"/><path d="M188 952q-19-17-1-39t37 9q22 23 5 36t-41-6Z"/><path d="M78 955q12-31 40-20t23 29q-5 16-33 13t-30-22Z"/></g>
+   <g fill="none" stroke="#f8f2df" stroke-width="2"><path d="M438 589q20-3 28 11m-30 105 24 20m-18 109 27 10m-156 94 36 2m-160-11 24 17m-112 3 22 11"/></g>`,
 ];
 export function createShoreArt() {
   const art = document.getElementById("scenery")!;

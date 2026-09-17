@@ -29,6 +29,15 @@ export const criterionIcon = (id: string) =>
   `<svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${icons[id] ?? '<path d="M18 5v26M5 18h26M9 9l18 18M9 27 27 9"/>'}</svg>`;
 export const visualCriteria = CRITERIA.map((rule, i) => ({
   ...rule,
+  detail: [
+    "Keep it concise",
+    "Make every word count",
+    "Leave E out",
+    "Skip a, an & the",
+    "Up to 4 letters",
+    "Two matching initials",
+    "Leave B out",
+  ][i]!,
   label: [
     "Up to 4 words",
     "7 words",

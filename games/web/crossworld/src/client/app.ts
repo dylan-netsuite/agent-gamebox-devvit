@@ -81,18 +81,54 @@ function updateEditor() {
   const turn = shore.turn;
   editor.hidden = !turn?.revealed || minimized;
   el("restore-editor").hidden = !turn?.revealed || !minimized;
-  el("turn-switch").hidden = !turn?.revealed;
+  el("turn-switch").hidden = !turn?.revealed || minimized;
+  el("welcome").hidden = !turn || turn.revealed;
+  el("atlas").dataset.editing = String(Boolean(turn?.revealed));
+  el("atlas").dataset.overview = String(minimized);
+  el("map-view").hidden = !turn?.revealed;
+  el("map-view").textContent = minimized ? "Back to clue ↙" : "Full map ↗";
+  el("map-view").setAttribute("aria-expanded", String(minimized));
+  el("choose-criterion").setAttribute(
+    "aria-expanded",
+    String(!el("criterion-picker").hidden),
+  );
   el("complete").hidden = turn !== null;
   el("all-clues").hidden = shore.completed.length === 0;
   for (const d of DIRECTIONS) {
     el(`${d}-tab`).setAttribute("aria-pressed", String(active === d));
-    el(`${d}-status`).textContent = pass(d) ? "✓" : "";
+    const entry = turn?.[d];
+    const filled = Boolean(
+      entry &&
+      /^[A-Z]+$/.test(entry.word) &&
+      entry.clue.trim() &&
+      entry.criterion,
+    );
+    const reviewed = Boolean(turn?.reviews[d]);
+    el(`${d}-status`).textContent = pass(d)
+      ? "✓ Passed"
+      : reviewed
+        ? "Revise"
+        : filled
+          ? "Ready"
+          : "";
+    el(`${d}-status`).classList.toggle("revise", reviewed && !pass(d));
+    el(`${d}-preview`).textContent = (
+      entry?.word || " ".repeat(DAYS[shore.completed.length]?.[d].length ?? 5)
+    ).replace(/ /g, "·");
+    el(`${d}-rule`).textContent =
+      visualCriteria.find((c) => c.id === entry?.criterion)?.label ??
+      "Choose a rule";
   }
   if (!turn) return;
-  clue.value = turn[active].clue;
-  el("clue-label").textContent = `Clue for ${title(active)}`;
-  el("word-guide").textContent =
-    `${DAYS[shore.completed.length]![active].length} letters · tap the tiles to write your word`;
+  if (clue.value !== turn[active].clue) clue.value = turn[active].clue;
+  const wordReady = /^[A-Z]+$/.test(turn[active].word);
+  el("clue-label").textContent = wordReady
+    ? `A clue for ${turn[active].word}`
+    : `A clue for ${title(active)}`;
+  el("word-guide").textContent = wordReady
+    ? "Describe your word without giving it away."
+    : `${DAYS[shore.completed.length]![active].length} letters · choose your word in the highlighted tiles.`;
+  el("clue-count").textContent = `${turn[active].clue.length} / 140`;
   const criterion = visualCriteria.find((c) => c.id === turn[active].criterion);
   el("criterion-icon").innerHTML = criterionIcon(criterion?.id ?? "");
   el("criterion-name").textContent = criterion?.label ?? "Choose a criterion";
@@ -100,7 +136,8 @@ function updateEditor() {
     "aria-label",
     `${title(active)} criterion: ${criterion?.label ?? "choose a rule"}`,
   );
-  el("criterion-rule").textContent = criterion?.rule ?? "";
+  el("criterion-rule").textContent =
+    criterion?.rule ?? "Give this clue a little creative constraint.";
   el("picker-title").textContent = `A rule for ${title(active)}`;
   for (const button of el(
     "criterion-options",
@@ -126,27 +163,47 @@ function updateEditor() {
   el("next-word").hidden = bothReady;
   const other = active === "across" ? "down" : "across";
   el("next-word").setAttribute("aria-label", `Write the ${other} word`);
-  el("next-word").textContent = other === "down" ? "↓" : "→";
-  positionEditor();
+  el("next-word").textContent =
+    `Next: ${title(other)} ${other === "down" ? "↓" : "→"}`;
+  const prepared = DIRECTIONS.filter(
+    (d) =>
+      /^[A-Z]+$/.test(turn[d].word) && turn[d].clue.trim() && turn[d].criterion,
+  ).length;
+  el("pair-status").textContent =
+    prepared === 2
+      ? "Both clues are ready for review."
+      : `${prepared} of 2 clues ready`;
+  positionMap();
 }
-function positionEditor() {
-  if (!shore.turn?.revealed) return;
-  const map = el("map"),
-    path = DAYS[shore.completed.length]![active];
-  const unit = map.clientHeight / 10;
-  const start = path.row * unit,
-    end = (path.row + (active === "down" ? path.length : 1)) * unit;
-  const height = Math.max(
-    editor.offsetHeight,
-    el("criterion-picker").hidden ? 0 : el("criterion-picker").offsetHeight,
-    180,
-  );
-  const below = end + 10,
-    above = start - height - 10;
-  const top = below + height <= map.clientHeight ? below : Math.max(0, above);
-  editor.style.top = `${Math.min(top, map.clientHeight - height)}px`;
-  el("restore-editor").style.top =
-    `${Math.min(end + 8, map.clientHeight - 50)}px`;
+let mapPositionFrame = 0;
+let positionedPath = "";
+function positionMap(force = false) {
+  cancelAnimationFrame(mapPositionFrame);
+  mapPositionFrame = requestAnimationFrame(() => {
+    const viewport = el("map-viewport");
+    const key = `${shore.completed.length}:${active}:${minimized}:${viewport.clientWidth}:${Boolean(shore.turn?.revealed)}`;
+    if (!force && positionedPath === key) return;
+    positionedPath = key;
+    if (
+      !shore.turn?.revealed ||
+      minimized ||
+      matchMedia("(min-width: 721px)").matches
+    ) {
+      viewport.scrollTop = 0;
+      return;
+    }
+    const path = DAYS[shore.completed.length]![active];
+    const map = el("map");
+    const unit = (map.clientHeight + 7) / 10;
+    viewport.style.setProperty(
+      "--focus-height",
+      `${active === "down" ? path.length * unit + 24 : 156}px`,
+    );
+    const center =
+      map.offsetTop +
+      (path.row + (active === "down" ? path.length / 2 : 0.5)) * unit;
+    viewport.scrollTop = Math.max(0, center - viewport.clientHeight / 2);
+  });
 }
 function showClues(items: { day: number; direction: Direction }[]) {
   const content = el("inspect-content");
@@ -192,6 +249,7 @@ function selectWord(direction: Direction, index?: number) {
   minimized = false;
   el("criterion-picker").hidden = true;
   message("errors", "");
+  clue.removeAttribute("aria-invalid");
   updateEditor();
   renderMap();
   controls();
@@ -209,6 +267,7 @@ function markEdited(before: PairDraft) {
       shore.turn.reviews[d] = null;
   dirty = true;
   revision++;
+  clue.removeAttribute("aria-invalid");
   message("errors", "");
   el("storage-status").textContent = signedIn
     ? "Unsaved changes"
@@ -234,7 +293,7 @@ function putLetters(index: number, text: string) {
         "errors",
         `Letter ${index + i + 1} is ${expected}, from an earlier path.`,
       );
-      positionEditor();
+      positionMap();
       return;
     }
   }
@@ -401,20 +460,43 @@ function renderMap(animate = false) {
       row: 2,
       col: 2,
     };
-    discover.style.left = `${(center.col + 0.5) * 20}%`;
-    discover.style.top = `${(center.row + 0.5) * 10}%`;
+    discover.style.left = "50%";
+    discover.style.top = `${Math.min(82, Math.max(20, (center.row + 0.5) * 10))}%`;
   }
   el("discover-label").textContent = shore.completed.length
     ? "Uncover the next pair"
     : "Uncover two paths";
-  el("progress").textContent = shore.turn
-    ? `Turn ${shore.completed.length + 1} / 5 · ${shown * 2} paths found`
-    : "10 / 10 paths discovered";
-  el("story").textContent = shore.turn?.revealed
-    ? "Tap a tile to write. Tap a rule to choose."
+  el("discover-place").textContent =
+    `${DAYS[shore.completed.length]?.place ?? "Shore complete"} · Turn ${shore.completed.length + 1}`;
+  el("turn-label").textContent = shore.turn
+    ? `Turn ${shore.completed.length + 1} of 5`
+    : "Journey complete";
+  el("journey-track")
+    .querySelectorAll("i")
+    .forEach((n, i) => {
+      n.classList.toggle("done", i < shore.completed.length);
+      n.classList.toggle("now", i === shore.completed.length);
+    });
+  el("map-caption").textContent = shore.turn?.revealed
+    ? `${title(active)} · ${DAYS[shore.completed.length]![active].length} letters`
     : shore.turn
-      ? "Two paths are waiting beneath the shore."
-      : "";
+      ? "Uncharted shore"
+      : "Your discovered shore";
+  el("place-title").textContent = shore.completed.length
+    ? (DAYS[shore.completed.length]?.place ?? "Your shore is complete.")
+    : "Beneath the sand.";
+  el("place-copy").textContent = shore.completed.length
+    ? "Two clues accepted. Follow the marker to uncover the next pair of paths and see what washes ashore."
+    : "A little exploring. A little wordplay. Uncover two paths and give them words of your own.";
+  el("progress").textContent = shore.turn
+    ? `${shore.completed.length * 2} of 10 words written · ${shown * 2} paths found`
+    : "10 words written · 5 turns complete";
+  el("story").textContent = shore.turn?.revealed
+    ? "Your words meet at the crossings."
+    : shore.turn
+      ? "Follow the marker. See what’s beneath."
+      : "A crossword only you could have made.";
+  positionMap();
 }
 function controls() {
   clue.disabled = !editable();
@@ -432,7 +514,8 @@ function controls() {
   ).querySelectorAll<HTMLButtonElement>("button"))
     button.disabled = !editable();
   submit.disabled = !editable() || !signedIn || !judgeReady;
-  submit.textContent = busy ? "…" : "✓";
+  submit.textContent = busy ? "Reviewing…" : "Review both ↗";
+  editor.setAttribute("aria-busy", String(busy));
   submit.setAttribute(
     "aria-label",
     busy
@@ -517,13 +600,19 @@ clue.addEventListener("input", () => {
   controls();
 });
 for (const direction of DIRECTIONS)
-  el(`${direction}-tab`).addEventListener("click", () => selectWord(direction));
+  el(`${direction}-tab`).addEventListener("click", () =>
+    selectWord(direction, 0),
+  );
 el("next-word").addEventListener("click", () =>
   selectWord(active === "across" ? "down" : "across", 0),
 );
 el("choose-criterion").addEventListener("click", () => {
   el("criterion-picker").hidden = !el("criterion-picker").hidden;
-  positionEditor();
+  el("choose-criterion").setAttribute(
+    "aria-expanded",
+    String(!el("criterion-picker").hidden),
+  );
+  positionMap();
   if (!el("criterion-picker").hidden)
     el("criterion-options")
       .querySelector<HTMLButtonElement>('button[aria-pressed="true"],button')
@@ -531,7 +620,8 @@ el("choose-criterion").addEventListener("click", () => {
 });
 el("close-picker").addEventListener("click", () => {
   el("criterion-picker").hidden = true;
-  positionEditor();
+  el("choose-criterion").setAttribute("aria-expanded", "false");
+  positionMap();
   el("choose-criterion").focus({ preventScroll: true });
 });
 for (const rule of visualCriteria) {
@@ -541,7 +631,11 @@ for (const rule of visualCriteria) {
   button.dataset.criterion = rule.id;
   button.innerHTML = criterionIcon(rule.id);
   const text = document.createElement("span");
-  text.textContent = rule.label;
+  const name = document.createElement("strong"),
+    detail = document.createElement("small");
+  name.textContent = rule.label;
+  detail.textContent = rule.detail;
+  text.append(name, detail);
   button.append(text);
   button.setAttribute("aria-label", `${rule.name}: ${rule.rule}`);
   button.title = rule.rule;
@@ -597,8 +691,13 @@ editor.addEventListener("submit", (event) => {
   if (!editable() || !signedIn || !judgeReady || !shore.turn) return;
   const result = validatePair(currentDraft(), shore.completed);
   if (result.issues.length) {
+    const invalidDirection = result.issues[0]!.startsWith("Down:")
+      ? "down"
+      : "across";
+    selectWord(invalidDirection);
     message("errors", result.issues[0]!);
-    positionEditor();
+    clue.setAttribute("aria-invalid", "true");
+    positionMap();
     return;
   }
   const payload = {
@@ -651,7 +750,7 @@ editor.addEventListener("submit", (event) => {
       busy = false;
       controls();
       renderMap();
-      positionEditor();
+      positionMap();
     }
   })();
 });
@@ -699,7 +798,7 @@ async function load() {
     busy = false;
     controls();
     renderMap();
-    positionEditor();
+    positionMap();
   }
 }
 el("refresh").addEventListener("click", () => {
@@ -748,5 +847,27 @@ el("confirm-restart").addEventListener("click", () => {
     }
   })();
 });
-window.addEventListener("resize", positionEditor);
+el("map-view").addEventListener("click", () => {
+  minimized = !minimized;
+  el("criterion-picker").hidden = true;
+  updateEditor();
+});
+el("help").addEventListener("click", () =>
+  el<HTMLDialogElement>("instructions").showModal(),
+);
+el("close-help").addEventListener("click", () =>
+  el<HTMLDialogElement>("instructions").close(),
+);
+el("criterion-picker").addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    el("close-picker").click();
+  }
+});
+document.addEventListener("click", (event) => {
+  const settings = document.querySelector<HTMLDetailsElement>(".settings")!;
+  if (event.target instanceof Node && !settings.contains(event.target))
+    settings.open = false;
+});
+window.addEventListener("resize", () => positionMap(true));
 void load();

@@ -2,7 +2,9 @@
 
 The current prototype implements the owner's supplied 5-column, 10-row illustration layout. Ten paths are discovered in five paired turns, with one across and one down word per turn. Each word has its own authored clue and independently selected criterion. The seven available criteria can be reused. Immediate advancement is explicitly enabled for this private prototype; there is no calendar-day gate.
 
-Native HTML, CSS and replaceable inline SVG form the phone interface. The crossword is the map. Five sparse shore cover groups clear away as pairs are discovered. Players type directly into active path tiles, switch direction on the map, and write a clue in a compact editor positioned around the active path. A visual seven-rule picker replaces that editor temporarily; each direction retains its own selection. The editor can be minimized to reveal the map. Both clues must pass review before the next pair opens. Players can inspect completed clues. The pale sand, turquoise title, orange subtitle and exact tile footprint follow the owner's reference; detailed art is left to the owner.
+Native HTML, CSS and replaceable inline SVG form the responsive interface. The crossword is the map. A coastal field-guide visual system uses warm paper, sea-green ink and controls, a terracotta accent, serif world/word headings and readable utility text. Five contour-drawn shore cover groups transform as pairs are discovered. The exact supplied tile footprint remains unchanged.
+
+On wide screens, the entire map and field-note editor share one atlas surface. On phones, a map viewport centers the active path at usable tile sizes; **Full map** switches to an overview, and **Back to clue** restores the editor. The clue card never covers map tiles. Across/Down choices show each word, its own rule and preparation/review state. Seven visual criteria replace the editor temporarily, with explicit Close and Escape recovery. Help, preferences and saved-clue inspection use native controls and HTML dialogs. Source colors/spacing are semantic CSS variables; no external fonts, images or new dependencies are required.
 
 ## Paired turns and storage
 
@@ -21,6 +23,12 @@ Two bounded reviewer calls run together and are fully awaited. The existing `cre
 Draft saves are debounced and serialized; edits immediately show as unsaved. Refresh flushes both drafts and preserves unsaved local input if saving fails. Responses from older edits cannot replace newer local typing. A provider failure never triggers an automatic paid retry. Read recovery can restore the companion's cached review. Earlier accepted state wins over late saves.
 
 The current entrypoints are `src/client/app.ts`, `game.html`, `style.css`, `criteria-art.ts` and `shore-art.ts`. Active editable tiles use native one-character inputs with automatic advance, backspace, arrow navigation and whole-word paste. Other tiles use native buttons. Shared letters within the current pair update together; accepted crossings are read-only. Unfinished words retain spaces so a saved crossing never shifts position. Rule icons also carry text and accessible descriptions. The art uses only finite discovery transitions, optional gesture-enabled sound and reduced-motion controls. No image generation, new framework or dependency change is required.
+
+## UI overhaul — September 2026
+
+[Editable structural design](https://app.excalidraw.com/s/9oHgJ0UhsrQ/1PUa50nGJ2z): covered mobile, active authoring, criterion selection and wide completion. Mobile frames are drawn at 2× scale and describe hierarchy, not browser typography. The mobile and wide browser renders are the visual authority. The prior mobile render was inspected before redesign; its floating form obscured much of the board and controls lacked a clear hierarchy.
+
+The new flow preserves all five paired turns, independent criteria, account storage and server-side judging. TypeScript, ESLint, all **71 tests**, and the production build pass. **98 isolated browser checks** cover the redesigned map flow, with **10 additional restart regressions**. Light/dark renders were inspected at 320px, 390px and 1120px; 768px and a 420px-high viewport were also exercised. Actual letter and rule targets remain at least 44px at the checked widths. Supporting-text contrast was corrected to at least 4.8:1 on the tested light surfaces; this is not a full accessibility certification. The private Reddit playtest loaded the redesign for BarryBetsALot with HTTP 200 and ten already-revealed tiles. Help, visual criteria, full-map switching and refresh worked at 390px without horizontal overflow. Readback before and after inspection confirmed identical stored progress; no live clues were submitted and no board was reset. Isolated browser fixtures exercise all five turns and rejection/provider/save recovery. Physical-device keyboards, screen-reader use, subjective visual preference and human playtesting remain unverified. The original AI accuracy limitations below still apply.
 
 ## Sandy Shore verification
 
@@ -76,13 +84,13 @@ Reddit requires apps that use HTTP fetch to provide Terms & Conditions and Priva
 
 ## Earlier Chatterbloom requests and persistence (retained)
 
-| Route | Access | Behavior |
-| --- | --- | --- |
-| `GET /api/chatterbloom-seven-v1/turn` | Everyone | Login/reviewer readiness and the caller's journey; guests start blank. |
-| `POST /api/chatterbloom-seven-v1/draft` | Signed-in user | Saves bounded draft fields for the supplied numeric `path` index. |
-| `POST /api/chatterbloom-seven-v1/submit` | Signed-in user | Validates progression, crossing and unused rule, reviews the clue, persists acceptance. |
-| `/api/chatterbloom-postcard-v1/*` | Existing access rules | Compatibility routes for the previous single-turn client; separate saved state. |
-| `/internal/on-app-install`, `/internal/menu/post-create` | Devvit trigger / moderator | Creates a post. All posts in one installation share the caller's scenario progress. |
+| Route                                                    | Access                     | Behavior                                                                                |
+| -------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------- |
+| `GET /api/chatterbloom-seven-v1/turn`                    | Everyone                   | Login/reviewer readiness and the caller's journey; guests start blank.                  |
+| `POST /api/chatterbloom-seven-v1/draft`                  | Signed-in user             | Saves bounded draft fields for the supplied numeric `path` index.                       |
+| `POST /api/chatterbloom-seven-v1/submit`                 | Signed-in user             | Validates progression, crossing and unused rule, reviews the clue, persists acceptance. |
+| `/api/chatterbloom-postcard-v1/*`                        | Existing access rules      | Compatibility routes for the previous single-turn client; separate saved state.         |
+| `/internal/on-app-install`, `/internal/menu/post-create` | Devvit trigger / moderator | Creates a post. All posts in one installation share the caller's scenario progress.     |
 
 The new journey response contains `completed` (an ordered array of immutable accepted turns) and `turn` (the current draft, or null when all seven are complete). Client-supplied identity, status and judgment are ignored. Identity comes exclusively from trusted Devvit context. There is no manual accept, skip or reset API.
 
