@@ -1,4 +1,3 @@
-import { CRITERIA } from "../shared/shore";
 const dot = (x: number, y: number) =>
   `<circle cx="${x}" cy="${y}" r="2.5" fill="currentColor"/>`;
 const letters = (text: string) =>
@@ -24,27 +23,11 @@ const icons: Record<string, string> = {
   "same-start":
     '<text x="18" y="25" text-anchor="middle" fill="currentColor" stroke="none" font-family="Georgia,serif" font-size="24">Aa</text><path d="M7 30h22"/>',
   "no-b": letters("B") + slash,
+  "two-breaths": [dot(13, 18), dot(23, 18)].join(""),
+  "half-measure":
+    '<path d="M5 18h26M5 14v8M31 14v8"/><path d="M18 9v18" stroke-dasharray="3 3"/>',
+  "long-shadow":
+    '<rect x="3" y="14" width="30" height="8" rx="4"/><path d="M8 26h22" opacity=".45"/>',
 };
 export const criterionIcon = (id: string) =>
   `<svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${icons[id] ?? '<path d="M18 5v26M5 18h26M9 9l18 18M9 27 27 9"/>'}</svg>`;
-export const visualCriteria = CRITERIA.map((rule, i) => ({
-  ...rule,
-  detail: [
-    "Keep it concise",
-    "Make every word count",
-    "Leave E out",
-    "Skip a, an & the",
-    "Up to 4 letters",
-    "Two matching initials",
-    "Leave B out",
-  ][i]!,
-  label: [
-    "Up to 4 words",
-    "7 words",
-    "No E",
-    "No articles",
-    "Short words",
-    "Same initials",
-    "No B",
-  ][i]!,
-}));

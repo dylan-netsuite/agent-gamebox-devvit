@@ -1,12 +1,15 @@
-import { WORLDS, worldFor, type WorldDefinition } from "../shared/worlds";
+import { worldFor } from "../shared/worlds";
+import { createAtlasMap } from "./atlas-map";
 import { readPreference, writePreference } from "./preferences";
 import { navigateTo } from "@devvit/web/client";
 import { createGameApi } from "./api";
 import { createShoreArt } from "./shore-art";
-import { criterionIcon, visualCriteria } from "./criteria-art";
+import { criterionIcon } from "./criteria-art";
 import {
   DIRECTIONS,
   CRITERIA,
+  availableCards,
+  deckFor,
   cellsFor as cellsForWorld,
   cellKey,
   lettersFor as lettersForWorld,
@@ -29,7 +32,14 @@ const lettersFor = (completed: Shore["completed"]) =>
 const validatePair = (draft: PairDraft, completed: Shore["completed"]) =>
   validateWorldPair(draft, completed, world);
 document.documentElement.dataset.world = world.id;
+document.documentElement.dataset.region = world.region;
 document.title = `CrossWorld · ${world.name}`;
+// Grid size is per-world: the Wrackline is 12x4 and the Gate is 13x5.
+el("map").style.setProperty("--map-rows", String(world.rows));
+el("map").style.setProperty("--map-cols", String(world.cols));
+el("journey-track").replaceChildren(
+  ...DAYS.map(() => document.createElement("i")),
+);
 el("world-title").textContent = world.name;
 el("world-chapter").textContent = world.chapter;
 el("atlas").setAttribute("aria-label", `${world.name} crossword`);
@@ -97,6 +107,7 @@ function currentDraft(): PairDraft {
   return parsePair(shore.turn)!;
 }
 function updateEditor() {
+  renderDeck();
   const turn = shore.turn;
   editor.hidden = !turn?.revealed || minimized;
   el("restore-editor").hidden = !turn?.revealed || !minimized;
@@ -135,7 +146,7 @@ function updateEditor() {
       entry?.word || " ".repeat(DAYS[shore.completed.length]?.[d].length ?? 5)
     ).replace(/ /g, "·");
     el(`${d}-rule`).textContent =
-      visualCriteria.find((c) => c.id === entry?.criterion)?.label ??
+      deckFor(world).find((c) => c.id === entry?.criterion)?.name ??
       "Choose a rule";
   }
   if (!turn) return;
@@ -148,12 +159,12 @@ function updateEditor() {
     ? "Describe your word without giving it away."
     : `${DAYS[shore.completed.length]![active].length} letters · choose your word in the highlighted tiles.`;
   el("clue-count").textContent = `${turn[active].clue.length} / 140`;
-  const criterion = visualCriteria.find((c) => c.id === turn[active].criterion);
+  const criterion = deckFor(world).find((c) => c.id === turn[active].criterion);
   el("criterion-icon").innerHTML = criterionIcon(criterion?.id ?? "");
-  el("criterion-name").textContent = criterion?.label ?? "Choose a criterion";
+  el("criterion-name").textContent = criterion?.name ?? "Choose a criterion";
   el("choose-criterion").setAttribute(
     "aria-label",
-    `${title(active)} criterion: ${criterion?.label ?? "choose a rule"}`,
+    `${title(active)} criterion: ${criterion?.name ?? "choose a rule"}`,
   );
   el("criterion-rule").textContent =
     criterion?.rule ?? "Give this clue a little creative constraint.";
@@ -213,7 +224,7 @@ function positionMap(force = false) {
     }
     const path = DAYS[shore.completed.length]![active];
     const map = el("map");
-    const unit = (map.clientHeight + 7) / 10;
+    const unit = (map.clientHeight + 7) / world.rows;
     viewport.style.setProperty(
       "--focus-height",
       `${active === "down" ? path.length * unit + 24 : 156}px`,
@@ -488,7 +499,7 @@ function renderMap(animate = false) {
   el("discover-place").textContent =
     `${DAYS[shore.completed.length]?.place ?? "Shore complete"} · Turn ${shore.completed.length + 1}`;
   el("turn-label").textContent = shore.turn
-    ? `Turn ${shore.completed.length + 1} of 5`
+    ? `Turn ${shore.completed.length + 1} of ${DAYS.length}`
     : "Journey complete";
   el("journey-track")
     .querySelectorAll("i")
@@ -508,11 +519,11 @@ function renderMap(animate = false) {
     ? `Two clues accepted. Follow the marker to discover the next corner of your ${world.noun}.`
     : world.welcome;
   el("progress").textContent = shore.turn
-    ? `${shore.completed.length * 2} of 10 words written · ${shown * 2} paths found`
-    : "10 words written · 5 turns complete";
+    ? `${shore.completed.length * 2} of ${DAYS.length * 2} words written · ${shown * 2} paths found`
+    : `${DAYS.length * 2} words written · ${DAYS.length} discoveries complete`;
   el("story").textContent = shore.turn?.revealed
     ? world.id === "haunted-hedge"
-      ? `${shore.completed.length} of 5 lanterns lit · your words meet at the crossings.`
+      ? `${shore.completed.length} of ${DAYS.length} lanterns lit · your words meet at the crossings.`
       : "Your words meet at the crossings."
     : shore.turn
       ? "Follow the marker. See what’s beneath."
@@ -555,7 +566,10 @@ function controls() {
   for (const button of el("world-options").querySelectorAll<HTMLButtonElement>(
     "button",
   ))
-    button.disabled = busy || button.dataset.world === world.id;
+    button.disabled =
+      busy ||
+      button.dataset.state === "locked" ||
+      button.dataset.world === world.id;
 }
 function applyState(next: Shore, acceptNewRun = false) {
   const changedRun = (next.run ?? "initial") !== (shore.run ?? "initial");
@@ -652,34 +666,48 @@ el("close-picker").addEventListener("click", () => {
   positionMap();
   el("choose-criterion").focus({ preventScroll: true });
 });
-for (const rule of visualCriteria) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "criterion-card";
-  button.dataset.criterion = rule.id;
-  button.innerHTML = criterionIcon(rule.id);
-  const text = document.createElement("span");
-  const name = document.createElement("strong"),
-    detail = document.createElement("small");
-  name.textContent = rule.label;
-  detail.textContent = rule.detail;
-  text.append(name, detail);
-  button.append(text);
-  button.setAttribute("aria-label", `${rule.name}: ${rule.rule}`);
-  button.title = rule.rule;
-  button.setAttribute("aria-pressed", "false");
-  button.addEventListener("click", () => {
-    if (!editable() || !shore.turn) return;
-    const before = currentDraft();
-    shore.turn[active].criterion = rule.id;
-    markEdited(before);
-    el("criterion-picker").hidden = true;
-    updateEditor();
-    controls();
-    el("choose-criterion").focus({ preventScroll: true });
-  });
-  el("criterion-options").append(button);
+let renderedDeck = "";
+function renderDeck() {
+  // Every card is one-use, so a spent card leaves the picker for good. Rebuild
+  // only when the remaining deck actually changes, to preserve focus.
+  const cards = availableCards(world, shore.completed);
+  const signature = cards.map((card) => card.id).join("|");
+  if (signature === renderedDeck) return;
+  renderedDeck = signature;
+  const options = el("criterion-options");
+  options.replaceChildren();
+  for (const rule of cards) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "criterion-card";
+    button.dataset.criterion = rule.id;
+    button.innerHTML = criterionIcon(rule.id);
+    const text = document.createElement("span");
+    const name = document.createElement("strong"),
+      detail = document.createElement("small");
+    name.textContent = rule.name;
+    detail.textContent = rule.label;
+    text.append(name, detail);
+    button.append(text);
+    button.setAttribute("aria-label", `${rule.name}: ${rule.rule}`);
+    button.title = rule.rule;
+    button.setAttribute("aria-pressed", "false");
+    button.addEventListener("click", () => {
+      if (!editable() || !shore.turn) return;
+      const before = currentDraft();
+      shore.turn[active].criterion = rule.id;
+      markEdited(before);
+      el("criterion-picker").hidden = true;
+      updateEditor();
+      controls();
+      el("choose-criterion").focus({ preventScroll: true });
+    });
+    options.append(button);
+  }
+  el("deck-count").textContent =
+    `${cards.length} of ${deckFor(world).length} rules left`;
 }
+renderDeck();
 el("minimize").addEventListener("click", () => {
   minimized = true;
   el("criterion-picker").hidden = true;
@@ -902,6 +930,7 @@ function showWorlds() {
   if (busy) return;
   message("world-switch-error", "");
   worldDialog.showModal();
+  void atlasMap.refresh();
 }
 el("worlds").addEventListener("click", showWorlds);
 el("explore-worlds").addEventListener("click", showWorlds);
@@ -909,39 +938,13 @@ el("close-worlds").addEventListener("click", () => worldDialog.close());
 worldDialog.addEventListener("cancel", (event) => {
   if (busy) event.preventDefault();
 });
-for (const option of WORLDS) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "world-option";
-  button.dataset.world = option.id;
-  button.setAttribute(
-    "aria-label",
-    option.id === world.id
-      ? `${option.name}, current world`
-      : `Explore ${option.name}`,
-  );
-  const swatch = document.createElement("span"),
-    content = document.createElement("span"),
-    heading = document.createElement("strong"),
-    detail = document.createElement("span"),
-    action = document.createElement("small");
-  swatch.className = "world-swatch";
-  swatch.setAttribute("aria-hidden", "true");
-  swatch.textContent = option.id === "sandy-shore" ? "≈" : "☾";
-  content.className = "world-option-copy";
-  heading.textContent = option.name;
-  detail.textContent = option.description;
-  action.textContent =
-    option.id === world.id ? "Current world" : "Explore world ↗";
-  content.append(heading, detail, action);
-  button.append(swatch, content);
-  button.addEventListener("click", () => {
-    void switchWorld(option);
-  });
-  el("world-options").append(button);
-}
-async function switchWorld(next: WorldDefinition) {
-  if (busy || next.id === world.id) return;
+const atlasMap = createAtlasMap(el("world-options"), {
+  currentWorld: world.id,
+  busy: () => busy,
+  open: (id) => openWorld(id),
+});
+async function openWorld(next: string) {
+  if (busy || next === world.id) return;
   busy = true;
   controls();
   renderMap();
@@ -960,10 +963,10 @@ async function switchWorld(next: WorldDefinition) {
     renderMap();
     return;
   }
-  writePreference("world", next.id);
+  writePreference("world", next);
   // Reload only our iframe, retaining Devvit's signed URL query. All writes have
   // settled on the old world's API before a new world can mount.
-  location.hash = next.id;
+  location.hash = next;
   location.reload();
 }
 window.addEventListener("resize", () => positionMap(true));

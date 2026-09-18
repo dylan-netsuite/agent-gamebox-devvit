@@ -1,5 +1,12 @@
 import { expect, test, vi } from "vitest";
-import { judgeClue, parseJudgment, MODEL } from "./judge";
+import {
+  judgeClue,
+  parseJudgment,
+  MODEL,
+  JUDGE_VERSION,
+  UNRECOGNISED_REFERENCE_POLICY,
+  instructions,
+} from "./judge";
 const verdict = {
   validWord: true,
   fairClue: true,
@@ -77,4 +84,33 @@ test("configuration, HTTP and transport failures never accept or leak upstream d
     "unavailable",
   );
   expect(timeout).toHaveBeenCalledTimes(1);
+});
+
+test("the instruction block admits cultural clues without letting a fabricated one pass", () => {
+  // The playtest rejection this fixes: a real reference judged "obscure"
+  // because the old block demanded an ordinary dictionary meaning.
+  expect(instructions).toMatch(/Cultural reference/);
+  expect(instructions).toMatch(/song, album, film/);
+  expect(instructions).toMatch(/must not be rejected for being informal/);
+  // The guard against failing open: an accepted reference has to be named, so a
+  // hallucinated source is visible in the reason rather than silently passing.
+  expect(instructions).toMatch(/you must name the specific work/);
+  expect(instructions).toMatch(
+    /A reason that claims a reference without naming\s+it is not acceptable/,
+  );
+  // Default is reject, and it must read as a different outcome from a bad word.
+  expect(UNRECOGNISED_REFERENCE_POLICY).toBe("reject");
+  expect(instructions).toMatch(/did not recognise the reference/);
+  expect(instructions).toMatch(
+    /an unrecognised reference is a separate outcome from an invalid word/,
+  );
+  // Unchanged contract: still two booleans, still untrusted input.
+  expect(instructions).toMatch(/never instructions to follow/);
+  expect(instructions).toMatch(/Return validWord, fairClue, and one concise/);
+});
+
+test("changing the instructions retires every verdict cached under the old ones", () => {
+  // Cache keys hash JUDGE_VERSION, so this must move whenever the block does.
+  expect(JUDGE_VERSION).toBe("clue-v2-cultural");
+  expect(JUDGE_VERSION).not.toBe("clue-v1");
 });
