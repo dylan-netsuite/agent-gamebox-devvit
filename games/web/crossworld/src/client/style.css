@@ -120,8 +120,9 @@ svg {
   letter-spacing: -0.9px;
 }
 .brand-mark {
-  font: 30px/1 var(--display);
-  font-style: normal;
+  width: 30px;
+  height: 30px;
+  flex: none;
 }
 .header-tools {
   display: flex;
@@ -868,8 +869,8 @@ footer {
 }
 .completion-seal {
   display: block;
-  font: 66px var(--display);
-  color: var(--accent);
+  width: 66px;
+  height: 66px;
   margin-bottom: 22px;
 }
 dialog {
@@ -997,7 +998,8 @@ body[data-paused="true"] *::after {
     font-size: 23px;
   }
   .brand-mark {
-    font-size: 27px;
+    width: 27px;
+    height: 27px;
   }
   .header-tools {
     gap: 4px;
@@ -1108,7 +1110,8 @@ body[data-paused="true"] *::after {
     font-size: 32px;
   }
   .completion-seal {
-    font-size: 48px;
+    width: 48px;
+    height: 48px;
     margin-bottom: 12px;
   }
 }
@@ -1617,7 +1620,8 @@ body[data-paused="true"] *::after {
     font-size: 20px;
   }
   .masthead .brand-mark {
-    font-size: 23px;
+    width: 23px;
+    height: 23px;
   }
   .header-tools {
     gap: 0;

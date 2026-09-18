@@ -22,6 +22,7 @@ const dependencies = (review = yes) => ({
   config: vi.fn(async () => ({ enabled: true, key: "test-only-placeholder" })),
   judge: vi.fn(async () => review),
   now: Date.now,
+  playtest: () => false,
 });
 test("login is required before account operations", () => {
   expect(() => requireUser(undefined)).toThrow("Sign in");
@@ -110,6 +111,17 @@ test("per-user and installation budgets stop new provider calls", async () => {
   await redis.set(`cq:judge-budget:${day}`, "200");
   await expect(submit("bob", draft, deps)).rejects.toThrow("playtest limit");
   expect(deps.judge).not.toHaveBeenCalled();
+});
+test("the playtest lifts the per-user cap but never the installation ceiling", async () => {
+  const deps = { ...dependencies(), playtest: () => true };
+  const day = new Date().toISOString().slice(0, 10);
+  await redis.set(`cq:${SCENARIO}:alice:budget:${day}`, "5000");
+  expect((await submit("alice", draft, deps)).status).toBe("accepted");
+  expect(deps.judge).toHaveBeenCalledTimes(1);
+  // The spend ceiling still applies, so a runaway playtest cannot bill freely.
+  await redis.set(`cq:judge-budget:${day}`, "200");
+  await expect(submit("bob", draft, deps)).rejects.toThrow("playtest limit");
+  expect(deps.judge).toHaveBeenCalledTimes(1);
 });
 
 test("submission works without a global Redis grant and charges expiring installation counters", async () => {

@@ -14,7 +14,70 @@
     <main class="game">
       <header class="masthead">
         <p class="brand">
-          <span class="brand-mark" aria-hidden="true">✳</span> CrossWorld
+          <!-- crossworld-mark-32.svg geometry: heavy arc, crossing cropped to
+               3x3. The full 5-wide grid turns to noise below ~48px. Fills are
+               theme tokens because :root.dark redefines them and an <img>
+               cannot inherit a custom property. Strokes run heavier than the
+               file's, which land sub-pixel at this size. -->
+          <svg
+            class="brand-mark"
+            viewBox="0 0 256 256"
+            role="img"
+            aria-label="CrossWorld"
+            focusable="false"
+          >
+            <path
+              d="M202.57 216.86A116 116 0 1 1 216.86 53.43"
+              fill="none"
+              stroke="var(--ink)"
+              stroke-width="12"
+            />
+            <g stroke="var(--ink)" stroke-width="6">
+              <circle cx="128" cy="77" r="23" fill="var(--surface)" />
+              <rect
+                x="156"
+                y="54"
+                width="46"
+                height="46"
+                rx="7"
+                fill="var(--ink)"
+              />
+              <rect
+                x="54"
+                y="105"
+                width="46"
+                height="46"
+                rx="7"
+                fill="var(--surface)"
+              />
+              <rect
+                x="105"
+                y="105"
+                width="46"
+                height="46"
+                rx="7"
+                fill="var(--orange)"
+              />
+              <circle cx="179" cy="128" r="23" fill="var(--surface)" />
+              <rect
+                x="54"
+                y="156"
+                width="46"
+                height="46"
+                rx="7"
+                fill="var(--ink)"
+              />
+              <rect
+                x="105"
+                y="156"
+                width="46"
+                height="46"
+                rx="7"
+                fill="var(--surface)"
+              />
+            </g>
+          </svg>
+          CrossWorld
         </p>
         <div class="header-tools">
           <button
@@ -279,7 +342,99 @@
             Return to your clue ↗
           </button>
           <section id="complete" class="complete" hidden>
-            <span class="completion-seal" aria-hidden="true">✳</span>
+            <!-- crossworld-mark-48.svg geometry: full 5-wide grid, no
+                 waypoints, no letters. Rendered at 66px (48px on narrow), the
+                 band where waypoints antialias into smudges but the grid still
+                 reads. -->
+            <svg
+              class="completion-seal"
+              viewBox="0 0 256 256"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M202.57 216.86A116 116 0 1 1 216.86 53.43"
+                fill="none"
+                stroke="var(--ink)"
+                stroke-width="10"
+              />
+              <g stroke="var(--ink)" stroke-width="3">
+                <rect
+                  x="73"
+                  y="35"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+                <circle cx="90" cy="90" r="17" fill="var(--surface)" />
+                <rect
+                  x="111"
+                  y="73"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--ink)"
+                />
+                <rect
+                  x="35"
+                  y="111"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+                <rect
+                  x="73"
+                  y="111"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--orange)"
+                />
+                <circle cx="128" cy="128" r="17" fill="var(--surface)" />
+                <rect
+                  x="149"
+                  y="111"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+                <rect
+                  x="187"
+                  y="111"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+                <rect
+                  x="35"
+                  y="149"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--ink)"
+                />
+                <rect
+                  x="73"
+                  y="149"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+                <rect
+                  x="73"
+                  y="187"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+              </g>
+            </svg>
             <p id="completion-world" class="eyebrow">Sandy Shore, discovered</p>
             <h2>Ten words.<br />A world of your own.</h2>
             <p>

@@ -19,6 +19,7 @@ import {
   createTurnGame,
   GameError,
   COOLDOWN_MS,
+  PLAYTEST_SUBREDDIT,
   requireUser,
   type Dependencies,
 } from "./game";
@@ -26,7 +27,7 @@ import {
 export const canResetShore = (
   user: string | undefined,
   subreddit: string | undefined,
-) => Boolean(user && subreddit === "crossworld_game_dev");
+) => Boolean(user && subreddit === PLAYTEST_SUBREDDIT);
 export function createWorldGame(world: WorldDefinition) {
   const DAYS = world.days;
   const runKey = (user: string) => `cq:${world.scenario}:${user}:run`;
