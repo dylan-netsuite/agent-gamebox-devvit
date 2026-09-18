@@ -24,6 +24,13 @@ import { atlasView, enterWorld } from "./atlas";
 import { createWorldGame, canResetShore } from "./shore";
 
 const app = express();
+// TEMPORARY: mobile stray-glyph diagnostics. Registered ahead of the 2kb global
+// parser so a DOM geometry dump is accepted, and it never reaches game state.
+// Read with `npx devvit logs r/crossworld_game_dev`. Remove with src/client/diag.ts.
+app.post("/api/diag", express.json({ limit: "64kb" }), (req, res) => {
+  console.log(`CW_DIAG ${JSON.stringify(req.body)}`);
+  res.json({ ok: true });
+});
 app.use(express.json({ limit: "2kb" }));
 app.use("/api", (_req, res, next) => {
   res.set("Cache-Control", "no-store");

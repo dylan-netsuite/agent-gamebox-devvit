@@ -3,6 +3,7 @@ import { createAtlasMap } from "./atlas-map";
 import { readPreference, writePreference } from "./preferences";
 import { navigateTo } from "@devvit/web/client";
 import { createGameApi } from "./api";
+import { startDiag } from "./diag";
 import { createShoreArt } from "./shore-art";
 import { criterionIcon } from "./criteria-art";
 import {
@@ -971,3 +972,5 @@ async function openWorld(next: string) {
 }
 window.addEventListener("resize", () => positionMap(true));
 void load();
+// TEMPORARY: see src/client/diag.ts. Remove with the /api/diag route.
+startDiag();
