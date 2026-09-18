@@ -297,7 +297,8 @@ h2 {
   width: min(100%, 300px);
   /* One literal ratio per world. This was written while chasing a mobile bug
      it turned out not to cause: WebKit resolves `var(--a) / var(--b)` here
-     correctly, verified against Playwright WebKit on an iPhone profile. Kept
+     correctly, verified against Playwright WebKit on an iPhone profile and
+     later on real iOS 18.7, which reported ratio "5 / 10" at 264x528. Kept
      because it is the more legible form and because an unlisted world then
      falls back to 5 / 10 — wrong proportions but playable. A board that cannot
      resolve its ratio collapses to zero height, and since #scenery is
@@ -358,8 +359,19 @@ h2 {
 }
 .tile input,
 .tile .letter {
-  width: 100%;
-  height: 100%;
+  /* Absolute + inset rather than width/height 100%. The tile's height comes
+     from a 1fr grid track inside .tiles, whose own height traces back to the
+     .map aspect-ratio rather than an explicit length. iOS 18.7 WebKit treats
+     that item height as indefinite when resolving a percentage and walks up to
+     the nearest definite ancestor, so `height: 100%` measured 528px -- the
+     whole board -- instead of one ~46px cell. A text input centres its value
+     vertically, so the typed letter painted ~500px below its tile while the
+     tile itself still looked empty. Width was unaffected because .map carries
+     an explicit width. Insets resolve against the containing block's used
+     padding box, so they cannot hit the same trap. Confirmed on device via
+     src/client/diag.ts, not reproducible in Chromium or Playwright WebKit. */
+  position: absolute;
+  inset: 0;
   padding: 7px 0 0;
   border: 0;
   border-radius: inherit;

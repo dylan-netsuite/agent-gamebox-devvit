@@ -98,6 +98,13 @@ export function captureDiag(tag: string) {
         ? {
             box: box(tiles.getBoundingClientRect()),
             kids: tiles.childElementCount,
+            // A correct tile is one grid track tall (~46px at 528/10 with a
+            // 7px gap). A tile near the full board height would mean the track
+            // itself is wrong, not just the field inside it.
+            cells: [...tiles.children].slice(0, 12).map((tile) => ({
+              k: (tile as HTMLElement).dataset.cell ?? "?",
+              box: box(tile.getBoundingClientRect()),
+            })),
           }
         : null,
       active: describe(
