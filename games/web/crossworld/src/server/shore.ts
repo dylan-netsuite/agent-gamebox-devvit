@@ -2,7 +2,7 @@ import { SANDY_SHORE, type WorldDefinition } from "../shared/worlds";
 import { redis } from "@devvit/web/server";
 import { randomUUID } from "node:crypto";
 import {
-  SHORE_SCENARIO,
+  JUDGE_BUDGET_SCENARIO,
   DIRECTIONS,
   asDraft,
   emptyPair,
@@ -14,6 +14,7 @@ import {
   type Shore,
 } from "../shared/shore";
 import { validateTurn } from "../shared/rules";
+import { assertPlayable, clearCompletion, recordCompletion } from "./atlas";
 import {
   createTurnGame,
   GameError,
@@ -35,8 +36,9 @@ export function createWorldGame(world: WorldDefinition) {
     createTurnGame(
       `${world.scenario}:day:${day}:${direction}`,
       (draft) => validateTurn(draft, null, DAYS[day]![direction].length),
-      // Share the original allowance across both worlds; switching never replenishes it.
-      SHORE_SCENARIO,
+      // Share the original allowance across every world; switching never replenishes
+      // it, and versioning a world's grid must not hand out a fresh budget either.
+      JUDGE_BUDGET_SCENARIO,
       false,
     );
   async function withReviews(
@@ -105,6 +107,7 @@ export function createWorldGame(world: WorldDefinition) {
     // Rotate only this account's progress namespace. In-flight writes stay in the
     // old run; existing verdict caches, cooldowns and paid budgets remain intact.
     await redis.set(runKey(id), randomUUID());
+    await clearCompletion(id, world);
     return readShore(id);
   }
   async function write(
@@ -123,6 +126,9 @@ export function createWorldGame(world: WorldDefinition) {
       day >= DAYS.length
     )
       throw new GameError(400, "Choose a valid turn and two clue drafts.");
+    // The atlas decides whether this world may be written in at all today. It
+    // runs before any state is read or written, and before any paid review.
+    await assertPlayable(user, world, deps?.now() ?? Date.now());
     const current = await readShore(user);
     const run = current.run ?? "initial";
     const requestedRun =
@@ -192,7 +198,12 @@ export function createWorldGame(world: WorldDefinition) {
         },
       );
     }
-    return readShore(user);
+    const settled = await readShore(user);
+    // The last accepted pair closes the world. Recording is idempotent, so a
+    // retry of this request cannot move the completion date or the streak.
+    if (!settled.turn)
+      await recordCompletion(user, world, deps?.now() ?? Date.now());
+    return settled;
   }
   const saveShore = (user: string, raw: unknown) => write(user, raw, false);
   const submitShore = (user: string, raw: unknown, deps?: Dependencies) =>
