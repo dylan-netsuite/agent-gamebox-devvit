@@ -478,10 +478,14 @@ td strong{color:var(--text)}
   </div>
 
   <h3>Deck construction rules</h3>
+  <div class="callout callout-success">
+    <p><strong>Decks are per-world and thematically named.</strong> A card's <em>mechanic</em> is stable and global; its <em>name</em> belongs to the world it appears in. "Exactly two words" is <em>Two Shells</em> on Sandy Shore and <em>Two Posts</em> on The Long Pier — one deterministic check, two pieces of fiction. Implementations must key saved records on the mechanic id, never the display name.</p>
+    <p>Each world draws a distinct subset sized to its slot count, so a completed world consumes its deck exactly. <strong>Cards are one-use and are eliminated on acceptance</strong> — the first playtest shipped without this and the spend decision had no weight at all. A card is reserved on draft and spent only when a pair is accepted, so a rejected clue or an unavailable judge never consumes it.</p>
+  </div>
   <table>
     <thead><tr><th>Region</th><th>Deck source</th><th>Per slot</th><th>Choice</th></tr></thead>
     <tbody>
-      <tr><td>I</td><td>Tier I</td><td>1 card</td><td>Free pick</td></tr>
+      <tr><td>I</td><td>Tiers I–III, themed per world</td><td>1 card</td><td>Free pick</td></tr>
       <tr><td>II</td><td>Tiers I–II</td><td>1 card</td><td>Free pick</td></tr>
       <tr><td>III</td><td>Tiers I–III</td><td>1 card</td><td>Free pick</td></tr>
       <tr><td>IV</td><td>Tiers I–IV</td><td>2 cards (1 shape + 1 other)</td><td>Free pick</td></tr>
@@ -599,26 +603,29 @@ World A (done)      World B (today)<br>
       <table>
         <thead><tr><th>World</th><th>Discovery</th><th>Across</th><th>Down</th><th>Cross</th></tr></thead>
         <tbody>
-          <tr><td rowspan="2"><strong>1 Sandy Shore</strong></td><td>Sand drifts</td><td>1A (2,1) SAND · Pocket Posy</td><td>1D (1,3) ANTS · Two Breaths</td><td>(2,3) <strong>N</strong></td></tr>
-          <tr><td>Tide pool</td><td>2A (8,1) COAST · Half Measure</td><td>2D (7,2) FOAM · Tiny Seeds</td><td>(8,2) <strong>O</strong></td></tr>
-          <tr><td rowspan="2"><strong>2 Glass Reach</strong></td><td>Green shard</td><td>1A (2,1) GLASS · Pocket Posy</td><td>1D (1,3) WAVE · Two Breaths</td><td>(2,3) <strong>A</strong></td></tr>
-          <tr><td>Bottle neck</td><td>2A (8,2) TIDE · Tiny Seeds</td><td>2D (6,3) SHINE · Long Shadow</td><td>(8,3) <strong>I</strong></td></tr>
-          <tr><td rowspan="2"><strong>3 The Wrackline</strong></td><td>Rope knot</td><td>1A (3,1) ROPE · Two Breaths</td><td>1D (1,2) FLOAT · Pocket Posy</td><td>(3,2) <strong>O</strong></td></tr>
-          <tr><td>Salt-stiff coat</td><td>2A (9,1) SALT · Half Measure</td><td>2D (9,4) TORN · Tiny Seeds</td><td>(9,4) <strong>T</strong></td></tr>
-          <tr><td rowspan="2"><strong>4 Gullery</strong></td><td>Nest ledge</td><td>1A (2,1) NEST · Pocket Posy</td><td>1D (1,3) ISLE · Two Breaths</td><td>(2,3) <strong>S</strong></td></tr>
-          <tr><td>Loud stone</td><td>2A (8,1) STONE · Half Measure</td><td>2D (7,3) LOUD · Tiny Seeds</td><td>(8,3) <strong>O</strong></td></tr>
-          <tr><td rowspan="3"><strong>5 Low Water</strong></td><td>Wet flats</td><td>1A (3,1) FLAT · Pocket Posy</td><td>1D (1,3) SHALE · Long Shadow</td><td>(3,3) <strong>A</strong></td></tr>
-          <tr><td>Buried keel</td><td>2A (9,1) KEEL · Two Breaths</td><td>2D (8,2) BEAMS · Tiny Seeds</td><td>(9,2) <strong>E</strong></td></tr>
-          <tr><td>Old channel</td><td>3A (15,1) CANAL · Seven Petals</td><td>3D (14,3) INLET · Half Measure</td><td>(15,3) <strong>N</strong></td></tr>
-          <tr><td rowspan="2"><strong>6 The Bell Buoy</strong></td><td>Iron tongue</td><td>1A (2,2) BELL · Two Breaths</td><td>1D (2,2) BUOY · Pocket Posy</td><td>(2,2) <strong>B</strong></td></tr>
-          <tr><td>Rope line</td><td>2A (8,1) IRON · Half Measure</td><td>2D (7,3) FOG · Tiny Seeds</td><td>(8,3) <strong>O</strong></td></tr>
-          <tr><td rowspan="3"><strong>7 The Long Pier</strong> <span class="badge badge-gate">Gate</span></td><td>First piling</td><td>1A (2,1) PIER · Pocket Posy</td><td>1D (2,1) POST · Two Breaths</td><td>(2,1) <strong>P</strong></td></tr>
-          <tr><td>Missing plank</td><td>2A (9,1) PLANK · Half Measure</td><td>2D (7,3) GRAIN · Tiny Seeds</td><td>(9,3) <strong>A</strong></td></tr>
-          <tr><td>Fog end</td><td>3A (11,1) CANOE · Seven Petals</td><td>3D (11,1) CRANE · Long Shadow</td><td>(11,1) <strong>C</strong> &nbsp;+&nbsp; (11,3) <strong>N</strong> shared with 2D GRAIN</td></tr>
+          <tr><td rowspan="2"><strong>1 Sandy Shore</strong></td><td>Sand drifts</td><td>1A (2,1) SAND · Driftwood</td><td>1D (1,3) ANTS · Two Shells</td><td>(2,3) <strong>N</strong></td></tr>
+          <tr><td>Tide pool</td><td>2A (8,1) COAST · Low Tide</td><td>2D (7,2) FOAM · Grains</td><td>(8,2) <strong>O</strong></td></tr>
+          <tr><td rowspan="2"><strong>2 Glass Reach</strong></td><td>Green shard</td><td>1A (2,1) GLASS · Pocket Find</td><td>1D (1,3) WAVE · Matched Pair</td><td>(2,3) <strong>A</strong></td></tr>
+          <tr><td>Bottle neck</td><td>2A (8,2) TIDE · Clouded Glass</td><td>2D (6,3) SHINE · Long Shard</td><td>(8,3) <strong>I</strong></td></tr>
+          <tr><td rowspan="2"><strong>3 The Wrackline</strong></td><td>Rope knot</td><td>1A (3,1) ROPE · Short Rope</td><td>1D (1,2) FLOAT · Seven Knots</td><td>(3,2) <strong>O</strong></td></tr>
+          <tr><td>Salt-stiff coat</td><td>2A (9,1) SALT · Small Salvage</td><td>2D (9,4) TORN · Cut the Line</td><td>(9,4) <strong>T</strong></td></tr>
+          <tr><td rowspan="2"><strong>4 Gullery</strong></td><td>Nest ledge</td><td>1A (2,1) NEST · <em>deck TBD</em></td><td>1D (1,3) ISLE · <em>deck TBD</em></td><td>(2,3) <strong>S</strong></td></tr>
+          <tr><td>Loud stone</td><td>2A (8,1) STONE · <em>deck TBD</em></td><td>2D (7,3) LOUD · <em>deck TBD</em></td><td>(8,3) <strong>O</strong></td></tr>
+          <tr><td rowspan="3"><strong>5 Low Water</strong></td><td>Wet flats</td><td>1A (3,1) FLAT · <em>deck TBD</em></td><td>1D (1,3) SHALE · <em>deck TBD</em></td><td>(3,3) <strong>A</strong></td></tr>
+          <tr><td>Buried keel</td><td>2A (8,1) KEEL · <em>deck TBD</em></td><td>2D (7,2) BEAMS · <em>deck TBD</em></td><td>(8,2) <strong>E</strong></td></tr>
+          <tr><td>Old channel</td><td>3A (14,1) CANAL · <em>deck TBD</em></td><td>3D (13,3) INLET · <em>deck TBD</em></td><td>(14,3) <strong>N</strong></td></tr>
+          <tr><td rowspan="2"><strong>6 The Bell Buoy</strong></td><td>Iron tongue</td><td>1A (2,2) BELL · <em>deck TBD</em></td><td>1D (2,2) BUOY · <em>deck TBD</em></td><td>(2,2) <strong>B</strong></td></tr>
+          <tr><td>Rope line</td><td>2A (8,1) IRON · <em>deck TBD</em></td><td>2D (7,3) FOG · <em>deck TBD</em></td><td>(8,3) <strong>O</strong></td></tr>
+          <tr><td rowspan="3"><strong>7 The Long Pier</strong> <span class="badge badge-gate">Gate</span></td><td>First piling</td><td>1A (2,1) PIER · Short Span</td><td>1D (2,1) POST · Two Posts</td><td>(2,1) <strong>P</strong></td></tr>
+          <tr><td>Missing plank</td><td>2A (7,1) PLANK · Fog Bank</td><td>2D (5,3) GRAIN · Missing Plank</td><td>(7,3) <strong>A</strong></td></tr>
+          <tr><td>Fog end</td><td>3A (9,1) CANOE · Seven Pilings</td><td>3D (9,1) CRANE · Far Out</td><td>(9,1) <strong>C</strong> &nbsp;+&nbsp; (9,3) <strong>N</strong> shared with 2D GRAIN</td></tr>
         </tbody>
       </table>
       <div class="callout callout-success">
-        <p><strong>The Gate's cross-discovery link.</strong> <code>3A CANOE</code> runs through <code>(11,3)</code>, which is the final letter of <code>2D GRAIN</code> written in the previous discovery. That single cell is the whole preview of Region II: an answer you already locked now constrains one you haven't written yet.</p>
+        <p><strong>The Gate's cross-discovery link.</strong> <code>3A CANOE</code> runs through <code>(9,3)</code>, which is the final letter of <code>2D GRAIN</code> written in the previous discovery. That single cell is the whole preview of Region II: an answer you already locked now constrains one you haven't written yet.</p>
+      </div>
+      <div class="callout callout-warn">
+        <p><strong>The Long Pier was compacted from 15 rows to 13.</strong> The original layout put <code>CRANE</code> at rows 11–15, making the Gate a 1:3 board. The shipped 10×5 grid already needs a focused mobile viewport because the full map does not fit, so at 44px touch targets a 15-row board made "Full map" unusable in the Reddit iframe. Discoveries 2 and 3 moved up two rows; the pair crossings and the cross-discovery link are unchanged. <strong>Grid height is a mobile constraint, not just a content choice</strong> — later regions with 10–12 slot worlds must be laid out against a real viewport before the coordinates are fixed.</p>
       </div>
     </div>
   </div>
