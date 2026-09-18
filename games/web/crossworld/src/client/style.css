@@ -14,7 +14,6 @@
   --cover-line: #b29b65;
   --cover-fill: #dac68c;
   --cover-glow: #e9dfc0;
-  --brand: #087e73;
   --orange: #a75432;
   --selected: #dfebe2;
   --tile: #eee9d9;
@@ -36,7 +35,6 @@
   --cover-line: #6c7f6a;
   --cover-fill: #3b5450;
   --cover-glow: #46615c;
-  --brand: #86d5c1;
   --orange: #f1b394;
   --selected: #365950;
   --tile: #314540;
@@ -115,9 +113,20 @@ svg {
   display: flex;
   gap: 9px;
   align-items: center;
-  color: var(--brand);
-  font: italic 600 25px/1 var(--display);
-  letter-spacing: -0.9px;
+  color: var(--ink);
+  /* Label voice, not display voice. The masthead is chrome; the world title
+     below it is the page heading. An upright serif wordmark at display size
+     competed with it -- same face, same colour, stacked -- so this reuses
+     .eyebrow's uppercase 0.14em setting instead, sits with the ink icon
+     buttons opposite, and leaves the mark to carry the identity. Replaces an
+     italic teal lockup that was the only italic and the only teal text in the
+     app. Font family is left to inherit; text-transform keeps the accessible
+     name as "CrossWorld". */
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 .brand-mark {
   width: 30px;
@@ -995,7 +1004,7 @@ body[data-paused="true"] *::after {
     min-height: 64px;
   }
   .brand {
-    font-size: 23px;
+    font-size: 12px;
   }
   .brand-mark {
     width: 27px;
@@ -1617,7 +1626,7 @@ body[data-paused="true"] *::after {
 }
 @media (max-width: 350px) {
   .masthead .brand {
-    font-size: 20px;
+    font-size: 11px;
   }
   .masthead .brand-mark {
     width: 23px;
