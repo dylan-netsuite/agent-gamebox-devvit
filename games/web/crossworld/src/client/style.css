@@ -295,9 +295,20 @@ h2 {
 .map {
   position: relative;
   width: min(100%, 300px);
-  /* Grid size is per-world; app.ts sets these from the world definition. */
-  aspect-ratio: var(--map-cols, 5) / var(--map-rows, 10);
+  /* Written per world as a literal ratio, never as `var(--a) / var(--b)`.
+     WebKit does not resolve a ratio split across two substitutions, and the
+     board then collapses to zero height: #scenery keeps painting because it is
+     overflow: visible, so the art and the typed letters survive while every
+     tile disappears. Worlds without an override below fall back to 5 / 10 —
+     wrong proportions but playable, rather than invisible. */
+  aspect-ratio: 5 / 10;
   margin: 12px auto 16px;
+}
+:root[data-world="the-wrackline"] .map {
+  aspect-ratio: 4 / 12;
+}
+:root[data-world="the-long-pier"] .map {
+  aspect-ratio: 5 / 13;
 }
 .tiles {
   position: absolute;

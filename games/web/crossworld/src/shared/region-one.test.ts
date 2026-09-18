@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 import { HAUNTED_HEDGE, THE_LONG_PIER, WORLDS } from "./worlds";
 import { RESTRICTIONS } from "./rules";
@@ -201,5 +202,33 @@ test("no two worlds share an atlas cell, so map cards cannot be placed on top of
   for (const world of WORLDS) {
     expect(world.atlas.x).toBeGreaterThanOrEqual(0);
     expect(world.atlas.y).toBeGreaterThanOrEqual(0);
+  }
+});
+
+test("every world's grid shape has a literal aspect-ratio in the stylesheet", () => {
+  // A board whose aspect-ratio does not resolve collapses to zero height, and
+  // because #scenery is overflow:visible the art and letters keep painting while
+  // every tile vanishes. That failure is silent, so it is pinned here: the ratio
+  // must be a literal per world, never built from two var() substitutions.
+  const css = readFileSync(
+    new URL("../client/style.css", import.meta.url),
+    "utf8",
+  );
+  expect(css).not.toMatch(/aspect-ratio:\s*var\([^)]*\)\s*\/\s*var\(/);
+  const base = css.match(/\.map \{[\s\S]*?aspect-ratio:\s*(\d+)\s*\/\s*(\d+)/);
+  expect(base, "base .map aspect-ratio").not.toBeNull();
+  const declared = new Map<string, string>([
+    ["default", `${base![1]}/${base![2]}`],
+  ]);
+  for (const m of css.matchAll(
+    /:root\[data-world="([^"]+)"\] \.map \{\s*aspect-ratio:\s*(\d+)\s*\/\s*(\d+)/g,
+  ))
+    declared.set(m[1]!, `${m[2]}/${m[3]}`);
+  for (const world of WORLDS) {
+    const want = `${world.cols}/${world.rows}`;
+    const got = declared.get(world.id) ?? declared.get("default");
+    expect(got, `${world.id} (${world.rows}x${world.cols}) aspect-ratio`).toBe(
+      want,
+    );
   }
 });
