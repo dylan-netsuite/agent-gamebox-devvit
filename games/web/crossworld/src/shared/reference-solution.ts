@@ -1,8 +1,9 @@
 /**
  * The design bible's verified reference solution for Region I, transcribed
  * 1-based exactly as the document writes it. Players supply their own answers —
- * these words exist only to pin the geometry, the crossings and the card
- * assignments, and are used by tests rather than by the game.
+ * these words exist only to pin the geometry and the crossings, and are used by
+ * tests rather than by the game. Card assignments are drawn from each world's
+ * own deck, which supersedes the card column in the bible's draft spec table.
  */
 import {
   GLASS_REACH,
@@ -55,12 +56,12 @@ export const REGION_ONE: ReferenceWorld[] = [
       {
         place: "Green shard",
         across: { row: 2, col: 1, word: "GLASS", card: "brief" },
-        down: { row: 1, col: 3, word: "WAVE", card: "two-breaths" },
+        down: { row: 1, col: 3, word: "WAVE", card: "same-start" },
         cross: "2,3,A",
       },
       {
         place: "Bottle neck",
-        across: { row: 8, col: 2, word: "TIDE", card: "short-words" },
+        across: { row: 8, col: 2, word: "TIDE", card: "no-e" },
         down: { row: 6, col: 3, word: "SHINE", card: "long-shadow" },
         cross: "8,3,I",
       },
@@ -71,14 +72,14 @@ export const REGION_ONE: ReferenceWorld[] = [
     discoveries: [
       {
         place: "Rope knot",
-        across: { row: 3, col: 1, word: "ROPE", card: "two-breaths" },
-        down: { row: 1, col: 2, word: "FLOAT", card: "brief" },
+        across: { row: 3, col: 1, word: "ROPE", card: "half-measure" },
+        down: { row: 1, col: 2, word: "FLOAT", card: "seven" },
         cross: "3,2,O",
       },
       {
         place: "Salt-stiff coat",
-        across: { row: 9, col: 1, word: "SALT", card: "half-measure" },
-        down: { row: 9, col: 4, word: "TORN", card: "short-words" },
+        across: { row: 9, col: 1, word: "SALT", card: "short-words" },
+        down: { row: 9, col: 4, word: "TORN", card: "no-articles" },
         cross: "9,4,T",
       },
     ],
@@ -97,7 +98,7 @@ export const REGION_ONE: ReferenceWorld[] = [
       {
         place: "Missing plank",
         across: { row: 7, col: 1, word: "PLANK", card: "half-measure" },
-        down: { row: 5, col: 3, word: "GRAIN", card: "short-words" },
+        down: { row: 5, col: 3, word: "GRAIN", card: "no-b" },
         cross: "7,3,A",
       },
       {
@@ -117,17 +118,17 @@ export const REFERENCE_CLUES: Record<string, string> = {
   COAST: "Where land meets sea",
   FOAM: "Sea suds on a wave",
   GLASS: "Clear brittle window stuff",
-  WAVE: "Rolling swell",
-  TIDE: "Sea rise and fall",
+  WAVE: "Swell surging shoreward",
+  TIDE: "Daily push and pull of a bay",
   SHINE: "A brilliantly polished gleam",
   ROPE: "Twisted cord",
-  FLOAT: "Stay atop water",
-  SALT: "Sea seasoning",
-  TORN: "Rent in two",
+  FLOAT: "To stay up on top of water",
+  SALT: "Sea grit in your food",
+  TORN: "Ripped in two",
   PIER: "Walkway over water",
   POST: "Upright timber",
   PLANK: "Long flat board",
-  GRAIN: "Wood line or a seed",
+  GRAIN: "Wood lines, or a seed",
   CANOE: "A slim boat you paddle while kneeling",
   CRANE: "A tall wading bird, unmistakably",
 };

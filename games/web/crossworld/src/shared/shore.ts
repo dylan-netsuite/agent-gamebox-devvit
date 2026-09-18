@@ -1,5 +1,5 @@
 import { SANDY_SHORE, type WorldDefinition } from "./worlds";
-import { RESTRICTIONS, validateTurn } from "./rules";
+import { RESTRICTIONS, mechanicFor, validateTurn } from "./rules";
 import { type Draft, type Judgment } from "./types";
 
 export const SHORE_SCENARIO = SANDY_SHORE.scenario;
@@ -13,10 +13,39 @@ export const COLS = SANDY_SHORE.cols;
 export const DIRECTIONS = ["across", "down"] as const;
 export type Direction = (typeof DIRECTIONS)[number];
 export const DAYS = SANDY_SHORE.days;
-export const CRITERIA = RESTRICTIONS.map((rule) => ({
-  ...rule,
-  name: rule.plain,
-}));
+export const CRITERIA = RESTRICTIONS;
+export type DeckCard = {
+  id: string;
+  name: string;
+  label: string;
+  detail: string;
+  rule: string;
+};
+/** A world's full deck, resolved from stable mechanic ids to display cards. */
+export function deckFor(world: WorldDefinition = SANDY_SHORE): DeckCard[] {
+  return world.deck.flatMap((entry) => {
+    const mechanic = mechanicFor(entry.mechanic);
+    return mechanic
+      ? [{ ...mechanic, id: entry.mechanic, name: entry.name }]
+      : [];
+  });
+}
+/**
+ * Cards spent on accepted pairs. Acceptance is the only thing that consumes a
+ * card: a draft, a rejected clue and an unavailable judge all leave the deck
+ * untouched, because none of them produce a completed pair.
+ */
+export const usedCards = (completed: Pair[]): string[] =>
+  completed.flatMap((pair) => DIRECTIONS.map((d) => pair[d].criterion));
+export function availableCards(
+  world: WorldDefinition = SANDY_SHORE,
+  completed: Pair[] = [],
+): DeckCard[] {
+  const spent = new Set(usedCards(completed));
+  return deckFor(world).filter((card) => !spent.has(card.id));
+}
+export const cardName = (world: WorldDefinition, id: string) =>
+  deckFor(world).find((card) => card.id === id)?.name ?? id;
 export type Entry = { word: string; clue: string; criterion: string };
 export type PairDraft = { revealed: boolean; across: Entry; down: Entry };
 export type Pair = PairDraft & { reviews: Record<Direction, Judgment | null> };
@@ -127,7 +156,18 @@ export function validatePair(
       issues: [`All ${world.days.length} discoveries are complete.`],
       pair: normalized,
     };
+  const deck = new Set(deckFor(world).map((card) => card.id));
+  const spent = new Set(usedCards(completed));
   for (const direction of DIRECTIONS) {
+    const label = direction === "across" ? "Across" : "Down";
+    const card = pair[direction].criterion;
+    // Deck membership and one-use are enforced here, before any paid review.
+    if (card && !deck.has(card))
+      issues.push(`${label}: that rule is not in this world’s deck.`);
+    else if (card && spent.has(card))
+      issues.push(
+        `${label}: ${cardName(world, card)} has already been spent in this world.`,
+      );
     const result = validateTurn(
       asDraft(pair, direction),
       null,
@@ -152,5 +192,13 @@ export function validatePair(
           `${direction === "across" ? "Across" : "Down"}: letter ${crossing.index + 1} must be ${crossing.letter} to match ${crossing.fixed ? "an earlier path" : "the other word in this pair"}.`,
         );
   }
+  if (
+    pair.across.criterion &&
+    pair.across.criterion === pair.down.criterion &&
+    deck.has(pair.across.criterion)
+  )
+    issues.push(
+      `Each rule is one-use: spend a different card on Across and Down.`,
+    );
   return { issues, pair: normalized };
 }

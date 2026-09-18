@@ -1,4 +1,3 @@
-import { CRITERIA } from "../shared/shore";
 const dot = (x: number, y: number) =>
   `<circle cx="${x}" cy="${y}" r="2.5" fill="currentColor"/>`;
 const letters = (text: string) =>
@@ -32,5 +31,3 @@ const icons: Record<string, string> = {
 };
 export const criterionIcon = (id: string) =>
   `<svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">${icons[id] ?? '<path d="M18 5v26M5 18h26M9 9l18 18M9 27 27 9"/>'}</svg>`;
-// Card copy lives with the rules themselves, so a new card needs no edit here.
-export const visualCriteria = CRITERIA;

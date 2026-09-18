@@ -11,6 +11,7 @@ import {
   type AtlasProgress,
 } from "./atlas";
 
+const HEDGE = "haunted-hedge";
 const SHORE = "sandy-shore",
   GLASS = "glass-reach",
   WRACK = "the-wrackline",
@@ -32,13 +33,45 @@ test("the frontier starts at the origin and grows outward one world at a time", 
   expect(frontierFor([SHORE, GLASS])).toEqual([WRACK]);
   expect(frontierFor([SHORE, WRACK])).toEqual([GLASS]);
   expect(frontierFor([SHORE, GLASS, WRACK])).toEqual([GATE]);
-  expect(frontierFor([SHORE, GLASS, WRACK, GATE])).toEqual([]);
+  // Clearing the Shallows Gate opens Region II, and nothing before it does.
+  expect(frontierFor([SHORE, GLASS, WRACK, GATE])).toEqual([HEDGE]);
+  expect(frontierFor([SHORE, GLASS, WRACK, GATE, HEDGE])).toEqual([]);
 });
 
 test("the Gate stays dark until every other world in the region is complete", () => {
   for (const partial of [[], [SHORE], [SHORE, GLASS], [SHORE, WRACK]])
     expect(frontierFor(partial)).not.toContain(GATE);
   expect(frontierFor([SHORE, GLASS, WRACK])).toContain(GATE);
+});
+
+test("Region II is unreachable until the Shallows Gate is complete", () => {
+  // The Hedge must never be a Shallows frontier destination, at any point.
+  for (const partial of [[], [SHORE], [SHORE, GLASS], [SHORE, GLASS, WRACK]]) {
+    expect(frontierFor(partial)).not.toContain(HEDGE);
+    expect(
+      canEnter(
+        HEDGE,
+        done(...partial.map((id) => [id, "2026-03-01"] as [string, string])),
+        "2026-03-09",
+      ),
+    ).toEqual({
+      ok: false,
+      reason: "region-locked",
+    });
+  }
+  const cleared = done(
+    [SHORE, "2026-03-01"],
+    [GLASS, "2026-03-02"],
+    [WRACK, "2026-03-03"],
+    [GATE, "2026-03-04"],
+  );
+  expect(frontierFor(Object.keys(cleared.completed))).toEqual([HEDGE]);
+  expect(canEnter(HEDGE, cleared, "2026-03-05")).toEqual({ ok: true });
+  // It is still subject to the same one-a-day cadence once it opens.
+  expect(canEnter(HEDGE, cleared, "2026-03-04")).toEqual({
+    ok: false,
+    reason: "played-today",
+  });
 });
 
 test("a world is only enterable when it borders completed terrain", () => {
@@ -53,7 +86,11 @@ test("a world is only enterable when it borders completed terrain", () => {
     ok: false,
     reason: "gate-locked",
   });
-  expect(canEnter("haunted-hedge", fresh, "2026-03-01")).toEqual({
+  expect(canEnter(HEDGE, fresh, "2026-03-01")).toEqual({
+    ok: false,
+    reason: "region-locked",
+  });
+  expect(canEnter("not-a-world", fresh, "2026-03-01")).toEqual({
     ok: false,
     reason: "not-in-atlas",
   });
@@ -119,14 +156,19 @@ test("a gap in play keeps every completed world and the frontier it earned", () 
   expect(canEnter(WRACK, lapsed, "2026-04-20")).toEqual({ ok: true });
 });
 
-test("map nodes explain why each world is unavailable, and the Hedge sits outside the run", () => {
+test("map nodes explain why each world is unavailable, including Region II", () => {
   const nodes = atlasNodes(done([SHORE, "2026-03-01"]), "2026-03-01");
   const at = (id: string) => nodes.find((node) => node.id === id)!;
   expect(at(SHORE).state).toBe("completed");
   expect(at(GLASS)).toMatchObject({ state: "locked", reason: "played-today" });
   expect(at(GATE)).toMatchObject({ state: "locked", reason: "gate-locked" });
   expect(at(GATE).detail).toContain("2 to go");
-  expect(at("haunted-hedge")).toMatchObject({ state: "open", inRun: false });
+  expect(at(HEDGE)).toMatchObject({
+    state: "locked",
+    reason: "region-locked",
+    inRun: false,
+  });
+  expect(at(HEDGE).detail).toContain("The Long Pier");
   const tomorrow = atlasNodes(done([SHORE, "2026-03-01"]), "2026-03-02");
   expect(tomorrow.find((node) => node.id === GLASS)!.state).toBe("open");
 });

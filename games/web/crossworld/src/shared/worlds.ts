@@ -8,6 +8,7 @@ export type WorldDay = {
   note: string;
 };
 export type RegionId = "shallows" | "hedge";
+export type DeckEntry = { mechanic: string; name: string };
 export type WorldKind = "open" | "gate";
 export type WorldDefinition = {
   id: string;
@@ -32,6 +33,14 @@ export type WorldDefinition = {
   neighbours: string[];
   /** Scenery motif key for the shared coastal renderer. */
   motif: "sand" | "glass" | "wrack" | "pier" | "hedge";
+  /**
+   * This world's restriction deck, sized to its slot count. Every card is
+   * one-use, so the deck is exactly consumed by a completed world. `mechanic`
+   * is the stable id the deterministic switch and saved records use; `name` is
+   * world-flavoured display only, and may be reworded without invalidating a
+   * single locked entry.
+   */
+  deck: DeckEntry[];
   days: WorldDay[];
 };
 
@@ -60,6 +69,12 @@ export const SANDY_SHORE: WorldDefinition = {
   atlas: { x: 1, y: 0 },
   neighbours: ["glass-reach", "the-wrackline", "the-long-pier"],
   motif: "sand",
+  deck: [
+    { mechanic: "brief", name: "Driftwood" },
+    { mechanic: "two-breaths", name: "Two Shells" },
+    { mechanic: "half-measure", name: "Low Tide" },
+    { mechanic: "short-words", name: "Grains" },
+  ],
   days: [
     {
       // 1A (2,1) SAND x 1D (1,3) ANTS, crossing (2,3) N
@@ -96,6 +111,12 @@ export const GLASS_REACH: WorldDefinition = {
   atlas: { x: 0, y: 1 },
   neighbours: ["sandy-shore", "the-long-pier"],
   motif: "glass",
+  deck: [
+    { mechanic: "brief", name: "Pocket Find" },
+    { mechanic: "same-start", name: "Matched Pair" },
+    { mechanic: "no-e", name: "Clouded Glass" },
+    { mechanic: "long-shadow", name: "Long Shard" },
+  ],
   days: [
     {
       // 1A (2,1) GLASS x 1D (1,3) WAVE, crossing (2,3) A
@@ -132,6 +153,12 @@ export const THE_WRACKLINE: WorldDefinition = {
   atlas: { x: 2, y: 1 },
   neighbours: ["sandy-shore", "the-long-pier"],
   motif: "wrack",
+  deck: [
+    { mechanic: "half-measure", name: "Short Rope" },
+    { mechanic: "seven", name: "Seven Knots" },
+    { mechanic: "short-words", name: "Small Salvage" },
+    { mechanic: "no-articles", name: "Cut the Line" },
+  ],
   days: [
     {
       // 1A (3,1) ROPE x 1D (1,2) FLOAT, crossing (3,2) O
@@ -172,6 +199,14 @@ export const THE_LONG_PIER: WorldDefinition = {
   atlas: { x: 1, y: 2 },
   neighbours: ["sandy-shore", "glass-reach", "the-wrackline"],
   motif: "pier",
+  deck: [
+    { mechanic: "brief", name: "Short Span" },
+    { mechanic: "two-breaths", name: "Two Posts" },
+    { mechanic: "half-measure", name: "Fog Bank" },
+    { mechanic: "no-b", name: "Missing Plank" },
+    { mechanic: "seven", name: "Seven Pilings" },
+    { mechanic: "long-shadow", name: "Far Out" },
+  ],
   days: [
     {
       // 1A (2,1) PIER x 1D (2,1) POST, crossing (2,1) P
@@ -220,6 +255,18 @@ export const HAUNTED_HEDGE: WorldDefinition = {
   atlas: { x: 1, y: 3 },
   neighbours: [],
   motif: "hedge",
+  deck: [
+    { mechanic: "two-breaths", name: "Two Breaths" },
+    { mechanic: "no-b", name: "Bee-Free Patch" },
+    { mechanic: "brief", name: "Pocket Posy" },
+    { mechanic: "no-e", name: "E’s Day Off" },
+    { mechanic: "seven", name: "Seven Petals" },
+    { mechanic: "same-start", name: "Twin Blossoms" },
+    { mechanic: "short-words", name: "Tiny Seeds" },
+    { mechanic: "half-measure", name: "Half Measure" },
+    { mechanic: "long-shadow", name: "Long Shadow" },
+    { mechanic: "no-articles", name: "Pull the Weeds" },
+  ],
   days: [
     {
       across: { row: 2, col: 0, length: 3 },

@@ -5,7 +5,13 @@ import { WORLDS, type RegionId, type WorldDefinition } from "./worlds";
 
 export const ATLAS_SCENARIO = "atlas-shallows-v1";
 export const ATLAS_API_ROOT = `/api/${ATLAS_SCENARIO}`;
-/** The Phase 1 slice routes Region I only. */
+/** Regions open in order; a region opens when the previous region's Gate closes. */
+export const REGION_ORDER: RegionId[] = ["shallows", "hedge"];
+export const REGION_LABEL: Record<RegionId, string> = {
+  shallows: "Region I · The Shallows",
+  hedge: "Region II · The Hedge",
+};
+/** The region this phase measures. Others are routed, but not counted. */
 export const ATLAS_REGION: RegionId = "shallows";
 /** The atlas grows outward from here. */
 export const ORIGIN_WORLD = "sandy-shore";
@@ -28,6 +34,7 @@ export const emptyAtlas = (): AtlasProgress => ({
 });
 
 export type LockReason =
+  | "region-locked"
   | "not-adjacent"
   | "gate-locked"
   | "played-today"
@@ -45,6 +52,7 @@ export type AtlasNode = {
   region: RegionId;
   atlas: { x: number; y: number };
   slots: number;
+  regionLabel: string;
   neighbours: string[];
   state: NodeState;
   reason: LockReason | null;
@@ -66,10 +74,28 @@ export const ymd = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 export function previousDay(date: string): string {
   return ymd(Date.parse(`${date}T00:00:00Z`) - 86_400_000);
 }
-export const atlasWorlds = () =>
-  WORLDS.filter((world) => world.region === ATLAS_REGION);
+/** Every world is routed. Nothing is reachable outside the frontier rules. */
+export const atlasWorlds = () => WORLDS;
 export const isAtlasWorld = (id: string) =>
-  atlasWorlds().some((world) => world.id === id);
+  WORLDS.some((world) => world.id === id);
+const worldsIn = (region: RegionId) =>
+  WORLDS.filter((world) => world.region === region);
+const gateFor = (region: RegionId) =>
+  worldsIn(region).find((world) => world.kind === "gate");
+const entryFor = (region: RegionId) =>
+  worldsIn(region).reduce((first, world) =>
+    world.ordinal < first.ordinal ? world : first,
+  );
+/** A later region stays dark until the previous region's Gate is complete. */
+export function regionUnlocked(region: RegionId, done: Set<string>): boolean {
+  const index = REGION_ORDER.indexOf(region);
+  if (index <= 0) return true;
+  const previous = REGION_ORDER[index - 1]!;
+  const gate = gateFor(previous);
+  return gate
+    ? done.has(gate.id)
+    : worldsIn(previous).every((world) => done.has(world.id));
+}
 
 /**
  * Derived, never stored. Completed worlds only ever grow, so a derived frontier
@@ -78,16 +104,16 @@ export const isAtlasWorld = (id: string) =>
  */
 export function frontierFor(completed: Iterable<string>): string[] {
   const done = new Set(completed);
-  const region = atlasWorlds();
-  return region
-    .filter((world) => !done.has(world.id))
+  return WORLDS.filter((world) => !done.has(world.id))
     .filter((world) => {
+      if (!regionUnlocked(world.region, done)) return false;
+      const peers = worldsIn(world.region);
       // A Gate borders its whole region, so it lights only when the rest is lit.
       if (world.kind === "gate")
-        return region.every(
-          (peer) => peer.kind === "gate" || done.has(peer.id),
-        );
-      if (!done.size) return world.id === ORIGIN_WORLD;
+        return peers.every((peer) => peer.kind === "gate" || done.has(peer.id));
+      // The first world of a freshly opened region needs no completed neighbour.
+      if (!peers.some((peer) => done.has(peer.id)))
+        return world.id === entryFor(world.region).id;
       return world.neighbours.some((id) => done.has(id));
     })
     .map((world) => world.id);
@@ -117,12 +143,15 @@ export function canEnter(
   progress: AtlasProgress,
   today: string,
 ): EntryCheck {
-  const world = atlasWorlds().find((candidate) => candidate.id === worldId);
+  const world = WORLDS.find((candidate) => candidate.id === worldId);
   if (!world) return { ok: false, reason: "not-in-atlas" };
   // Completed terrain is permanent and is never re-entered for judging.
   if (progress.completed[worldId]) return { ok: false, reason: "completed" };
   // A part-finished world is always resumable, including on a later day.
   if (progress.activeWorld === worldId) return { ok: true };
+  const done = new Set(Object.keys(progress.completed));
+  if (!regionUnlocked(world.region, done))
+    return { ok: false, reason: "region-locked" };
   if (!frontierFor(Object.keys(progress.completed)).includes(worldId))
     return {
       ok: false,
@@ -138,8 +167,23 @@ export function canEnter(
   return { ok: true };
 }
 
-const lockDetail = (reason: LockReason, remaining: number): string => {
+/** Non-gate worlds still to clear in this world's own region. */
+const remainingIn = (region: RegionId, progress: AtlasProgress) =>
+  worldsIn(region).filter(
+    (world) => world.kind !== "gate" && !progress.completed[world.id],
+  ).length;
+
+const lockDetail = (
+  reason: LockReason,
+  remaining: number,
+  world: WorldDefinition,
+): string => {
   switch (reason) {
+    case "region-locked": {
+      const index = REGION_ORDER.indexOf(world.region);
+      const gate = gateFor(REGION_ORDER[index - 1] ?? world.region);
+      return `${REGION_LABEL[world.region]} opens once ${gate?.name ?? "the previous Gate"} is complete.`;
+    }
     case "gate-locked":
       return `The Gate opens once all three Shallows worlds are complete. ${remaining} to go.`;
     case "played-today":
@@ -155,9 +199,6 @@ export function atlasNodes(
   progress: AtlasProgress,
   today: string,
 ): AtlasNode[] {
-  const remaining = atlasWorlds().filter(
-    (world) => world.kind !== "gate" && !progress.completed[world.id],
-  ).length;
   return WORLDS.map((world) => {
     const base = {
       id: world.id,
@@ -170,23 +211,15 @@ export function atlasNodes(
       atlas: world.atlas,
       slots: world.days.length * 2,
       neighbours: world.neighbours,
+      regionLabel: REGION_LABEL[world.region],
+      // Only the measured region counts toward the Shallows progress line.
+      inRun: world.region === ATLAS_REGION,
     };
-    // Worlds outside the routed region stay playable but sit outside the run:
-    // they never gate the day, never break the streak, and never light the Gate.
-    if (world.region !== ATLAS_REGION)
-      return {
-        ...base,
-        state: "open" as const,
-        reason: null,
-        inRun: false,
-        detail: "Open any time. Outside the Shallows run.",
-      };
     if (progress.completed[world.id])
       return {
         ...base,
         state: "completed" as const,
         reason: null,
-        inRun: true,
         detail: `Complete · ${progress.completed[world.id]!.date}`,
       };
     const check = canEnter(world.id, progress, today);
@@ -198,7 +231,6 @@ export function atlasNodes(
             ? ("active" as const)
             : ("open" as const),
         reason: null,
-        inRun: true,
         detail:
           progress.activeWorld === world.id
             ? "In progress. Pick up where you left off."
@@ -208,8 +240,11 @@ export function atlasNodes(
       ...base,
       state: "locked" as const,
       reason: check.reason,
-      inRun: true,
-      detail: lockDetail(check.reason, remaining),
+      detail: lockDetail(
+        check.reason,
+        remainingIn(world.region, progress),
+        world,
+      ),
     };
   });
 }

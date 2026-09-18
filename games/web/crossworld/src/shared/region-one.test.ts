@@ -9,6 +9,11 @@ import {
   type Pair,
 } from "./shore";
 import { ATLAS_REGION, atlasWorlds, frontierFor } from "./atlas";
+import { deckFor } from "./shore";
+
+/** The measured region. Every world is routed; only these are counted. */
+const shallows = () =>
+  atlasWorlds().filter((world) => world.region === ATLAS_REGION);
 
 import {
   REFERENCE_CLUES as clues,
@@ -57,9 +62,15 @@ test.each(spec)(
       expect(shared[0]).toBe(`${Number(row) - 1},${Number(col) - 1}`);
       expect(letters.get(shared[0]!)).toBe(letter);
     });
-    // Cards are one-use within a world, matching the bible's deck sizing.
+    // The deck is exactly the size of the world and every card is one-use, so a
+    // completed world consumes its deck precisely once.
     const cards = discoveries.flatMap((d) => [d.across.card, d.down.card]);
     expect(new Set(cards).size).toBe(cards.length);
+    const deck = deckFor(world);
+    expect(deck).toHaveLength(world.days.length * 2);
+    expect(new Set(deck.map((card) => card.id)).size).toBe(deck.length);
+    for (const card of cards)
+      expect(deck.map((entry) => entry.id)).toContain(card);
     // No maximal run of two or more cells may exist that is not a declared slot.
     const declared = new Set(
       world.days.flatMap((day, index) =>
@@ -124,10 +135,10 @@ test.each(spec)(
   },
 );
 
-test("the Phase 1 slice routes four Shallows worlds and leaves the Hedge out of them", () => {
+test("the Phase 1 slice routes four Shallows worlds and gates the Hedge behind them", () => {
   // Worlds 4-7 of Region I (Gullery, Low Water, The Bell Buoy) are deliberately
   // not in this slice; they are pure data against the same verified spec.
-  expect(atlasWorlds().map((world) => world.id)).toEqual([
+  expect(shallows().map((world) => world.id)).toEqual([
     "sandy-shore",
     "glass-reach",
     "the-wrackline",
@@ -135,29 +146,28 @@ test("the Phase 1 slice routes four Shallows worlds and leaves the Hedge out of 
   ]);
   expect(HAUNTED_HEDGE.region).not.toBe(ATLAS_REGION);
   expect(HAUNTED_HEDGE.ordinal).toBe(8);
-  for (const world of atlasWorlds())
+  for (const world of shallows())
     expect(world.neighbours).not.toContain(HAUNTED_HEDGE.id);
-  // The Hedge can never surface as a Shallows frontier destination, at any
-  // point in the run.
-  const everyRoute = atlasWorlds().map((world) => world.id);
-  for (let size = 0; size <= everyRoute.length; size++)
-    expect(frontierFor(everyRoute.slice(0, size))).not.toContain(
-      HAUNTED_HEDGE.id,
-    );
+  // The Hedge is never a Shallows frontier destination: it appears only once
+  // the Gate itself is complete, never as one of the region's own choices.
+  const route = shallows().map((world) => world.id);
+  for (let size = 0; size < route.length; size++)
+    expect(frontierFor(route.slice(0, size))).not.toContain(HAUNTED_HEDGE.id);
+  expect(frontierFor(route)).toEqual([HAUNTED_HEDGE.id]);
 });
 
 test("atlas adjacency is symmetric and the Gate borders every world in its region", () => {
-  for (const world of atlasWorlds())
+  for (const world of shallows())
     for (const id of world.neighbours) {
-      const other = atlasWorlds().find((candidate) => candidate.id === id);
+      const other = shallows().find((candidate) => candidate.id === id);
       expect(other, `${world.id} -> ${id}`).toBeDefined();
       expect(other!.neighbours).toContain(world.id);
     }
-  const gate = atlasWorlds().find((world) => world.kind === "gate")!;
+  const gate = shallows().find((world) => world.kind === "gate")!;
   expect(gate.id).toBe("the-long-pier");
   expect(new Set(gate.neighbours)).toEqual(
     new Set(
-      atlasWorlds()
+      shallows()
         .filter((world) => world.kind !== "gate")
         .map((world) => world.id),
     ),
@@ -180,4 +190,16 @@ test("every world's paths fit its own grid and world ids stay unique", () => {
   // The Gate stays the tallest board in the slice; anything beyond 13 rows does
   // not fit the mobile overview at a usable tile size.
   expect(Math.max(...WORLDS.map((world) => world.rows))).toBe(13);
+});
+
+test("no two worlds share an atlas cell, so map cards cannot be placed on top of each other", () => {
+  // The map places each card with CSS grid-row/grid-column taken straight from
+  // these coordinates, so unique cells make overlap structurally impossible at
+  // any viewport. Rendered geometry is verified separately in a browser.
+  const cells = WORLDS.map((world) => `${world.atlas.x},${world.atlas.y}`);
+  expect(new Set(cells).size).toBe(WORLDS.length);
+  for (const world of WORLDS) {
+    expect(world.atlas.x).toBeGreaterThanOrEqual(0);
+    expect(world.atlas.y).toBeGreaterThanOrEqual(0);
+  }
 });

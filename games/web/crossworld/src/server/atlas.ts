@@ -76,6 +76,11 @@ const refusal: Record<LockReason, { status: number; message: string }> = {
     status: 409,
     message: "The Long Pier opens once all three Shallows worlds are complete.",
   },
+  "region-locked": {
+    status: 409,
+    message:
+      "That world is in a later region. Complete the Shallows Gate to open it.",
+  },
   "not-in-atlas": {
     status: 400,
     message: "That world is not part of the Shallows run.",
@@ -131,7 +136,6 @@ export async function assertPlayable(
   world: WorldDefinition,
   now = Date.now(),
 ): Promise<void> {
-  if (!isAtlasWorld(world.id)) return;
   const progress = await readAtlas(user);
   if (progress.activeWorld === world.id) return;
   const check = canEnter(world.id, progress, ymd(now));

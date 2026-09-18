@@ -1,8 +1,17 @@
 import { createDevvitTest } from "@devvit/test/server/vitest";
 import { redis } from "@devvit/web/server";
 import { expect, vi } from "vitest";
-import { HAUNTED_HEDGE, SANDY_SHORE, worldFor } from "../shared/worlds";
+import {
+  GLASS_REACH,
+  HAUNTED_HEDGE,
+  SANDY_SHORE,
+  THE_LONG_PIER,
+  THE_WRACKLINE,
+} from "../shared/worlds";
+import { worldFor } from "../shared/worlds";
 import { JUDGE_BUDGET_SCENARIO } from "../shared/shore";
+import { referenceDraft } from "../shared/reference-solution";
+import { recordCompletion } from "./atlas";
 import {
   cellsFor,
   cellKey,
@@ -16,6 +25,13 @@ import { createWorldGame, readShore, saveShore, submitShore } from "./shore";
 import type { Dependencies } from "./game";
 const test = createDevvitTest();
 const hedge = createWorldGame(HAUNTED_HEDGE);
+const glass = createWorldGame(GLASS_REACH);
+// Region II opens only when the Shallows Gate closes. Recorded in the past so
+// the one-a-day rule does not also block the Hedge session under test.
+const openHedge = async (user: string) => {
+  for (const world of [SANDY_SHORE, GLASS_REACH, THE_WRACKLINE, THE_LONG_PIER])
+    await recordCompletion(user, world, Date.parse("2026-01-02T12:00:00Z"));
+};
 const yes = { validWord: true, fairClue: true, reason: "Fair definition." };
 const deps = (): Dependencies => ({
   config: async () => ({ enabled: true, key: "test-placeholder" }),
@@ -35,7 +51,14 @@ const pair = (
   down: { word: d, clue: dc, criterion: dr },
 });
 const fixtures = [
-  pair("OWL", "Night hunter", "brief", "GHOST", "Restless spirit", "no-b"),
+  pair(
+    "OWL",
+    "Night hunter",
+    "two-breaths",
+    "GHOST",
+    "Restless spirit",
+    "no-b",
+  ),
   pair(
     "GRANT",
     "Give as a favor",
@@ -46,27 +69,27 @@ const fixtures = [
   ),
   pair(
     "TALES",
-    "Stories told aloud",
-    "brief",
+    "Stories that are told aloud by someone",
+    "seven",
     "LILAC",
-    "Purple flowering shrub",
-    "no-articles",
+    "Purple perfumed shrub",
+    "same-start",
   ),
   pair(
     "CAT",
-    "Small furry feline",
-    "no-b",
+    "Tiny pet, has paws",
+    "short-words",
     "TOMB",
     "Stone burial chamber",
-    "brief",
+    "half-measure",
   ),
   pair(
     "CLIMB",
-    "Go up a hill",
-    "short-words",
+    "Ascend a steep mountainside",
+    "long-shadow",
     "EPIC",
-    "A grand heroic poem",
-    "no-b",
+    "Grand heroic poem",
+    "no-articles",
   ),
 ];
 const shorePair = pair(
@@ -143,6 +166,7 @@ test("all five hedge pairs save, review and restore independently of Sandy Shore
   const d = deps();
   await saveShore("explorer", { ...shorePair, day: 0 });
   const original = await readShore("explorer");
+  await openHedge("explorer");
   for (let day = 0; day < 5; day++) {
     const state = await hedge.submit("explorer", payload(day), d);
     expect(state.completed).toHaveLength(day + 1);
@@ -160,6 +184,7 @@ test("all five hedge pairs save, review and restore independently of Sandy Shore
 });
 test("world-specific geometry rejects a Shore-shaped pair before paid review", async () => {
   const d = deps();
+  await openHedge("explorer");
   await expect(
     hedge.submit("explorer", { ...shorePair, day: 0 }, d),
   ).rejects.toThrow();
@@ -178,19 +203,22 @@ test("world-specific geometry rejects a Shore-shaped pair before paid review", a
   expect((await readShore("explorer")).turn?.revealed).toBe(false);
   expect((await hedge.read("someone-else")).turn?.revealed).toBe(false);
 });
-test("concurrent submissions in separate worlds keep their data and share the original budget", async () => {
+test("only one world is writable at a time, and the allowance is shared by all of them", async () => {
   const d = deps();
-  const [s, h] = await Promise.all([
-    submitShore("explorer", { ...shorePair, day: 0 }, d),
-    hedge.submit("explorer", payload(), d),
-  ]);
+  const s = await submitShore("explorer", { ...shorePair, day: 0 }, d);
   expect(s.completed[0]?.across.word).toBe("SAND");
-  expect(h.completed[0]?.across.word).toBe("OWL");
-  expect(d.judge).toHaveBeenCalledTimes(4);
+  // Sandy Shore is active and unfinished, so no other world accepts a write.
+  await expect(hedge.submit("explorer", payload(), d)).rejects.toThrow(
+    "later region",
+  );
+  await expect(
+    glass.submit("explorer", referenceDraft(GLASS_REACH, 0), d),
+  ).rejects.toThrow("not reachable yet");
+  expect(d.judge).toHaveBeenCalledTimes(2);
   const day = new Date().toISOString().slice(0, 10);
   expect(
     await redis.get(`cq:${JUDGE_BUDGET_SCENARIO}:explorer:budget:${day}`),
-  ).toBe("4");
+  ).toBe("2");
   // Sandy Shore's own key must stay empty: the allowance namespace is pinned and
   // does not follow a world's scenario version.
   expect(
@@ -203,6 +231,7 @@ test("concurrent submissions in separate worlds keep their data and share the or
 test("switching worlds cannot replenish a used paid review allowance", async () => {
   const d = deps(),
     day = new Date().toISOString().slice(0, 10);
+  await openHedge("explorer");
   await redis.set(`cq:${JUDGE_BUDGET_SCENARIO}:explorer:budget:${day}`, "20");
   await expect(hedge.submit("explorer", payload(), d)).rejects.toThrow(
     "allowance",
@@ -214,6 +243,8 @@ test("restarting the hedge leaves Shore and other accounts intact and rejects st
   const d = deps();
   await submitShore("explorer", { ...shorePair, day: 0 }, d);
   const original = await readShore("explorer");
+  await openHedge("explorer");
+  await openHedge("friend");
   await hedge.save("explorer", payload());
   await hedge.save("friend", payload());
   const fresh = await hedge.reset("explorer", "crossworld_game_dev", {
@@ -230,6 +261,7 @@ test("restarting the hedge leaves Shore and other accounts intact and rejects st
 });
 test("a partial hedge review retains both drafts without affecting Shore", async () => {
   const d = deps();
+  await openHedge("explorer");
   d.judge = vi.fn(async (draft) =>
     draft.word === "OWL"
       ? yes

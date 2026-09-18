@@ -4,10 +4,12 @@ import { readPreference, writePreference } from "./preferences";
 import { navigateTo } from "@devvit/web/client";
 import { createGameApi } from "./api";
 import { createShoreArt } from "./shore-art";
-import { criterionIcon, visualCriteria } from "./criteria-art";
+import { criterionIcon } from "./criteria-art";
 import {
   DIRECTIONS,
   CRITERIA,
+  availableCards,
+  deckFor,
   cellsFor as cellsForWorld,
   cellKey,
   lettersFor as lettersForWorld,
@@ -105,6 +107,7 @@ function currentDraft(): PairDraft {
   return parsePair(shore.turn)!;
 }
 function updateEditor() {
+  renderDeck();
   const turn = shore.turn;
   editor.hidden = !turn?.revealed || minimized;
   el("restore-editor").hidden = !turn?.revealed || !minimized;
@@ -143,7 +146,7 @@ function updateEditor() {
       entry?.word || " ".repeat(DAYS[shore.completed.length]?.[d].length ?? 5)
     ).replace(/ /g, "·");
     el(`${d}-rule`).textContent =
-      visualCriteria.find((c) => c.id === entry?.criterion)?.label ??
+      deckFor(world).find((c) => c.id === entry?.criterion)?.name ??
       "Choose a rule";
   }
   if (!turn) return;
@@ -156,12 +159,12 @@ function updateEditor() {
     ? "Describe your word without giving it away."
     : `${DAYS[shore.completed.length]![active].length} letters · choose your word in the highlighted tiles.`;
   el("clue-count").textContent = `${turn[active].clue.length} / 140`;
-  const criterion = visualCriteria.find((c) => c.id === turn[active].criterion);
+  const criterion = deckFor(world).find((c) => c.id === turn[active].criterion);
   el("criterion-icon").innerHTML = criterionIcon(criterion?.id ?? "");
-  el("criterion-name").textContent = criterion?.label ?? "Choose a criterion";
+  el("criterion-name").textContent = criterion?.name ?? "Choose a criterion";
   el("choose-criterion").setAttribute(
     "aria-label",
-    `${title(active)} criterion: ${criterion?.label ?? "choose a rule"}`,
+    `${title(active)} criterion: ${criterion?.name ?? "choose a rule"}`,
   );
   el("criterion-rule").textContent =
     criterion?.rule ?? "Give this clue a little creative constraint.";
@@ -663,34 +666,48 @@ el("close-picker").addEventListener("click", () => {
   positionMap();
   el("choose-criterion").focus({ preventScroll: true });
 });
-for (const rule of visualCriteria) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "criterion-card";
-  button.dataset.criterion = rule.id;
-  button.innerHTML = criterionIcon(rule.id);
-  const text = document.createElement("span");
-  const name = document.createElement("strong"),
-    detail = document.createElement("small");
-  name.textContent = rule.label;
-  detail.textContent = rule.detail;
-  text.append(name, detail);
-  button.append(text);
-  button.setAttribute("aria-label", `${rule.name}: ${rule.rule}`);
-  button.title = rule.rule;
-  button.setAttribute("aria-pressed", "false");
-  button.addEventListener("click", () => {
-    if (!editable() || !shore.turn) return;
-    const before = currentDraft();
-    shore.turn[active].criterion = rule.id;
-    markEdited(before);
-    el("criterion-picker").hidden = true;
-    updateEditor();
-    controls();
-    el("choose-criterion").focus({ preventScroll: true });
-  });
-  el("criterion-options").append(button);
+let renderedDeck = "";
+function renderDeck() {
+  // Every card is one-use, so a spent card leaves the picker for good. Rebuild
+  // only when the remaining deck actually changes, to preserve focus.
+  const cards = availableCards(world, shore.completed);
+  const signature = cards.map((card) => card.id).join("|");
+  if (signature === renderedDeck) return;
+  renderedDeck = signature;
+  const options = el("criterion-options");
+  options.replaceChildren();
+  for (const rule of cards) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "criterion-card";
+    button.dataset.criterion = rule.id;
+    button.innerHTML = criterionIcon(rule.id);
+    const text = document.createElement("span");
+    const name = document.createElement("strong"),
+      detail = document.createElement("small");
+    name.textContent = rule.name;
+    detail.textContent = rule.label;
+    text.append(name, detail);
+    button.append(text);
+    button.setAttribute("aria-label", `${rule.name}: ${rule.rule}`);
+    button.title = rule.rule;
+    button.setAttribute("aria-pressed", "false");
+    button.addEventListener("click", () => {
+      if (!editable() || !shore.turn) return;
+      const before = currentDraft();
+      shore.turn[active].criterion = rule.id;
+      markEdited(before);
+      el("criterion-picker").hidden = true;
+      updateEditor();
+      controls();
+      el("choose-criterion").focus({ preventScroll: true });
+    });
+    options.append(button);
+  }
+  el("deck-count").textContent =
+    `${cards.length} of ${deckFor(world).length} rules left`;
 }
+renderDeck();
 el("minimize").addEventListener("click", () => {
   minimized = true;
   el("criterion-picker").hidden = true;

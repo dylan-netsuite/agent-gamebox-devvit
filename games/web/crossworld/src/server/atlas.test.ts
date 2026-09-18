@@ -67,11 +67,7 @@ test("finishing a world does not buy the next one until the calendar day turns o
     ).rejects.toThrow("One world a day");
   expect(same.judge).not.toHaveBeenCalled();
   const next = deps("2026-10-02");
-  await game(GLASS_REACH).submit(
-    "daily",
-    referenceDraft(GLASS_REACH, 0),
-    next,
-  );
+  await game(GLASS_REACH).submit("daily", referenceDraft(GLASS_REACH, 0), next);
   expect(next.judge).toHaveBeenCalledTimes(2);
   expect((await readAtlas("daily")).activeWorld).toBe(GLASS_REACH.id);
 });
@@ -120,9 +116,7 @@ test("missing days breaks the streak counter and nothing else", async () => {
     date: "2026-10-01",
   });
   expect(state.lastCompletedDate).toBe("2026-10-23");
-  expect(frontierFor(Object.keys(state.completed))).toEqual([
-    THE_LONG_PIER.id,
-  ]);
+  expect(frontierFor(Object.keys(state.completed))).toEqual([THE_LONG_PIER.id]);
 });
 
 test("the Gate opens only once all three Shallows worlds are complete", async () => {
@@ -146,11 +140,20 @@ test("the Gate opens only once all three Shallows worlds are complete", async ()
   // The Gate's six slots, including its cross-discovery link, then complete the slice.
   await play("gater", THE_LONG_PIER, "2026-10-04");
   const done = await atlasView("gater", at("2026-10-04"));
-  expect(done.frontier).toEqual([]);
+  // Clearing the Gate is what opens Region II, and only that.
+  expect(done.frontier).toEqual([HAUNTED_HEDGE.id]);
   expect(done.streak).toBe(4);
   expect(done.nodes.filter((node) => node.state === "completed")).toHaveLength(
     4,
   );
+  expect(done.nodes.find((node) => node.id === HAUNTED_HEDGE.id)).toMatchObject(
+    { state: "locked", reason: "played-today" },
+  );
+  expect(
+    (await atlasView("gater", at("2026-10-05"))).nodes.find(
+      (node) => node.id === HAUNTED_HEDGE.id,
+    ),
+  ).toMatchObject({ state: "open" });
 });
 
 test("a completed world is never re-judged, however the request arrives", async () => {
@@ -170,8 +173,9 @@ test("a completed world is never re-judged, however the request arrives", async 
   await expect(
     game(SANDY_SHORE).save("locked", referenceDraft(SANDY_SHORE, 0)),
   ).rejects.toThrow("already complete");
-  await expect(enterWorld("locked", SANDY_SHORE.id, at("2026-10-09"))).rejects
-    .toThrow("already complete");
+  await expect(
+    enterWorld("locked", SANDY_SHORE.id, at("2026-10-09")),
+  ).rejects.toThrow("already complete");
   expect(replay.judge).not.toHaveBeenCalled();
   // The original locked record is byte-for-byte unchanged.
   expect((await readAtlas("locked")).completed[SANDY_SHORE.id]).toEqual(record);
@@ -185,7 +189,7 @@ test("entering a world is idempotent, routed server-side, and refused when locke
     "not part of the Shallows run",
   );
   await expect(enterWorld("enterer", HAUNTED_HEDGE.id)).rejects.toThrow(
-    "not part of the Shallows run",
+    "later region",
   );
   await expect(enterWorld("enterer", 42)).rejects.toThrow("Choose a world");
   const entered = await enterWorld("enterer", SANDY_SHORE.id);
@@ -193,27 +197,40 @@ test("entering a world is idempotent, routed server-side, and refused when locke
   expect(await enterWorld("enterer", SANDY_SHORE.id)).toEqual(entered);
 });
 
-test("worlds outside the region stay playable and never touch the run", async () => {
-  await play("visitor", SANDY_SHORE, "2026-10-01");
-  // Region II is reachable on a day the Shallows run is already spent.
-  const hedge = deps("2026-10-01");
-  const pair = {
+test("Region II is locked until the Shallows Gate closes, then opens with its progress intact", async () => {
+  const hedgePair = {
     day: 0,
     revealed: true,
-    across: { word: "OWL", clue: "Night hunter", criterion: "brief" },
+    across: { word: "OWL", clue: "Night hunter", criterion: "two-breaths" },
     down: { word: "GHOST", clue: "Restless spirit", criterion: "no-b" },
   };
-  const state = await game(HAUNTED_HEDGE).submit("visitor", pair, hedge);
+  await play("pilgrim", SANDY_SHORE, "2026-10-01");
+  const early = deps("2026-10-02");
+  // The bypass this closes: the Hedge must not be reachable mid-Shallows.
+  await expect(
+    game(HAUNTED_HEDGE).submit("pilgrim", hedgePair, early),
+  ).rejects.toThrow("later region");
+  expect(early.judge).not.toHaveBeenCalled();
+  const blocked = await atlasView("pilgrim", at("2026-10-02"));
+  expect(blocked.frontier).not.toContain(HAUNTED_HEDGE.id);
+  expect(
+    blocked.nodes.find((node) => node.id === HAUNTED_HEDGE.id),
+  ).toMatchObject({ state: "locked", reason: "region-locked" });
+
+  await play("pilgrim", GLASS_REACH, "2026-10-02");
+  await play("pilgrim", THE_WRACKLINE, "2026-10-03");
+  await play("pilgrim", THE_LONG_PIER, "2026-10-04");
+  const open = deps("2026-10-05");
+  const state = await game(HAUNTED_HEDGE).submit("pilgrim", hedgePair, open);
   expect(state.completed).toHaveLength(1);
-  // It records no completion, moves no streak and claims no active world.
-  const atlas = await readAtlas("visitor");
-  expect(Object.keys(atlas.completed)).toEqual([SANDY_SHORE.id]);
-  expect(atlas.streak).toBe(1);
-  expect(atlas.activeWorld).toBeNull();
-  const view = await atlasView("visitor", at("2026-10-01"));
+  // Region II play counts toward the streak but not the Shallows progress line.
+  const view = await atlasView("pilgrim", at("2026-10-05"));
   expect(view.nodes.find((node) => node.id === HAUNTED_HEDGE.id)).toMatchObject(
-    { inRun: false, state: "open" },
+    { state: "active", inRun: false },
   );
+  expect(
+    view.nodes.filter((node) => node.inRun && node.state === "completed"),
+  ).toHaveLength(4);
 });
 
 test("the map reads without a signed-in user and shows only the origin", async () => {
@@ -224,4 +241,7 @@ test("the map reads without a signed-in user and shows only the origin", async (
   expect(
     view.nodes.filter((node) => node.inRun && node.state === "locked"),
   ).toHaveLength(3);
+  expect(view.nodes.find((node) => node.id === HAUNTED_HEDGE.id)).toMatchObject(
+    { state: "locked", reason: "region-locked" },
+  );
 });
