@@ -295,12 +295,14 @@ h2 {
 .map {
   position: relative;
   width: min(100%, 300px);
-  /* Written per world as a literal ratio, never as `var(--a) / var(--b)`.
-     WebKit does not resolve a ratio split across two substitutions, and the
-     board then collapses to zero height: #scenery keeps painting because it is
-     overflow: visible, so the art and the typed letters survive while every
-     tile disappears. Worlds without an override below fall back to 5 / 10 —
-     wrong proportions but playable, rather than invisible. */
+  /* One literal ratio per world. This was written while chasing a mobile bug
+     it turned out not to cause: WebKit resolves `var(--a) / var(--b)` here
+     correctly, verified against Playwright WebKit on an iPhone profile. Kept
+     because it is the more legible form and because an unlisted world then
+     falls back to 5 / 10 — wrong proportions but playable. A board that cannot
+     resolve its ratio collapses to zero height, and since #scenery is
+     overflow: visible the art and typed letters keep painting while every tile
+     disappears, which is near-impossible to read from a screenshot. */
   aspect-ratio: 5 / 10;
   margin: 12px auto 16px;
 }

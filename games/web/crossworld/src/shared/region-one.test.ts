@@ -208,8 +208,9 @@ test("no two worlds share an atlas cell, so map cards cannot be placed on top of
 test("every world's grid shape has a literal aspect-ratio in the stylesheet", () => {
   // A board whose aspect-ratio does not resolve collapses to zero height, and
   // because #scenery is overflow:visible the art and letters keep painting while
-  // every tile vanishes. That failure is silent, so it is pinned here: the ratio
-  // must be a literal per world, never built from two var() substitutions.
+  // every tile vanishes — a silent failure. Known-good engines resolve the
+  // var() form, so this pins the literal form as defence in depth, and catches
+  // a new world being added without a ratio at all.
   const css = readFileSync(
     new URL("../client/style.css", import.meta.url),
     "utf8",
