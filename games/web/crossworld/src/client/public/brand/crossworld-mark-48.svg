@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="CrossWorld">
+  <title>CrossWorld</title>
+  <!--
+    Mid mark. Use around 48px.
+    Same geometry as crossworld-mark.svg with a heavier arc and no waypoints:
+    at 48px the waypoints antialias into grey smudges and only add noise.
+    Letterless by design - letters are illegible at this size.
+  -->
+  <g fill="none" stroke="#263F3B" stroke-width="10" stroke-linecap="butt">
+    <path d="M 202.57 216.86 A 116 116 0 1 1 216.86 53.43" />
+  </g>
+
+  <g stroke="#263F3B" stroke-width="2">
+    <rect x="73" y="35" width="34" height="34" rx="5" fill="#F4F0E6" />
+    <circle cx="90" cy="90" r="17" fill="#F4F0E6" />
+    <rect x="111" y="73" width="34" height="34" rx="5" fill="#263F3B" />
+    <rect x="35" y="111" width="34" height="34" rx="5" fill="#F4F0E6" />
+    <rect x="73" y="111" width="34" height="34" rx="5" fill="#A75432" />
+    <circle cx="128" cy="128" r="17" fill="#F4F0E6" />
+    <rect x="149" y="111" width="34" height="34" rx="5" fill="#F4F0E6" />
+    <rect x="187" y="111" width="34" height="34" rx="5" fill="#F4F0E6" />
+    <rect x="35" y="149" width="34" height="34" rx="5" fill="#263F3B" />
+    <rect x="73" y="149" width="34" height="34" rx="5" fill="#F4F0E6" />
+    <rect x="73" y="187" width="34" height="34" rx="5" fill="#F4F0E6" />
+  </g>
+</svg>

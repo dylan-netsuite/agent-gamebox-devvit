@@ -1119,22 +1119,21 @@ body[data-paused="true"] *::after {
   text-align: center;
   background: var(--map);
 }
-.splash .brand {
-  font-size: 21px;
-}
 .splash h1 {
-  font-size: 40px;
+  /* Two beats on two lines: the <br> is deliberate. Scale down on narrow
+     screens so the first sentence still fits its own line. */
+  font-size: clamp(25px, 6.6vw, 40px);
   margin: 8px 0 12px;
 }
-.splash .eyebrow {
-  color: var(--orange);
-  margin-top: 14px;
-}
-.splash-art {
-  width: 128px;
-  height: 100px;
+/* Hero mark. Inline (not <img>) so fills bind to theme tokens and survive
+   :root.dark. Geometry matches public/brand/crossworld-mark.svg. */
+.splash-mark {
+  width: 140px;
+  height: 140px;
   margin: 14px 0 0;
-  color: var(--accent);
+}
+.splash-mark text {
+  font-family: var(--display);
 }
 .splash > p:not(.brand):not(.eyebrow) {
   font-size: 13px;
@@ -1150,12 +1149,15 @@ body[data-paused="true"] *::after {
   font-size: 10px !important;
 }
 @media (max-height: 420px) {
-  .splash-art {
-    height: 50px;
+  /* Shrink, but keep the letters: they are the only place the product name
+     appears on this screen. Waypoints go, they are noise at this size. */
+  .splash-mark {
+    width: 120px;
+    height: 120px;
     margin: 4px 0;
   }
-  .splash .eyebrow {
-    margin-top: 8px;
+  .splash-mark-waypoints {
+    display: none;
   }
   .splash h1 {
     font-size: 30px;

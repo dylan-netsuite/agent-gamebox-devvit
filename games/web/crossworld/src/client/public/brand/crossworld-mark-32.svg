@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="CrossWorld">
+  <title>CrossWorld</title>
+  <!--
+    Small mark. Use at 32px and below, and as the source for the app icon.
+    Heavy arc plus the crossing cropped to 3x3: at this size eleven cells in a
+    ~20px interior turn to noise, so fewer and larger wins.
+
+    The 3x3 has real corner cells, unlike the 5-wide plus shape, so its corners
+    sit at half * sqrt(2) from centre. Grid is sized to 148 (half 74) to keep
+    that 104.7 corner distance inside the arc's 111 inner radius.
+  -->
+  <g fill="none" stroke="#263F3B" stroke-width="10" stroke-linecap="butt">
+    <path d="M 202.57 216.86 A 116 116 0 1 1 216.86 53.43" />
+  </g>
+
+  <g stroke="#263F3B" stroke-width="3">
+    <circle cx="128" cy="77" r="23" fill="#F4F0E6" />
+    <rect x="156" y="54" width="46" height="46" rx="7" fill="#263F3B" />
+    <rect x="54" y="105" width="46" height="46" rx="7" fill="#F4F0E6" />
+    <rect x="105" y="105" width="46" height="46" rx="7" fill="#A75432" />
+    <circle cx="179" cy="128" r="23" fill="#F4F0E6" />
+    <rect x="54" y="156" width="46" height="46" rx="7" fill="#263F3B" />
+    <rect x="105" y="156" width="46" height="46" rx="7" fill="#F4F0E6" />
+  </g>
+</svg>
