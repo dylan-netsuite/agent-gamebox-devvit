@@ -11,6 +11,9 @@
   --line: #d5dbcf;
   --accent: #087e73;
   --accent-ink: #fff;
+  --cover-line: #b29b65;
+  --cover-fill: #dac68c;
+  --cover-glow: #e9dfc0;
   --brand: #087e73;
   --orange: #a75432;
   --selected: #dfebe2;
@@ -30,6 +33,9 @@
   --line: #4c655a;
   --accent: #86d5c1;
   --accent-ink: #183e34;
+  --cover-line: #6c7f6a;
+  --cover-fill: #3b5450;
+  --cover-glow: #46615c;
   --brand: #86d5c1;
   --orange: #f1b394;
   --selected: #365950;
@@ -289,7 +295,8 @@ h2 {
 .map {
   position: relative;
   width: min(100%, 300px);
-  aspect-ratio: 5 / 10;
+  /* Grid size is per-world; app.ts sets these from the world definition. */
+  aspect-ratio: var(--map-cols, 5) / var(--map-rows, 10);
   margin: 12px auto 16px;
 }
 .tiles {
@@ -297,8 +304,8 @@ h2 {
   z-index: 2;
   inset: 0;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(10, 1fr);
+  grid-template-columns: repeat(var(--map-cols, 5), 1fr);
+  grid-template-rows: repeat(var(--map-rows, 10), 1fr);
   gap: 7px;
 }
 .tile {
@@ -1268,6 +1275,94 @@ body[data-paused="true"] *::after {
   font-size: 11px;
 }
 /* World colors change atmosphere; the paper, wordmark and component language stay shared. */
+/* Region I palettes. Cohesive coastal tones, one accent per world. */
+:root[data-world="glass-reach"] {
+  --map: #eef4ef;
+  --ink: #24403c;
+  --muted: #5b7370;
+  --line: #c3d6ce;
+  --accent: #3f8f96;
+  --orange: #c07d5a;
+  --selected: #d8eae6;
+  --tile: #f7fbf8;
+  --cover-line: #6fa79f;
+  --cover-fill: #bfdcd6;
+  --cover-glow: #dcefe9;
+}
+:root.dark[data-world="glass-reach"] {
+  --paper: #1b2b2c;
+  --map: #22383a;
+  --surface: #2a4143;
+  --ink: #e8f2ee;
+  --muted: #b3ccc6;
+  --line: #4f7370;
+  --accent: #7fd2d0;
+  --accent-ink: #14383a;
+  --orange: #e2a87e;
+  --selected: #33534f;
+  --tile: #2d4446;
+  --cover-line: #5d908c;
+  --cover-fill: #31504f;
+  --cover-glow: #3c5e5c;
+}
+:root[data-world="the-wrackline"] {
+  --map: #f3ecdf;
+  --ink: #3a3328;
+  --muted: #6d6250;
+  --line: #d3c6ac;
+  --accent: #6d7f4f;
+  --orange: #a4562f;
+  --selected: #e7dcc7;
+  --tile: #fbf6ec;
+  --cover-line: #9a8560;
+  --cover-fill: #dccfb2;
+  --cover-glow: #ece2cc;
+}
+:root.dark[data-world="the-wrackline"] {
+  --paper: #241f18;
+  --map: #322b21;
+  --surface: #3c342a;
+  --ink: #f2ebdc;
+  --muted: #cabda6;
+  --line: #6d6047;
+  --accent: #b3c489;
+  --accent-ink: #2b3318;
+  --orange: #dd9668;
+  --selected: #4c4232;
+  --tile: #3e362b;
+  --cover-line: #8a785a;
+  --cover-fill: #443b2c;
+  --cover-glow: #524734;
+}
+:root[data-world="the-long-pier"] {
+  --map: #e9eef1;
+  --ink: #24353f;
+  --muted: #5a6f7b;
+  --line: #bfd0d9;
+  --accent: #2f6f8f;
+  --orange: #b0713f;
+  --selected: #d5e3ea;
+  --tile: #f4f8fa;
+  --cover-line: #7d9aa9;
+  --cover-fill: #c8d9e2;
+  --cover-glow: #dfe9ef;
+}
+:root.dark[data-world="the-long-pier"] {
+  --paper: #182329;
+  --map: #1f2f38;
+  --surface: #263841;
+  --ink: #e9f1f5;
+  --muted: #b5c8d2;
+  --line: #4b6572;
+  --accent: #82bfd9;
+  --accent-ink: #12313f;
+  --orange: #dfa172;
+  --selected: #2f4a57;
+  --tile: #2a3c45;
+  --cover-line: #5f818f;
+  --cover-fill: #2c434e;
+  --cover-glow: #375260;
+}
 :root[data-world="haunted-hedge"] {
   --map: #eae5ee;
   --ink: #443947;
@@ -1342,79 +1437,161 @@ body[data-paused="true"] *::after {
   margin-bottom: 20px;
 }
 .world-options {
-  display: grid;
-  gap: 12px;
   margin-bottom: 18px;
 }
-.world-option {
+.atlas-status {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+/* Narrow screens stack the atlas; the spatial map needs room the Reddit iframe
+   does not have on a phone, and clipped nodes are worse than an ordered list. */
+.atlas-grid {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+}
+.atlas-links {
+  display: none;
+}
+.atlas-link {
+  stroke: var(--line);
+  stroke-width: 2;
+  stroke-dasharray: 5 6;
+}
+.atlas-link.lit {
+  stroke: var(--accent);
+  stroke-dasharray: none;
+  opacity: 0.7;
+}
+.atlas-board {
+  display: grid;
+  gap: 10px;
+}
+.atlas-node {
   display: flex;
   align-items: center;
-  gap: 17px;
+  gap: 12px;
   width: 100%;
-  padding: 18px;
+  padding: 12px 14px;
   text-align: left;
   border: 1px solid var(--line);
-  background: var(--map);
   border-radius: 12px;
+  background: var(--map);
+  color: var(--ink);
+  box-shadow: var(--shadow);
 }
-.world-option-copy {
+.atlas-copy {
   display: grid;
-  gap: 8px;
+  gap: 3px;
+  min-width: 0;
 }
-.world-option strong {
-  font: 25px/1.15 var(--display);
+.atlas-node strong {
+  font: 19px/1.15 var(--display);
 }
-.world-option-copy > span {
-  font-size: 12px;
-  line-height: 1.6;
-}
-.world-option small {
-  font-size: 11px;
+.atlas-meta {
+  font-size: 10px;
   font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
-.world-option[data-world="sandy-shore"] {
-  background: #faf5e5;
-  color: #263f3b;
-  border-color: #b6c6bc;
+.atlas-why {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--muted);
 }
-.world-option[data-world="haunted-hedge"] {
-  background: #eae5ee;
-  color: #443947;
-  border-color: #bdacc5;
-}
-.world-option:disabled {
-  opacity: 1;
-}
-.world-option:hover:not(:disabled) {
-  box-shadow: inset 0 0 0 1px currentColor;
-}
-.world-swatch {
+.atlas-mark {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 52px;
-  height: 62px;
-  font: 45px/1 var(--display);
-  color: #087e73;
+  width: 38px;
+  height: 44px;
+  font: 30px/1 var(--display);
+  color: var(--accent);
 }
-.world-option[data-world="haunted-hedge"] .world-swatch {
-  color: #725b79;
+.atlas-node[data-state="completed"] {
+  border-color: var(--accent);
+  background: var(--selected);
 }
-.dark .world-option[data-world="sandy-shore"] {
-  background: #213735;
-  color: #f1eddd;
-  border-color: #637f6d;
+.atlas-node[data-state="active"] {
+  border-color: var(--accent);
+  box-shadow:
+    var(--shadow),
+    inset 0 0 0 1px var(--accent);
 }
-.dark .world-option[data-world="haunted-hedge"] {
-  background: #332d3d;
-  color: #f4ecf2;
-  border-color: #76687e;
+.atlas-node[data-state="locked"] {
+  opacity: 0.62;
+  border-style: dashed;
+  box-shadow: none;
 }
-.dark .world-swatch {
-  color: #86d5c1;
+.atlas-node[data-state="locked"] .atlas-mark {
+  color: var(--muted);
 }
-.dark .world-option[data-world="haunted-hedge"] .world-swatch {
-  color: #d6b6df;
+.atlas-node[data-kind="gate"] .atlas-mark {
+  color: var(--orange);
+}
+.atlas-node[data-current="true"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.atlas-node:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.atlas-legend {
+  margin-top: 12px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+/* A branch: two worlds on the same rank, one of which you pick today. */
+.atlas-node[data-choice="true"] {
+  width: calc(100% - 16px);
+  margin-left: 16px;
+  border-left: 3px solid var(--accent);
+}
+@media (min-width: 760px) {
+  /* The spatial map needs a wider sheet than the other dialogs. */
+  #world-picker {
+    width: min(720px, calc(100% - 32px));
+  }
+  .atlas-grid {
+    aspect-ratio: 3 / 2;
+    max-height: 58vh;
+  }
+  .atlas-links {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .atlas-board {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+  .atlas-node,
+  .atlas-node[data-choice="true"] {
+    position: absolute;
+    left: var(--atlas-x);
+    top: var(--atlas-y);
+    transform: translate(-50%, -50%);
+    width: min(31%, 196px);
+    margin-left: 0;
+    padding: 10px 12px;
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: var(--line);
+  }
+  .atlas-node strong {
+    font-size: 17px;
+  }
+  .atlas-node[data-state="completed"],
+  .atlas-node[data-state="active"] {
+    border-left-color: var(--accent);
+  }
 }
 #world-switch-error {
   padding: 10px 0 16px;

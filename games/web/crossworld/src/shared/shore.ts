@@ -4,22 +4,18 @@ import { type Draft, type Judgment } from "./types";
 
 export const SHORE_SCENARIO = SANDY_SHORE.scenario;
 export const SHORE_API_ROOT = SANDY_SHORE.apiRoot;
-export const ROWS = 10;
-export const COLS = 5;
+// The paid-review allowance is deliberately pinned to a fixed namespace rather
+// than to a world's scenario key. Versioning a world's grid must never hand a
+// player a fresh daily budget or clear their cooldowns.
+export const JUDGE_BUDGET_SCENARIO = "sandy-shore-pairs-v1";
+export const ROWS = SANDY_SHORE.rows;
+export const COLS = SANDY_SHORE.cols;
 export const DIRECTIONS = ["across", "down"] as const;
 export type Direction = (typeof DIRECTIONS)[number];
 export const DAYS = SANDY_SHORE.days;
-export const CRITERIA = RESTRICTIONS.map((rule, i) => ({
+export const CRITERIA = RESTRICTIONS.map((rule) => ({
   ...rule,
-  name: [
-    "Keep it brief",
-    "Seven words",
-    "No letter E",
-    "No articles",
-    "Small words",
-    "Matching initials",
-    "No letter B",
-  ][i]!,
+  name: rule.plain,
 }));
 export type Entry = { word: string; clue: string; criterion: string };
 export type PairDraft = { revealed: boolean; across: Entry; down: Entry };
@@ -127,7 +123,10 @@ export function validatePair(
   const issues: string[] = [];
   const normalized = parsePair(pair)!;
   if (!layout)
-    return { issues: ["All five turns are complete."], pair: normalized };
+    return {
+      issues: [`All ${world.days.length} discoveries are complete.`],
+      pair: normalized,
+    };
   for (const direction of DIRECTIONS) {
     const result = validateTurn(
       asDraft(pair, direction),

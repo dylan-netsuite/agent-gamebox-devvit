@@ -2,6 +2,7 @@ import { createDevvitTest } from "@devvit/test/server/vitest";
 import { redis } from "@devvit/web/server";
 import { expect, vi } from "vitest";
 import { HAUNTED_HEDGE, SANDY_SHORE, worldFor } from "../shared/worlds";
+import { JUDGE_BUDGET_SCENARIO } from "../shared/shore";
 import {
   cellsFor,
   cellKey,
@@ -69,12 +70,12 @@ const fixtures = [
   ),
 ];
 const shorePair = pair(
-  "SCALD",
-  "Burn with steam",
+  "SAND",
+  "Fine grains underfoot",
   "brief",
-  "NECTAR",
-  "Sweet flower liquid",
-  "no-articles",
+  "ANTS",
+  "Busy insects",
+  "two-breaths",
 );
 const payload = (day = 0) => ({ ...fixtures[day]!, day });
 test("Haunted Hedge has ten maximal paths and 33 connected cells in the approved silhouette", () => {
@@ -183,13 +184,18 @@ test("concurrent submissions in separate worlds keep their data and share the or
     submitShore("explorer", { ...shorePair, day: 0 }, d),
     hedge.submit("explorer", payload(), d),
   ]);
-  expect(s.completed[0]?.across.word).toBe("SCALD");
+  expect(s.completed[0]?.across.word).toBe("SAND");
   expect(h.completed[0]?.across.word).toBe("OWL");
   expect(d.judge).toHaveBeenCalledTimes(4);
   const day = new Date().toISOString().slice(0, 10);
   expect(
-    await redis.get(`cq:${SANDY_SHORE.scenario}:explorer:budget:${day}`),
+    await redis.get(`cq:${JUDGE_BUDGET_SCENARIO}:explorer:budget:${day}`),
   ).toBe("4");
+  // Sandy Shore's own key must stay empty: the allowance namespace is pinned and
+  // does not follow a world's scenario version.
+  expect(
+    await redis.get(`cq:${SANDY_SHORE.scenario}:explorer:budget:${day}`),
+  ).toBeUndefined();
   expect(
     await redis.get(`cq:${HAUNTED_HEDGE.scenario}:explorer:budget:${day}`),
   ).toBeUndefined();
@@ -197,7 +203,7 @@ test("concurrent submissions in separate worlds keep their data and share the or
 test("switching worlds cannot replenish a used paid review allowance", async () => {
   const d = deps(),
     day = new Date().toISOString().slice(0, 10);
-  await redis.set(`cq:${SANDY_SHORE.scenario}:explorer:budget:${day}`, "20");
+  await redis.set(`cq:${JUDGE_BUDGET_SCENARIO}:explorer:budget:${day}`, "20");
   await expect(hedge.submit("explorer", payload(), d)).rejects.toThrow(
     "allowance",
   );

@@ -73,9 +73,9 @@
           </h1>
         </div>
         <div class="journey">
-          <span id="turn-label">Turn 1 of 5</span>
+          <span id="turn-label">Turn 1</span>
           <div id="journey-track" class="journey-track" aria-hidden="true">
-            <i></i><i></i><i></i><i></i><i></i>
+            <!-- One marker per discovery; filled in from the world definition. -->
           </div>
         </div>
       </div>
@@ -342,10 +342,9 @@
         </li>
       </ol>
       <p class="fine-print">
-        You can play all five turns now. Clues use 1–140 characters. Groups of
-        A–Z letters count as words; punctuation separates them. Don’t include
-        the exact answer as a whole word in its clue. Your word and clue are
-        sent to OpenAI for review.
+        Clues use 1–140 characters. Groups of A–Z letters count as words;
+        punctuation separates them. Don’t include the exact answer as a whole
+        word in its clue. Your word and clue are sent to OpenAI for review.
       </p>
     </dialog>
     <dialog id="world-picker" aria-labelledby="world-picker-title">
@@ -364,13 +363,14 @@
         </button>
       </div>
       <p class="world-picker-intro">
-        Two places to make your own. Each keeps your words and clues.
+        Region I · The Shallows. One world a day. Finishing a world reveals the
+        worlds bordering it, and The Long Pier opens once all three are done.
       </p>
       <div id="world-options" class="world-options"></div>
       <p id="world-switch-error" class="notice" role="status" hidden></p>
       <p class="fine-print">
-        Both worlds are open for this playtest. The daily clue review allowance
-        is shared.
+        Missing a day only breaks your streak — your route and your words are
+        kept. The daily clue review allowance is shared across every world.
       </p>
     </dialog>
     <dialog
