@@ -16,7 +16,7 @@ import {
   type WorldCompletion,
 } from "../shared/atlas";
 import type { WorldDefinition } from "../shared/worlds";
-import { GameError } from "./game";
+import { GameError, inPlaytestSubreddit } from "./game";
 
 const metaKey = (user: string) => `cq:${ATLAS_SCENARIO}:${user}:meta`;
 const worldKey = (user: string, world: string) =>
@@ -91,11 +91,12 @@ export async function enterWorld(
   user: string,
   worldId: unknown,
   now = Date.now(),
+  ignoreCadence = inPlaytestSubreddit(),
 ): Promise<AtlasProgress> {
   if (typeof worldId !== "string" || worldId.length > 60)
     throw new GameError(400, "Choose a world to explore.");
   const progress = await readAtlas(user);
-  const check = canEnter(worldId, progress, ymd(now));
+  const check = canEnter(worldId, progress, ymd(now), { ignoreCadence });
   if (!check.ok) {
     const { status, message } = refusal[check.reason];
     throw new GameError(status, message);
@@ -135,10 +136,11 @@ export async function assertPlayable(
   user: string,
   world: WorldDefinition,
   now = Date.now(),
+  ignoreCadence = inPlaytestSubreddit(),
 ): Promise<void> {
   const progress = await readAtlas(user);
   if (progress.activeWorld === world.id) return;
-  const check = canEnter(world.id, progress, ymd(now));
+  const check = canEnter(world.id, progress, ymd(now), { ignoreCadence });
   if (!check.ok) {
     const { status, message } = refusal[check.reason];
     throw new GameError(status, message);
@@ -159,6 +161,9 @@ export async function clearCompletion(
 export async function atlasView(
   user: string | undefined,
   now = Date.now(),
+  // The picker disables a node from its locked state, so the map has to be
+  // told about the lifted cadence too or every world still reads as locked.
+  ignoreCadence = inPlaytestSubreddit(),
 ): Promise<AtlasView> {
   const today = ymd(now);
   const progress = await readAtlas(user);
@@ -169,6 +174,6 @@ export async function atlasView(
     streak: progress.streak,
     frontier: frontierFor(Object.keys(progress.completed)),
     activeWorld: progress.activeWorld,
-    nodes: atlasNodes(progress, today),
+    nodes: atlasNodes(progress, today, { ignoreCadence }),
   };
 }

@@ -21,7 +21,8 @@ export const USER_DAILY_LIMIT = 20;
 export const INSTALLATION_DAILY_LIMIT = 200;
 export const COOLDOWN_MS = 45_000;
 export const PLAYTEST_SUBREDDIT = "crossworld_game_dev";
-const inPlaytestSubreddit = () => context.subredditName === PLAYTEST_SUBREDDIT;
+export const inPlaytestSubreddit = () =>
+  context.subredditName === PLAYTEST_SUBREDDIT;
 export class GameError extends Error {
   constructor(
     public readonly status: number,

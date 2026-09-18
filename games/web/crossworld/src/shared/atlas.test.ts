@@ -110,6 +110,29 @@ test("finishing a world blocks the next one until the calendar day turns over", 
   });
 });
 
+test("the playtest cadence lift opens the next world without relaxing the atlas", () => {
+  const lift = { ignoreCadence: true };
+  const after = done([SHORE, "2026-03-01"]);
+  // Same day, cadence lifted: the neighbouring world opens immediately.
+  expect(canEnter(GLASS, after, "2026-03-01", lift)).toEqual({ ok: true });
+  // Structural gating is untouched: unreachable, gated and completed all hold.
+  expect(canEnter(HEDGE, after, "2026-03-01", lift)).toEqual({
+    ok: false,
+    reason: "region-locked",
+  });
+  expect(canEnter(GATE, after, "2026-03-01", lift)).toEqual({
+    ok: false,
+    reason: "gate-locked",
+  });
+  expect(canEnter(SHORE, after, "2026-03-01", lift)).toEqual({
+    ok: false,
+    reason: "completed",
+  });
+  // The map must agree, or the picker leaves the node disabled.
+  const node = atlasNodes(after, "2026-03-01", lift).find((n) => n.id === GLASS);
+  expect(node).toMatchObject({ state: "open", reason: null });
+});
+
 test("a part-finished world can be resumed the same day and on any later day", () => {
   const midway = progress({ activeWorld: SHORE });
   expect(canEnter(SHORE, midway, "2026-03-01")).toEqual({ ok: true });

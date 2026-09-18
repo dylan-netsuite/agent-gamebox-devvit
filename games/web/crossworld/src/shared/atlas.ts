@@ -138,10 +138,19 @@ export function streakFromDates(dates: Iterable<string>): number {
 export const lastDate = (dates: Iterable<string>): string =>
   [...dates].sort().at(-1) ?? "";
 
+/**
+ * Playtest escape hatch. `ignoreCadence` skips the one-world-a-day rule so a
+ * whole run can be played in one sitting. It is never set in production, and
+ * it deliberately does not relax adjacency, gate or region gating: those are
+ * the atlas design, not a pacing rule.
+ */
+export type EntryOptions = { ignoreCadence?: boolean };
+
 export function canEnter(
   worldId: string,
   progress: AtlasProgress,
   today: string,
+  options: EntryOptions = {},
 ): EntryCheck {
   const world = WORLDS.find((candidate) => candidate.id === worldId);
   if (!world) return { ok: false, reason: "not-in-atlas" };
@@ -163,7 +172,8 @@ export function canEnter(
   const finishedToday =
     lastDate(Object.values(progress.completed).map((entry) => entry.date)) ===
     today;
-  if (finishedToday) return { ok: false, reason: "played-today" };
+  if (finishedToday && !options.ignoreCadence)
+    return { ok: false, reason: "played-today" };
   return { ok: true };
 }
 
@@ -198,6 +208,7 @@ const lockDetail = (
 export function atlasNodes(
   progress: AtlasProgress,
   today: string,
+  options: EntryOptions = {},
 ): AtlasNode[] {
   return WORLDS.map((world) => {
     const base = {
@@ -222,7 +233,7 @@ export function atlasNodes(
         reason: null,
         detail: `Complete · ${progress.completed[world.id]!.date}`,
       };
-    const check = canEnter(world.id, progress, today);
+    const check = canEnter(world.id, progress, today, options);
     if (check.ok)
       return {
         ...base,
