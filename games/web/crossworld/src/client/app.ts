@@ -50,6 +50,9 @@ el("map").style.setProperty("--map-cols", String(world.cols));
 el("journey-track").replaceChildren(
   ...DAYS.map(() => document.createElement("i")),
 );
+// Stable asset names mean a stale webview looks identical to a fresh one.
+// This is the only way to tell them apart from the device.
+el("build-stamp").textContent = `Playtest · ${__BUILD_STAMP__}`;
 el("world-title").textContent = world.name;
 // Worlds differ in length, so the pace note cannot be a fixed number.
 el("pace-note").textContent = `${DAYS.length} turns, at your own pace.`;
