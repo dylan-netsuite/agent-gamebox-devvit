@@ -4,6 +4,7 @@ import {
   atlasNodes,
   atlasWorlds,
   canEnter,
+  cardScope,
   emptyAtlas,
   frontierFor,
   isAtlasWorld,
@@ -114,10 +115,17 @@ export async function enterWorld(
 export async function recordCompletion(
   user: string,
   world: WorldDefinition,
+  cards: string[] = [],
   now = Date.now(),
 ): Promise<void> {
   if (!isAtlasWorld(world.id)) return;
-  const record: WorldCompletion = { completedAt: now, date: ymd(now) };
+  const record: WorldCompletion = {
+    completedAt: now,
+    date: ymd(now),
+    // Stored so sibling worlds can see what this one spent; the nx write below
+    // keeps that list as immutable as the completion date itself.
+    cards: [...new Set(cards)],
+  };
   await redis.set(worldKey(user, world.id), JSON.stringify(record), {
     nx: true,
   });
@@ -156,6 +164,28 @@ export async function clearCompletion(
   if (!isAtlasWorld(world.id)) return;
   await redis.del(worldKey(user, world.id));
   await redis.set(metaKey(user), JSON.stringify({ activeWorld: null }));
+}
+
+/**
+ * Cards already spent in this world's card scope, excluding the world itself:
+ * its own spend is read live from its completed pairs. Signed-out play has no
+ * history, so it always deals a full deck.
+ */
+export async function spentElsewhere(
+  user: string | undefined,
+  world: WorldDefinition,
+): Promise<string[]> {
+  if (!user) return [];
+  const siblings = new Set(cardScope(world).filter((id) => id !== world.id));
+  if (!siblings.size) return [];
+  const progress = await readAtlas(user);
+  return [
+    ...new Set(
+      Object.entries(progress.completed)
+        .filter(([id]) => siblings.has(id))
+        .flatMap(([, entry]) => entry.cards ?? []),
+    ),
+  ];
 }
 
 export async function atlasView(

@@ -9,6 +9,7 @@ import {
   usedCards,
   validatePair,
 } from "../shared/shore";
+import { cardScope } from "../shared/atlas";
 import { referenceDraft } from "../shared/reference-solution";
 import { createWorldGame } from "./shore";
 import { JudgeUnavailable } from "./judge";
@@ -38,10 +39,10 @@ const cardsOn = (day: number) => {
   return [draft.across.criterion, draft.down.criterion].sort();
 };
 
-test("every world's deck is exactly the size of the world and drawn from real mechanics", () => {
+test("every world deals more cards than it has slots, all real mechanics", () => {
   for (const world of WORLDS) {
     const deck = deckFor(world);
-    expect(deck, world.id).toHaveLength(world.days.length * 2);
+    expect(deck.length, world.id).toBeGreaterThan(world.days.length * 2);
     expect(new Set(deck.map((card) => card.id)).size).toBe(deck.length);
     // A world-flavoured name never replaces the stable mechanic id.
     for (const card of deck) {
@@ -60,30 +61,29 @@ test("every world's deck is exactly the size of the world and drawn from real me
   ).toBe("Tiny Seeds");
 });
 
-test("completing a world spends its deck exactly once", async () => {
+test("completing a world spends one card per slot and leaves the rest in hand", async () => {
   const d = deps();
-  expect(availableCards(SANDY_SHORE, [])).toHaveLength(4);
+  const slots = SANDY_SHORE.days.length * 2;
+  expect(availableCards(SANDY_SHORE, []).length).toBeGreaterThan(slots);
   for (let day = 0; day < SANDY_SHORE.days.length; day++)
     await shore.submit("dealer", referenceDraft(SANDY_SHORE, day), d);
   const done = await shore.read("dealer");
   expect(done.turn).toBeNull();
-  expect(await spentBy("dealer")).toEqual(
-    deckFor(SANDY_SHORE)
-      .map((card) => card.id)
-      .sort(),
+  expect(await spentBy("dealer")).toHaveLength(slots);
+  // The declined cards survive the world rather than being consumed with it.
+  expect(availableCards(SANDY_SHORE, done.completed).length).toBe(
+    deckFor(SANDY_SHORE).length - slots,
   );
-  expect(availableCards(SANDY_SHORE, done.completed)).toEqual([]);
 });
 
 test("a spent card is gone from the deck and is refused before any paid review", async () => {
   const d = deps();
   await shore.submit("spender", referenceDraft(SANDY_SHORE, 0), d);
   const after = await shore.read("spender");
-  expect(
-    availableCards(SANDY_SHORE, after.completed)
-      .map((c) => c.id)
-      .sort(),
-  ).toEqual(cardsOn(1));
+  // The two cards the first discovery spent are gone; everything else remains.
+  const left = availableCards(SANDY_SHORE, after.completed).map((c) => c.id);
+  expect(left).toHaveLength(deckFor(SANDY_SHORE).length - 2);
+  for (const card of cardsOn(0)) expect(left).not.toContain(card);
   d.judge.mockClear();
   // Day one spent Driftwood (brief); day two may not spend it again.
   const reuse = {
@@ -134,7 +134,9 @@ test("a rejected clue does not consume its card", async () => {
   expect(first.completed).toHaveLength(0);
   // Nothing was accepted, so the whole deck is still in hand.
   expect(await spentBy("unlucky")).toEqual([]);
-  expect(availableCards(SANDY_SHORE, first.completed)).toHaveLength(4);
+  expect(availableCards(SANDY_SHORE, first.completed)).toHaveLength(
+    deckFor(SANDY_SHORE).length,
+  );
 
   await expireReview("unlucky");
   d.judge.mockResolvedValue(yes);
@@ -155,7 +157,9 @@ test("an unavailable judge does not consume a card", async () => {
   const stalled = await shore.read("offline");
   expect(stalled.completed).toHaveLength(0);
   expect(await spentBy("offline")).toEqual([]);
-  expect(availableCards(SANDY_SHORE, stalled.completed)).toHaveLength(4);
+  expect(availableCards(SANDY_SHORE, stalled.completed)).toHaveLength(
+    deckFor(SANDY_SHORE).length,
+  );
 
   await expireReview("offline");
   d.judge.mockResolvedValue(yes);
@@ -173,7 +177,9 @@ test("a draft reserves nothing: saving does not spend a card", async () => {
   const saved = await shore.read("drafter");
   expect(saved.turn?.across.criterion).toBe("brief");
   expect(await spentBy("drafter")).toEqual([]);
-  expect(availableCards(SANDY_SHORE, saved.completed)).toHaveLength(4);
+  expect(availableCards(SANDY_SHORE, saved.completed)).toHaveLength(
+    deckFor(SANDY_SHORE).length,
+  );
 });
 
 test("one-use is enforced against accepted pairs, not against the pair being written", () => {
@@ -187,4 +193,36 @@ test("one-use is enforced against accepted pairs, not against the pair being wri
   // spent; only later pairs are checked against it.
   const next = referenceDraft(SANDY_SHORE, 1);
   expect(validatePair(next, completed, SANDY_SHORE).issues).toEqual([]);
+});
+
+test("cards spend across the region's open worlds, and the gate deals fresh", () => {
+  const open = WORLDS.filter(
+    (w) => w.region === "shallows" && w.kind !== "gate",
+  );
+  const gate = WORLDS.find((w) => w.id === "the-long-pier")!;
+  // Siblings share one pool; the gate is its own, so it is never depleted.
+  for (const world of open)
+    expect(cardScope(world).sort()).toEqual(open.map((w) => w.id).sort());
+  expect(cardScope(gate)).toEqual([gate.id]);
+
+  // Burning a sibling's card removes it here too: that is the route decision.
+  const shared = deckFor(open[0]!).find((card) =>
+    deckFor(open[2]!).some((other) => other.id === card.id),
+  );
+  expect(shared, "open worlds must contest at least one card").toBeTruthy();
+  const after = availableCards(open[2]!, [], [shared!.id]).map((c) => c.id);
+  expect(after).not.toContain(shared!.id);
+
+  // Starvation guard: even if every card another world could spend is gone, a
+  // world still holds at least one card per slot, because the base decks are
+  // disjoint. Without this, a route could make a later world unplayable.
+  for (const world of open) {
+    const elsewhere = open
+      .filter((other) => other.id !== world.id)
+      .flatMap((other) => deckFor(other).map((card) => card.id));
+    expect(
+      availableCards(world, [], elsewhere).length,
+      `${world.id} starved by its siblings`,
+    ).toBeGreaterThanOrEqual(world.days.length * 2);
+  }
 });

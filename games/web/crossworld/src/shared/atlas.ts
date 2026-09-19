@@ -16,7 +16,12 @@ export const ATLAS_REGION: RegionId = "shallows";
 /** The atlas grows outward from here. */
 export const ORIGIN_WORLD = "sandy-shore";
 
-export type WorldCompletion = { completedAt: number; date: string };
+export type WorldCompletion = {
+  completedAt: number;
+  date: string;
+  /** Cards this world spent, read by its siblings. Absent on older records. */
+  cards?: string[];
+};
 export type AtlasProgress = {
   /** Immutable per-world records. The only stored truth about progress. */
   completed: Record<string, WorldCompletion>;
@@ -145,6 +150,19 @@ export const lastDate = (dates: Iterable<string>): string =>
  * the atlas design, not a pacing rule.
  */
 export type EntryOptions = { ignoreCadence?: boolean };
+
+/**
+ * Which worlds share a one-use card pool. Cards spend across a region's open
+ * worlds, so what you burn in the first world is gone from the next and the
+ * route becomes a real decision. A gate deals fresh: it is the exam, and it is
+ * meant to test every card again rather than whatever you have left.
+ */
+export const cardScope = (world: WorldDefinition): string[] =>
+  world.kind === "gate"
+    ? [world.id]
+    : WORLDS.filter((w) => w.region === world.region && w.kind !== "gate").map(
+        (w) => w.id,
+      );
 
 export function canEnter(
   worldId: string,

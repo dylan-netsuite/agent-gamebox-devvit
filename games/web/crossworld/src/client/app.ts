@@ -61,6 +61,7 @@ const art = createShoreArt(world),
   submit = el<HTMLButtonElement>("submit"),
   editor = el<HTMLFormElement>("map-editor"),
   inspect = el<HTMLDialogElement>("inspect");
+let spentElsewhere: string[] = [];
 let shore = emptyShore(),
   ready = false,
   signedIn = false,
@@ -671,7 +672,7 @@ let renderedDeck = "";
 function renderDeck() {
   // Every card is one-use, so a spent card leaves the picker for good. Rebuild
   // only when the remaining deck actually changes, to preserve focus.
-  const cards = availableCards(world, shore.completed);
+  const cards = availableCards(world, shore.completed, spentElsewhere);
   const signature = cards.map((card) => card.id).join("|");
   if (signature === renderedDeck) return;
   renderedDeck = signature;
@@ -705,8 +706,10 @@ function renderDeck() {
     });
     options.append(button);
   }
+  // Cards spend across the region's open worlds, so the count is what is left
+  // to you here and now, not what this world started with.
   el("deck-count").textContent =
-    `${cards.length} of ${deckFor(world).length} rules left`;
+    `${cards.length} rules in hand · ${DAYS.length * 2 - shore.completed.length * 2} to place`;
 }
 renderDeck();
 el("minimize").addEventListener("click", () => {
@@ -825,6 +828,7 @@ async function load() {
     signedIn = view.signedIn;
     judgeReady = view.judgeReady;
     canReset = Boolean(view.canReset);
+    spentElsewhere = view.spentElsewhere ?? [];
     ready = true;
     const local =
       dirty &&

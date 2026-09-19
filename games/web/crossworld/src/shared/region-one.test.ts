@@ -75,7 +75,8 @@ test.each(spec)(
     const cards = discoveries.flatMap((d) => [d.across.card, d.down.card]);
     expect(new Set(cards).size).toBe(cards.length);
     const deck = deckFor(world);
-    expect(deck).toHaveLength(world.days.length * 2);
+    // A world deals more than it needs, so declining a card is a real choice.
+    expect(deck.length).toBeGreaterThan(world.days.length * 2);
     expect(new Set(deck.map((card) => card.id)).size).toBe(deck.length);
     for (const card of cards)
       expect(deck.map((entry) => entry.id)).toContain(card);

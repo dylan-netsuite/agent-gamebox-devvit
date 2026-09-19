@@ -30,7 +30,7 @@ const glass = createWorldGame(GLASS_REACH);
 // the one-a-day rule does not also block the Hedge session under test.
 const openHedge = async (user: string) => {
   for (const world of [SANDY_SHORE, GLASS_REACH, THE_WRACKLINE, THE_LONG_PIER])
-    await recordCompletion(user, world, Date.parse("2026-01-02T12:00:00Z"));
+    await recordCompletion(user, world, [], Date.parse("2026-01-02T12:00:00Z"));
 };
 const yes = { validWord: true, fairClue: true, reason: "Fair definition." };
 const deps = (): Dependencies => ({

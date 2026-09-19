@@ -37,11 +37,19 @@ export function deckFor(world: WorldDefinition = SANDY_SHORE): DeckCard[] {
  */
 export const usedCards = (completed: Pair[]): string[] =>
   completed.flatMap((pair) => DIRECTIONS.map((d) => pair[d].criterion));
+/**
+ * A world deals more cards than it has slots, so you choose which to decline.
+ * `elsewhere` is what the rest of this card scope already spent (see cardScope):
+ * those are gone for good, which is what makes the route order matter. A world's
+ * base deck is disjoint from its siblings', so no amount of earlier spending can
+ * leave it with fewer cards than slots.
+ */
 export function availableCards(
   world: WorldDefinition = SANDY_SHORE,
   completed: Pair[] = [],
+  elsewhere: string[] = [],
 ): DeckCard[] {
-  const spent = new Set(usedCards(completed));
+  const spent = new Set([...usedCards(completed), ...elsewhere]);
   return deckFor(world).filter((card) => !spent.has(card.id));
 }
 export const cardName = (world: WorldDefinition, id: string) =>
@@ -56,6 +64,8 @@ export type ShoreView = {
   judgeReady: boolean;
   canReset?: boolean;
   shore: Shore;
+  /** Cards already spent elsewhere in this world's card scope. */
+  spentElsewhere?: string[];
 };
 export const emptyPair = (): Pair => ({
   revealed: false,
@@ -146,6 +156,7 @@ export function validatePair(
   pair: PairDraft,
   completed: Pair[],
   world: WorldDefinition = SANDY_SHORE,
+  elsewhere: string[] = [],
 ) {
   const day = completed.length,
     layout = world.days[day];
@@ -157,7 +168,7 @@ export function validatePair(
       pair: normalized,
     };
   const deck = new Set(deckFor(world).map((card) => card.id));
-  const spent = new Set(usedCards(completed));
+  const spent = new Set([...usedCards(completed), ...elsewhere]);
   for (const direction of DIRECTIONS) {
     const label = direction === "across" ? "Across" : "Down";
     const card = pair[direction].criterion;
@@ -166,7 +177,7 @@ export function validatePair(
       issues.push(`${label}: that rule is not in this world’s deck.`);
     else if (card && spent.has(card))
       issues.push(
-        `${label}: ${cardName(world, card)} has already been spent in this world.`,
+        `${label}: ${cardName(world, card)} has already been spent.`,
       );
     const other: Direction = direction === "across" ? "down" : "across";
     const result = validateTurn(

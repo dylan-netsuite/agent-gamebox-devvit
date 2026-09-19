@@ -7,6 +7,7 @@ import {
   asDraft,
   emptyPair,
   parsePair,
+  usedCards,
   validatePair,
   type Direction,
   type Pair,
@@ -14,7 +15,12 @@ import {
   type Shore,
 } from "../shared/shore";
 import { clueWords, validateTurn, type ClueContext } from "../shared/rules";
-import { assertPlayable, clearCompletion, recordCompletion } from "./atlas";
+import {
+  assertPlayable,
+  clearCompletion,
+  recordCompletion,
+  spentElsewhere,
+} from "./atlas";
 import {
   createTurnGame,
   GameError,
@@ -157,7 +163,12 @@ export function createWorldGame(world: WorldDefinition) {
       await redis.set(key(user, day, "draft", run), JSON.stringify(draft));
       return readShore(user);
     }
-    const result = validatePair(draft, current.completed, world);
+    const result = validatePair(
+      draft,
+      current.completed,
+      world,
+      await spentElsewhere(user, world),
+    );
     if (result.issues.length) throw new GameError(400, result.issues.join(" "));
     const pair = result.pair;
     // A fixed lease prevents overlapping paired reviews. Never delete an expired lease.
@@ -218,7 +229,12 @@ export function createWorldGame(world: WorldDefinition) {
     // The last accepted pair closes the world. Recording is idempotent, so a
     // retry of this request cannot move the completion date or the streak.
     if (!settled.turn)
-      await recordCompletion(user, world, deps?.now() ?? Date.now());
+      await recordCompletion(
+        user,
+        world,
+        usedCards(settled.completed),
+        deps?.now() ?? Date.now(),
+      );
     return settled;
   }
   const saveShore = (user: string, raw: unknown) => write(user, raw, false);

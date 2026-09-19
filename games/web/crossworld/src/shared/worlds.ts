@@ -74,6 +74,8 @@ export const SANDY_SHORE: WorldDefinition = {
     { mechanic: "short-words", name: "Grains" },
     { mechanic: "shared-initial", name: "Matching Grain" },
     { mechanic: "ask", name: "Message in a Bottle" },
+    { mechanic: "two-breaths", name: "Two Shells" },
+    { mechanic: "echo", name: "Paired Shells" },
   ],
   days: [
     {
@@ -117,6 +119,8 @@ export const GLASS_REACH: WorldDefinition = {
     { mechanic: "no-e", name: "Clouded Glass" },
     { mechanic: "same-start", name: "Matched Pair" },
     { mechanic: "twin-endings", name: "Twin Edges" },
+    { mechanic: "echo", name: "Paired Panes" },
+    { mechanic: "mirror-length", name: "Pane Count" },
   ],
   days: [
     {
@@ -162,6 +166,8 @@ export const THE_WRACKLINE: WorldDefinition = {
     { mechanic: "fresh-words", name: "Nothing Twice" },
     { mechanic: "double-trouble", name: "Twin Bones" },
     { mechanic: "count-me-in", name: "Tally Marks" },
+    { mechanic: "two-breaths", name: "Two Knots" },
+    { mechanic: "mirror-length", name: "Rope Count" },
   ],
   days: [
     {
@@ -221,6 +227,8 @@ export const THE_LONG_PIER: WorldDefinition = {
     { mechanic: "echo", name: "Both Rails" },
     { mechanic: "fresh-words", name: "New Timber" },
     { mechanic: "twin-endings", name: "Twin Pilings" },
+    { mechanic: "two-breaths", name: "Two Posts" },
+    { mechanic: "count-me-in", name: "Counted Boards" },
   ],
   days: [
     {
@@ -290,6 +298,8 @@ export const HAUNTED_HEDGE: WorldDefinition = {
     { mechanic: "mirror-length", name: "Petal Count" },
     { mechanic: "echo", name: "Paired Vines" },
     { mechanic: "ask", name: "The Gate Asks" },
+    { mechanic: "brief", name: "Pocket Posy" },
+    { mechanic: "half-measure", name: "Half Measure" },
   ],
   days: [
     {
