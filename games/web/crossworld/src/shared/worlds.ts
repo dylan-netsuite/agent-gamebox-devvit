@@ -63,7 +63,7 @@ export const SANDY_SHORE: WorldDefinition = {
   scenario: "sandy-shore-shallows-v2",
   apiRoot: "/api/sandy-shore-shallows-v2",
   name: "Sandy Shore",
-  chapter: "Where you wash up",
+  chapter: "The dust ends here",
   noun: "shore",
   introduction: "Loose ground, holding no shape.",
   welcome:
@@ -108,7 +108,7 @@ export const GLASS_REACH: WorldDefinition = {
   scenario: "glass-reach-shallows-v1",
   apiRoot: "/api/glass-reach-shallows-v1",
   name: "Glass Reach",
-  chapter: "Where water meets sky",
+  chapter: "Between two skies",
   noun: "reach",
   introduction: "Worn smooth without trying.",
   welcome:
@@ -154,7 +154,7 @@ export const THE_WRACKLINE: WorldDefinition = {
   scenario: "the-wrackline-shallows-v1",
   apiRoot: "/api/the-wrackline-shallows-v1",
   name: "The Wrackline",
-  chapter: "The tide’s leavings",
+  chapter: "What has no use",
   noun: "wrackline",
   introduction: "Water dwells where no one else will.",
   welcome:
@@ -209,7 +209,7 @@ export const THE_LONG_PIER: WorldDefinition = {
   scenario: "the-long-pier-shallows-v1",
   apiRoot: "/api/the-long-pier-shallows-v1",
   name: "The Long Pier",
-  chapter: "Last steps over water",
+  chapter: "Beyond the human world",
   noun: "pier",
   introduction: "Further out than the map has room for.",
   welcome:
@@ -290,7 +290,7 @@ export const HAUNTED_HEDGE: WorldDefinition = {
   scenario: "haunted-hedge-pairs-v1",
   apiRoot: "/api/haunted-hedge-pairs-v1",
   name: "Haunted Hedge",
-  chapter: "A garden after dark",
+  chapter: "By the eastern fence",
   noun: "garden",
   introduction: "Something in the leaves.",
   welcome:
