@@ -8,10 +8,11 @@ import {
   THE_WRACKLINE,
   type WorldDefinition,
 } from "../shared/worlds";
+import { lettersFor } from "../shared/shore";
 import { referenceDraft } from "../shared/reference-solution";
 import { frontierFor } from "../shared/atlas";
 import { createWorldGame } from "./shore";
-import { atlasView, enterWorld, readAtlas } from "./atlas";
+import { atlasView, enterWorld, readAtlas, seedsFor } from "./atlas";
 import type { Dependencies } from "./game";
 
 const test = createDevvitTest();
@@ -244,4 +245,46 @@ test("the map reads without a signed-in user and shows only the origin", async (
   expect(view.nodes.find((node) => node.id === HAUNTED_HEDGE.id)).toMatchObject(
     { state: "locked", reason: "region-locked" },
   );
+});
+
+test("the gate is seeded with the first letter you wrote in each Shallows world", async () => {
+  // Finishing a world stores the letter it carries onward.
+  await play("walker", SANDY_SHORE, "2026-11-01");
+  await play("walker", GLASS_REACH, "2026-11-02");
+  await play("walker", THE_WRACKLINE, "2026-11-03");
+  const seeds = await seedsFor("walker", THE_LONG_PIER);
+  // SAND, GLASS and STEP are the reference first answers of the three worlds.
+  expect(seeds).toEqual({ "1,0": "S", "5,0": "G", "12,0": "S" });
+
+  // Those letters are on the gate's board before a word is written there.
+  const fixed = lettersFor([], THE_LONG_PIER, seeds);
+  expect(fixed.get("1,0")).toBe("S");
+  expect(fixed.get("5,0")).toBe("G");
+
+  // And they bind: an answer that ignores a carried letter never reaches the judge.
+  const d = deps("2026-11-04");
+  const wrong = referenceDraft(THE_LONG_PIER, 0);
+  await expect(
+    game(THE_LONG_PIER).submit(
+      "walker",
+      { ...wrong, across: { ...wrong.across, word: "PIER" } },
+      d,
+    ),
+  ).rejects.toThrow("must be S");
+  expect(d.judge).not.toHaveBeenCalled();
+  // The reference journey does satisfy them, so the gate stays playable.
+  expect(
+    (await game(THE_LONG_PIER).submit("walker", wrong, deps("2026-11-04")))
+      .completed,
+  ).toHaveLength(1);
+});
+
+test("seeding fails open so a missing source can never strand the gate", async () => {
+  // No Shallows history at all: the gate simply deals an unseeded board rather
+  // than refusing to resolve a letter it cannot find.
+  expect(await seedsFor("stranger", THE_LONG_PIER)).toEqual({});
+  expect(await seedsFor(undefined, THE_LONG_PIER)).toEqual({});
+  // A world with no declared seeds is unaffected by any history.
+  await play("walker2", SANDY_SHORE, "2026-12-01");
+  expect(await seedsFor("walker2", GLASS_REACH)).toEqual({});
 });

@@ -66,6 +66,8 @@ export type ShoreView = {
   shore: Shore;
   /** Cards already spent elsewhere in this world's card scope. */
   spentElsewhere?: string[];
+  /** Letters carried in from worlds you already finished. */
+  seeds?: Seeds;
 };
 export const emptyPair = (): Pair => ({
   revealed: false,
@@ -89,11 +91,17 @@ export const cellsFor = (
 };
 export const cellKey = (cell: { row: number; col: number }) =>
   `${cell.row},${cell.col}`;
+/** Letters carried in from other worlds, keyed "row,col". */
+export type Seeds = Record<string, string>;
+
 export function lettersFor(
   completed: Pair[],
   world: WorldDefinition = SANDY_SHORE,
+  seeds: Seeds = {},
 ) {
-  const letters = new Map<string, string>();
+  // Seeds go down first so an accepted answer, which had to satisfy the seed to
+  // be accepted, is the final word on any cell it covers.
+  const letters = new Map<string, string>(Object.entries(seeds));
   completed.forEach((pair, day) => {
     for (const direction of DIRECTIONS)
       cellsFor(day, direction, world).forEach((cell, i) =>
@@ -108,8 +116,9 @@ export function crossingsFor(
   completed: Pair[],
   pair?: PairDraft,
   world: WorldDefinition = SANDY_SHORE,
+  seeds: Seeds = {},
 ) {
-  const fixed = lettersFor(completed, world);
+  const fixed = lettersFor(completed, world, seeds);
   const other = direction === "across" ? "down" : "across";
   const companion = new Map<string, string>();
   if (pair)
@@ -157,6 +166,7 @@ export function validatePair(
   completed: Pair[],
   world: WorldDefinition = SANDY_SHORE,
   elsewhere: string[] = [],
+  seeds: Seeds = {},
 ) {
   const day = completed.length,
     layout = world.days[day];
@@ -176,9 +186,7 @@ export function validatePair(
     if (card && !deck.has(card))
       issues.push(`${label}: that rule is not in this world’s deck.`);
     else if (card && spent.has(card))
-      issues.push(
-        `${label}: ${cardName(world, card)} has already been spent.`,
-      );
+      issues.push(`${label}: ${cardName(world, card)} has already been spent.`);
     const other: Direction = direction === "across" ? "down" : "across";
     const result = validateTurn(
       asDraft(pair, direction),
@@ -203,7 +211,14 @@ export function validatePair(
         (issue) => `${direction === "across" ? "Across" : "Down"}: ${issue}`,
       ),
     );
-    for (const crossing of crossingsFor(day, direction, completed, pair, world))
+    for (const crossing of crossingsFor(
+      day,
+      direction,
+      completed,
+      pair,
+      world,
+      seeds,
+    ))
       if (
         result.word.length === layout[direction].length &&
         result.word[crossing.index] !== crossing.letter

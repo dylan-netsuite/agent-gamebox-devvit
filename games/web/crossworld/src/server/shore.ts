@@ -19,6 +19,7 @@ import {
   assertPlayable,
   clearCompletion,
   recordCompletion,
+  seedsFor,
   spentElsewhere,
 } from "./atlas";
 import {
@@ -168,6 +169,7 @@ export function createWorldGame(world: WorldDefinition) {
       current.completed,
       world,
       await spentElsewhere(user, world),
+      await seedsFor(user, world),
     );
     if (result.issues.length) throw new GameError(400, result.issues.join(" "));
     const pair = result.pair;
@@ -228,13 +230,16 @@ export function createWorldGame(world: WorldDefinition) {
     const settled = await readShore(user);
     // The last accepted pair closes the world. Recording is idempotent, so a
     // retry of this request cannot move the completion date or the streak.
-    if (!settled.turn)
+    if (!settled.turn) {
+      // The first letter you wrote here is what this world carries onward.
+      const seed = settled.completed[0]?.across.word[0];
       await recordCompletion(
         user,
         world,
-        usedCards(settled.completed),
+        { cards: usedCards(settled.completed), ...(seed ? { seed } : {}) },
         deps?.now() ?? Date.now(),
       );
+    }
     return settled;
   }
   const saveShore = (user: string, raw: unknown) => write(user, raw, false);

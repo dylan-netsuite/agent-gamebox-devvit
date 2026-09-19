@@ -21,6 +21,8 @@ export type WorldCompletion = {
   date: string;
   /** Cards this world spent, read by its siblings. Absent on older records. */
   cards?: string[];
+  /** The letter this world carries into its region's gate. */
+  seed?: string;
 };
 export type AtlasProgress = {
   /** Immutable per-world records. The only stored truth about progress. */

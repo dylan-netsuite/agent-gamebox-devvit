@@ -18,6 +18,7 @@ import {
   parsePair,
   validatePair as validateWorldPair,
   type Direction,
+  type Seeds,
   type Shore,
   type ShoreView,
   type PairDraft,
@@ -28,8 +29,16 @@ const world = worldFor(location.hash.slice(1) || readPreference("world"));
 const DAYS = world.days;
 const cellsFor = (day: number, direction: Direction) =>
   cellsForWorld(day, direction, world);
+let seeds: Seeds = {};
 const lettersFor = (completed: Shore["completed"]) =>
-  lettersForWorld(completed, world);
+  lettersForWorld(completed, world, seeds);
+/** Which finished world a carried letter came from, for the tile's label. */
+const seedSource = new Map(
+  (world.seeds ?? []).map((source) => [
+    `${source.row},${source.col}`,
+    worldFor(source.from).name,
+  ]),
+);
 const validatePair = (draft: PairDraft, completed: Shore["completed"]) =>
   validateWorldPair(draft, completed, world);
 document.documentElement.dataset.world = world.id;
@@ -397,6 +406,8 @@ function renderMap(animate = false) {
     if (current.length) tile.classList.add("current");
     if (selected) tile.classList.add("active");
     if (fixed.has(key)) tile.classList.add("fixed");
+    const carriedFrom = seedSource.get(key);
+    if (carriedFrom && !shore.completed.length) tile.classList.add("carried");
     if (conflict) tile.classList.add("conflict");
     if (animate && current.length && !fixed.has(key))
       tile.classList.add("new-tile");
@@ -458,8 +469,9 @@ function renderMap(animate = false) {
       button.disabled = !ready || busy;
       button.setAttribute(
         "aria-label",
-        `Row ${cell.row + 1}, column ${cell.col + 1}${letter ? `, ${letter}` : ", empty"}${current.length ? ", select " + current.map((p) => p.direction).join(" or ") : ", inspect clue"}`,
+        `Row ${cell.row + 1}, column ${cell.col + 1}${letter ? `, ${letter}` : ", empty"}${carriedFrom ? `, carried from ${carriedFrom}` : ""}${current.length ? ", select " + current.map((p) => p.direction).join(" or ") : ", inspect clue"}`,
       );
+      if (carriedFrom) button.title = `${letter} carried from ${carriedFrom}`;
       button.addEventListener("click", () => {
         if (current.length) {
           const next =
@@ -829,6 +841,7 @@ async function load() {
     judgeReady = view.judgeReady;
     canReset = Boolean(view.canReset);
     spentElsewhere = view.spentElsewhere ?? [];
+    seeds = view.seeds ?? {};
     ready = true;
     const local =
       dirty &&

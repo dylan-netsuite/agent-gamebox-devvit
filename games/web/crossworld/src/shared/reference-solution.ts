@@ -103,34 +103,38 @@ export const REGION_ONE: ReferenceWorld[] = [
     ],
   },
   {
+    // The gate is the one world whose reference depends on the rest: its 1A, 2A
+    // and 4A open on the first letters of SAND, GLASS and STEP. Change a first
+    // across in the Shallows and this solution has to be re-derived.
     world: THE_LONG_PIER,
     discoveries: [
       {
         place: "First piling",
-        across: { row: 2, col: 1, word: "PIER", card: "brief" },
-        down: { row: 2, col: 2, word: "IRONS", card: "half-measure" },
-        cross: "2,2,I",
+        across: { row: 2, col: 1, word: "SAIL", card: "brief" },
+        down: { row: 2, col: 2, word: "AMBER", card: "half-measure" },
+        cross: "2,2,A",
       },
       {
-        // ISLES inherits (6,2) S from IRONS.
-        place: "The long span",
-        across: { row: 6, col: 1, word: "ISLES", card: "no-b" },
-        down: { row: 6, col: 5, word: "SPANS", card: "mirror-length" },
-        cross: "6,5,S",
+        // GRAIN inherits (6,2) R from AMBER.
+        place: "Missing plank",
+        across: { row: 6, col: 1, word: "GRAIN", card: "no-b" },
+        down: { row: 6, col: 5, word: "NAILS", card: "mirror-length" },
+        cross: "6,5,N",
       },
       {
-        // INLET inherits (6,1) I from ISLES; TIDES inherits (10,5) S from SPANS.
-        place: "Inlet turn",
-        across: { row: 10, col: 1, word: "TIDES", card: "shared-initial" },
-        down: { row: 6, col: 1, word: "INLET", card: "echo" },
-        cross: "10,1,T",
+        // GULLS shares GRAIN's carried G at (6,1); SIGNS inherits (10,5) from
+        // NAILS. GULLS echoes "that stand" back out of SIGNS.
+        place: "Gull post",
+        across: { row: 10, col: 1, word: "SIGNS", card: "shared-initial" },
+        down: { row: 6, col: 1, word: "GULLS", card: "echo" },
+        cross: "10,1,S",
       },
       {
-        // DEEP inherits (10,3) D from TIDES.
+        // GATE inherits (10,3) G from SIGNS.
         place: "Fog end",
-        across: { row: 13, col: 1, word: "ROPES", card: "fresh-words" },
-        down: { row: 10, col: 3, word: "DEEP", card: "twin-endings" },
-        cross: "13,3,P",
+        across: { row: 13, col: 1, word: "SWELL", card: "fresh-words" },
+        down: { row: 10, col: 3, word: "GATE", card: "twin-endings" },
+        cross: "13,3,E",
       },
     ],
   },
@@ -157,15 +161,15 @@ export const REFERENCE_CLUES: Record<string, string> = {
   KNOT: "Pulled tight in rope",
   WRACK: "Storm litter left by one high tide",
   // The Long Pier: brief, half-measure, no-b, mirror-length, shared-initial,
-  // echo, fresh-words, twin-endings. INLET echoes "the sea" back from TIDES.
-  PIER: "Walkway over water",
-  IRONS: "Metal fastenings",
-  ISLES: "Small scattered lands in water",
-  SPANS: "Stretches that cross open gaps",
-  TIDES: "The sea rises and falls",
-  INLET: "A narrow arm of the sea",
-  ROPES: "Thick cords for hauling",
-  DEEP: "Down where the water is darker",
+  // echo, fresh-words, twin-endings. GULLS echoes "that stand" out of SIGNS.
+  SAIL: "Canvas that catches wind",
+  AMBER: "Warm gold, almost brown",
+  GRAIN: "Lines running through cut wood",
+  NAILS: "Iron pins that hold planks",
+  SIGNS: "Marks that stand for something",
+  GULLS: "Grey birds that stand on posts",
+  SWELL: "A long rolling rise of water",
+  GATE: "Swinging opening in a fence",
 };
 
 export const referenceFor = (world: WorldDefinition): ReferenceWorld =>

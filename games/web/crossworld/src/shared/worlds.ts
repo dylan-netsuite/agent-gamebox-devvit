@@ -41,6 +41,14 @@ export type WorldDefinition = {
    * single locked entry.
    */
   deck: DeckEntry[];
+  /**
+   * Cells this world inherits from other worlds you finished. A gate is the
+   * culmination of its region, so it is partly built out of the letters you
+   * already wrote. Every seeded cell sits at index 0 of a slot: a word-initial
+   * constraint is the easiest to satisfy, and the carried letter is whatever
+   * the player themselves chose, so it cannot be assumed to be a common one.
+   */
+  seeds?: { from: string; row: number; col: number }[];
   days: WorldDay[];
 };
 
@@ -204,7 +212,7 @@ export const THE_LONG_PIER: WorldDefinition = {
   noun: "pier",
   introduction: "Further out than the map has room for.",
   welcome:
-    "The capstone of the Shallows. Three discoveries, and one letter that carries between them.",
+    "The capstone of the Shallows. Three paths open on letters you carried out of the worlds behind you.",
   description:
     "A pier that continues further out than the map has room for. Opens once the Shallows are complete.",
   // Compacted from the bible's 15-row draft to 13 rows without changing any
@@ -218,6 +226,14 @@ export const THE_LONG_PIER: WorldDefinition = {
   atlas: { x: 1, y: 2 },
   neighbours: ["sandy-shore", "glass-reach", "the-wrackline"],
   motif: "pier",
+  seeds: [
+    // 1A, 2A/3D and 4A each open on a letter carried out of the Shallows.
+    // Seeded cells are index 0 of their slot: the carried letter is whatever
+    // the player chose, so it must land where any letter is workable.
+    { from: "sandy-shore", row: 1, col: 0 },
+    { from: "glass-reach", row: 5, col: 0 },
+    { from: "the-wrackline", row: 12, col: 0 },
+  ],
   deck: [
     { mechanic: "brief", name: "Short Span" },
     { mechanic: "half-measure", name: "Fog Bank" },
@@ -232,31 +248,32 @@ export const THE_LONG_PIER: WorldDefinition = {
   ],
   days: [
     {
-      // 1A (2,1) PIER x 1D (2,2) IRONS, crossing (2,2) I
+      // 1A (2,1) SAIL x 1D (2,2) AMBER, crossing (2,2) A. 1A opens on the
+      // letter Sandy Shore carried in.
       across: { row: 1, col: 0, length: 4 },
       down: { row: 1, col: 1, length: 5 },
       place: "First piling",
       note: "The boards begin. Two paths run out over the water.",
     },
     {
-      // 2A (6,1) ISLES x 2D (6,5) SPANS, crossing (6,5) S. 2A inherits (6,2)
-      // from 1D IRONS.
+      // 2A (6,1) GRAIN x 2D (6,5) NAILS, crossing (6,5) N. 2A inherits (6,2)
+      // from 1D AMBER and opens on the letter Glass Reach carried in.
       across: { row: 5, col: 0, length: 5 },
       down: { row: 5, col: 4, length: 5 },
-      place: "The long span",
+      place: "Missing plank",
       note: "The rail runs on past the last lamp.",
     },
     {
-      // 3A (10,1) TIDES x 3D (6,1) INLET, crossing (10,1) T. 3D inherits (6,1)
-      // from 2A ISLES and 3A inherits (10,5) from 2D SPANS.
+      // 3A (10,1) SIGNS x 3D (6,1) GULLS, crossing (10,1) S. 3D shares 2A's
+      // carried letter at (6,1); 3A inherits (10,5) from 2D NAILS.
       across: { row: 9, col: 0, length: 5 },
       down: { row: 5, col: 0, length: 5 },
-      place: "Inlet turn",
+      place: "Gull post",
       note: "Water on both sides now. Your own words hold the crossing.",
     },
     {
-      // 4A (13,1) ROPES x 4D (10,3) DEEP, crossing (13,3) P. 4D inherits (10,3)
-      // from 3A TIDES.
+      // 4A (13,1) SWELL x 4D (10,3) GATE, crossing (13,3) E. 4D inherits
+      // (10,3) from 3A SIGNS; 4A opens on the Wrackline's carried letter.
       across: { row: 12, col: 0, length: 5 },
       down: { row: 9, col: 2, length: 4 },
       place: "Fog end",

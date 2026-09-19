@@ -123,6 +123,30 @@ const preLocked = (world: (typeof WORLDS)[number]) => {
   return total;
 };
 
+test("a carried letter always lands where any letter can work", () => {
+  // The seed is whatever the player chose in an earlier world, so it may be a
+  // rare one. Index 0 of a slot is the only position where that is always
+  // workable: a word-initial constraint never strands a slot the way a fixed
+  // interior or final letter can.
+  for (const world of WORLDS)
+    for (const seed of world.seeds ?? []) {
+      const key = `${seed.row},${seed.col}`;
+      const slots = world.days
+        .flatMap((_, day) =>
+          DIRECTIONS.map((direction) =>
+            cellsFor(day, direction, world).map(cellKey),
+          ),
+        )
+        .filter((cells) => cells.includes(key));
+      expect(
+        slots.length,
+        `${world.id} seeds an unused cell ${key}`,
+      ).toBeGreaterThan(0);
+      for (const cells of slots)
+        expect(cells.indexOf(key), `${world.id} seeds ${key} mid-slot`).toBe(0);
+    }
+});
+
 test("Region I escalates: every world locks more letters than the one before", () => {
   // Playtest finding: the three open worlds were the same size and shared no
   // letters between turns, so nothing got harder until the Gate. Inherited
@@ -138,15 +162,22 @@ test("Region I escalates: every world locks more letters than the one before", (
 });
 
 test("no world hands a player a turn with nothing left to choose", () => {
-  // A turn whose letters are almost all inherited stops being a choice. The
-  // Hedge peak is three locked letters in a five-cell word; nothing may exceed
-  // it, and every turn must keep at least two free cells.
+  // A turn whose letters are almost all decided stops being a choice. The Hedge
+  // peak is three locked letters in a five-cell word; nothing may exceed it,
+  // and every turn must keep at least two free cells. Carried letters count:
+  // they are decided before the player arrives, exactly like an inherited
+  // crossing, and they are the easiest way to over-constrain a gate by accident.
   for (const world of WORLDS) {
+    const carried = new Set(
+      (world.seeds ?? []).map((seed) => `${seed.row},${seed.col}`),
+    );
     const seen = new Set<string>();
     world.days.forEach((_, day) => {
       for (const direction of DIRECTIONS) {
         const cells = cellsFor(day, direction, world).map(cellKey);
-        const inherited = cells.filter((key) => seen.has(key)).length;
+        const inherited = cells.filter(
+          (key) => seen.has(key) || carried.has(key),
+        ).length;
         expect(inherited).toBeLessThanOrEqual(3);
         expect(cells.length - inherited).toBeGreaterThanOrEqual(2);
       }

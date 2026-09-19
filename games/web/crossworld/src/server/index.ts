@@ -20,7 +20,7 @@ import { readJourney, saveJourney, submitJourney } from "./journey";
 import { emptyShore, type ShoreView } from "../shared/shore";
 import { WORLDS } from "../shared/worlds";
 import { ATLAS_API_ROOT } from "../shared/atlas";
-import { atlasView, enterWorld, spentElsewhere } from "./atlas";
+import { atlasView, enterWorld, seedsFor, spentElsewhere } from "./atlas";
 import { createWorldGame, canResetShore } from "./shore";
 
 const app = express();
@@ -98,6 +98,7 @@ for (const world of WORLDS) {
       judgeReady: Boolean(config.enabled && config.key),
       shore: context.userId ? await game.read(context.userId) : emptyShore(),
       spentElsewhere: await spentElsewhere(context.userId, world),
+      seeds: await seedsFor(context.userId, world),
     };
     res.json(view);
   });

@@ -129,7 +129,9 @@ test("the playtest cadence lift opens the next world without relaxing the atlas"
     reason: "completed",
   });
   // The map must agree, or the picker leaves the node disabled.
-  const node = atlasNodes(after, "2026-03-01", lift).find((n) => n.id === GLASS);
+  const node = atlasNodes(after, "2026-03-01", lift).find(
+    (n) => n.id === GLASS,
+  );
   expect(node).toMatchObject({ state: "open", reason: null });
 });
 

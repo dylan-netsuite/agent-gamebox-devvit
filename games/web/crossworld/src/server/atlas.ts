@@ -115,7 +115,7 @@ export async function enterWorld(
 export async function recordCompletion(
   user: string,
   world: WorldDefinition,
-  cards: string[] = [],
+  detail: { cards?: string[]; seed?: string } = {},
   now = Date.now(),
 ): Promise<void> {
   if (!isAtlasWorld(world.id)) return;
@@ -124,7 +124,8 @@ export async function recordCompletion(
     date: ymd(now),
     // Stored so sibling worlds can see what this one spent; the nx write below
     // keeps that list as immutable as the completion date itself.
-    cards: [...new Set(cards)],
+    cards: [...new Set(detail.cards ?? [])],
+    ...(detail.seed ? { seed: detail.seed } : {}),
   };
   await redis.set(worldKey(user, world.id), JSON.stringify(record), {
     nx: true,
@@ -186,6 +187,25 @@ export async function spentElsewhere(
         .flatMap(([, entry]) => entry.cards ?? []),
     ),
   ];
+}
+
+/**
+ * Letters this world inherits from worlds you already finished, keyed by cell.
+ * Fails open: a source world you have not completed simply seeds nothing, so a
+ * missing record can never make a board unplayable.
+ */
+export async function seedsFor(
+  user: string | undefined,
+  world: WorldDefinition,
+): Promise<Record<string, string>> {
+  if (!user || !world.seeds?.length) return {};
+  const progress = await readAtlas(user);
+  const seeds: Record<string, string> = {};
+  for (const source of world.seeds) {
+    const letter = progress.completed[source.from]?.seed;
+    if (letter) seeds[`${source.row},${source.col}`] = letter;
+  }
+  return seeds;
 }
 
 export async function atlasView(

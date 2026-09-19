@@ -367,6 +367,15 @@ h2 {
 .tile.conflict {
   border-color: var(--error);
 }
+/* Letters the gate inherits from worlds you already finished. Marked apart from
+   .fixed so the board shows at a glance which letters you brought with you. */
+.tile.carried {
+  background: var(--cover-glow);
+  border-color: var(--cover-line);
+}
+.tile.carried .letter {
+  color: var(--ink);
+}
 .tile input,
 .tile .letter {
   /* Absolute + inset rather than width/height 100%. The tile's height comes
