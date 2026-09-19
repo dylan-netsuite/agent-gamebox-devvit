@@ -109,8 +109,28 @@ test("the instruction block admits cultural clues without letting a fabricated o
   expect(instructions).toMatch(/Return validWord, fairClue, and one concise/);
 });
 
+test("a widely known name is a valid answer, an unrecognised one is not", () => {
+  // The playtest rejection this fixes: MONET refused because the old block
+  // banned "a word requiring a proper-name reading" outright.
+  expect(instructions).toMatch(/or a proper name that is widely known/);
+  expect(instructions).toMatch(/a surname, a full name, a place, a brand/);
+  expect(instructions).toMatch(/must not be rejected\s+for being a name/);
+  // The same guard the cultural-reference rule uses: a name that is accepted
+  // has to be identified, so a fabricated one is visible in the reason.
+  expect(instructions).toMatch(/you must say inside reason who or what it is/);
+  expect(instructions).toMatch(
+    /A\s+reason that accepts a name without identifying it is not acceptable/,
+  );
+  expect(instructions).toMatch(/did not recognise the name/);
+  // Invented words stay out; only the proper-name ban was lifted.
+  expect(instructions).toMatch(/Do not accept invented words or abbreviations/);
+  expect(instructions).not.toMatch(/proper-name reading/);
+});
+
 test("changing the instructions retires every verdict cached under the old ones", () => {
   // Cache keys hash JUDGE_VERSION, so this must move whenever the block does.
-  expect(JUDGE_VERSION).toBe("clue-v2-cultural");
-  expect(JUDGE_VERSION).not.toBe("clue-v1");
+  // Bumped for proper names: a verdict formed while names were banned must
+  // never be replayed against a board where they are allowed.
+  expect(JUDGE_VERSION).toBe("clue-v3-proper-names");
+  expect(JUDGE_VERSION).not.toBe("clue-v2-cultural");
 });
