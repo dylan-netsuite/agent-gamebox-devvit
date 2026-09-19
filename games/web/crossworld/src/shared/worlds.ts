@@ -65,10 +65,10 @@ export const SANDY_SHORE: WorldDefinition = {
   name: "Sandy Shore",
   chapter: "Where you wash up",
   noun: "shore",
-  introduction: "Beneath the sand.",
+  introduction: "Low ground. The water settles here.",
   welcome:
-    "A little exploring. A little wordplay. Uncover two paths and give them words of your own.",
-  description: "Sun-warmed sand, sea-glass water, and words waiting beneath.",
+    "The sea leaves things here and does not name them. Uncover two paths and say what they are.",
+  description: "Low ground where the water goes, and leaves things unnamed.",
   rows: 10,
   cols: 5,
   region: "shallows",
@@ -91,7 +91,7 @@ export const SANDY_SHORE: WorldDefinition = {
       across: { row: 2, col: 0, length: 4 },
       down: { row: 1, col: 2, length: 5 },
       place: "Sand drifts",
-      note: "The sand shifts. Two paths appear.",
+      note: "The sand moves aside. Two paths were always under it.",
     },
     {
       // 2A (6,1) SALTS x 2D (6,5) SHORE, crossing (6,5) S. 2A also runs through
@@ -99,7 +99,7 @@ export const SANDY_SHORE: WorldDefinition = {
       across: { row: 5, col: 0, length: 5 },
       down: { row: 5, col: 4, length: 5 },
       place: "Tide pool",
-      note: "The tide slips away. Your first path left a letter behind.",
+      note: "The tide goes out. One letter stays where you put it.",
     },
   ],
 };
@@ -110,10 +110,11 @@ export const GLASS_REACH: WorldDefinition = {
   name: "Glass Reach",
   chapter: "Where water meets sky",
   noun: "reach",
-  introduction: "Sea-glass, still warm.",
+  introduction: "Worn smooth without trying.",
   welcome:
-    "Every piece here hums faintly when you name it. Uncover two paths and see what answers.",
-  description: "A shore of tumbled sea-glass that hums when you name a piece.",
+    "Every piece holds a little light until it is named. Uncover two paths and see what answers.",
+  description:
+    "Tumbled glass and still water, holding the light until you name it.",
   rows: 10,
   cols: 5,
   region: "shallows",
@@ -136,7 +137,7 @@ export const GLASS_REACH: WorldDefinition = {
       across: { row: 4, col: 0, length: 5 },
       down: { row: 2, col: 1, length: 5 },
       place: "Green shard",
-      note: "A green edge catches the light. Two paths open around it.",
+      note: "A green edge takes the light and keeps it. Two paths open around it.",
     },
     {
       // 2A (7,2) SILT x 2D (5,5) SATIN, crossing (7,5) T. Both new paths start
@@ -144,7 +145,7 @@ export const GLASS_REACH: WorldDefinition = {
       across: { row: 6, col: 1, length: 4 },
       down: { row: 4, col: 4, length: 5 },
       place: "Bottle neck",
-      note: "A smoothed neck rolls free. Two of your letters are already set.",
+      note: "Water wore this smooth without trying. Two letters are already yours.",
     },
   ],
 };
@@ -155,10 +156,10 @@ export const THE_WRACKLINE: WorldDefinition = {
   name: "The Wrackline",
   chapter: "The tide’s leavings",
   noun: "wrackline",
-  introduction: "Everything here belonged to someone.",
+  introduction: "Nothing here was kept.",
   welcome:
-    "A long seam of rope, wood and salt. Uncover two paths and name what the water left.",
-  description: "The tide’s leavings, in a long seam of rope, wood and salt.",
+    "Rope, wood and salt, all set down and left. Uncover two paths and name what the water finished with.",
+  description: "A long seam of rope, wood and salt, set down and left.",
   rows: 12,
   cols: 4,
   region: "shallows",
@@ -183,7 +184,7 @@ export const THE_WRACKLINE: WorldDefinition = {
       across: { row: 2, col: 0, length: 4 },
       down: { row: 2, col: 1, length: 5 },
       place: "Tide-line trace",
-      note: "Something walked this line before you. Two paths follow it.",
+      note: "Something walked this line before you and left it open.",
     },
     {
       // 2A (7,1) WEED x 2D (7,4) DRIFT, crossing (7,4) D. 2A inherits (7,2)
@@ -191,7 +192,7 @@ export const THE_WRACKLINE: WorldDefinition = {
       across: { row: 6, col: 0, length: 4 },
       down: { row: 6, col: 3, length: 5 },
       place: "Drifted weed",
-      note: "A green tangle, heaped and drying. An older path runs under it.",
+      note: "Green tangle, heaped and drying. An older path runs beneath.",
     },
     {
       // 3A (11,1) KNOT x 3D (7,1) WRACK, crossing (11,1) K. 3D inherits (7,1)
@@ -199,7 +200,7 @@ export const THE_WRACKLINE: WorldDefinition = {
       across: { row: 10, col: 0, length: 4 },
       down: { row: 6, col: 0, length: 5 },
       place: "Knotted wrack",
-      note: "The line ties itself off. Two earlier paths hold it in place.",
+      note: "The line ties itself off. Two older paths hold the knot.",
     },
   ],
 };
@@ -212,7 +213,7 @@ export const THE_LONG_PIER: WorldDefinition = {
   noun: "pier",
   introduction: "Further out than the map has room for.",
   welcome:
-    "The capstone of the Shallows. Three paths open on letters you carried out of the worlds behind you.",
+    "The boards run out past the last lamp. Three paths here open on letters you carried from the worlds behind you.",
   description:
     "A pier that continues further out than the map has room for. Opens once the Shallows are complete.",
   // Compacted from the bible's 15-row draft to 13 rows without changing any
@@ -253,7 +254,7 @@ export const THE_LONG_PIER: WorldDefinition = {
       across: { row: 1, col: 0, length: 4 },
       down: { row: 1, col: 1, length: 5 },
       place: "First piling",
-      note: "The boards begin. Two paths run out over the water.",
+      note: "The boards begin. Two paths go out over water.",
     },
     {
       // 2A (6,1) GRAIN x 2D (6,5) NAILS, crossing (6,5) N. 2A inherits (6,2)
@@ -261,7 +262,7 @@ export const THE_LONG_PIER: WorldDefinition = {
       across: { row: 5, col: 0, length: 5 },
       down: { row: 5, col: 4, length: 5 },
       place: "Missing plank",
-      note: "The rail runs on past the last lamp.",
+      note: "Past the last lamp, the rail keeps going.",
     },
     {
       // 3A (10,1) SIGNS x 3D (6,1) GULLS, crossing (10,1) S. 3D shares 2A's
@@ -269,7 +270,7 @@ export const THE_LONG_PIER: WorldDefinition = {
       across: { row: 9, col: 0, length: 5 },
       down: { row: 5, col: 0, length: 5 },
       place: "Gull post",
-      note: "Water on both sides now. Your own words hold the crossing.",
+      note: "Water on both sides. Your own words hold the crossing.",
     },
     {
       // 4A (13,1) SWELL x 4D (10,3) GATE, crossing (13,3) E. 4D inherits
@@ -293,7 +294,7 @@ export const HAUNTED_HEDGE: WorldDefinition = {
   noun: "garden",
   introduction: "Something in the leaves.",
   welcome:
-    "Beyond a crooked gate, the hedges are quietly watching. Uncover two paths. Leave a little light behind.",
+    "Past a crooked gate the hedges keep their own counsel. Uncover two paths. Leave a little light behind.",
   description:
     "Lavender mist, watchful hedges, and a trail of waking lanterns.",
   rows: 10,
@@ -323,31 +324,31 @@ export const HAUNTED_HEDGE: WorldDefinition = {
       across: { row: 2, col: 0, length: 3 },
       down: { row: 0, col: 0, length: 5 },
       place: "Rusted gate",
-      note: "The ivy loosens. The first stone paths appear.",
+      note: "The ivy gives. Stone shows through.",
     },
     {
       across: { row: 0, col: 0, length: 5 },
       down: { row: 0, col: 4, length: 5 },
       place: "Watchful topiary",
-      note: "Two small eyes blink. The hedges lean aside.",
+      note: "Two small eyes open. The hedges lean aside.",
     },
     {
       across: { row: 4, col: 0, length: 5 },
       down: { row: 2, col: 2, length: 5 },
       place: "Whisper walk",
-      note: "The mist drifts away. Pale footprints lead onward.",
+      note: "The mist thins. Pale footprints, going on.",
     },
     {
       across: { row: 6, col: 2, length: 3 },
       down: { row: 6, col: 4, length: 4 },
       place: "Lost fountain",
-      note: "Leaves scatter. Still water holds a moonlit reflection.",
+      note: "Leaves scatter. Still water holds the moon and keeps nothing.",
     },
     {
       across: { row: 9, col: 0, length: 5 },
       down: { row: 6, col: 0, length: 4 },
       place: "Moon gate",
-      note: "The last hedge opens. A warm light waits beyond.",
+      note: "The last hedge opens. Light, and no one in it.",
     },
   ],
 };

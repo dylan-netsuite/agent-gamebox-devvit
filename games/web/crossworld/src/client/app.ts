@@ -51,6 +51,8 @@ el("journey-track").replaceChildren(
   ...DAYS.map(() => document.createElement("i")),
 );
 el("world-title").textContent = world.name;
+// Worlds differ in length, so the pace note cannot be a fixed number.
+el("pace-note").textContent = `${DAYS.length} turns, at your own pace.`;
 el("world-chapter").textContent = world.chapter;
 el("atlas").setAttribute("aria-label", `${world.name} crossword`);
 el("map").setAttribute("aria-label", `${world.name} crossword map`);
@@ -167,7 +169,7 @@ function updateEditor() {
     ? `A clue for ${turn[active].word}`
     : `A clue for ${title(active)}`;
   el("word-guide").textContent = wordReady
-    ? "Describe your word without giving it away."
+    ? "Point at it without naming it."
     : `${DAYS[shore.completed.length]![active].length} letters · choose your word in the highlighted tiles.`;
   el("clue-count").textContent = `${turn[active].clue.length} / 140`;
   const criterion = deckFor(world).find((c) => c.id === turn[active].criterion);
@@ -514,7 +516,7 @@ function renderMap(animate = false) {
     `${DAYS[shore.completed.length]?.place ?? "Shore complete"} · Turn ${shore.completed.length + 1}`;
   el("turn-label").textContent = shore.turn
     ? `Turn ${shore.completed.length + 1} of ${DAYS.length}`
-    : "Journey complete";
+    : "Every turn taken";
   el("journey-track")
     .querySelectorAll("i")
     .forEach((n, i) => {
@@ -524,24 +526,24 @@ function renderMap(animate = false) {
   el("map-caption").textContent = shore.turn?.revealed
     ? `${title(active)} · ${DAYS[shore.completed.length]![active].length} letters`
     : shore.turn
-      ? `Uncharted ${world.noun}`
-      : `Your discovered ${world.noun}`;
+      ? `Unnamed ${world.noun}`
+      : `The ${world.noun} you named`;
   el("place-title").textContent = shore.completed.length
     ? (DAYS[shore.completed.length]?.place ?? `Your ${world.noun} is complete.`)
     : world.introduction;
   el("place-copy").textContent = shore.completed.length
-    ? `Two clues accepted. Follow the marker to discover the next corner of your ${world.noun}.`
+    ? `Two more names set down. The marker has moved on across your ${world.noun}.`
     : world.welcome;
   el("progress").textContent = shore.turn
     ? `${shore.completed.length * 2} of ${DAYS.length * 2} words written · ${shown * 2} paths found`
     : `${DAYS.length * 2} words written · ${DAYS.length} discoveries complete`;
   el("story").textContent = shore.turn?.revealed
     ? world.id === "haunted-hedge"
-      ? `${shore.completed.length} of ${DAYS.length} lanterns lit · your words meet at the crossings.`
-      : "Your words meet at the crossings."
+      ? `${shore.completed.length} of ${DAYS.length} lanterns lit · your words hold each other where they cross.`
+      : "Your words hold each other where they cross."
     : shore.turn
-      ? "Follow the marker. See what’s beneath."
-      : "A crossword only you could have made.";
+      ? "Nothing here is named yet."
+      : "Finished, and the hills are still there.";
   positionMap();
 }
 function controls() {
