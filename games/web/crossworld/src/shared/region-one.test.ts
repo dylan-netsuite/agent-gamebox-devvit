@@ -1,6 +1,13 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
-import { HAUNTED_HEDGE, THE_LONG_PIER, WORLDS } from "./worlds";
+import {
+  GLASS_REACH,
+  HAUNTED_HEDGE,
+  SANDY_SHORE,
+  THE_LONG_PIER,
+  THE_WRACKLINE,
+  WORLDS,
+} from "./worlds";
 import { RESTRICTIONS } from "./rules";
 import {
   DIRECTIONS,
@@ -99,23 +106,54 @@ test.each(spec)(
   },
 );
 
-test("the Gate carries exactly one cross-discovery link, on the last letter of its second Down", () => {
-  const world = THE_LONG_PIER;
-  const owners = new Map<string, Set<number>>();
+/** Letters a turn inherits from any strictly earlier turn in the same world. */
+const preLocked = (world: (typeof WORLDS)[number]) => {
+  const seen = new Set<string>();
+  let total = 0;
   world.days.forEach((_, day) => {
-    for (const direction of DIRECTIONS)
-      for (const cell of cellsFor(day, direction, world))
-        owners.set(
-          cellKey(cell),
-          (owners.get(cellKey(cell)) ?? new Set()).add(day),
-        );
+    const mine = new Set(
+      DIRECTIONS.flatMap((direction) =>
+        cellsFor(day, direction, world).map(cellKey),
+      ),
+    );
+    for (const key of mine) if (seen.has(key)) total++;
+    for (const key of mine) seen.add(key);
   });
-  const links = [...owners].filter(([, days]) => days.size > 1);
-  expect(links).toHaveLength(1);
-  const grain = cellsFor(1, "down", world).at(-1)!;
-  expect(links[0]![0]).toBe(cellKey(grain));
-  // GRAIN's N, inherited by CANOE — the one preview of Region II.
-  expect(links[0]![1]).toEqual(new Set([1, 2]));
+  return total;
+};
+
+test("Region I escalates: every world locks more letters than the one before", () => {
+  // Playtest finding: the three open worlds were the same size and shared no
+  // letters between turns, so nothing got harder until the Gate. Inherited
+  // letters are the difficulty lever in a construction game, so they now ramp.
+  const order = [SANDY_SHORE, GLASS_REACH, THE_WRACKLINE, THE_LONG_PIER];
+  expect(order.map(preLocked)).toEqual([1, 2, 3, 4]);
+  expect(order.map((world) => world.days.length * 2)).toEqual([4, 4, 6, 8]);
+  // Region II still steps up from the Gate rather than repeating it.
+  expect(preLocked(HAUNTED_HEDGE)).toBeGreaterThan(preLocked(THE_LONG_PIER));
+  expect(HAUNTED_HEDGE.days.length * 2).toBeGreaterThan(
+    THE_LONG_PIER.days.length * 2,
+  );
+});
+
+test("no world hands a player a turn with nothing left to choose", () => {
+  // A turn whose letters are almost all inherited stops being a choice. The
+  // Hedge peak is three locked letters in a five-cell word; nothing may exceed
+  // it, and every turn must keep at least two free cells.
+  for (const world of WORLDS) {
+    const seen = new Set<string>();
+    world.days.forEach((_, day) => {
+      for (const direction of DIRECTIONS) {
+        const cells = cellsFor(day, direction, world).map(cellKey);
+        const inherited = cells.filter((key) => seen.has(key)).length;
+        expect(inherited).toBeLessThanOrEqual(3);
+        expect(cells.length - inherited).toBeGreaterThanOrEqual(2);
+      }
+      for (const direction of DIRECTIONS)
+        for (const key of cellsFor(day, direction, world).map(cellKey))
+          seen.add(key);
+    });
+  }
 });
 
 test.each(spec)(

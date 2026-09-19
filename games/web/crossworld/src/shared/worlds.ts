@@ -77,18 +77,19 @@ export const SANDY_SHORE: WorldDefinition = {
   ],
   days: [
     {
-      // 1A (2,1) SAND x 1D (1,3) ANTS, crossing (2,3) N
-      across: { row: 1, col: 0, length: 4 },
-      down: { row: 0, col: 2, length: 4 },
+      // 1A (3,1) SAND x 1D (2,3) SNAIL, crossing (3,3) N
+      across: { row: 2, col: 0, length: 4 },
+      down: { row: 1, col: 2, length: 5 },
       place: "Sand drifts",
       note: "The sand shifts. Two paths appear.",
     },
     {
-      // 2A (8,1) COAST x 2D (7,2) FOAM, crossing (8,2) O
-      across: { row: 7, col: 0, length: 5 },
-      down: { row: 6, col: 1, length: 4 },
+      // 2A (6,1) SALTS x 2D (6,5) SHORE, crossing (6,5) S. 2A also runs through
+      // (6,3), the last letter of 1D SNAIL: the first letter you inherit.
+      across: { row: 5, col: 0, length: 5 },
+      down: { row: 5, col: 4, length: 5 },
       place: "Tide pool",
-      note: "The tide slips away, leaving a crossing behind.",
+      note: "The tide slips away. Your first path left a letter behind.",
     },
   ],
 };
@@ -119,18 +120,19 @@ export const GLASS_REACH: WorldDefinition = {
   ],
   days: [
     {
-      // 1A (2,1) GLASS x 1D (1,3) WAVE, crossing (2,3) A
-      across: { row: 1, col: 0, length: 5 },
-      down: { row: 0, col: 2, length: 4 },
+      // 1A (5,1) GLASS x 1D (3,2) MELTS, crossing (5,2) L
+      across: { row: 4, col: 0, length: 5 },
+      down: { row: 2, col: 1, length: 5 },
       place: "Green shard",
       note: "A green edge catches the light. Two paths open around it.",
     },
     {
-      // 2A (8,2) TIDE x 2D (6,3) SHINE, crossing (8,3) I
-      across: { row: 7, col: 1, length: 4 },
-      down: { row: 5, col: 2, length: 5 },
+      // 2A (7,2) SILT x 2D (5,5) SATIN, crossing (7,5) T. Both new paths start
+      // in old letters: 2D inherits (5,5) from 1A GLASS, 2A (7,2) from 1D MELTS.
+      across: { row: 6, col: 1, length: 4 },
+      down: { row: 4, col: 4, length: 5 },
       place: "Bottle neck",
-      note: "A smoothed neck of glass rolls free, and the humming shifts.",
+      note: "A smoothed neck rolls free. Two of your letters are already set.",
     },
   ],
 };
@@ -158,21 +160,32 @@ export const THE_WRACKLINE: WorldDefinition = {
     { mechanic: "seven", name: "Seven Knots" },
     { mechanic: "short-words", name: "Small Salvage" },
     { mechanic: "no-articles", name: "Cut the Line" },
+    { mechanic: "no-b", name: "Bone White" },
+    { mechanic: "long-shadow", name: "Long Spar" },
   ],
   days: [
     {
-      // 1A (3,1) ROPE x 1D (1,2) FLOAT, crossing (3,2) O
+      // 1A (3,1) STEP x 1D (3,2) TRACE, crossing (3,2) T
       across: { row: 2, col: 0, length: 4 },
-      down: { row: 0, col: 1, length: 5 },
-      place: "Rope knot",
-      note: "A knot loosens. Two frayed paths run out of it.",
+      down: { row: 2, col: 1, length: 5 },
+      place: "Tide-line trace",
+      note: "Something walked this line before you. Two paths follow it.",
     },
     {
-      // 2A (9,1) SALT x 2D (9,4) TORN, crossing (9,4) T
-      across: { row: 8, col: 0, length: 4 },
-      down: { row: 8, col: 3, length: 4 },
-      place: "Salt-stiff coat",
-      note: "Stiff with salt, the cloth gives. Something is still in the pocket.",
+      // 2A (7,1) WEED x 2D (7,4) DRIFT, crossing (7,4) D. 2A inherits (7,2)
+      // from 1D TRACE.
+      across: { row: 6, col: 0, length: 4 },
+      down: { row: 6, col: 3, length: 5 },
+      place: "Drifted weed",
+      note: "A green tangle, heaped and drying. An older path runs under it.",
+    },
+    {
+      // 3A (11,1) KNOT x 3D (7,1) WRACK, crossing (11,1) K. 3D inherits (7,1)
+      // from 2A WEED and 3A inherits (11,4) from 2D DRIFT: two held letters.
+      across: { row: 10, col: 0, length: 4 },
+      down: { row: 6, col: 0, length: 5 },
+      place: "Knotted wrack",
+      note: "The line ties itself off. Two earlier paths hold it in place.",
     },
   ],
 };
@@ -206,29 +219,40 @@ export const THE_LONG_PIER: WorldDefinition = {
     { mechanic: "no-b", name: "Missing Plank" },
     { mechanic: "seven", name: "Seven Pilings" },
     { mechanic: "long-shadow", name: "Far Out" },
+    { mechanic: "no-e", name: "Mist Gap" },
+    { mechanic: "same-start", name: "Twin Pilings" },
   ],
   days: [
     {
-      // 1A (2,1) PIER x 1D (2,1) POST, crossing (2,1) P
+      // 1A (2,1) PIER x 1D (2,2) IRONS, crossing (2,2) I
       across: { row: 1, col: 0, length: 4 },
-      down: { row: 1, col: 0, length: 4 },
+      down: { row: 1, col: 1, length: 5 },
       place: "First piling",
-      note: "The first piling stands clear of the water. The boards begin here.",
+      note: "The boards begin. Two paths run out over the water.",
     },
     {
-      // 2A (7,1) PLANK x 2D (5,3) GRAIN, crossing (7,3) A
-      across: { row: 6, col: 0, length: 5 },
-      down: { row: 4, col: 2, length: 5 },
-      place: "Missing plank",
-      note: "A plank is gone. The grain of the next one runs out over the water.",
+      // 2A (6,1) ISLES x 2D (6,5) SPANS, crossing (6,5) S. 2A inherits (6,2)
+      // from 1D IRONS.
+      across: { row: 5, col: 0, length: 5 },
+      down: { row: 5, col: 4, length: 5 },
+      place: "The long span",
+      note: "The rail runs on past the last lamp.",
     },
     {
-      // 3A (9,1) CANOE x 3D (9,1) CRANE, crossing (9,1) C. 3A also runs through
-      // (9,3), the last letter of 2D GRAIN — the region's one cross-discovery link.
-      across: { row: 8, col: 0, length: 5 },
-      down: { row: 8, col: 0, length: 5 },
+      // 3A (10,1) TIDES x 3D (6,1) INLET, crossing (10,1) T. 3D inherits (6,1)
+      // from 2A ISLES and 3A inherits (10,5) from 2D SPANS.
+      across: { row: 9, col: 0, length: 5 },
+      down: { row: 5, col: 0, length: 5 },
+      place: "Inlet turn",
+      note: "Water on both sides now. Your own words hold the crossing.",
+    },
+    {
+      // 4A (13,1) ROPES x 4D (10,3) DEEP, crossing (13,3) P. 4D inherits (10,3)
+      // from 3A TIDES.
+      across: { row: 12, col: 0, length: 5 },
+      down: { row: 9, col: 2, length: 4 },
       place: "Fog end",
-      note: "The pier ends in fog. A letter you already wrote is waiting out here.",
+      note: "The pier stops. The fog does not.",
     },
   ],
 };

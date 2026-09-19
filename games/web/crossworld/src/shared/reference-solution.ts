@@ -1,9 +1,17 @@
 /**
- * The design bible's verified reference solution for Region I, transcribed
- * 1-based exactly as the document writes it. Players supply their own answers —
- * these words exist only to pin the geometry and the crossings, and are used by
- * tests rather than by the game. Card assignments are drawn from each world's
- * own deck, which supersedes the card column in the bible's draft spec table.
+ * The verified reference solution for Region I, written 1-based. Players supply
+ * their own answers — these words exist only to pin the geometry and the
+ * crossings, and are used by tests rather than by the game. Card assignments
+ * are drawn from each world's own deck.
+ *
+ * Region I was re-laid after playtesting: its three open worlds were the same
+ * size and shared no letters between turns, so nothing escalated. Each world
+ * now inherits more locked letters than the last (1, 2, 3, 4) before Region II
+ * takes over at 6. The design bible still documents the original flat grids and
+ * is stale here; this file and worlds.ts are the source of truth.
+ *
+ * Every word is unique across the region because REFERENCE_CLUES is keyed by
+ * word, so a reused answer would need one clue to satisfy two different cards.
  */
 import {
   GLASS_REACH,
@@ -38,15 +46,16 @@ export const REGION_ONE: ReferenceWorld[] = [
     discoveries: [
       {
         place: "Sand drifts",
-        across: { row: 2, col: 1, word: "SAND", card: "brief" },
-        down: { row: 1, col: 3, word: "ANTS", card: "two-breaths" },
-        cross: "2,3,N",
+        across: { row: 3, col: 1, word: "SAND", card: "brief" },
+        down: { row: 2, col: 3, word: "SNAIL", card: "two-breaths" },
+        cross: "3,3,N",
       },
       {
+        // SALTS inherits (6,3) L, the last letter of SNAIL.
         place: "Tide pool",
-        across: { row: 8, col: 1, word: "COAST", card: "half-measure" },
-        down: { row: 7, col: 2, word: "FOAM", card: "short-words" },
-        cross: "8,2,O",
+        across: { row: 6, col: 1, word: "SALTS", card: "half-measure" },
+        down: { row: 6, col: 5, word: "SHORE", card: "short-words" },
+        cross: "6,5,S",
       },
     ],
   },
@@ -55,15 +64,16 @@ export const REGION_ONE: ReferenceWorld[] = [
     discoveries: [
       {
         place: "Green shard",
-        across: { row: 2, col: 1, word: "GLASS", card: "brief" },
-        down: { row: 1, col: 3, word: "WAVE", card: "same-start" },
-        cross: "2,3,A",
+        across: { row: 5, col: 1, word: "GLASS", card: "brief" },
+        down: { row: 3, col: 2, word: "MELTS", card: "same-start" },
+        cross: "5,2,L",
       },
       {
+        // SATIN inherits (5,5) S from GLASS; SILT inherits (7,2) S from MELTS.
         place: "Bottle neck",
-        across: { row: 8, col: 2, word: "TIDE", card: "no-e" },
-        down: { row: 6, col: 3, word: "SHINE", card: "long-shadow" },
-        cross: "8,3,I",
+        across: { row: 7, col: 2, word: "SILT", card: "no-e" },
+        down: { row: 5, col: 5, word: "SATIN", card: "long-shadow" },
+        cross: "7,5,T",
       },
     ],
   },
@@ -71,41 +81,56 @@ export const REGION_ONE: ReferenceWorld[] = [
     world: THE_WRACKLINE,
     discoveries: [
       {
-        place: "Rope knot",
-        across: { row: 3, col: 1, word: "ROPE", card: "half-measure" },
-        down: { row: 1, col: 2, word: "FLOAT", card: "seven" },
-        cross: "3,2,O",
+        place: "Tide-line trace",
+        across: { row: 3, col: 1, word: "STEP", card: "half-measure" },
+        down: { row: 3, col: 2, word: "TRACE", card: "seven" },
+        cross: "3,2,T",
       },
       {
-        place: "Salt-stiff coat",
-        across: { row: 9, col: 1, word: "SALT", card: "short-words" },
-        down: { row: 9, col: 4, word: "TORN", card: "no-articles" },
-        cross: "9,4,T",
+        // WEED inherits (7,2) E from TRACE.
+        place: "Drifted weed",
+        across: { row: 7, col: 1, word: "WEED", card: "short-words" },
+        down: { row: 7, col: 4, word: "DRIFT", card: "no-articles" },
+        cross: "7,4,D",
+      },
+      {
+        // WRACK inherits (7,1) W from WEED; KNOT inherits (11,4) T from DRIFT.
+        place: "Knotted wrack",
+        across: { row: 11, col: 1, word: "KNOT", card: "no-b" },
+        down: { row: 7, col: 1, word: "WRACK", card: "long-shadow" },
+        cross: "11,1,K",
       },
     ],
   },
   {
-    // Compacted from the bible's 15-row draft: discoveries two and three each
-    // sit two rows higher. Every reference word and card is unchanged.
     world: THE_LONG_PIER,
     discoveries: [
       {
         place: "First piling",
         across: { row: 2, col: 1, word: "PIER", card: "brief" },
-        down: { row: 2, col: 1, word: "POST", card: "two-breaths" },
-        cross: "2,1,P",
+        down: { row: 2, col: 2, word: "IRONS", card: "two-breaths" },
+        cross: "2,2,I",
       },
       {
-        place: "Missing plank",
-        across: { row: 7, col: 1, word: "PLANK", card: "half-measure" },
-        down: { row: 5, col: 3, word: "GRAIN", card: "no-b" },
-        cross: "7,3,A",
+        // ISLES inherits (6,2) S from IRONS.
+        place: "The long span",
+        across: { row: 6, col: 1, word: "ISLES", card: "half-measure" },
+        down: { row: 6, col: 5, word: "SPANS", card: "no-b" },
+        cross: "6,5,S",
       },
       {
+        // INLET inherits (6,1) I from ISLES; TIDES inherits (10,5) S from SPANS.
+        place: "Inlet turn",
+        across: { row: 10, col: 1, word: "TIDES", card: "seven" },
+        down: { row: 6, col: 1, word: "INLET", card: "long-shadow" },
+        cross: "10,1,T",
+      },
+      {
+        // DEEP inherits (10,3) D from TIDES.
         place: "Fog end",
-        across: { row: 9, col: 1, word: "CANOE", card: "seven" },
-        down: { row: 9, col: 1, word: "CRANE", card: "long-shadow" },
-        cross: "9,1,C",
+        across: { row: 13, col: 1, word: "ROPES", card: "no-e" },
+        down: { row: 10, col: 3, word: "DEEP", card: "same-start" },
+        cross: "13,3,P",
       },
     ],
   },
@@ -113,24 +138,32 @@ export const REGION_ONE: ReferenceWorld[] = [
 
 /** One clue per reference answer, each obeying that slot's restriction card. */
 export const REFERENCE_CLUES: Record<string, string> = {
+  // Sandy Shore
   SAND: "Fine grains underfoot",
-  ANTS: "Busy insects",
-  COAST: "Where land meets sea",
-  FOAM: "Sea suds on a wave",
+  SNAIL: "Shelled crawler",
+  SALTS: "What the sea leaves behind",
+  SHORE: "Land at the edge of a sea",
+  // Glass Reach
   GLASS: "Clear brittle window stuff",
-  WAVE: "Swell surging shoreward",
-  TIDE: "Daily push and pull of a bay",
-  SHINE: "A brilliantly polished gleam",
-  ROPE: "Twisted cord",
-  FLOAT: "To stay up on top of water",
-  SALT: "Sea grit in your food",
-  TORN: "Ripped in two",
+  MELTS: "Slowly softens into liquid",
+  SILT: "Soft mud that a flood drops",
+  SATIN: "A smooth lustrous woven cloth",
+  // The Wrackline
+  STEP: "One print in wet sand",
+  TRACE: "A faint mark left by something passing",
+  WEED: "Limp sea herb on sand",
+  DRIFT: "To float slowly with current",
+  KNOT: "Tied tangle in rope",
+  WRACK: "Shoreline litter left by storms",
+  // The Long Pier
   PIER: "Walkway over water",
-  POST: "Upright timber",
-  PLANK: "Long flat board",
-  GRAIN: "Wood lines, or a seed",
-  CANOE: "A slim boat you paddle while kneeling",
-  CRANE: "A tall wading bird, unmistakably",
+  IRONS: "Metal fastenings",
+  ISLES: "Small islands",
+  SPANS: "Stretches across a gap",
+  TIDES: "The sea rises and falls each day",
+  INLET: "A narrow saltwater passage inland",
+  ROPES: "Thick cords for hauling",
+  DEEP: "Far down, far darker",
 };
 
 export const referenceFor = (world: WorldDefinition): ReferenceWorld =>

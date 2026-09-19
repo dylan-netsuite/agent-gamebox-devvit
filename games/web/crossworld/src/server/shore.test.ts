@@ -53,16 +53,16 @@ const fixtures = [
     "SAND",
     "Fine grains underfoot",
     "brief",
-    "ANTS",
-    "Busy insects",
+    "SNAIL",
+    "Shelled crawler",
     "two-breaths",
   ),
   pair(
-    "COAST",
-    "Where land meets sea",
+    "SALTS",
+    "What the sea leaves behind",
     "half-measure",
-    "FOAM",
-    "Sea suds on a wave",
+    "SHORE",
+    "Land at the edge of a sea",
     "short-words",
   ),
 ];
@@ -70,11 +70,11 @@ test("unfinished tile drafts retain spatial crossing positions across save and r
   const draft = emptyPair();
   draft.revealed = true;
   // Day one crosses at across index 2 and down index 1.
-  draft.down.word = " C  ";
+  draft.down.word = " C   ";
   draft.across.word = "  D ";
   await saveShore("tile-draft", { ...draft, day: 0 });
   const loaded = await readShore("tile-draft");
-  expect(loaded.turn?.down.word).toBe(" C  ");
+  expect(loaded.turn?.down.word).toBe(" C   ");
   expect(crossingsFor(0, "across", [], loaded.turn!)).toEqual([
     { index: 2, letter: "C", fixed: false },
   ]);
@@ -94,25 +94,26 @@ async function expireReview(day = 0) {
       `cq:${SANDY_SHORE.scenario}:day:${day}:${direction}:alice:cooldown`,
     );
 }
-test("the reshaped shore has 15 tiles, four maximal paths and matching letters at both crossings", () => {
+test("the reshaped shore has 16 tiles, four maximal paths and matching letters at both crossings", () => {
+  // 1D SNAIL runs down into 2A SALTS, so the two discoveries share (5,2).
   const expected = [
+    ".....",
     "..X..",
     "XXXX.",
     "..X..",
     "..X..",
-    ".....",
-    ".....",
-    ".X...",
     "XXXXX",
-    ".X...",
-    ".X...",
+    "....X",
+    "....X",
+    "....X",
+    "....X",
   ];
   const completed = fixtures.map((p) => ({
     ...p,
     reviews: { across: yes, down: yes },
   }));
   const board = lettersFor(completed);
-  expect(board.size).toBe(15);
+  expect(board.size).toBe(16);
   for (let row = 0; row < ROWS; row++)
     expect(
       Array.from({ length: COLS }, (_, col) =>
@@ -217,7 +218,7 @@ test("every crossing with earlier days and the companion word is validated, not 
 test("a partial pass remains editable, reloads both reviews, and reuses the unchanged successful review on retry", async () => {
   const d = deps();
   d.judge.mockImplementation(async (draft) =>
-    draft.word === "ANTS"
+    draft.word === "SNAIL"
       ? { validWord: true, fairClue: false, reason: "Clarify this clue." }
       : yes,
   );
@@ -237,7 +238,7 @@ test("a partial pass remains editable, reloads both reviews, and reuses the unch
 test("one provider failure cannot advance or lock the other word, and all provider calls settle before return", async () => {
   const d = deps();
   d.judge.mockImplementation(async (draft) => {
-    if (draft.word === "ANTS") throw new JudgeUnavailable();
+    if (draft.word === "SNAIL") throw new JudgeUnavailable();
     return yes;
   });
   await expect(submitShore("alice", payload(0), d)).rejects.toThrow(
@@ -246,7 +247,7 @@ test("one provider failure cannot advance or lock the other word, and all provid
   const state = await readShore("alice");
   expect(state.completed).toHaveLength(0);
   expect(state.turn?.reviews.across).toEqual(yes);
-  expect(state.turn?.down.word).toBe("ANTS");
+  expect(state.turn?.down.word).toBe("SNAIL");
   expect(state.turn?.reviews.down).toBeNull();
   await expireReview();
   d.judge.mockResolvedValue(yes);
@@ -281,7 +282,7 @@ test("concurrent pairs, duplicate submits and late saves cannot mix answers or a
       d,
     );
     expect(state.completed).toHaveLength(1);
-    expect(state.turn?.across.word).toBe("COAST");
+    expect(state.turn?.across.word).toBe("SALTS");
   }
   expect(d.judge).toHaveBeenCalledTimes(2);
 });

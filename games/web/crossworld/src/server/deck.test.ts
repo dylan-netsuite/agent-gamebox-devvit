@@ -82,8 +82,8 @@ test("a spent card is gone from the deck and is refused before any paid review",
   const reuse = {
     ...referenceDraft(SANDY_SHORE, 1),
     across: {
-      word: "COAST",
-      clue: "Where land meets sea",
+      word: "SALTS",
+      clue: "What the sea leaves behind",
       criterion: "brief",
     },
   };
@@ -115,7 +115,7 @@ test("a card outside this world's deck, or spent twice in one pair, is refused",
 test("a rejected clue does not consume its card", async () => {
   const d = deps();
   d.judge.mockImplementation(async (draft) =>
-    draft.word === "ANTS"
+    draft.word === "SNAIL"
       ? { validWord: true, fairClue: false, reason: "Clarify this clue." }
       : yes,
   );

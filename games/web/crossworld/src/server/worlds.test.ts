@@ -96,8 +96,8 @@ const shorePair = pair(
   "SAND",
   "Fine grains underfoot",
   "brief",
-  "ANTS",
-  "Busy insects",
+  "SNAIL",
+  "Shelled crawler",
   "two-breaths",
 );
 const payload = (day = 0) => ({ ...fixtures[day]!, day });
