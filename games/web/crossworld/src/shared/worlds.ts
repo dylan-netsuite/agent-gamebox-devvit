@@ -156,7 +156,7 @@ export const THE_WRACKLINE: WorldDefinition = {
   name: "The Wrackline",
   chapter: "The tide’s leavings",
   noun: "wrackline",
-  introduction: "Water dwells in places disdained.",
+  introduction: "Water dwells where no one else will.",
   welcome:
     "Rope, wood and salt, all set down and left. Uncover two paths and name what the water finished with.",
   description: "A long seam of rope, wood and salt, set down and left.",
