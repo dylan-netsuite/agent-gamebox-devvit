@@ -16,7 +16,6 @@ export type WorldDefinition = {
   apiRoot: string;
   name: string;
   chapter: string;
-  introduction: string;
   welcome: string;
   noun: string;
   description: string;
@@ -63,9 +62,8 @@ export const SANDY_SHORE: WorldDefinition = {
   scenario: "sandy-shore-shallows-v2",
   apiRoot: "/api/sandy-shore-shallows-v2",
   name: "Sandy Shore",
-  chapter: "The dust ends here",
+  chapter: "Loose ground, holding no shape",
   noun: "shore",
-  introduction: "Loose ground, holding no shape.",
   welcome:
     "The sea leaves things here and does not name them. Uncover two paths and say what they are.",
   description: "Low ground where the water goes, and leaves things unnamed.",
@@ -108,9 +106,8 @@ export const GLASS_REACH: WorldDefinition = {
   scenario: "glass-reach-shallows-v1",
   apiRoot: "/api/glass-reach-shallows-v1",
   name: "Glass Reach",
-  chapter: "Between two skies",
+  chapter: "Worn smooth without trying",
   noun: "reach",
-  introduction: "Worn smooth without trying.",
   welcome:
     "Every piece holds a little light until it is named. Uncover two paths and see what answers.",
   description:
@@ -154,9 +151,8 @@ export const THE_WRACKLINE: WorldDefinition = {
   scenario: "the-wrackline-shallows-v1",
   apiRoot: "/api/the-wrackline-shallows-v1",
   name: "The Wrackline",
-  chapter: "What has no use",
+  chapter: "Water dwells where no one else will",
   noun: "wrackline",
-  introduction: "Water dwells where no one else will.",
   welcome:
     "Rope, wood and salt, all set down and left. Uncover two paths and name what the water finished with.",
   description: "A long seam of rope, wood and salt, set down and left.",
@@ -209,9 +205,8 @@ export const THE_LONG_PIER: WorldDefinition = {
   scenario: "the-long-pier-shallows-v1",
   apiRoot: "/api/the-long-pier-shallows-v1",
   name: "The Long Pier",
-  chapter: "Beyond the human world",
+  chapter: "Further out than the map has room for",
   noun: "pier",
-  introduction: "Further out than the map has room for.",
   welcome:
     "The boards run out past the last lamp. Three paths here open on letters you carried from the worlds behind you.",
   description:
@@ -290,9 +285,8 @@ export const HAUNTED_HEDGE: WorldDefinition = {
   scenario: "haunted-hedge-pairs-v1",
   apiRoot: "/api/haunted-hedge-pairs-v1",
   name: "Haunted Hedge",
-  chapter: "By the eastern fence",
+  chapter: "Something in the leaves",
   noun: "garden",
-  introduction: "Something in the leaves.",
   welcome:
     "Past a crooked gate the hedges keep their own counsel. Uncover two paths. Leave a little light behind.",
   description:

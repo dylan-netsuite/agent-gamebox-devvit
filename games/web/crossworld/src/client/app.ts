@@ -531,9 +531,10 @@ function renderMap(animate = false) {
     : shore.turn
       ? `Unnamed ${world.noun}`
       : `The ${world.noun} you named`;
-  el("place-title").textContent = shore.completed.length
-    ? (DAYS[shore.completed.length]?.place ?? `Your ${world.noun} is complete.`)
-    : world.introduction;
+  // The world's line lives above the title now, so this panel just names the
+  // place you are standing in.
+  el("place-title").textContent =
+    DAYS[shore.completed.length]?.place ?? `Your ${world.noun} is complete.`;
   el("place-copy").textContent = shore.completed.length
     ? `Two more names set down. The marker has moved on across your ${world.noun}.`
     : world.welcome;
