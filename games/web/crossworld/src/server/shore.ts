@@ -13,7 +13,7 @@ import {
   type PairDraft,
   type Shore,
 } from "../shared/shore";
-import { validateTurn } from "../shared/rules";
+import { clueWords, validateTurn, type ClueContext } from "../shared/rules";
 import { assertPlayable, clearCompletion, recordCompletion } from "./atlas";
 import {
   createTurnGame,
@@ -33,10 +33,18 @@ export function createWorldGame(world: WorldDefinition) {
   const runKey = (user: string) => `cq:${world.scenario}:${user}:run`;
   const key = (user: string, day: number, part: string, run = "initial") =>
     `cq:${world.scenario}:${user}${run === "initial" ? "" : `:run:${run}`}:day:${day}:${part}`;
-  const reviewer = (day: number, direction: Direction) =>
+  // Link cards (echo, fresh-words) read beyond their own clue, and this
+  // per-direction path validates before any paid review, so it has to be given
+  // the same context validatePair builds or those cards fail closed.
+  const reviewer = (
+    day: number,
+    direction: Direction,
+    context: ClueContext = {},
+  ) =>
     createTurnGame(
       `${world.scenario}:day:${day}:${direction}`,
-      (draft) => validateTurn(draft, null, DAYS[day]![direction].length),
+      (draft) =>
+        validateTurn(draft, null, DAYS[day]![direction].length, context),
       // Share the original allowance across every world; switching never replenishes
       // it, and versioning a world's grid must not hand out a fresh budget either.
       JUDGE_BUDGET_SCENARIO,
@@ -176,7 +184,14 @@ export function createWorldGame(world: WorldDefinition) {
     // the existing fixed cooldown, cached verdict, daily budget and server-only judge.
     const reviews = await Promise.allSettled(
       DIRECTIONS.map((direction) =>
-        reviewer(day, direction).submit(user, asDraft(pair, direction), deps),
+        reviewer(day, direction, {
+          companion: clueWords(
+            pair[direction === "across" ? "down" : "across"].clue,
+          ),
+          earlier: latest.completed.flatMap((entry) =>
+            DIRECTIONS.flatMap((d) => clueWords(entry[d].clue)),
+          ),
+        }).submit(user, asDraft(pair, direction), deps),
       ),
     );
     const failure = reviews.find((r) => r.status === "rejected");

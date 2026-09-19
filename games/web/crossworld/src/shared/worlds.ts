@@ -71,9 +71,9 @@ export const SANDY_SHORE: WorldDefinition = {
   motif: "sand",
   deck: [
     { mechanic: "brief", name: "Driftwood" },
-    { mechanic: "two-breaths", name: "Two Shells" },
-    { mechanic: "half-measure", name: "Low Tide" },
     { mechanic: "short-words", name: "Grains" },
+    { mechanic: "shared-initial", name: "Matching Grain" },
+    { mechanic: "ask", name: "Message in a Bottle" },
   ],
   days: [
     {
@@ -113,10 +113,10 @@ export const GLASS_REACH: WorldDefinition = {
   neighbours: ["sandy-shore", "the-long-pier"],
   motif: "glass",
   deck: [
-    { mechanic: "brief", name: "Pocket Find" },
-    { mechanic: "same-start", name: "Matched Pair" },
+    { mechanic: "half-measure", name: "Thin Pane" },
     { mechanic: "no-e", name: "Clouded Glass" },
-    { mechanic: "long-shadow", name: "Long Shard" },
+    { mechanic: "same-start", name: "Matched Pair" },
+    { mechanic: "twin-endings", name: "Twin Edges" },
   ],
   days: [
     {
@@ -156,12 +156,12 @@ export const THE_WRACKLINE: WorldDefinition = {
   neighbours: ["sandy-shore", "the-long-pier"],
   motif: "wrack",
   deck: [
-    { mechanic: "half-measure", name: "Short Rope" },
     { mechanic: "seven", name: "Seven Knots" },
-    { mechanic: "short-words", name: "Small Salvage" },
-    { mechanic: "no-articles", name: "Cut the Line" },
-    { mechanic: "no-b", name: "Bone White" },
     { mechanic: "long-shadow", name: "Long Spar" },
+    { mechanic: "no-articles", name: "Cut the Line" },
+    { mechanic: "fresh-words", name: "Nothing Twice" },
+    { mechanic: "double-trouble", name: "Twin Bones" },
+    { mechanic: "count-me-in", name: "Tally Marks" },
   ],
   days: [
     {
@@ -214,13 +214,13 @@ export const THE_LONG_PIER: WorldDefinition = {
   motif: "pier",
   deck: [
     { mechanic: "brief", name: "Short Span" },
-    { mechanic: "two-breaths", name: "Two Posts" },
     { mechanic: "half-measure", name: "Fog Bank" },
     { mechanic: "no-b", name: "Missing Plank" },
-    { mechanic: "seven", name: "Seven Pilings" },
-    { mechanic: "long-shadow", name: "Far Out" },
-    { mechanic: "no-e", name: "Mist Gap" },
-    { mechanic: "same-start", name: "Twin Pilings" },
+    { mechanic: "mirror-length", name: "One Per Board" },
+    { mechanic: "shared-initial", name: "Matching Post" },
+    { mechanic: "echo", name: "Both Rails" },
+    { mechanic: "fresh-words", name: "New Timber" },
+    { mechanic: "twin-endings", name: "Twin Pilings" },
   ],
   days: [
     {
@@ -281,15 +281,15 @@ export const HAUNTED_HEDGE: WorldDefinition = {
   motif: "hedge",
   deck: [
     { mechanic: "two-breaths", name: "Two Breaths" },
-    { mechanic: "no-b", name: "Bee-Free Patch" },
-    { mechanic: "brief", name: "Pocket Posy" },
-    { mechanic: "no-e", name: "E’s Day Off" },
-    { mechanic: "seven", name: "Seven Petals" },
-    { mechanic: "same-start", name: "Twin Blossoms" },
     { mechanic: "short-words", name: "Tiny Seeds" },
-    { mechanic: "half-measure", name: "Half Measure" },
     { mechanic: "long-shadow", name: "Long Shadow" },
+    { mechanic: "no-e", name: "E’s Day Off" },
     { mechanic: "no-articles", name: "Pull the Weeds" },
+    { mechanic: "same-start", name: "Twin Blossoms" },
+    { mechanic: "double-trouble", name: "Double Bloom" },
+    { mechanic: "mirror-length", name: "Petal Count" },
+    { mechanic: "echo", name: "Paired Vines" },
+    { mechanic: "ask", name: "The Gate Asks" },
   ],
   days: [
     {

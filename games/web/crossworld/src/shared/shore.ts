@@ -1,5 +1,5 @@
 import { SANDY_SHORE, type WorldDefinition } from "./worlds";
-import { RESTRICTIONS, mechanicFor, validateTurn } from "./rules";
+import { RESTRICTIONS, clueWords, mechanicFor, validateTurn } from "./rules";
 import { type Draft, type Judgment } from "./types";
 
 export const SHORE_SCENARIO = SANDY_SHORE.scenario;
@@ -168,10 +168,19 @@ export function validatePair(
       issues.push(
         `${label}: ${cardName(world, card)} has already been spent in this world.`,
       );
+    const other: Direction = direction === "across" ? "down" : "across";
     const result = validateTurn(
       asDraft(pair, direction),
       null,
       layout[direction].length,
+      {
+        companion: clueWords(pair[other].clue),
+        // Only accepted turns count as earlier, so the two clues written in the
+        // same turn never block each other.
+        earlier: completed.flatMap((entry) =>
+          DIRECTIONS.flatMap((d) => clueWords(entry[d].clue)),
+        ),
+      },
     );
     normalized[direction] = {
       word: result.word,

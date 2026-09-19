@@ -32,6 +32,11 @@ async function expireReview(user: string, day = 0) {
 }
 const spentBy = async (user: string) =>
   usedCards((await shore.read(user)).completed).sort();
+/** The two cards the reference solution spends on a given discovery. */
+const cardsOn = (day: number) => {
+  const draft = referenceDraft(SANDY_SHORE, day);
+  return [draft.across.criterion, draft.down.criterion].sort();
+};
 
 test("every world's deck is exactly the size of the world and drawn from real mechanics", () => {
   for (const world of WORLDS) {
@@ -45,14 +50,14 @@ test("every world's deck is exactly the size of the world and drawn from real me
     }
   }
   // The same mechanic reads differently per world without forking the switch.
-  expect(deckFor(SANDY_SHORE).find((c) => c.id === "brief")?.name).toBe(
-    "Driftwood",
+  expect(deckFor(SANDY_SHORE).find((c) => c.id === "short-words")?.name).toBe(
+    "Grains",
   );
   expect(
     deckFor(WORLDS.find((w) => w.id === "haunted-hedge")!).find(
-      (c) => c.id === "brief",
+      (c) => c.id === "short-words",
     )?.name,
-  ).toBe("Pocket Posy");
+  ).toBe("Tiny Seeds");
 });
 
 test("completing a world spends its deck exactly once", async () => {
@@ -74,11 +79,13 @@ test("a spent card is gone from the deck and is refused before any paid review",
   const d = deps();
   await shore.submit("spender", referenceDraft(SANDY_SHORE, 0), d);
   const after = await shore.read("spender");
-  expect(availableCards(SANDY_SHORE, after.completed).map((c) => c.id)).toEqual(
-    ["half-measure", "short-words"],
-  );
+  expect(
+    availableCards(SANDY_SHORE, after.completed)
+      .map((c) => c.id)
+      .sort(),
+  ).toEqual(cardsOn(1));
   d.judge.mockClear();
-  // Day one spent Driftwood; day two may not spend it again.
+  // Day one spent Driftwood (brief); day two may not spend it again.
   const reuse = {
     ...referenceDraft(SANDY_SHORE, 1),
     across: {
@@ -133,10 +140,10 @@ test("a rejected clue does not consume its card", async () => {
   d.judge.mockResolvedValue(yes);
   // The same card, on a reworded clue, is still spendable.
   const retry = referenceDraft(SANDY_SHORE, 0);
-  retry.down = { ...retry.down, clue: "Tiny marchers" };
+  retry.down = { ...retry.down, clue: "Slow bug on a leaf" };
   const second = await shore.submit("unlucky", retry, d);
   expect(second.completed).toHaveLength(1);
-  expect(await spentBy("unlucky")).toEqual(["brief", "two-breaths"]);
+  expect(await spentBy("unlucky")).toEqual(cardsOn(0));
 });
 
 test("an unavailable judge does not consume a card", async () => {
@@ -158,7 +165,7 @@ test("an unavailable judge does not consume a card", async () => {
     d,
   );
   expect(recovered.completed).toHaveLength(1);
-  expect(await spentBy("offline")).toEqual(["brief", "two-breaths"]);
+  expect(await spentBy("offline")).toEqual(cardsOn(0));
 });
 
 test("a draft reserves nothing: saving does not spend a card", async () => {

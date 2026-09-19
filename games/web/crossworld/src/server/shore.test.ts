@@ -23,6 +23,7 @@ import {
   type PairDraft,
 } from "../shared/shore";
 import { SANDY_SHORE } from "../shared/worlds";
+import { referenceDraft } from "../shared/reference-solution";
 import { readJourney, saveJourney } from "./journey";
 import { JudgeUnavailable } from "./judge";
 import type { Dependencies } from "./game";
@@ -46,26 +47,12 @@ const pair = (
   across: { word: across, clue: acrossClue, criterion: acrossCriterion },
   down: { word: down, clue: downClue, criterion: downCriterion },
 });
-// The design bible's reference solution for Sandy Shore. Players supply their
-// own answers; these only pin the geometry and the restriction cards.
-const fixtures = [
-  pair(
-    "SAND",
-    "Fine grains underfoot",
-    "brief",
-    "SNAIL",
-    "Shelled crawler",
-    "two-breaths",
-  ),
-  pair(
-    "SALTS",
-    "What the sea leaves behind",
-    "half-measure",
-    "SHORE",
-    "Land at the edge of a sea",
-    "short-words",
-  ),
-];
+// Derived from the reference solution so geometry and deck changes flow through
+// instead of pinning words and cards here. Players supply their own answers.
+const fixtures: PairDraft[] = SANDY_SHORE.days.map((_, day) => {
+  const { across, down } = referenceDraft(SANDY_SHORE, day);
+  return { revealed: true, across, down };
+});
 test("unfinished tile drafts retain spatial crossing positions across save and reload", async () => {
   const draft = emptyPair();
   draft.revealed = true;
@@ -163,7 +150,7 @@ test("both discoveries accept their clues, retain independent criteria, and surv
     fixtures.map((p) => p.across.word),
   );
   expect(done.completed[0]?.across.criterion).toBe("brief");
-  expect(done.completed[0]?.down.criterion).toBe("two-breaths");
+  expect(done.completed[0]?.down.criterion).toBe(fixtures[0]!.down.criterion);
   expect(done.turn).toBeNull();
   expect((await readShore("bob")).completed).toHaveLength(0);
 });
@@ -230,7 +217,7 @@ test("a partial pass remains editable, reloads both reviews, and reuses the unch
   await expireReview();
   d.judge.mockResolvedValue(yes);
   const revised = payload(0, {
-    down: { ...fixtures[0]!.down, clue: "Tiny marchers" },
+    down: { ...fixtures[0]!.down, clue: "Slow bug on a leaf" },
   });
   expect((await submitShore("alice", revised, d)).completed).toHaveLength(1);
   expect(d.judge).toHaveBeenCalledTimes(3);

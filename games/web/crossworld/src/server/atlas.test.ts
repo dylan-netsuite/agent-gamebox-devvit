@@ -202,7 +202,7 @@ test("Region II is locked until the Shallows Gate closes, then opens with its pr
     day: 0,
     revealed: true,
     across: { word: "OWL", clue: "Night hunter", criterion: "two-breaths" },
-    down: { word: "GHOST", clue: "Restless spirit", criterion: "no-b" },
+    down: { word: "GHOST", clue: "Wraith in a dark hall", criterion: "no-e" },
   };
   await play("pilgrim", SANDY_SHORE, "2026-10-01");
   const early = deps("2026-10-02");

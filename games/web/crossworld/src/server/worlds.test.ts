@@ -50,56 +50,56 @@ const pair = (
   across: { word: a, clue: ac, criterion: ar },
   down: { word: d, clue: dc, criterion: dr },
 });
+// Hedge deck: two-breaths, short-words, long-shadow, no-e, no-articles,
+// same-start, double-trouble, mirror-length, echo, ask. Words are unchanged, so
+// every crossing still holds; only the cards and clues move.
 const fixtures = [
   pair(
     "OWL",
     "Night hunter",
     "two-breaths",
     "GHOST",
-    "Restless spirit",
-    "no-b",
-  ),
-  pair(
-    "GRANT",
-    "Give as a favor",
-    "brief",
-    "TREES",
-    "Tall woody plants",
+    "Wraith in a dark hall",
     "no-e",
   ),
   pair(
-    "TALES",
-    "Stories that are told aloud by someone",
-    "seven",
-    "LILAC",
-    "Purple perfumed shrub",
+    "GRANT",
+    "Give as a gift",
+    "short-words",
+    "TREES",
+    "Tall timber that towers",
     "same-start",
   ),
   pair(
-    "CAT",
-    "Tiny pet, has paws",
-    "short-words",
-    "TOMB",
-    "Stone burial chamber",
-    "half-measure",
+    "TALES",
+    "Stories recounted by firelight",
+    "long-shadow",
+    "LILAC",
+    "Purple shrub with perfumed blooms",
+    "mirror-length",
   ),
   pair(
-    "CLIMB",
-    "Ascend a steep mountainside",
-    "long-shadow",
-    "EPIC",
-    "Grand heroic poem",
+    "CAT",
+    "Small pet with soft paws",
     "no-articles",
+    "TOMB",
+    "Still stone room for bones",
+    "double-trouble",
+  ),
+  // EPIC echoes "you" back out of CLIMB's question.
+  pair(
+    "CLIMB",
+    "How do you get up a cliff?",
+    "ask",
+    "EPIC",
+    "A grand poem you recite",
+    "echo",
   ),
 ];
-const shorePair = pair(
-  "SAND",
-  "Fine grains underfoot",
-  "brief",
-  "SNAIL",
-  "Shelled crawler",
-  "two-breaths",
-);
+const shorePair = (() => {
+  const { across, down } = referenceDraft(SANDY_SHORE, 0);
+  return { revealed: true, across, down };
+})();
 const payload = (day = 0) => ({ ...fixtures[day]!, day });
 test("Haunted Hedge has ten maximal paths and 33 connected cells in the approved silhouette", () => {
   const seen = new Set<string>(),
