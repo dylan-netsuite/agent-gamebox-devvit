@@ -65,7 +65,7 @@ export const SANDY_SHORE: WorldDefinition = {
   name: "Sandy Shore",
   chapter: "Where you wash up",
   noun: "shore",
-  introduction: "Low ground. The water settles here.",
+  introduction: "Loose ground, holding no shape.",
   welcome:
     "The sea leaves things here and does not name them. Uncover two paths and say what they are.",
   description: "Low ground where the water goes, and leaves things unnamed.",
@@ -156,7 +156,7 @@ export const THE_WRACKLINE: WorldDefinition = {
   name: "The Wrackline",
   chapter: "The tide’s leavings",
   noun: "wrackline",
-  introduction: "Nothing here was kept.",
+  introduction: "Water dwells in places disdained.",
   welcome:
     "Rope, wood and salt, all set down and left. Uncover two paths and name what the water finished with.",
   description: "A long seam of rope, wood and salt, set down and left.",
