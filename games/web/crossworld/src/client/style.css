@@ -387,8 +387,8 @@ h2 {
      vertically, so the typed letter painted ~500px below its tile while the
      tile itself still looked empty. Width was unaffected because .map carries
      an explicit width. Insets resolve against the containing block's used
-     padding box, so they cannot hit the same trap. Confirmed on device via
-     src/client/diag.ts, not reproducible in Chromium or Playwright WebKit. */
+     padding box, so they cannot hit the same trap. Confirmed by measuring the
+     DOM on device; not reproducible in Chromium or Playwright WebKit. */
   position: absolute;
   inset: 0;
   padding: 7px 0 0;
