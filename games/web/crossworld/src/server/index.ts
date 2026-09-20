@@ -19,6 +19,8 @@ import {
 import { readJourney, saveJourney, submitJourney } from "./journey";
 import { emptyShore, type ShoreView } from "../shared/shore";
 import { WORLDS } from "../shared/worlds";
+import { ATLAS_API_ROOT } from "../shared/atlas";
+import { atlasView, enterWorld, seedsFor, spentElsewhere } from "./atlas";
 import { createWorldGame, canResetShore } from "./shore";
 
 const app = express();
@@ -63,6 +65,20 @@ app.post(`${JOURNEY_API_ROOT}/submit`, async (req, res) => {
   res.json(await submitJourney(requireUser(context.userId), req.body));
 });
 
+// The atlas is readable signed out so the map renders for guests; every write
+// path is trusted-user only and re-checks routing server-side.
+app.get(`${ATLAS_API_ROOT}/map`, async (_req, res) => {
+  res.json(await atlasView(context.userId));
+});
+app.post(`${ATLAS_API_ROOT}/enter`, async (req, res) => {
+  const world =
+    req.body && typeof req.body === "object" && "world" in req.body
+      ? req.body.world
+      : null;
+  await enterWorld(requireUser(context.userId), world);
+  res.json(await atlasView(context.userId));
+});
+
 // Only configured routes select a world; client-supplied identity/world fields are ignored.
 for (const world of WORLDS) {
   const game = createWorldGame(world);
@@ -74,6 +90,8 @@ for (const world of WORLDS) {
       signedIn: Boolean(context.userId),
       judgeReady: Boolean(config.enabled && config.key),
       shore: context.userId ? await game.read(context.userId) : emptyShore(),
+      spentElsewhere: await spentElsewhere(context.userId, world),
+      seeds: await seedsFor(context.userId, world),
     };
     res.json(view);
   });

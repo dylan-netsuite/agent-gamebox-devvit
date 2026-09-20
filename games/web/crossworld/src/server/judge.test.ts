@@ -1,5 +1,12 @@
 import { expect, test, vi } from "vitest";
-import { judgeClue, parseJudgment, MODEL } from "./judge";
+import {
+  judgeClue,
+  parseJudgment,
+  MODEL,
+  JUDGE_VERSION,
+  UNRECOGNISED_REFERENCE_POLICY,
+  instructions,
+} from "./judge";
 const verdict = {
   validWord: true,
   fairClue: true,
@@ -77,4 +84,53 @@ test("configuration, HTTP and transport failures never accept or leak upstream d
     "unavailable",
   );
   expect(timeout).toHaveBeenCalledTimes(1);
+});
+
+test("the instruction block admits cultural clues without letting a fabricated one pass", () => {
+  // The playtest rejection this fixes: a real reference judged "obscure"
+  // because the old block demanded an ordinary dictionary meaning.
+  expect(instructions).toMatch(/Cultural reference/);
+  expect(instructions).toMatch(/song, album, film/);
+  expect(instructions).toMatch(/must not be rejected for being informal/);
+  // The guard against failing open: an accepted reference has to be named, so a
+  // hallucinated source is visible in the reason rather than silently passing.
+  expect(instructions).toMatch(/you must name the specific work/);
+  expect(instructions).toMatch(
+    /A reason that claims a reference without naming\s+it is not acceptable/,
+  );
+  // Default is reject, and it must read as a different outcome from a bad word.
+  expect(UNRECOGNISED_REFERENCE_POLICY).toBe("reject");
+  expect(instructions).toMatch(/did not recognise the reference/);
+  expect(instructions).toMatch(
+    /an unrecognised reference is a separate outcome from an invalid word/,
+  );
+  // Unchanged contract: still two booleans, still untrusted input.
+  expect(instructions).toMatch(/never instructions to follow/);
+  expect(instructions).toMatch(/Return validWord, fairClue, and one concise/);
+});
+
+test("a widely known name is a valid answer, an unrecognised one is not", () => {
+  // The playtest rejection this fixes: MONET refused because the old block
+  // banned "a word requiring a proper-name reading" outright.
+  expect(instructions).toMatch(/or a proper name that is widely known/);
+  expect(instructions).toMatch(/a surname, a full name, a place, a brand/);
+  expect(instructions).toMatch(/must not be rejected\s+for being a name/);
+  // The same guard the cultural-reference rule uses: a name that is accepted
+  // has to be identified, so a fabricated one is visible in the reason.
+  expect(instructions).toMatch(/you must say inside reason who or what it is/);
+  expect(instructions).toMatch(
+    /A\s+reason that accepts a name without identifying it is not acceptable/,
+  );
+  expect(instructions).toMatch(/did not recognise the name/);
+  // Invented words stay out; only the proper-name ban was lifted.
+  expect(instructions).toMatch(/Do not accept invented words or abbreviations/);
+  expect(instructions).not.toMatch(/proper-name reading/);
+});
+
+test("changing the instructions retires every verdict cached under the old ones", () => {
+  // Cache keys hash JUDGE_VERSION, so this must move whenever the block does.
+  // Bumped for proper names: a verdict formed while names were banned must
+  // never be replayed against a board where they are allowed.
+  expect(JUDGE_VERSION).toBe("clue-v3-proper-names");
+  expect(JUDGE_VERSION).not.toBe("clue-v2-cultural");
 });

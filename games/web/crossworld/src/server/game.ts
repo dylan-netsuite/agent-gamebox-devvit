@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { redis } from "@devvit/web/server";
+import { context, redis } from "@devvit/web/server";
 import { SCENARIO, validateTurn } from "../shared/rules";
 import {
   emptyTurn,
@@ -20,6 +20,9 @@ import {
 export const USER_DAILY_LIMIT = 20;
 export const INSTALLATION_DAILY_LIMIT = 200;
 export const COOLDOWN_MS = 45_000;
+export const PLAYTEST_SUBREDDIT = "crossworld_game_dev";
+export const inPlaytestSubreddit = () =>
+  context.subredditName === PLAYTEST_SUBREDDIT;
 export class GameError extends Error {
   constructor(
     public readonly status: number,
@@ -38,11 +41,17 @@ export type Dependencies = {
   config: () => Promise<JudgeConfig>;
   judge: (draft: Draft, config: JudgeConfig) => Promise<Judgment>;
   now: () => number;
+  // True only inside the private playtest subreddit. Lifts the per-user daily
+  // cap so a tester is not locked out mid-session. It never lifts the
+  // installation cap, which stays the ceiling on paid provider calls. Optional
+  // so callers that omit it fall back to the real check and keep the cap on.
+  playtest?: () => boolean;
 };
 const defaults: Dependencies = {
   config: judgeConfig,
   judge: judgeClue,
   now: Date.now,
+  playtest: inPlaytestSubreddit,
 };
 
 export function createTurnGame(
@@ -150,7 +159,12 @@ export function createTurnGame(
     const day = new Date(now).toISOString().slice(0, 10);
     const userLimitKey = `cq:${budgetScenario}:${user}:budget:${day}`;
     const userCount = await countReview(userLimitKey, "user-budget");
-    if (userCount > USER_DAILY_LIMIT)
+    // Counted even in the playtest, so the tally stays honest and the cap
+    // resumes the moment this build runs anywhere else.
+    if (
+      !(deps.playtest ?? inPlaytestSubreddit)() &&
+      userCount > USER_DAILY_LIMIT
+    )
       throw new GameError(
         429,
         "Today’s 20-review allowance is used. Come back tomorrow; your restriction is still available.",

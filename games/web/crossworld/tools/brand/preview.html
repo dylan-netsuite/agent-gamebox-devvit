@@ -1,0 +1,136 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #fff;
+        font:
+          13px/1.4 -apple-system,
+          sans-serif;
+        color: #59685e;
+      }
+      .row {
+        display: flex;
+        align-items: flex-end;
+        gap: 40px;
+        margin-bottom: 32px;
+      }
+      .cell {
+        text-align: center;
+      }
+      .cell img {
+        display: block;
+        margin: 0 auto 8px;
+      }
+      h2 {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #59685e;
+        margin: 0 0 12px;
+      }
+      .swatch {
+        background: #f4f0e6;
+        padding: 10px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Geometry check &mdash; all three at 256</h2>
+    <div class="row">
+      <div class="cell">
+        <img
+          src="../../src/client/public/brand/crossworld-mark.svg"
+          width="256"
+          height="256"
+        />mark (96+)
+      </div>
+      <div class="cell">
+        <img
+          src="../../src/client/public/brand/crossworld-mark-48.svg"
+          width="256"
+          height="256"
+        />mark-48
+      </div>
+      <div class="cell">
+        <img
+          src="../../src/client/public/brand/crossworld-mark-32.svg"
+          width="256"
+          height="256"
+        />mark-32
+      </div>
+    </div>
+
+    <h2>True size, on paper</h2>
+    <div class="row">
+      <div class="cell">
+        <div class="swatch">
+          <img
+            src="../../src/client/public/brand/crossworld-mark.svg"
+            width="96"
+            height="96"
+          />
+        </div>
+        96
+      </div>
+      <div class="cell">
+        <div class="swatch">
+          <img
+            src="../../src/client/public/brand/crossworld-mark-48.svg"
+            width="48"
+            height="48"
+          />
+        </div>
+        48
+      </div>
+      <div class="cell">
+        <div class="swatch">
+          <img
+            src="../../src/client/public/brand/crossworld-mark-32.svg"
+            width="32"
+            height="32"
+          />
+        </div>
+        32
+      </div>
+      <div class="cell">
+        <div class="swatch">
+          <img
+            src="../../src/client/public/brand/crossworld-mark-32.svg"
+            width="24"
+            height="24"
+          />
+        </div>
+        24
+      </div>
+    </div>
+
+    <h2>Wrong-variant control &mdash; large mark forced small</h2>
+    <div class="row">
+      <div class="cell">
+        <div class="swatch">
+          <img
+            src="../../src/client/public/brand/crossworld-mark.svg"
+            width="48"
+            height="48"
+          />
+        </div>
+        mark @48
+      </div>
+      <div class="cell">
+        <div class="swatch">
+          <img
+            src="../../src/client/public/brand/crossworld-mark.svg"
+            width="32"
+            height="32"
+          />
+        </div>
+        mark @32
+      </div>
+    </div>
+  </body>
+</html>

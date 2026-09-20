@@ -14,7 +14,70 @@
     <main class="game">
       <header class="masthead">
         <p class="brand">
-          <span class="brand-mark" aria-hidden="true">✳</span> CrossWorld
+          <!-- crossworld-mark-32.svg geometry: heavy arc, crossing cropped to
+               3x3. The full 5-wide grid turns to noise below ~48px. Fills are
+               theme tokens because :root.dark redefines them and an <img>
+               cannot inherit a custom property. Strokes run heavier than the
+               file's, which land sub-pixel at this size. -->
+          <svg
+            class="brand-mark"
+            viewBox="0 0 256 256"
+            role="img"
+            aria-label="CrossWorld"
+            focusable="false"
+          >
+            <path
+              d="M202.57 216.86A116 116 0 1 1 216.86 53.43"
+              fill="none"
+              stroke="var(--ink)"
+              stroke-width="12"
+            />
+            <g stroke="var(--ink)" stroke-width="6">
+              <circle cx="128" cy="77" r="23" fill="var(--surface)" />
+              <rect
+                x="156"
+                y="54"
+                width="46"
+                height="46"
+                rx="7"
+                fill="var(--ink)"
+              />
+              <rect
+                x="54"
+                y="105"
+                width="46"
+                height="46"
+                rx="7"
+                fill="var(--surface)"
+              />
+              <rect
+                x="105"
+                y="105"
+                width="46"
+                height="46"
+                rx="7"
+                fill="var(--orange)"
+              />
+              <circle cx="179" cy="128" r="23" fill="var(--surface)" />
+              <rect
+                x="54"
+                y="156"
+                width="46"
+                height="46"
+                rx="7"
+                fill="var(--ink)"
+              />
+              <rect
+                x="105"
+                y="156"
+                width="46"
+                height="46"
+                rx="7"
+                fill="var(--surface)"
+              />
+            </g>
+          </svg>
+          CrossWorld
         </p>
         <div class="header-tools">
           <button
@@ -66,16 +129,18 @@
       </header>
       <div class="world-heading">
         <div>
-          <p id="world-chapter" class="eyebrow chapter">A world in ten words</p>
+          <p id="world-chapter" class="eyebrow chapter">
+            Loose ground, holding no shape
+          </p>
           <h1>
             <span id="world-title">Sandy Shore</span
             ><span class="world-dot" aria-hidden="true">.</span>
           </h1>
         </div>
         <div class="journey">
-          <span id="turn-label">Turn 1 of 5</span>
+          <span id="turn-label">Turn 1</span>
           <div id="journey-track" class="journey-track" aria-hidden="true">
-            <i></i><i></i><i></i><i></i><i></i>
+            <!-- One marker per discovery; filled in from the world definition. -->
           </div>
         </div>
       </div>
@@ -90,7 +155,7 @@
       <section class="atlas" id="atlas" aria-label="Sandy Shore crossword">
         <div class="map-pane">
           <div class="map-toolbar">
-            <span class="eyebrow" id="map-caption">Uncharted shore</span
+            <span class="eyebrow" id="map-caption">Unnamed shore</span
             ><button
               id="map-view"
               class="text-button"
@@ -130,9 +195,7 @@
               </button>
             </section>
           </div>
-          <p id="story" class="map-story">
-            Two paths are waiting beneath the sand.
-          </p>
+          <p id="story" class="map-story">Nothing here is named yet.</p>
         </div>
         <aside
           class="field-notes"
@@ -140,18 +203,18 @@
           aria-label="Clue field notes"
         >
           <section id="welcome" class="welcome">
-            <span class="eyebrow">Your next discovery</span>
-            <h2 id="place-title">Beneath the sand.</h2>
+            <span class="eyebrow">Where you are</span>
+            <h2 id="place-title">Sand drifts</h2>
             <p id="place-copy">
-              A little exploring. A little wordplay. Uncover two paths and give
-              them words of your own.
+              The sea leaves things here and does not name them. Uncover two
+              paths and say what they are.
             </p>
             <div class="loop-guide">
-              <span><b>01</b> Uncover a pair of paths</span
-              ><span><b>02</b> Write two words &amp; clues</span
-              ><span><b>03</b> Watch your world unfold</span>
+              <span><b>01</b> Uncover two paths</span
+              ><span><b>02</b> Name them, and say why</span
+              ><span><b>03</b> Watch the world fill in</span>
             </div>
-            <p class="fine-print">Five turns, at your own pace.</p>
+            <p class="fine-print" id="pace-note">At your own pace.</p>
           </section>
           <div
             id="turn-switch"
@@ -251,7 +314,7 @@
             >
               <div class="picker-heading">
                 <div>
-                  <p class="eyebrow">A little creative constraint</p>
+                  <p class="eyebrow" id="deck-count">Rules left</p>
                   <h2 id="picker-title">A rule for Across</h2>
                 </div>
                 <button
@@ -264,7 +327,8 @@
                 </button>
               </div>
               <p class="picker-intro">
-                Pick one. Your other clue keeps its own rule.
+                Each rule can be spent once in this world. Pick carefully — you
+                will not get it back.
               </p>
               <div id="criterion-options" class="criterion-options"></div>
             </section>
@@ -278,7 +342,99 @@
             Return to your clue ↗
           </button>
           <section id="complete" class="complete" hidden>
-            <span class="completion-seal" aria-hidden="true">✳</span>
+            <!-- crossworld-mark-48.svg geometry: full 5-wide grid, no
+                 waypoints, no letters. Rendered at 66px (48px on narrow), the
+                 band where waypoints antialias into smudges but the grid still
+                 reads. -->
+            <svg
+              class="completion-seal"
+              viewBox="0 0 256 256"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M202.57 216.86A116 116 0 1 1 216.86 53.43"
+                fill="none"
+                stroke="var(--ink)"
+                stroke-width="10"
+              />
+              <g stroke="var(--ink)" stroke-width="3">
+                <rect
+                  x="73"
+                  y="35"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+                <circle cx="90" cy="90" r="17" fill="var(--surface)" />
+                <rect
+                  x="111"
+                  y="73"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--ink)"
+                />
+                <rect
+                  x="35"
+                  y="111"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+                <rect
+                  x="73"
+                  y="111"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--orange)"
+                />
+                <circle cx="128" cy="128" r="17" fill="var(--surface)" />
+                <rect
+                  x="149"
+                  y="111"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+                <rect
+                  x="187"
+                  y="111"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+                <rect
+                  x="35"
+                  y="149"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--ink)"
+                />
+                <rect
+                  x="73"
+                  y="149"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+                <rect
+                  x="73"
+                  y="187"
+                  width="34"
+                  height="34"
+                  rx="5"
+                  fill="var(--surface)"
+                />
+              </g>
+            </svg>
             <p id="completion-world" class="eyebrow">Sandy Shore, discovered</p>
             <h2>Ten words.<br />A world of your own.</h2>
             <p>
@@ -294,14 +450,14 @@
       <div class="map-status">
         <span id="progress" aria-live="polite">Finding your shore…</span
         ><button id="all-clues" class="text-button" type="button" hidden>
-          Your field notes ↗
+          What you left behind ↗
         </button>
       </div>
       <p id="pair-review-status" class="sr-only" role="status"></p>
       <footer>
         <span id="storage-status">Connecting…</span
         ><span class="footer-tools"
-          ><span class="prototype-label">Playtest</span
+          ><span class="prototype-label" id="build-stamp">Playtest</span
           ><button id="refresh" class="text-button" type="button">
             Refresh
           </button></span
@@ -310,7 +466,7 @@
     </main>
     <dialog id="instructions" aria-labelledby="instructions-title">
       <div class="dialog-heading">
-        <span class="eyebrow">An explorer’s guide</span
+        <span class="eyebrow">How this goes</span
         ><button
           id="close-help"
           class="icon-button"
@@ -320,7 +476,9 @@
           ×
         </button>
       </div>
-      <h2 id="instructions-title">Make a crossword.<br />Discover a world.</h2>
+      <h2 id="instructions-title">
+        Write the crossword.<br />Find the world in it.
+      </h2>
       <ol class="instructions-list">
         <li>
           <strong>Uncover two paths.</strong>
@@ -342,10 +500,11 @@
         </li>
       </ol>
       <p class="fine-print">
-        You can play all five turns now. Clues use 1–140 characters. Groups of
-        A–Z letters count as words; punctuation separates them. Don’t include
-        the exact answer as a whole word in its clue. Your word and clue are
-        sent to OpenAI for review.
+        Answers can be ordinary words or well-known names — people, places,
+        brands, titles. Clues use 1–140 characters. Groups of A–Z letters count
+        as words; punctuation separates them. Don’t include the exact answer as
+        a whole word in its clue. Your word and clue are sent to OpenAI for
+        review.
       </p>
     </dialog>
     <dialog id="world-picker" aria-labelledby="world-picker-title">
@@ -364,13 +523,14 @@
         </button>
       </div>
       <p class="world-picker-intro">
-        Two places to make your own. Each keeps your words and clues.
+        Region I · The Shallows. One world a day. Finishing a world reveals the
+        worlds bordering it, and The Long Pier opens once all three are done.
       </p>
       <div id="world-options" class="world-options"></div>
       <p id="world-switch-error" class="notice" role="status" hidden></p>
       <p class="fine-print">
-        Both worlds are open for this playtest. The daily clue review allowance
-        is shared.
+        Missing a day only breaks your streak — your route and your words are
+        kept. The daily clue review allowance is shared across every world.
       </p>
     </dialog>
     <dialog
@@ -378,7 +538,7 @@
       aria-labelledby="restart-title"
       aria-describedby="restart-description"
     >
-      <p class="eyebrow">A new beginning</p>
+      <p class="eyebrow">Begin again</p>
       <h2 id="restart-title">Start a fresh shore?</h2>
       <p id="restart-description">
         Your current words and clues will be cleared from the map.
@@ -395,7 +555,7 @@
       <div class="dialog-heading">
         <div>
           <p id="inspect-world" class="eyebrow">Collected in Sandy Shore</p>
-          <h2 id="inspect-title">Your field notes</h2>
+          <h2 id="inspect-title">What you left behind</h2>
         </div>
         <button
           id="close"

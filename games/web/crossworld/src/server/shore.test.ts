@@ -11,7 +11,7 @@ import {
 import {
   DAYS,
   DIRECTIONS,
-  SHORE_SCENARIO,
+  JUDGE_BUDGET_SCENARIO,
   ROWS,
   COLS,
   cellsFor,
@@ -22,6 +22,8 @@ import {
   emptyPair,
   type PairDraft,
 } from "../shared/shore";
+import { SANDY_SHORE } from "../shared/worlds";
+import { referenceDraft } from "../shared/reference-solution";
 import { readJourney, saveJourney } from "./journey";
 import { JudgeUnavailable } from "./judge";
 import type { Dependencies } from "./game";
@@ -45,61 +47,26 @@ const pair = (
   across: { word: across, clue: acrossClue, criterion: acrossCriterion },
   down: { word: down, clue: downClue, criterion: downCriterion },
 });
-const fixtures = [
-  pair(
-    "SCALD",
-    "Burn with steam",
-    "brief",
-    "NECTAR",
-    "Sweet flower liquid",
-    "no-articles",
-  ),
-  pair(
-    "APE",
-    "Large primate",
-    "brief",
-    "SLEEP",
-    "Rest with eyes closed",
-    "no-b",
-  ),
-  pair(
-    "WRAPS",
-    "Covers with a layer",
-    "no-b",
-    "PALACE",
-    "A vast home for a king",
-    "short-words",
-  ),
-  pair(
-    "VIA",
-    "By way of",
-    "short-words",
-    "WAVES",
-    "Says hi with a hand",
-    "no-e",
-  ),
-  pair(
-    "SHELL",
-    "Hard home for a snail",
-    "same-start",
-    "SHOAL",
-    "Shallow stretch of water",
-    "same-start",
-  ),
-];
+// Derived from the reference solution so geometry and deck changes flow through
+// instead of pinning words and cards here. Players supply their own answers.
+const fixtures: PairDraft[] = SANDY_SHORE.days.map((_, day) => {
+  const { across, down } = referenceDraft(SANDY_SHORE, day);
+  return { revealed: true, across, down };
+});
 test("unfinished tile drafts retain spatial crossing positions across save and reload", async () => {
   const draft = emptyPair();
   draft.revealed = true;
-  draft.down.word = "  C   ";
-  draft.across.word = " C   ";
+  // Day one crosses at across index 2 and down index 1.
+  draft.down.word = " C   ";
+  draft.across.word = "  D ";
   await saveShore("tile-draft", { ...draft, day: 0 });
   const loaded = await readShore("tile-draft");
-  expect(loaded.turn?.down.word).toBe("  C   ");
+  expect(loaded.turn?.down.word).toBe(" C   ");
   expect(crossingsFor(0, "across", [], loaded.turn!)).toEqual([
-    { index: 1, letter: "C", fixed: false },
+    { index: 2, letter: "C", fixed: false },
   ]);
   expect(crossingsFor(0, "down", [], loaded.turn!)).toEqual([
-    { index: 2, letter: "C", fixed: false },
+    { index: 1, letter: "D", fixed: false },
   ]);
 });
 const payload = (day: number, changes: Partial<PairDraft> = {}) => ({
@@ -108,31 +75,32 @@ const payload = (day: number, changes: Partial<PairDraft> = {}) => ({
   day,
 });
 async function expireReview(day = 0) {
-  await redis.del(`cq:${SHORE_SCENARIO}:alice:day:${day}:reviewing`);
+  await redis.del(`cq:${SANDY_SHORE.scenario}:alice:day:${day}:reviewing`);
   for (const direction of DIRECTIONS)
     await redis.del(
-      `cq:${SHORE_SCENARIO}:day:${day}:${direction}:alice:cooldown`,
+      `cq:${SANDY_SHORE.scenario}:day:${day}:${direction}:alice:cooldown`,
     );
 }
-test("the reference has exactly 33 tiles, ten maximal paths and matching letters at all fifteen crossings", () => {
+test("the reshaped shore has 16 tiles, four maximal paths and matching letters at both crossings", () => {
+  // 1D SNAIL runs down into 2A SALTS, so the two discoveries share (5,2).
   const expected = [
-    ".X...",
-    ".X.X.",
+    ".....",
+    "..X..",
+    "XXXX.",
+    "..X..",
+    "..X..",
     "XXXXX",
-    ".X.X.",
-    ".XXX.",
-    "XXXXX",
-    "X.X.X",
-    "XXX.X",
-    "X.X.X",
-    "XXXXX",
+    "....X",
+    "....X",
+    "....X",
+    "....X",
   ];
   const completed = fixtures.map((p) => ({
     ...p,
     reviews: { across: yes, down: yes },
   }));
   const board = lettersFor(completed);
-  expect(board.size).toBe(33);
+  expect(board.size).toBe(16);
   for (let row = 0; row < ROWS; row++)
     expect(
       Array.from({ length: COLS }, (_, col) =>
@@ -165,7 +133,7 @@ test("the reference has exactly 33 tiles, ten maximal paths and matching letters
       validatePair(fixtures[day]!, completed.slice(0, day)).issues,
     ).toEqual([]);
 });
-test("five immediate turns accept both clues, retain independent reusable criteria, and survive a new read", async () => {
+test("both discoveries accept their clues, retain independent criteria, and survive a new read", async () => {
   const d = deps();
   expect(await readShore("alice")).toEqual({
     completed: [],
@@ -174,26 +142,26 @@ test("five immediate turns accept both clues, retain independent reusable criter
   for (let day = 0; day < DAYS.length; day++) {
     const state = await submitShore("alice", payload(day), d);
     expect(state.completed).toHaveLength(day + 1);
-    expect(state.turn).toEqual(day === 4 ? null : emptyPair());
+    expect(state.turn).toEqual(day === DAYS.length - 1 ? null : emptyPair());
   }
-  expect(d.judge).toHaveBeenCalledTimes(10);
+  expect(d.judge).toHaveBeenCalledTimes(DAYS.length * 2);
   const done = await readShore("alice");
   expect(done.completed.map((p) => p.across.word)).toEqual(
     fixtures.map((p) => p.across.word),
   );
   expect(done.completed[0]?.across.criterion).toBe("brief");
-  expect(done.completed[0]?.down.criterion).toBe("no-articles");
+  expect(done.completed[0]?.down.criterion).toBe(fixtures[0]!.down.criterion);
   expect(done.turn).toBeNull();
   expect((await readShore("bob")).completed).toHaveLength(0);
 });
 test("future turns, malformed payloads, wrong lengths and companion conflicts fail before paid review", async () => {
   const d = deps();
   for (const raw of [
-    payload(0, { across: { ...fixtures[0]!.across, word: "FOUR" } }),
+    payload(0, { across: { ...fixtures[0]!.across, word: "GRAINS" } }),
     payload(0, { down: { ...fixtures[0]!.down, word: "BANANA" } }),
     payload(0, { down: { ...fixtures[0]!.down, criterion: "invented" } }),
     { ...payload(0), day: 1.5 },
-    { ...payload(0), day: 5 },
+    { ...payload(0), day: 9 },
     payload(0, { revealed: false }),
   ])
     await expect(submitShore("alice", raw, d)).rejects.toThrow();
@@ -207,17 +175,19 @@ test("future turns, malformed payloads, wrong lengths and companion conflicts fa
 });
 test("every crossing with earlier days and the companion word is validated, not just the first", async () => {
   const d = deps();
-  for (let day = 0; day < 4; day++) await submitShore("alice", payload(day), d);
+  for (let day = 0; day < DAYS.length - 1; day++)
+    await submitShore("alice", payload(day), d);
   const completed = (await readShore("alice")).completed;
-  const current = fixtures[4]!;
+  const last = DAYS.length - 1;
+  const current = fixtures[last]!;
   expect(validatePair(current, completed).issues).toEqual([]);
   const shared = new Map<string, number>();
-  for (let day = 0; day < 5; day++)
+  for (let day = 0; day < DAYS.length; day++)
     for (const direction of DIRECTIONS)
       for (const cell of cellsFor(day, direction))
         shared.set(cellKey(cell), (shared.get(cellKey(cell)) ?? 0) + 1);
   for (const direction of DIRECTIONS)
-    for (const [i, cell] of cellsFor(4, direction).entries()) {
+    for (const [i, cell] of cellsFor(last, direction).entries()) {
       if (shared.get(cellKey(cell)) !== 2) continue;
       const word = current[direction].word.split("");
       word[i] = word[i] === "Z" ? "Q" : "Z";
@@ -227,15 +197,15 @@ test("every crossing with earlier days and the companion word is validated, not 
       };
       expect(validatePair(wrong, completed).issues.length).toBeGreaterThan(0);
       await expect(
-        submitShore("alice", { ...wrong, day: 4 }, d),
+        submitShore("alice", { ...wrong, day: last }, d),
       ).rejects.toThrow("must be");
     }
-  expect(d.judge).toHaveBeenCalledTimes(8);
+  expect(d.judge).toHaveBeenCalledTimes((DAYS.length - 1) * 2);
 });
 test("a partial pass remains editable, reloads both reviews, and reuses the unchanged successful review on retry", async () => {
   const d = deps();
   d.judge.mockImplementation(async (draft) =>
-    draft.word === "NECTAR"
+    draft.word === "SNAIL"
       ? { validWord: true, fairClue: false, reason: "Clarify this clue." }
       : yes,
   );
@@ -247,7 +217,7 @@ test("a partial pass remains editable, reloads both reviews, and reuses the unch
   await expireReview();
   d.judge.mockResolvedValue(yes);
   const revised = payload(0, {
-    down: { ...fixtures[0]!.down, clue: "Sugary liquid inside flowers" },
+    down: { ...fixtures[0]!.down, clue: "Slow bug on a leaf" },
   });
   expect((await submitShore("alice", revised, d)).completed).toHaveLength(1);
   expect(d.judge).toHaveBeenCalledTimes(3);
@@ -255,7 +225,7 @@ test("a partial pass remains editable, reloads both reviews, and reuses the unch
 test("one provider failure cannot advance or lock the other word, and all provider calls settle before return", async () => {
   const d = deps();
   d.judge.mockImplementation(async (draft) => {
-    if (draft.word === "NECTAR") throw new JudgeUnavailable();
+    if (draft.word === "SNAIL") throw new JudgeUnavailable();
     return yes;
   });
   await expect(submitShore("alice", payload(0), d)).rejects.toThrow(
@@ -264,7 +234,7 @@ test("one provider failure cannot advance or lock the other word, and all provid
   const state = await readShore("alice");
   expect(state.completed).toHaveLength(0);
   expect(state.turn?.reviews.across).toEqual(yes);
-  expect(state.turn?.down.word).toBe("NECTAR");
+  expect(state.turn?.down.word).toBe("SNAIL");
   expect(state.turn?.reviews.down).toBeNull();
   await expireReview();
   d.judge.mockResolvedValue(yes);
@@ -287,10 +257,10 @@ test("concurrent pairs, duplicate submits and late saves cannot mix answers or a
   );
   await saveShore(
     "alice",
-    payload(0, { across: { ...fixtures[0]!.across, word: "FORGE" } }),
+    payload(0, { across: { ...fixtures[0]!.across, word: "DUNE" } }),
   );
   releases.forEach((release) => release(yes));
-  expect((await first).completed[0]?.across.word).toBe("SCALD");
+  expect((await first).completed[0]?.across.word).toBe("SAND");
   await saveShore("alice", payload(1));
   for (const write of [saveShore, submitShore]) {
     const state = await write(
@@ -299,7 +269,7 @@ test("concurrent pairs, duplicate submits and late saves cannot mix answers or a
       d,
     );
     expect(state.completed).toHaveLength(1);
-    expect(state.turn?.across.word).toBe("APE");
+    expect(state.turn?.across.word).toBe("SALTS");
   }
   expect(d.judge).toHaveBeenCalledTimes(2);
 });
@@ -329,7 +299,7 @@ test("drafts strip forged awards and stay isolated from the earlier seven-word s
 test("both clues count toward the shared daily allowance and disabled judging never awards a pair", async () => {
   const d = deps();
   await submitShore("alice", payload(0), d);
-  const key = `cq:${SHORE_SCENARIO}:alice:budget:${new Date().toISOString().slice(0, 10)}`;
+  const key = `cq:${JUDGE_BUDGET_SCENARIO}:alice:budget:${new Date().toISOString().slice(0, 10)}`;
   expect(await redis.get(key)).toBe("2");
   await redis.set(key, "20");
   await expect(submitShore("alice", payload(1), d)).rejects.toThrow(
@@ -367,7 +337,7 @@ test("private restart clears only the caller's map and preserves legacy progress
   expect(await readShore("alice")).toEqual(fresh);
   expect(await readShore("bob")).toEqual(old);
   expect((await readJourney("alice")).turn?.word).toBe("LAMPS");
-  const budget = `cq:${SHORE_SCENARIO}:alice:budget:${new Date().toISOString().slice(0, 10)}`;
+  const budget = `cq:${JUDGE_BUDGET_SCENARIO}:alice:budget:${new Date().toISOString().slice(0, 10)}`;
   expect(await redis.get(budget)).toBe("2");
   await expireReview();
   const accepted = await submitShore(
@@ -419,7 +389,7 @@ test("a restarted board rejects stale saves and paid submissions, including olde
   expect(d.judge).not.toHaveBeenCalled();
   expect(await readShore("alice")).toEqual(fresh);
   await saveShore("alice", { ...payload(0), run: fresh.run });
-  expect((await readShore("alice")).turn?.across.word).toBe("SCALD");
+  expect((await readShore("alice")).turn?.across.word).toBe("SAND");
 });
 test("a review already in flight cannot repopulate the fresh board", async () => {
   const d = deps(),

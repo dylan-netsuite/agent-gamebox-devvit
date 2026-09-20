@@ -1,26 +1,59 @@
 import { SANDY_SHORE, type WorldDefinition } from "./worlds";
-import { RESTRICTIONS, validateTurn } from "./rules";
+import { RESTRICTIONS, clueWords, mechanicFor, validateTurn } from "./rules";
 import { type Draft, type Judgment } from "./types";
 
 export const SHORE_SCENARIO = SANDY_SHORE.scenario;
 export const SHORE_API_ROOT = SANDY_SHORE.apiRoot;
-export const ROWS = 10;
-export const COLS = 5;
+// The paid-review allowance is deliberately pinned to a fixed namespace rather
+// than to a world's scenario key. Versioning a world's grid must never hand a
+// player a fresh daily budget or clear their cooldowns.
+export const JUDGE_BUDGET_SCENARIO = "sandy-shore-pairs-v1";
+export const ROWS = SANDY_SHORE.rows;
+export const COLS = SANDY_SHORE.cols;
 export const DIRECTIONS = ["across", "down"] as const;
 export type Direction = (typeof DIRECTIONS)[number];
 export const DAYS = SANDY_SHORE.days;
-export const CRITERIA = RESTRICTIONS.map((rule, i) => ({
-  ...rule,
-  name: [
-    "Keep it brief",
-    "Seven words",
-    "No letter E",
-    "No articles",
-    "Small words",
-    "Matching initials",
-    "No letter B",
-  ][i]!,
-}));
+export const CRITERIA = RESTRICTIONS;
+export type DeckCard = {
+  id: string;
+  name: string;
+  label: string;
+  detail: string;
+  rule: string;
+};
+/** A world's full deck, resolved from stable mechanic ids to display cards. */
+export function deckFor(world: WorldDefinition = SANDY_SHORE): DeckCard[] {
+  return world.deck.flatMap((entry) => {
+    const mechanic = mechanicFor(entry.mechanic);
+    return mechanic
+      ? [{ ...mechanic, id: entry.mechanic, name: entry.name }]
+      : [];
+  });
+}
+/**
+ * Cards spent on accepted pairs. Acceptance is the only thing that consumes a
+ * card: a draft, a rejected clue and an unavailable judge all leave the deck
+ * untouched, because none of them produce a completed pair.
+ */
+export const usedCards = (completed: Pair[]): string[] =>
+  completed.flatMap((pair) => DIRECTIONS.map((d) => pair[d].criterion));
+/**
+ * A world deals more cards than it has slots, so you choose which to decline.
+ * `elsewhere` is what the rest of this card scope already spent (see cardScope):
+ * those are gone for good, which is what makes the route order matter. A world's
+ * base deck is disjoint from its siblings', so no amount of earlier spending can
+ * leave it with fewer cards than slots.
+ */
+export function availableCards(
+  world: WorldDefinition = SANDY_SHORE,
+  completed: Pair[] = [],
+  elsewhere: string[] = [],
+): DeckCard[] {
+  const spent = new Set([...usedCards(completed), ...elsewhere]);
+  return deckFor(world).filter((card) => !spent.has(card.id));
+}
+export const cardName = (world: WorldDefinition, id: string) =>
+  deckFor(world).find((card) => card.id === id)?.name ?? id;
 export type Entry = { word: string; clue: string; criterion: string };
 export type PairDraft = { revealed: boolean; across: Entry; down: Entry };
 export type Pair = PairDraft & { reviews: Record<Direction, Judgment | null> };
@@ -31,6 +64,10 @@ export type ShoreView = {
   judgeReady: boolean;
   canReset?: boolean;
   shore: Shore;
+  /** Cards already spent elsewhere in this world's card scope. */
+  spentElsewhere?: string[];
+  /** Letters carried in from worlds you already finished. */
+  seeds?: Seeds;
 };
 export const emptyPair = (): Pair => ({
   revealed: false,
@@ -54,11 +91,17 @@ export const cellsFor = (
 };
 export const cellKey = (cell: { row: number; col: number }) =>
   `${cell.row},${cell.col}`;
+/** Letters carried in from other worlds, keyed "row,col". */
+export type Seeds = Record<string, string>;
+
 export function lettersFor(
   completed: Pair[],
   world: WorldDefinition = SANDY_SHORE,
+  seeds: Seeds = {},
 ) {
-  const letters = new Map<string, string>();
+  // Seeds go down first so an accepted answer, which had to satisfy the seed to
+  // be accepted, is the final word on any cell it covers.
+  const letters = new Map<string, string>(Object.entries(seeds));
   completed.forEach((pair, day) => {
     for (const direction of DIRECTIONS)
       cellsFor(day, direction, world).forEach((cell, i) =>
@@ -73,8 +116,9 @@ export function crossingsFor(
   completed: Pair[],
   pair?: PairDraft,
   world: WorldDefinition = SANDY_SHORE,
+  seeds: Seeds = {},
 ) {
-  const fixed = lettersFor(completed, world);
+  const fixed = lettersFor(completed, world, seeds);
   const other = direction === "across" ? "down" : "across";
   const companion = new Map<string, string>();
   if (pair)
@@ -121,18 +165,41 @@ export function validatePair(
   pair: PairDraft,
   completed: Pair[],
   world: WorldDefinition = SANDY_SHORE,
+  elsewhere: string[] = [],
+  seeds: Seeds = {},
 ) {
   const day = completed.length,
     layout = world.days[day];
   const issues: string[] = [];
   const normalized = parsePair(pair)!;
   if (!layout)
-    return { issues: ["All five turns are complete."], pair: normalized };
+    return {
+      issues: [`All ${world.days.length} discoveries are complete.`],
+      pair: normalized,
+    };
+  const deck = new Set(deckFor(world).map((card) => card.id));
+  const spent = new Set([...usedCards(completed), ...elsewhere]);
   for (const direction of DIRECTIONS) {
+    const label = direction === "across" ? "Across" : "Down";
+    const card = pair[direction].criterion;
+    // Deck membership and one-use are enforced here, before any paid review.
+    if (card && !deck.has(card))
+      issues.push(`${label}: that rule is not in this world’s deck.`);
+    else if (card && spent.has(card))
+      issues.push(`${label}: ${cardName(world, card)} has already been spent.`);
+    const other: Direction = direction === "across" ? "down" : "across";
     const result = validateTurn(
       asDraft(pair, direction),
       null,
       layout[direction].length,
+      {
+        companion: clueWords(pair[other].clue),
+        // Only accepted turns count as earlier, so the two clues written in the
+        // same turn never block each other.
+        earlier: completed.flatMap((entry) =>
+          DIRECTIONS.flatMap((d) => clueWords(entry[d].clue)),
+        ),
+      },
     );
     normalized[direction] = {
       word: result.word,
@@ -144,7 +211,14 @@ export function validatePair(
         (issue) => `${direction === "across" ? "Across" : "Down"}: ${issue}`,
       ),
     );
-    for (const crossing of crossingsFor(day, direction, completed, pair, world))
+    for (const crossing of crossingsFor(
+      day,
+      direction,
+      completed,
+      pair,
+      world,
+      seeds,
+    ))
       if (
         result.word.length === layout[direction].length &&
         result.word[crossing.index] !== crossing.letter
@@ -153,5 +227,13 @@ export function validatePair(
           `${direction === "across" ? "Across" : "Down"}: letter ${crossing.index + 1} must be ${crossing.letter} to match ${crossing.fixed ? "an earlier path" : "the other word in this pair"}.`,
         );
   }
+  if (
+    pair.across.criterion &&
+    pair.across.criterion === pair.down.criterion &&
+    deck.has(pair.across.criterion)
+  )
+    issues.push(
+      `Each rule is one-use: spend a different card on Across and Down.`,
+    );
   return { issues, pair: normalized };
 }

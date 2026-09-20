@@ -2,22 +2,31 @@ import { SANDY_SHORE, type WorldDefinition } from "../shared/worlds";
 import { redis } from "@devvit/web/server";
 import { randomUUID } from "node:crypto";
 import {
-  SHORE_SCENARIO,
+  JUDGE_BUDGET_SCENARIO,
   DIRECTIONS,
   asDraft,
   emptyPair,
   parsePair,
+  usedCards,
   validatePair,
   type Direction,
   type Pair,
   type PairDraft,
   type Shore,
 } from "../shared/shore";
-import { validateTurn } from "../shared/rules";
+import { clueWords, validateTurn, type ClueContext } from "../shared/rules";
+import {
+  assertPlayable,
+  clearCompletion,
+  recordCompletion,
+  seedsFor,
+  spentElsewhere,
+} from "./atlas";
 import {
   createTurnGame,
   GameError,
   COOLDOWN_MS,
+  PLAYTEST_SUBREDDIT,
   requireUser,
   type Dependencies,
 } from "./game";
@@ -25,18 +34,27 @@ import {
 export const canResetShore = (
   user: string | undefined,
   subreddit: string | undefined,
-) => Boolean(user && subreddit === "crossworld_game_dev");
+) => Boolean(user && subreddit === PLAYTEST_SUBREDDIT);
 export function createWorldGame(world: WorldDefinition) {
   const DAYS = world.days;
   const runKey = (user: string) => `cq:${world.scenario}:${user}:run`;
   const key = (user: string, day: number, part: string, run = "initial") =>
     `cq:${world.scenario}:${user}${run === "initial" ? "" : `:run:${run}`}:day:${day}:${part}`;
-  const reviewer = (day: number, direction: Direction) =>
+  // Link cards (echo, fresh-words) read beyond their own clue, and this
+  // per-direction path validates before any paid review, so it has to be given
+  // the same context validatePair builds or those cards fail closed.
+  const reviewer = (
+    day: number,
+    direction: Direction,
+    context: ClueContext = {},
+  ) =>
     createTurnGame(
       `${world.scenario}:day:${day}:${direction}`,
-      (draft) => validateTurn(draft, null, DAYS[day]![direction].length),
-      // Share the original allowance across both worlds; switching never replenishes it.
-      SHORE_SCENARIO,
+      (draft) =>
+        validateTurn(draft, null, DAYS[day]![direction].length, context),
+      // Share the original allowance across every world; switching never replenishes
+      // it, and versioning a world's grid must not hand out a fresh budget either.
+      JUDGE_BUDGET_SCENARIO,
       false,
     );
   async function withReviews(
@@ -105,6 +123,7 @@ export function createWorldGame(world: WorldDefinition) {
     // Rotate only this account's progress namespace. In-flight writes stay in the
     // old run; existing verdict caches, cooldowns and paid budgets remain intact.
     await redis.set(runKey(id), randomUUID());
+    await clearCompletion(id, world);
     return readShore(id);
   }
   async function write(
@@ -123,6 +142,9 @@ export function createWorldGame(world: WorldDefinition) {
       day >= DAYS.length
     )
       throw new GameError(400, "Choose a valid turn and two clue drafts.");
+    // The atlas decides whether this world may be written in at all today. It
+    // runs before any state is read or written, and before any paid review.
+    await assertPlayable(user, world, deps?.now() ?? Date.now());
     const current = await readShore(user);
     const run = current.run ?? "initial";
     const requestedRun =
@@ -142,7 +164,13 @@ export function createWorldGame(world: WorldDefinition) {
       await redis.set(key(user, day, "draft", run), JSON.stringify(draft));
       return readShore(user);
     }
-    const result = validatePair(draft, current.completed, world);
+    const result = validatePair(
+      draft,
+      current.completed,
+      world,
+      await spentElsewhere(user, world),
+      await seedsFor(user, world),
+    );
     if (result.issues.length) throw new GameError(400, result.issues.join(" "));
     const pair = result.pair;
     // A fixed lease prevents overlapping paired reviews. Never delete an expired lease.
@@ -169,7 +197,14 @@ export function createWorldGame(world: WorldDefinition) {
     // the existing fixed cooldown, cached verdict, daily budget and server-only judge.
     const reviews = await Promise.allSettled(
       DIRECTIONS.map((direction) =>
-        reviewer(day, direction).submit(user, asDraft(pair, direction), deps),
+        reviewer(day, direction, {
+          companion: clueWords(
+            pair[direction === "across" ? "down" : "across"].clue,
+          ),
+          earlier: latest.completed.flatMap((entry) =>
+            DIRECTIONS.flatMap((d) => clueWords(entry[d].clue)),
+          ),
+        }).submit(user, asDraft(pair, direction), deps),
       ),
     );
     const failure = reviews.find((r) => r.status === "rejected");
@@ -192,7 +227,20 @@ export function createWorldGame(world: WorldDefinition) {
         },
       );
     }
-    return readShore(user);
+    const settled = await readShore(user);
+    // The last accepted pair closes the world. Recording is idempotent, so a
+    // retry of this request cannot move the completion date or the streak.
+    if (!settled.turn) {
+      // The first letter you wrote here is what this world carries onward.
+      const seed = settled.completed[0]?.across.word[0];
+      await recordCompletion(
+        user,
+        world,
+        { cards: usedCards(settled.completed), ...(seed ? { seed } : {}) },
+        deps?.now() ?? Date.now(),
+      );
+    }
+    return settled;
   }
   const saveShore = (user: string, raw: unknown) => write(user, raw, false);
   const submitShore = (user: string, raw: unknown, deps?: Dependencies) =>
