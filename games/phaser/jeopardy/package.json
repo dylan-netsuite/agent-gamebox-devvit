@@ -37,7 +37,7 @@
     "vitest": "5.0.0",
     "devvit": "0.14.2",
     "@devvit/start": "0.14.2",
-    "@types/node": "24.13.3"
+    "@types/node": "26.4.1"
   },
   "engines": {
     "node": ">=24.18.0 <25"
