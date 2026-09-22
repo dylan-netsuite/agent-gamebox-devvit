@@ -27,7 +27,7 @@
     "@devvit/test": "0.14.2",
     "@eslint/js": "10.0.1",
     "@types/express": "5.0.6",
-    "@types/node": "24.13.3",
+    "@types/node": "26.4.1",
     "devvit": "0.14.2",
     "dotenv-cli": "11.0.0",
     "eslint": "10.9.1",
